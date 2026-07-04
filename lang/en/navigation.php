@@ -1,0 +1,47 @@
+<?php
+
+return [
+    'trash' => 'Trash',
+    'moderation' => 'Moderation',
+    'impersonating_as' => 'You are browsing as :name',
+    'stop_impersonating' => 'Return to my account',
+    'dashboard' => 'Dashboard',
+    'users' => 'Users',
+    'roles' => 'Roles & Permissions',
+    'pages' => 'Pages',
+    'menus' => 'Menus',
+    'rules' => 'Rules',
+    'contact' => 'Contact Messages',
+    'email' => 'Email',
+    'settings' => 'Settings',
+    'system_health' => 'System Health',
+    'updates' => 'Updates',
+    'backup' => 'Backup & Export',
+    'analytics' => 'Analytics',
+    'activity_log' => 'Activity Log',
+    'system_logs' => 'System Logs',
+    'extensions' => 'Extensions',
+    'themes' => 'Themes',
+    'news_articles' => 'Articles',
+    'news_categories' => 'Categories',
+    'news_comments' => 'Comments',
+    'reports' => 'Reports',
+    'profile' => 'Profile',
+    'sign_out' => 'Sign out',
+
+    /* Public navbar */
+    'nav_home' => 'Home',
+    'nav_servers' => 'Servers',
+    'nav_rules' => 'Rules',
+    'nav_contacts' => 'Contacts',
+
+    'sections' => [
+        'management' => 'Management',
+        'gaming' => 'Gaming',
+        'content' => 'Content',
+        'communication' => 'Communication',
+        'analytics' => 'Analytics',
+        'system' => 'System',
+        'extensions' => 'Extensions',
+    ],
+];

@@ -1,0 +1,27 @@
+<?php
+
+return [
+    'title' => 'Roles & Permissions',
+    'subtitle' => 'Manage roles, their badges, and what each one can access.',
+    'create' => 'Create Role',
+    'edit' => 'Edit Role',
+    'name' => 'Name',
+    'slug' => 'Slug',
+    'description' => 'Description',
+    'color' => 'Color',
+    'icon' => 'Icon',
+    'permissions' => 'Permissions',
+    'members' => 'Members',
+    'system_role' => 'System role',
+    'system_role_hint' => "This role is protected and can't be deleted.",
+    'created' => 'Role created.',
+    'updated' => 'Role updated.',
+    'deleted' => 'Role deleted.',
+    'cannot_delete_system' => "System roles can't be deleted.",
+    'delete_confirm' => 'Delete this role? Users will lose any permissions granted only by it.',
+    'select_icon' => 'Select an icon',
+    'search_icons' => 'Search icons…',
+    'no_permissions' => 'No permissions registered yet.',
+    'select_all' => 'Select all',
+    'save' => 'Save Role',
+];

@@ -1,0 +1,236 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Models\ContactMessage;
+use App\Models\Extension;
+use App\Models\Game;
+use App\Models\LegalPage;
+use App\Models\Menu;
+use App\Models\Server;
+use App\Services\Auth\OAuthProviderRegistry;
+use App\Services\Extensions\Registries\FilterRegistry;
+use App\Services\Extensions\Registries\NavigationRegistry;
+use App\Services\Extensions\Registries\SlotRegistry;
+use App\Services\Localization\LocaleService;
+use App\Services\SettingsService;
+use App\Services\Themes\ThemeResolver;
+use App\Support\Filters;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
+use Inertia\Middleware;
+
+class HandleInertiaRequests extends Middleware
+{
+    protected $rootView = 'app';
+
+    public function __construct(
+        private readonly SettingsService $settings,
+        private readonly ThemeResolver $themeResolver,
+        private readonly NavigationRegistry $navigation,
+        private readonly SlotRegistry $slots,
+        private readonly LocaleService $locales,
+        private readonly OAuthProviderRegistry $oauth,
+    ) {}
+
+    public function version(Request $request): ?string
+    {
+        return parent::version($request);
+    }
+
+    /** @return array<string, mixed> */
+    private function resolveThemeProps(): array
+    {
+        $theme = $this->themeResolver->resolve();
+
+        return [
+            'slug' => $theme?->slug ?? 'Default',
+            'settings' => $theme?->metadata['settings'] ?? [],
+        ];
+    }
+
+    private function resolveAuthShell(): array
+    {
+        // Only rendered on auth pages, but shared closures run on every
+        // request — cache so the random-server pick isn't queried each time.
+        return Cache::remember('inertia.auth_shell', 60, function () {
+            $games = Game::orderBy('name')->limit(6)->get(['name', 'slug']);
+
+            $servers = Server::with(['latestSnapshot', 'game'])
+                ->whereHas('latestSnapshot', fn ($q) => $q->where('is_online', true))
+                ->inRandomOrder()
+                ->limit(3)
+                ->get();
+
+            return [
+                'games' => $games->map(fn (Game $g) => [
+                    'name' => $g->name,
+                    'slug' => $g->slug,
+                ])->values(),
+                'servers' => $servers->map(fn (Server $s) => [
+                    'name' => $s->latestSnapshot?->name ?? $s->name,
+                    'map' => $s->latestSnapshot?->map ?? '—',
+                    'players' => ($s->latestSnapshot?->players_online ?? 0).' / '.($s->latestSnapshot?->players_max ?? 0),
+                    'ping' => $s->latestSnapshot?->ping ? $s->latestSnapshot->ping.'ms' : '—',
+                    'slug' => $s->game?->slug ?? '',
+                ])->values(),
+            ];
+        });
+    }
+
+    public const MENUS_CACHE_KEY = 'inertia.menus';
+
+    public const LEGAL_PAGES_CACHE_KEY = 'inertia.legal_pages';
+
+    /** @return array<string, array<int, array<string, string>>> */
+    /**
+     * messages.php of every enabled extension, keyed "ext.{namespace}".
+     * Failures are silently skipped — a broken lang file must not take
+     * down every page.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private function extensionTranslations(): array
+    {
+        try {
+            if (! Schema::hasTable('extensions')) {
+                return [];
+            }
+
+            $result = [];
+
+            foreach (Extension::where('enabled', true)->get() as $extension) {
+                $manifest = $extension->metadata ?? [];
+                $namespace = is_string($manifest['lang_namespace'] ?? null) && $manifest['lang_namespace'] !== ''
+                    ? $manifest['lang_namespace']
+                    : (string) str(($manifest['slug'] ?? 'extension'))->afterLast('-')->afterLast('/');
+
+                $messages = trans($namespace.'::messages');
+
+                if (is_array($messages)) {
+                    $result['ext.'.$namespace] = $messages;
+                }
+            }
+
+            return $result;
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    private function resolveMenus(): array
+    {
+        return Cache::remember(self::MENUS_CACHE_KEY, 3600, fn () => $this->buildMenus());
+    }
+
+    /** @return array<string, array<int, array<string, string>>> */
+    private function buildMenus(): array
+    {
+        $menus = Menu::with(['items' => fn ($q) => $q->whereNull('parent_id')->orderBy('sort'), 'items.children' => fn ($q) => $q->orderBy('sort')])
+            ->whereNotNull('location')
+            ->get();
+
+        $result = [];
+        foreach ($menus as $menu) {
+            $result[$menu->location] = $menu->items->map(fn ($item) => [
+                'label' => $item->label,
+                'url' => $item->url,
+                'target' => $item->target,
+                'children' => $item->children->map(fn ($c) => [
+                    'label' => $c->label,
+                    'url' => $c->url,
+                    'target' => $c->target,
+                ])->toArray(),
+            ])->toArray();
+        }
+
+        return $result;
+    }
+
+    public function share(Request $request): array
+    {
+        $shared = [
+            ...parent::share($request),
+            'app' => [
+                'name' => $this->settings->appName(),
+                'theme' => fn () => $this->resolveThemeProps(),
+            ],
+            'socialLinks' => fn () => array_filter([
+                'discord' => $this->settings->get('social_discord', ''),
+                'steam' => $this->settings->get('social_steam', ''),
+                'twitter' => $this->settings->get('social_twitter', ''),
+                'youtube' => $this->settings->get('social_youtube', ''),
+            ]),
+            'auth' => [
+                'user' => $request->user() ? [
+                    ...$request->user()->only('id', 'name', 'email', 'is_admin'),
+                    'username' => $request->user()->username,
+                    'avatar' => $request->user()->avatar,
+                    'verified' => $request->user()->hasVerifiedEmail(),
+                    'two_factor_enabled' => (bool) $request->user()->two_factor_secret,
+                ] : null,
+            ],
+            'impersonating' => $request->session()->has('impersonator_id') && $request->user()
+                ? ['name' => $request->user()->name]
+                : null,
+            'adminNav' => fn () => $request->user()?->is_admin
+                ? $this->navigation->compose()
+                : [],
+            'adminBadges' => fn () => $request->user()?->is_admin ? [
+                'unread_contact' => ContactMessage::whereNull('read_at')->count(),
+            ] : [],
+            'localization' => fn () => [
+                'currentLocale' => app()->getLocale(),
+                'fallbackLocale' => $this->locales->fallbackLocale(),
+                'supportedLocales' => $this->locales->supportedLocales(),
+                'localeDirection' => $this->locales->direction(app()->getLocale()),
+                'languageSwitcherEnabled' => $request->is('admin') || $request->is('admin/*')
+                    ? $this->locales->adminSwitcherEnabled()
+                    : $this->locales->publicSwitcherEnabled(),
+            ],
+            'translations' => fn () => [
+                'auth' => trans('auth'),
+                'account' => trans('account'),
+                'messages' => trans('messages'),
+                'navigation' => trans('navigation'),
+                'home' => trans('home'),
+                'roles' => trans('roles'),
+                'members' => trans('members'),
+                'profile' => trans('profile'),
+                'servers' => trans('servers'),
+                'news' => trans('news'),
+                'achievements' => trans('achievements'),
+                'onboarding' => trans('onboarding'),
+                'report' => trans('report'),
+                // Enabled extensions' messages.php, keyed "ext.{namespace}" —
+                // reachable in Vue via t('ext.store.some_key').
+                ...$this->extensionTranslations(),
+            ],
+            // Slot data is shared lazily — evaluated only when the page renders.
+            // Frontend uses <ExtensionSlot name="home.right.bottom" /> to render.
+            'extensionSlots' => fn () => $this->slots->compose(),
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+                // One-time reveal of a freshly generated bridge token.
+                'bridge_token' => fn () => $request->session()->get('bridge_token'),
+            ],
+            'oauthProviders' => fn () => $this->oauth->compose(),
+            'legalPages' => fn () => Cache::remember(
+                self::LEGAL_PAGES_CACHE_KEY,
+                3600,
+                fn () => LegalPage::orderBy('sort_order')->orderBy('id')
+                    ->limit(5)
+                    ->get(['slug', 'title'])
+                    ->toArray(),
+            ),
+            'menus' => fn () => $this->resolveMenus(),
+            'authShell' => fn () => $this->resolveAuthShell(),
+        ];
+
+        // Extensions may add or reshape shared props via the filter chain.
+        return app(FilterRegistry::class)
+            ->apply(Filters::INERTIA_SHARED, $shared, $request);
+    }
+}

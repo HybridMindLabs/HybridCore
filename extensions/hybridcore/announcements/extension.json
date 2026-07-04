@@ -1,0 +1,16 @@
+{
+    "id": "hybridcore/announcements",
+    "name": "Announcements",
+    "version": "1.0.0",
+    "description": "Site-wide announcement banners shown on the home page. Manage active messages, schedule them, and pick a severity level.",
+    "author": "HybridCore",
+    "type": "official",
+    "provider": "Hybridcore\\Announcements\\AnnouncementsServiceProvider",
+    "routes": {
+        "web":   "routes/web.php",
+        "admin": "routes/admin.php"
+    },
+    "migrations": "database/migrations",
+    "lang":           "resources/lang",
+    "lang_namespace": "announcements"
+}

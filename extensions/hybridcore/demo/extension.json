@@ -1,0 +1,16 @@
+{
+    "id": "hybridcore/demo",
+    "name": "Demo",
+    "version": "0.1.0",
+    "description": "The Demo extension.",
+    "author": "Hybridcore",
+    "type": "custom",
+    "provider": "Hybridcore\\Demo\\DemoServiceProvider",
+    "routes": {
+        "web": "routes/web.php",
+        "admin": "routes/admin.php"
+    },
+    "migrations": "database/migrations",
+    "lang": "resources/lang",
+    "lang_namespace": "demo"
+}
