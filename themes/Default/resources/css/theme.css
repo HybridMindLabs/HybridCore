@@ -1,0 +1,13 @@
+/*
+ * HybridCore Default Theme — CSS custom properties
+ *
+ * These variables are applied to :root at boot time by app.ts using the
+ * values from theme.json > settings. Override them here for dev/preview.
+ */
+
+:root {
+    --color-accent:     #22d3ee;
+    --color-background: #0a0f1a;
+    --color-surface:    #111827;
+    --color-primary:    #f1f5f9;
+}

@@ -1,0 +1,112 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+    --font-mono: ui-monospace, 'Cascadia Code', monospace;
+
+    /* HybridCore colour tokens */
+    --color-hc-base:     #0a0f1a;
+    --color-hc-surface:  #111827;
+    --color-hc-elevated: #1a2236;
+    --color-hc-border:   #1e2d47;
+
+    --color-hc-text:     #f1f5f9;
+    --color-hc-muted:    #94a3b8;
+    --color-hc-faint:    #475569;
+
+    --color-hc-accent:         #22d3ee;
+    --color-hc-accent-hover:   #06b6d4;
+
+    --color-hc-success: #22c55e;
+    --color-hc-warning: #f59e0b;
+    --color-hc-danger:  #ef4444;
+    --color-hc-info:    #3b82f6;
+}
+
+html, body {
+    background-color: #050810;
+    color: #f1f5f9;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Dot-grid background texture — apply .hc-texture to the page wrapper */
+.hc-texture {
+    position: relative;
+}
+.hc-texture::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        radial-gradient(circle, rgba(126, 170, 255, 0.32) 1px, transparent 1px),
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    background-size: 26px 26px, 96px 96px, 96px 96px;
+    opacity: 0.42;
+    pointer-events: none;
+    z-index: 0;
+}
+.hc-texture > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Glow effects */
+.hc-glow-accent {
+    box-shadow: 0 0 0 1px rgba(34,211,238,0.15), 0 0 20px rgba(34,211,238,0.08);
+}
+.hc-glow-success {
+    box-shadow: 0 0 0 1px rgba(34,197,94,0.15), 0 0 16px rgba(34,197,94,0.08);
+}
+
+/* Live pulse dot */
+@keyframes hc-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.5; transform: scale(0.85); }
+}
+.hc-live-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background: #22c55e;
+    animation: hc-pulse 2s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+.hc-orbit-lines::before,
+.hc-orbit-lines::after {
+    content: '';
+    position: absolute;
+    right: 6%;
+    top: 50%;
+    width: 520px;
+    height: 520px;
+    border: 1px solid rgba(95, 133, 255, 0.12);
+    border-radius: 9999px;
+    transform: translateY(-50%) rotate(-22deg);
+}
+
+.hc-orbit-lines::after {
+    width: 700px;
+    height: 700px;
+    right: -1%;
+    border-color: rgba(125, 183, 255, 0.08);
+    transform: translateY(-50%) rotate(18deg);
+}
+
+/* Card hover lift */
+.hc-card-hover {
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.hc-card-hover:hover {
+    border-color: rgba(34,211,238,0.2);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    transform: translateY(-1px);
+}

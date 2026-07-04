@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'welcome_title' => 'Welcome to HybridCore',
+    'welcome_subtitle' => 'This wizard will set up your platform in a few steps.',
+    'requirements' => 'Requirements',
+    'database' => 'Database',
+    'admin_account' => 'Admin Account',
+    'site_settings' => 'Site Settings',
+    'finish' => 'Finish',
+    'next' => 'Next',
+    'back' => 'Back',
+    'install' => 'Install',
+    'installing' => 'Installing…',
+    'db_host' => 'Database host',
+    'db_port' => 'Port',
+    'db_database' => 'Database name',
+    'db_username' => 'Username',
+    'db_password' => 'Password',
+    'db_connection_failed' => 'Could not connect to the database. Please check the credentials and try again.',
+    'migration_failed' => 'Database migration failed. Check the database credentials and database server logs, then try again.',
+    'incomplete' => 'Installation data is incomplete. Please restart the installer.',
+    'success' => 'HybridCore has been installed successfully. Welcome!',
+    'admin_name' => 'Name',
+    'admin_email' => 'Email',
+    'admin_password' => 'Password',
+    'admin_password_confirm' => 'Confirm password',
+];

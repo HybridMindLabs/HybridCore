@@ -1,0 +1,10 @@
+@extends('errors.layout')
+
+@section('code', '419')
+@section('title', 'Session Expired')
+@section('message', 'Your session has expired. Please refresh the page and try your request again.')
+@section('accent-from', '#34d399')
+@section('accent-to', '#10b981')
+@section('action', '↺ Refresh page')
+@section('secondary-action', 'Back to home')
+@section('secondary-href', '/')

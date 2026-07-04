@@ -1,0 +1,51 @@
+version: 2
+
+updates:
+  # PHP dependencies (Composer)
+  - package-ecosystem: composer
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - php
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      # Bundle minor + patch bumps into one PR to cut noise; majors stay separate.
+      php-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  # JavaScript dependencies (npm)
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - javascript
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      js-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  # GitHub Actions used in CI
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - ci
+    commit-message:
+      prefix: "chore(ci)"

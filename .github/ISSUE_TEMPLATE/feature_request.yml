@@ -1,0 +1,34 @@
+name: Feature request
+description: Suggest an idea or improvement for HybridCore
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem does this feature solve? Who is it for?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe what you'd like to happen.
+    validations:
+      required: true
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Should this live in core or an extension?
+      options:
+        - Not sure
+        - Core (used by most communities)
+        - Extension (game-specific or optional)
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false

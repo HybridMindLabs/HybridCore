@@ -1,0 +1,47 @@
+<?php
+
+return [
+    'trash' => 'Кошче',
+    'moderation' => 'Модерация',
+    'impersonating_as' => 'Разглеждаш като :name',
+    'stop_impersonating' => 'Върни се към моя акаунт',
+    'dashboard' => 'Табло',
+    'users' => 'Потребители',
+    'roles' => 'Роли и права',
+    'pages' => 'Страници',
+    'menus' => 'Менюта',
+    'rules' => 'Правила',
+    'contact' => 'Контактни съобщения',
+    'email' => 'Имейл',
+    'settings' => 'Настройки',
+    'system_health' => 'Състояние на системата',
+    'updates' => 'Актуализации',
+    'backup' => 'Архив и експорт',
+    'analytics' => 'Анализи',
+    'activity_log' => 'Дневник на активността',
+    'system_logs' => 'Системни логове',
+    'extensions' => 'Разширения',
+    'themes' => 'Теми',
+    'news_articles' => 'Статии',
+    'news_categories' => 'Категории',
+    'news_comments' => 'Коментари',
+    'reports' => 'Доклади',
+    'profile' => 'Профил',
+    'sign_out' => 'Изход',
+
+    /* Публична навигация */
+    'nav_home' => 'Начало',
+    'nav_servers' => 'Сървъри',
+    'nav_rules' => 'Правила',
+    'nav_contacts' => 'Контакти',
+
+    'sections' => [
+        'management' => 'Управление',
+        'gaming' => 'Гейминг',
+        'content' => 'Съдържание',
+        'communication' => 'Комуникация',
+        'analytics' => 'Анализи',
+        'system' => 'Система',
+        'extensions' => 'Разширения',
+    ],
+];

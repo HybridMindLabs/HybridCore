@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/HybridMindLabs/HybridCore/security/advisories/new
+    about: Please report security issues privately, never as a public issue.
+  - name: Questions & discussion
+    url: https://github.com/HybridMindLabs/HybridCore/discussions
+    about: Ask questions and discuss ideas here.

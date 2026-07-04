@@ -1,0 +1,16 @@
+{
+    "name": "Default",
+    "slug": "default",
+    "version": "1.0.0",
+    "author": "HybridCore",
+    "description": "The official default dark theme for HybridCore.",
+    "type": "official",
+    "supports": ["pages", "news", "servers", "store"],
+    "preview_image": "screenshot.png",
+    "settings": {
+        "accent_color": "#22d3ee",
+        "background_color": "#0a0f1a",
+        "surface_color": "#111827",
+        "primary_color": "#f1f5f9"
+    }
+}
