@@ -8,6 +8,7 @@ use App\Models\NewsComment;
 use App\Models\ServerReview;
 use App\Models\User;
 use App\Services\Extensions\Registries\FilterRegistry;
+use App\Services\Extensions\Registries\ProfileTabRegistry;
 use App\Services\SettingsService;
 use App\Support\Filters;
 use Illuminate\Http\RedirectResponse;
@@ -115,6 +116,8 @@ class ProfileController extends Controller
             'activity' => $this->recentActivity($user),
             'followers' => $this->miniUsers($user->followers()),
             'following' => $this->miniUsers($user->following()),
+            // Extension-registered profile panels (rendered via global slot components).
+            'extensionPanels' => app(ProfileTabRegistry::class)->compose($user),
         ], $user));
     }
 

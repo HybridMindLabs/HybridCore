@@ -154,6 +154,7 @@ const navLinks = [
 interface PublicNavItem { label: string; url: string; icon: string }
 const publicNavIcons: Record<string, Component> = { ThumbsUp, Trophy, Gift, Package, Server, BookOpen, Star };
 const publicNav = computed(() => (page.props.publicNav as PublicNavItem[] | undefined) ?? []);
+const userMenu = computed(() => (page.props.userMenu as PublicNavItem[] | undefined) ?? []);
 function publicNavIcon(name: string): Component { return publicNavIcons[name] ?? LinkIcon; }
 
 const socialSvgs: Record<string, { label: string; svg: string; viewBox: string }> = {
@@ -440,6 +441,11 @@ const socialLinks = computed(() => {
                                         <Users :size="14" :stroke-width="1.8" />
                                         {{ t('members.title') }}
                                     </Link>
+                                    <!-- Extension-registered user-menu links -->
+                                    <a v-for="item in userMenu" :key="item.url" :href="item.url" class="flex items-center gap-2.5 px-4 py-2 text-[13px] transition-colors w-full" :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'" @click="userOpen = false">
+                                        <component :is="publicNavIcon(item.icon)" :size="14" :stroke-width="1.8" />
+                                        {{ item.label }}
+                                    </a>
                                 </div>
 
                                 <div v-if="page.props.auth.user.is_admin" class="border-t py-1.5" :class="dark ? 'border-zinc-800' : 'border-zinc-100'">

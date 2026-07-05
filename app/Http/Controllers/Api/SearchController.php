@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\NewsArticle;
 use App\Models\Server;
 use App\Models\User;
+use App\Services\Extensions\Registries\SearchProviderRegistry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -16,12 +17,12 @@ use Illuminate\Http\Request;
  */
 class SearchController extends Controller
 {
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(Request $request, SearchProviderRegistry $providers): JsonResponse
     {
         $q = trim((string) $request->query('q', ''));
 
         if (mb_strlen($q) < 2) {
-            return response()->json(['users' => [], 'servers' => [], 'articles' => []]);
+            return response()->json(['users' => [], 'servers' => [], 'articles' => [], 'extensions' => []]);
         }
 
         // The database driver queries tables directly, so visibility rules
@@ -66,10 +67,35 @@ class SearchController extends Controller
             ])
             ->values();
 
+        // Extension-registered providers, grouped under their label. A provider
+        // that errors or is not permitted for this user is skipped.
+        $extensions = [];
+        foreach ($providers->all() as $provider) {
+            if ($provider['permission'] !== null && ! $request->user()?->can($provider['permission'])) {
+                continue;
+            }
+
+            try {
+                $rows = ($provider['resolver'])($q, 5);
+            } catch (\Throwable) {
+                continue;
+            }
+
+            if (is_array($rows) && $rows !== []) {
+                $extensions[] = [
+                    'key' => $provider['key'],
+                    'label' => __($provider['label']),
+                    'icon' => $provider['icon'],
+                    'results' => array_slice(array_values($rows), 0, 5),
+                ];
+            }
+        }
+
         return response()->json([
             'users' => $users,
             'servers' => $servers,
             'articles' => $articles,
+            'extensions' => $extensions,
         ]);
     }
 }

@@ -3,8 +3,9 @@ import { router, usePage } from '@inertiajs/vue3';
 import {
     User, ShieldCheck, Monitor, Settings, Link2, LogOut,
     BadgeCheck, ExternalLink, Bell, MessageSquare, Star,
-    History, Ban, Trash, MailCheck,
+    History, Ban, Trash, MailCheck, ThumbsUp, Gift, Trophy, Puzzle,
 } from '@lucide/vue';
+import type { Component } from 'vue';
 import { computed } from 'vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
@@ -42,8 +43,18 @@ function selectTab(tabId: string) {
 const { theme } = useTheme();
 const { t } = useLocale();
 const dark = computed(() => theme.value === 'dark');
-const page = usePage<{ auth: { user: any } | null }>();
+const page = usePage<{ auth: { user: any } | null; accountTabs?: ExtTab[] }>();
 const user = computed(() => page.props.auth?.user);
+
+// Extension-registered account tabs (each navigates to its own route).
+interface ExtTab { key: string; label: string; url: string; icon: string }
+const extTabIcons: Record<string, Component> = { ThumbsUp, Gift, Trophy, Star, Puzzle };
+const extensionTabs = computed(() => page.props.accountTabs ?? []);
+function extTabIcon(name: string): Component { return extTabIcons[name] ?? Puzzle; }
+function isExtTabActive(url: string): boolean {
+    return page.url === url || page.url.startsWith(url + '?');
+}
+function visitExtTab(url: string) { router.visit(url); }
 
 const tabs = computed(() => [
     { id: 'profile',      label: t('account.tab_profile'),   icon: User,          badge: 0 },
@@ -107,6 +118,17 @@ function avatarBg(name: string) {
                 <span v-if="tab.badge > 0" class="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center bg-blue-500 text-white">
                     {{ tab.badge > 99 ? '99+' : tab.badge }}
                 </span>
+            </button>
+
+            <!-- Extension-registered tabs -->
+            <button v-for="tab in extensionTabs" :key="tab.key" type="button"
+                class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-semibold text-left transition w-full"
+                :class="isExtTabActive(tab.url)
+                    ? dark ? 'bg-blue-500/12 text-blue-400 border border-blue-500/25' : 'bg-blue-50 text-blue-600 border border-blue-200'
+                    : dark ? 'text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.04] border border-transparent' : 'text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 border border-transparent'"
+                @click="visitExtTab(tab.url)">
+                <component :is="extTabIcon(tab.icon)" :size="14" :stroke-width="1.9" class="shrink-0" />
+                <span class="flex-1 truncate">{{ tab.label }}</span>
             </button>
         </nav>
 

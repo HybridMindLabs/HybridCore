@@ -20,6 +20,10 @@ class ExtensionRegistry
     public function __construct(
         private readonly NavigationRegistry $navigation,
         private readonly PublicNavigationRegistry $publicNavigation,
+        private readonly AccountTabRegistry $accountTabs,
+        private readonly ProfileTabRegistry $profileTabs,
+        private readonly UserMenuRegistry $userMenu,
+        private readonly SearchProviderRegistry $search,
         private readonly WidgetRegistry $widgets,
         private readonly PermissionRegistry $permissions,
         private readonly SettingsRegistry $settings,
@@ -42,6 +46,30 @@ class ExtensionRegistry
     public function publicNavigation(): PublicNavigationRegistry
     {
         return $this->publicNavigation;
+    }
+
+    /** Tabs in the authenticated user's account panel (/account). */
+    public function accountTabs(): AccountTabRegistry
+    {
+        return $this->accountTabs;
+    }
+
+    /** Panels on the public user profile (/u/{username}). */
+    public function profileTabs(): ProfileTabRegistry
+    {
+        return $this->profileTabs;
+    }
+
+    /** Items in the top-right user dropdown menu. */
+    public function userMenu(): UserMenuRegistry
+    {
+        return $this->userMenu;
+    }
+
+    /** Providers for the global search endpoint. */
+    public function search(): SearchProviderRegistry
+    {
+        return $this->search;
     }
 
     public function widgets(): WidgetRegistry
