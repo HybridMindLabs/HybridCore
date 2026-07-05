@@ -11,6 +11,7 @@ use App\Models\Server;
 use App\Services\Auth\OAuthProviderRegistry;
 use App\Services\Extensions\Registries\FilterRegistry;
 use App\Services\Extensions\Registries\NavigationRegistry;
+use App\Services\Extensions\Registries\PublicNavigationRegistry;
 use App\Services\Extensions\Registries\SlotRegistry;
 use App\Services\Localization\LocaleService;
 use App\Services\SettingsService;
@@ -29,6 +30,7 @@ class HandleInertiaRequests extends Middleware
         private readonly SettingsService $settings,
         private readonly ThemeResolver $themeResolver,
         private readonly NavigationRegistry $navigation,
+        private readonly PublicNavigationRegistry $publicNavigation,
         private readonly SlotRegistry $slots,
         private readonly LocaleService $locales,
         private readonly OAuthProviderRegistry $oauth,
@@ -177,6 +179,13 @@ class HandleInertiaRequests extends Middleware
             'adminNav' => fn () => $request->user()?->is_admin
                 ? $this->navigation->compose()
                 : [],
+            // Public (site header) links registered by enabled extensions.
+            // Items with a permission are only shown to users who hold it.
+            'publicNav' => fn () => array_values(array_filter(
+                $this->publicNavigation->compose(),
+                fn (array $item) => $item['permission'] === null
+                    || (bool) $request->user()?->can($item['permission']),
+            )),
             'adminBadges' => fn () => $request->user()?->is_admin ? [
                 'unread_contact' => ContactMessage::whereNull('read_at')->count(),
             ] : [],
