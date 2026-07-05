@@ -155,6 +155,7 @@ interface PublicNavItem { label: string; url: string; icon: string }
 const publicNavIcons: Record<string, Component> = { ThumbsUp, Trophy, Gift, Package, Server, BookOpen, Star };
 const publicNav = computed(() => (page.props.publicNav as PublicNavItem[] | undefined) ?? []);
 const userMenu = computed(() => (page.props.userMenu as PublicNavItem[] | undefined) ?? []);
+const footerNav = computed(() => (page.props.footerNav as { label: string; url: string }[] | undefined) ?? []);
 function publicNavIcon(name: string): Component { return publicNavIcons[name] ?? LinkIcon; }
 
 const socialSvgs: Record<string, { label: string; svg: string; viewBox: string }> = {
@@ -570,6 +571,10 @@ const socialLinks = computed(() => {
                                     <a :href="link.href" class="text-[13px] transition-colors" :class="dark ? 'text-zinc-500 hover:text-zinc-200' : 'text-zinc-500 hover:text-zinc-900'">{{ t('navigation.' + link.key) }}</a>
                                 </li>
                             </template>
+                            <!-- Extension-registered footer links -->
+                            <li v-for="item in footerNav" :key="item.url">
+                                <a :href="item.url" class="text-[13px] transition-colors" :class="dark ? 'text-zinc-500 hover:text-zinc-200' : 'text-zinc-500 hover:text-zinc-900'">{{ item.label }}</a>
+                            </li>
                         </ul>
                     </div>
                 </div>

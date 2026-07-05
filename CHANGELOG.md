@@ -7,6 +7,21 @@ conventions and [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.0]
+
+### Extension SDK
+- New registries let extensions plug into more of the frontend, each shared with
+  per-user permission filtering:
+  - **Public navigation** — links in the public site header
+  - **Account tabs** — extra tabs in the user's account panel
+  - **Profile panels** — panels on the public user profile
+  - **User menu** — items in the top-right user dropdown
+  - **Search providers** — grouped results in global search
+- `extensions:test` now forces the sqlite/array/sync test environment so an
+  extension's suite always runs isolated from the live database.
+
+---
+
 ## [0.2.0] — Initial public release
 
 The first public release of the HybridCore core — a feature-complete,

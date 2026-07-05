@@ -1,7 +1,7 @@
 {
     "$schema": "https://www.schemastore.org/package.json",
     "name": "hybridcore",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "description": "Frontend for HybridCore — a modular self-hosted platform for gaming communities.",
     "license": "UNLICENSED",
     "private": true,

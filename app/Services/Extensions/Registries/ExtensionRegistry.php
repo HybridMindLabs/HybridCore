@@ -24,6 +24,7 @@ class ExtensionRegistry
         private readonly ProfileTabRegistry $profileTabs,
         private readonly UserMenuRegistry $userMenu,
         private readonly SearchProviderRegistry $search,
+        private readonly FooterLinkRegistry $footerLinks,
         private readonly WidgetRegistry $widgets,
         private readonly PermissionRegistry $permissions,
         private readonly SettingsRegistry $settings,
@@ -70,6 +71,12 @@ class ExtensionRegistry
     public function search(): SearchProviderRegistry
     {
         return $this->search;
+    }
+
+    /** Links in the public site footer. */
+    public function footerLinks(): FooterLinkRegistry
+    {
+        return $this->footerLinks;
     }
 
     public function widgets(): WidgetRegistry

@@ -11,6 +11,7 @@ use App\Models\Server;
 use App\Services\Auth\OAuthProviderRegistry;
 use App\Services\Extensions\Registries\AccountTabRegistry;
 use App\Services\Extensions\Registries\FilterRegistry;
+use App\Services\Extensions\Registries\FooterLinkRegistry;
 use App\Services\Extensions\Registries\NavigationRegistry;
 use App\Services\Extensions\Registries\PublicNavigationRegistry;
 use App\Services\Extensions\Registries\SlotRegistry;
@@ -35,6 +36,7 @@ class HandleInertiaRequests extends Middleware
         private readonly PublicNavigationRegistry $publicNavigation,
         private readonly AccountTabRegistry $accountTabs,
         private readonly UserMenuRegistry $userMenu,
+        private readonly FooterLinkRegistry $footerLinks,
         private readonly SlotRegistry $slots,
         private readonly LocaleService $locales,
         private readonly OAuthProviderRegistry $oauth,
@@ -202,6 +204,12 @@ class HandleInertiaRequests extends Middleware
                 fn (array $item) => $item['permission'] === null
                     || (bool) $request->user()->can($item['permission']),
             )) : [],
+            // Extension-registered public footer links.
+            'footerNav' => fn () => array_values(array_filter(
+                $this->footerLinks->compose(),
+                fn (array $item) => $item['permission'] === null
+                    || (bool) $request->user()?->can($item['permission']),
+            )),
             'adminBadges' => fn () => $request->user()?->is_admin ? [
                 'unread_contact' => ContactMessage::whereNull('read_at')->count(),
             ] : [],

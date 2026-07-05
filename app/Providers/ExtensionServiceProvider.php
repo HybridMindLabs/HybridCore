@@ -9,6 +9,7 @@ use App\Services\Extensions\ExtensionAutoloader;
 use App\Services\Extensions\Registries\AccountTabRegistry;
 use App\Services\Extensions\Registries\ExtensionRegistry;
 use App\Services\Extensions\Registries\FilterRegistry;
+use App\Services\Extensions\Registries\FooterLinkRegistry;
 use App\Services\Extensions\Registries\HookRegistry;
 use App\Services\Extensions\Registries\NavigationRegistry;
 use App\Services\Extensions\Registries\PermissionRegistry;
@@ -51,6 +52,7 @@ class ExtensionServiceProvider extends ServiceProvider
         $this->app->singleton(ProfileTabRegistry::class);
         $this->app->singleton(UserMenuRegistry::class);
         $this->app->singleton(SearchProviderRegistry::class);
+        $this->app->singleton(FooterLinkRegistry::class);
         $this->app->singleton(WidgetRegistry::class);
         $this->app->singleton(PermissionRegistry::class);
         $this->app->singleton(SettingsRegistry::class);
