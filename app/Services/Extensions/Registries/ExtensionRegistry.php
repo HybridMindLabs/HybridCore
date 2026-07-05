@@ -29,6 +29,7 @@ class ExtensionRegistry
         private readonly NotificationTypeRegistry $notificationTypes,
         private readonly ActivityFeedRegistry $activityFeed,
         private readonly OnboardingStepRegistry $onboardingSteps,
+        private readonly ScheduledReportRegistry $scheduledReports,
         private readonly WidgetRegistry $widgets,
         private readonly PermissionRegistry $permissions,
         private readonly SettingsRegistry $settings,
@@ -105,6 +106,12 @@ class ExtensionRegistry
     public function onboardingSteps(): OnboardingStepRegistry
     {
         return $this->onboardingSteps;
+    }
+
+    /** Extra rows in the weekly community email digest. */
+    public function scheduledReports(): ScheduledReportRegistry
+    {
+        return $this->scheduledReports;
     }
 
     public function widgets(): WidgetRegistry

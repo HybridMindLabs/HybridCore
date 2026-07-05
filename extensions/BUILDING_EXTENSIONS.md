@@ -537,6 +537,34 @@ $registry->activityFeed()->register(
 );
 ```
 
+### Onboarding step
+
+Add a slide to the post-registration wizard. The step is a self-contained global
+slot component (persist any data through your own routes, not the core payload).
+The optional `when` guard skips the step when it returns false.
+
+```php
+$registry->onboardingSteps()->register(
+    key:       'vote_intro',
+    component: 'HybridcoreVoteOnboarding',   // global slot component
+    title:     'vote::messages.onboarding_title',
+    icon:      'ThumbsUp',
+    sort:      80,
+    when:      fn () => VoteSite::where('is_active', true)->exists(),
+);
+```
+
+### Weekly digest row
+
+Contribute rows to the weekly community email digest. Return **pre-localized**
+`text` (+ optional `url`); the digest command escapes it — never return raw HTML.
+
+```php
+$registry->scheduledReports()->register(fn () => [
+    ['text' => trans('vote::messages.digest_top', ['name' => $top]), 'url' => route('vote.index')],
+]);
+```
+
 ---
 
 ## Routes

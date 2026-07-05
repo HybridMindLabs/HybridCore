@@ -19,6 +19,7 @@ use App\Services\Extensions\Registries\PermissionRegistry;
 use App\Services\Extensions\Registries\ProfileTabRegistry;
 use App\Services\Extensions\Registries\PublicNavigationRegistry;
 use App\Services\Extensions\Registries\QuickActionRegistry;
+use App\Services\Extensions\Registries\ScheduledReportRegistry;
 use App\Services\Extensions\Registries\SearchProviderRegistry;
 use App\Services\Extensions\Registries\SettingsRegistry;
 use App\Services\Extensions\Registries\SlotRegistry;
@@ -61,6 +62,7 @@ class ExtensionServiceProvider extends ServiceProvider
         $this->app->singleton(NotificationTypeRegistry::class);
         $this->app->singleton(ActivityFeedRegistry::class);
         $this->app->singleton(OnboardingStepRegistry::class);
+        $this->app->singleton(ScheduledReportRegistry::class);
         $this->app->singleton(WidgetRegistry::class);
         $this->app->singleton(PermissionRegistry::class);
         $this->app->singleton(SettingsRegistry::class);
