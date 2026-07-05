@@ -11,6 +11,7 @@ use App\Services\Extensions\Registries\FilterRegistry;
 use App\Services\Extensions\Registries\HookRegistry;
 use App\Services\Extensions\Registries\NavigationRegistry;
 use App\Services\Extensions\Registries\PermissionRegistry;
+use App\Services\Extensions\Registries\PublicNavigationRegistry;
 use App\Services\Extensions\Registries\SettingsRegistry;
 use App\Services\Extensions\Registries\SlotRegistry;
 use App\Services\Extensions\Registries\WidgetRegistry;
@@ -41,6 +42,7 @@ class ExtensionServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(NavigationRegistry::class);
+        $this->app->singleton(PublicNavigationRegistry::class);
         $this->app->singleton(WidgetRegistry::class);
         $this->app->singleton(PermissionRegistry::class);
         $this->app->singleton(SettingsRegistry::class);

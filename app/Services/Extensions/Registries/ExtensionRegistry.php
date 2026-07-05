@@ -19,6 +19,7 @@ class ExtensionRegistry
 {
     public function __construct(
         private readonly NavigationRegistry $navigation,
+        private readonly PublicNavigationRegistry $publicNavigation,
         private readonly WidgetRegistry $widgets,
         private readonly PermissionRegistry $permissions,
         private readonly SettingsRegistry $settings,
@@ -35,6 +36,12 @@ class ExtensionRegistry
     public function navigation(): NavigationRegistry
     {
         return $this->navigation;
+    }
+
+    /** Public (site header) navigation — visible to visitors, not just admins. */
+    public function publicNavigation(): PublicNavigationRegistry
+    {
+        return $this->publicNavigation;
     }
 
     public function widgets(): WidgetRegistry
