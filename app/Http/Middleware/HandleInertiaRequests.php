@@ -95,13 +95,12 @@ class HandleInertiaRequests extends Middleware
 
     public const LEGAL_PAGES_CACHE_KEY = 'inertia.legal_pages';
 
-    /** @return array<string, array<int, array<string, string>>> */
     /**
-     * messages.php of every enabled extension, keyed "ext.{namespace}".
-     * Failures are silently skipped — a broken lang file must not take
-     * down every page.
+     * messages.php of every enabled extension, nested as ext.{namespace} so the
+     * frontend resolves t('ext.{namespace}.{key}'). Failures are silently
+     * skipped — a broken lang file must not take down every page.
      *
-     * @return array<string, array<string, mixed>>
+     * @return array{ext?: array<string, array<string, mixed>>}
      */
     private function extensionTranslations(): array
     {
@@ -110,7 +109,7 @@ class HandleInertiaRequests extends Middleware
                 return [];
             }
 
-            $result = [];
+            $ext = [];
 
             foreach (Extension::where('enabled', true)->get() as $extension) {
                 $manifest = $extension->metadata ?? [];
@@ -121,11 +120,13 @@ class HandleInertiaRequests extends Middleware
                 $messages = trans($namespace.'::messages');
 
                 if (is_array($messages)) {
-                    $result['ext.'.$namespace] = $messages;
+                    $ext[$namespace] = $messages;
                 }
             }
 
-            return $result;
+            // Nested under "ext" so the frontend's dotted resolver reaches
+            // t('ext.{namespace}.{key}') as translations.ext.{namespace}.{key}.
+            return $ext === [] ? [] : ['ext' => $ext];
         } catch (\Throwable) {
             return [];
         }
