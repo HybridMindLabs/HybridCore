@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AdminSidebar from '@/components/Admin/Sidebar.vue';
 import AdminTopbar from '@/components/Admin/Topbar.vue';
+import CommandPalette from '@/components/Admin/CommandPalette.vue';
 import ToastManager from '@/components/UI/ToastManager.vue';
 import { useFlashToast } from '@/composables/useFlashToast';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
@@ -30,5 +31,6 @@ useKeyboardShortcuts({
         </div>
 
         <ToastManager />
+        <CommandPalette />
     </div>
 </template>

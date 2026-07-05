@@ -6,6 +6,7 @@ use App\Mail\DigestMail;
 use App\Models\NewsArticle;
 use App\Models\Server;
 use App\Models\User;
+use App\Services\Extensions\Registries\ScheduledReportRegistry;
 use App\Services\Mail\EmailLogService;
 use App\Services\Mail\MailConfigService;
 use Illuminate\Console\Command;
@@ -100,6 +101,14 @@ class EmailDigestCommand extends Command
                 $name = $server->name ?? $server->address;
                 $items[] = '<li>New server: '.e($name).($server->game ? ' ('.e($server->game->name).')' : '').'</li>';
             }
+        }
+
+        // Extension-contributed digest rows (text is escaped; optional link).
+        foreach (app(ScheduledReportRegistry::class)->collect() as $row) {
+            $text = e($row['text']);
+            $items[] = $row['url']
+                ? '<li><a href="'.e($row['url']).'">'.$text.'</a></li>'
+                : '<li>'.$text.'</li>';
         }
 
         return implode('', $items);

@@ -36,11 +36,14 @@ interface Profile {
 interface ActivityItem { type: string; params: Record<string, string | number>; at: string; url: string | null }
 interface MiniUser { username: string | null; name: string; avatar: string | null }
 
+interface ExtensionPanel { key: string; label: string; icon: string; component: string; props: Record<string, unknown> }
+
 const props = defineProps<{
     profile: Profile;
     activity: ActivityItem[];
     followers: MiniUser[];
     following: MiniUser[];
+    extensionPanels?: ExtensionPanel[];
 }>();
 
 const openFollowList = ref<'followers' | 'following' | null>(null);
@@ -390,6 +393,15 @@ function toggleBlock() {
                 </div>
 
             </div>
+
+            <!-- Extension-registered profile panels -->
+            <component
+                v-for="panel in (extensionPanels ?? [])"
+                :key="panel.key"
+                :is="panel.component"
+                v-bind="panel.props"
+                class="mt-4"
+            />
 
             <!-- Recent activity -->
             <div v-if="activity.length" class="rounded-2xl border overflow-hidden mt-4"

@@ -4,19 +4,27 @@ import PublicLayout from '@/layouts/PublicLayout.vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
 import { computed, ref } from 'vue';
-import { User, MapPin, FileText, Gamepad2, Check, ChevronRight, ChevronLeft, Sparkles, Users } from '@lucide/vue';
+import { User, MapPin, FileText, Gamepad2, Check, ChevronRight, ChevronLeft, Sparkles, Users, ThumbsUp, Gift, Trophy } from '@lucide/vue';
+import type { Component } from 'vue';
 
 interface Game { id: number; name: string; icon: string | null; color: string | null }
 interface SuggestedMember { id: number; username: string; name: string; avatar: string | null; is_online: boolean }
+interface ExtStep { key: string; component: string; title: string; icon: string }
 
-const props = defineProps<{ games: Game[]; suggestedMembers: SuggestedMember[] }>();
+const props = defineProps<{ games: Game[]; suggestedMembers: SuggestedMember[]; extensionSteps?: ExtStep[] }>();
 
 const { theme } = useTheme();
 const { t } = useLocale();
 const dark = computed(() => theme.value === 'dark');
 
+const CORE_STEPS = 4;
+const extSteps = computed(() => props.extensionSteps ?? []);
+const totalSteps = computed(() => CORE_STEPS + extSteps.value.length);
+
+const extStepIcons: Record<string, Component> = { Sparkles, ThumbsUp, Gift, Trophy, Users };
+function extStepIcon(name: string): Component { return extStepIcons[name] ?? Sparkles; }
+
 const step = ref(1);
-const totalSteps = 4;
 
 const form = useForm({
     display_name: '',
@@ -47,7 +55,7 @@ function avatarBg(name: string) {
     return colors[(name.charCodeAt(0) ?? 0) % colors.length];
 }
 
-function next() { if (step.value < totalSteps) step.value++; }
+function next() { if (step.value < totalSteps.value) step.value++; }
 function prev() { if (step.value > 1) step.value--; }
 function skip() { form.post(route('onboarding.complete')); }
 
@@ -60,6 +68,7 @@ const steps = computed(() => [
     { title: t('onboarding.step2_title'), icon: Gamepad2 },
     { title: t('onboarding.step3_title'), icon: FileText },
     { title: t('onboarding.step4_title'), icon: Users },
+    ...extSteps.value.map((s) => ({ title: s.title, icon: extStepIcon(s.icon) })),
 ]);
 </script>
 
@@ -192,6 +201,11 @@ const steps = computed(() => [
                     <p v-if="suggestedMembers.length" class="text-[11px] mt-3" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">
                         {{ t('onboarding.follow_hint') }}
                     </p>
+                </div>
+
+                <!-- Extension-registered steps -->
+                <div v-else-if="step > 4 && extSteps[step - 5]" :key="extSteps[step - 5].key" class="p-6">
+                    <component :is="extSteps[step - 5].component" />
                 </div>
 
                 <!-- Footer nav -->

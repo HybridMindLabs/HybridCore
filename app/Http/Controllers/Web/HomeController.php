@@ -11,6 +11,7 @@ use App\Models\ServerReview;
 use App\Models\User;
 use App\Models\UserAchievement;
 use App\Services\AnalyticsService;
+use App\Services\Extensions\Registries\ActivityFeedRegistry;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -187,6 +188,19 @@ class HomeController extends Controller
                             'url' => $achievement->user?->username ? route('profile.show', $achievement->user->username) : null,
                         ]);
                     });
+            }
+
+            // Extension-contributed activity (pre-localized `text` per row).
+            foreach (app(ActivityFeedRegistry::class)->collect(8) as $row) {
+                $items->push([
+                    'type' => $row['type'],
+                    'username' => $row['username'] ?? null,
+                    'avatar' => $row['avatar'] ?? null,
+                    'text' => $row['text'] ?? '',
+                    'params' => [],
+                    'at' => $row['at'] ?? null,
+                    'url' => $row['url'] ?? null,
+                ]);
             }
 
             return $items

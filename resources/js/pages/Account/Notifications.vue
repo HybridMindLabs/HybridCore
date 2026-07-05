@@ -1,8 +1,18 @@
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
-import { Bell, Check, Trash2, Mail, MessageSquare, AlertCircle } from '@lucide/vue';
+import { router, usePage } from '@inertiajs/vue3';
+import { Bell, Check, Trash2, Mail, MessageSquare, AlertCircle, ThumbsUp, Gift, Trophy, Award } from '@lucide/vue';
+import type { Component } from 'vue';
 import { useTheme } from '@/composables/useTheme';
 import { computed } from 'vue';
+
+// Extension-registered notification types (type => { icon, accent }).
+const page = usePage<{ notificationTypes?: Record<string, { icon: string; accent: string }> }>();
+const extTypes = computed(() => page.props.notificationTypes ?? {});
+const extIconMap: Record<string, Component> = { Bell, MessageSquare, ThumbsUp, Gift, Trophy, Award, AlertCircle };
+const accentText: Record<string, string> = {
+    blue: 'text-blue-400', emerald: 'text-emerald-400', amber: 'text-amber-400',
+    red: 'text-red-400', violet: 'text-violet-400', zinc: 'text-zinc-400',
+};
 
 interface NotifData {
     type: string;
@@ -42,10 +52,14 @@ function destroy(id: string) {
 function notifIcon(type: string) {
     if (type === 'new_message') return MessageSquare;
     if (type === 'system') return AlertCircle;
+    const ext = extTypes.value[type];
+    if (ext) return extIconMap[ext.icon] ?? Bell;
     return Bell;
 }
 function notifColor(n: Notif) {
     if (n.data.type === 'new_message') return 'text-blue-400';
+    const ext = extTypes.value[n.data.type];
+    if (ext) return accentText[ext.accent] ?? 'text-zinc-400';
     const lvl = n.data.level ?? 'info';
     return { info: 'text-blue-400', success: 'text-emerald-400', warning: 'text-amber-400', danger: 'text-red-400' }[lvl] ?? 'text-zinc-400';
 }

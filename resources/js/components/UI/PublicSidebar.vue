@@ -16,7 +16,7 @@ import { useLocale } from '@/composables/useLocale';
 interface GameStat { slug: string; name: string; players: number }
 
 interface Viewer { banner: string | null; role: { name: string; color: string } | null; achievements: string[] }
-interface CommunityActivityItem { type: string; username: string | null; avatar: string | null; params: Record<string, string | number>; at: string; url: string | null }
+interface CommunityActivityItem { type: string; username: string | null; avatar: string | null; params: Record<string, string | number>; text?: string; at: string; url: string | null }
 
 const props = defineProps<{
     gameStats: GameStat[];
@@ -73,6 +73,8 @@ const statsDisplay = computed(() => [
 ]);
 
 function activityLabel(item: CommunityActivityItem): string {
+    // Extension rows carry a pre-localized `text`.
+    if (item.text) return item.text;
     if (item.type === 'badge') {
         const key = 'achievements.' + String(item.params.badge_slug) + '.label';
         const badge = t(key);

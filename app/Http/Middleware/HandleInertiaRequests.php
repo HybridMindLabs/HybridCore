@@ -9,10 +9,15 @@ use App\Models\LegalPage;
 use App\Models\Menu;
 use App\Models\Server;
 use App\Services\Auth\OAuthProviderRegistry;
+use App\Services\Extensions\Registries\AccountTabRegistry;
 use App\Services\Extensions\Registries\FilterRegistry;
+use App\Services\Extensions\Registries\FooterLinkRegistry;
 use App\Services\Extensions\Registries\NavigationRegistry;
+use App\Services\Extensions\Registries\NotificationTypeRegistry;
 use App\Services\Extensions\Registries\PublicNavigationRegistry;
+use App\Services\Extensions\Registries\QuickActionRegistry;
 use App\Services\Extensions\Registries\SlotRegistry;
+use App\Services\Extensions\Registries\UserMenuRegistry;
 use App\Services\Localization\LocaleService;
 use App\Services\SettingsService;
 use App\Services\Themes\ThemeResolver;
@@ -31,6 +36,11 @@ class HandleInertiaRequests extends Middleware
         private readonly ThemeResolver $themeResolver,
         private readonly NavigationRegistry $navigation,
         private readonly PublicNavigationRegistry $publicNavigation,
+        private readonly AccountTabRegistry $accountTabs,
+        private readonly UserMenuRegistry $userMenu,
+        private readonly FooterLinkRegistry $footerLinks,
+        private readonly QuickActionRegistry $quickActions,
+        private readonly NotificationTypeRegistry $notificationTypes,
         private readonly SlotRegistry $slots,
         private readonly LocaleService $locales,
         private readonly OAuthProviderRegistry $oauth,
@@ -186,6 +196,32 @@ class HandleInertiaRequests extends Middleware
                 fn (array $item) => $item['permission'] === null
                     || (bool) $request->user()?->can($item['permission']),
             )),
+            // Extension-registered account-panel tabs (auth users only).
+            'accountTabs' => fn () => $request->user() ? array_values(array_filter(
+                $this->accountTabs->compose(),
+                fn (array $item) => $item['permission'] === null
+                    || (bool) $request->user()->can($item['permission']),
+            )) : [],
+            // Extension-registered user-dropdown links (auth users only).
+            'userMenu' => fn () => $request->user() ? array_values(array_filter(
+                $this->userMenu->compose(),
+                fn (array $item) => $item['permission'] === null
+                    || (bool) $request->user()->can($item['permission']),
+            )) : [],
+            // Extension-registered public footer links.
+            'footerNav' => fn () => array_values(array_filter(
+                $this->footerLinks->compose(),
+                fn (array $item) => $item['permission'] === null
+                    || (bool) $request->user()?->can($item['permission']),
+            )),
+            // Extension-registered admin command-palette actions (admins only).
+            'quickActions' => fn () => $request->user()?->is_admin ? array_values(array_filter(
+                $this->quickActions->compose(),
+                fn (array $item) => $item['permission'] === null
+                    || (bool) $request->user()->can($item['permission']),
+            )) : [],
+            // Extension notification-type styling (type => {icon, accent}).
+            'notificationTypes' => fn () => $request->user() ? $this->notificationTypes->compose() : [],
             'adminBadges' => fn () => $request->user()?->is_admin ? [
                 'unread_contact' => ContactMessage::whereNull('read_at')->count(),
             ] : [],

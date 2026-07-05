@@ -15,14 +15,15 @@
 6. [Admin Dashboard Widgets](#admin-dashboard-widgets)
 7. [Extension Settings Page](#extension-settings-page)
 8. [Page Slots — injecting into core pages](#page-slots--injecting-into-core-pages)
-9. [Routes](#routes)
-10. [Database Migrations](#database-migrations)
-11. [Translations](#translations)
-12. [Vue Pages (Inertia)](#vue-pages-inertia)
-13. [Slot Vue Components](#slot-vue-components)
-14. [Available Slot Names](#available-slot-names)
-15. [Naming Conventions](#naming-conventions)
-16. [Installation Checklist](#installation-checklist)
+9. [Frontend & UX Registries](#frontend--ux-registries)
+10. [Routes](#routes)
+11. [Database Migrations](#database-migrations)
+12. [Translations](#translations)
+13. [Vue Pages (Inertia)](#vue-pages-inertia)
+14. [Slot Vue Components](#slot-vue-components)
+15. [Available Slot Names](#available-slot-names)
+16. [Naming Conventions](#naming-conventions)
+17. [Installation Checklist](#installation-checklist)
 
 ---
 
@@ -381,6 +382,188 @@ extensions/{vendor}/{name}/resources/js/components/{ComponentName}.vue
 
 Vite discovers it automatically via `import.meta.glob` in `app.ts` and registers it globally
 by filename. No manual import needed.
+
+---
+
+## Frontend & UX Registries
+
+Beyond admin navigation and slots, the SDK exposes registries that let you plug
+into the **public site** and **user-facing** surfaces. All follow the same
+pattern: call `register(...)` from your provider's `boot()`, and core shares the
+result to the frontend with **per-user permission filtering** — a `permission`
+argument (where present) hides the item from users who lack it; `null` = everyone.
+Items whose named `route` does not exist are silently skipped, so a half-installed
+extension never crashes a page.
+
+### Public navigation (site header)
+
+```php
+$registry->publicNavigation()->register(
+    label: 'vote::messages.nav',   // translation key
+    route: 'vote.index',
+    icon:  'ThumbsUp',             // Lucide icon
+    sort:  60,
+    permission: null,
+);
+```
+
+### User dropdown menu
+
+```php
+$registry->userMenu()->register(
+    label: 'vote::messages.nav', route: 'vote.index', icon: 'Gift', sort: 60,
+);
+```
+
+### Footer links
+
+```php
+$registry->footerLinks()->register(
+    label: 'vote::messages.nav', route: 'vote.index', sort: 60,
+);
+```
+
+### Account-panel tab
+
+A tab in the authenticated user's account area (`/account`). It navigates to a
+route you own (guard it with `auth`), rendered inside your own page using
+`AccountPage`.
+
+```php
+$registry->accountTabs()->register(
+    key:   'votes',
+    label: 'vote::messages.account_tab',
+    route: 'account.vote.index',   // your own auth-guarded web route
+    icon:  'ThumbsUp',
+    sort:  60,
+);
+```
+
+### Public profile panel
+
+A panel on the public profile (`/u/{username}`), rendered by a global slot
+component fed props from your `data` closure (given the profile `User`).
+
+```php
+$registry->profileTabs()->register(
+    key:       'votes',
+    label:     'vote::messages.top_voters',
+    component: 'HybridcoreVoteProfilePanel',  // global slot component
+    data:      fn ($user) => ['points' => app(VoteService::class)->userPoints($user)],
+    icon:      'Trophy',
+    sort:      50,
+);
+```
+
+### Global search provider
+
+Contribute a grouped result set to the site-wide search (`/` shortcut). The
+resolver must be fast (indexed).
+
+```php
+$registry->search()->register(
+    key:      'vote_sites',
+    label:    'vote::messages.nav',
+    icon:     'ThumbsUp',
+    resolver: fn (string $term, int $limit) => VoteSite::where('is_active', true)
+        ->where('name', 'like', "%{$term}%")->limit($limit)->get()
+        ->map(fn ($s) => ['title' => $s->name, 'url' => route('vote.index'), 'meta' => "{$s->reward_points} pts"])
+        ->all(),
+    permission: null,
+);
+```
+
+### Admin command palette (Ctrl/Cmd+K)
+
+```php
+$registry->quickActions()->register(
+    label:      'vote::messages.settings',
+    route:      'admin.vote.settings',
+    icon:       'ThumbsUp',
+    permission: 'vote.manage',
+    keywords:   ['vote', 'voting', 'rewards'],  // extra search terms
+);
+```
+
+### Notification types
+
+Style your notifications with a consistent icon + accent. The notification's own
+stored `data` still supplies `message`, `action_url` and `action_label`.
+
+```php
+$registry->notificationTypes()->register(
+    type:   'vote.confirmed',       // matches data.type of your Notification
+    icon:   'ThumbsUp',
+    accent: 'emerald',              // blue | emerald | amber | red | violet | zinc
+);
+```
+
+Pair it with a standard Laravel database notification:
+
+```php
+public function toDatabase(object $notifiable): array
+{
+    return [
+        'type'         => 'vote.confirmed',
+        'message'      => trans('vote::messages.notif_confirmed', ['points' => $this->vote->points_awarded]),
+        'action_url'   => route('vote.index'),
+        'action_label' => trans('vote::messages.nav'),
+    ];
+}
+```
+
+Trigger it from a hook listener, e.g.:
+
+```php
+$registry->hooks()->listen('vote.confirmed', fn ($vote) => $vote->user?->notify(new VoteConfirmedNotification($vote)));
+```
+
+### Community activity feed
+
+Contribute rows to the home-sidebar activity feed. Each row carries a
+**pre-localized** `text`; `at` must be a `Carbon` instance (used for sorting).
+
+```php
+$registry->activityFeed()->register(
+    type:     'vote.confirmed',
+    resolver: fn (int $limit) => Vote::with('user')->latest()->limit($limit)->get()
+        ->map(fn ($v) => [
+            'username' => $v->user?->username,
+            'avatar'   => $v->user?->avatar,
+            'text'     => trans('vote::messages.feed_voted'),
+            'url'      => route('vote.index'),
+            'at'       => $v->created_at,
+        ])->all(),
+);
+```
+
+### Onboarding step
+
+Add a slide to the post-registration wizard. The step is a self-contained global
+slot component (persist any data through your own routes, not the core payload).
+The optional `when` guard skips the step when it returns false.
+
+```php
+$registry->onboardingSteps()->register(
+    key:       'vote_intro',
+    component: 'HybridcoreVoteOnboarding',   // global slot component
+    title:     'vote::messages.onboarding_title',
+    icon:      'ThumbsUp',
+    sort:      80,
+    when:      fn () => VoteSite::where('is_active', true)->exists(),
+);
+```
+
+### Weekly digest row
+
+Contribute rows to the weekly community email digest. Return **pre-localized**
+`text` (+ optional `url`); the digest command escapes it — never return raw HTML.
+
+```php
+$registry->scheduledReports()->register(fn () => [
+    ['text' => trans('vote::messages.digest_top', ['name' => $top]), 'url' => route('vote.index')],
+]);
+```
 
 ---
 

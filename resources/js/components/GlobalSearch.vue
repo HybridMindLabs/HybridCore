@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
-import { Search, X, User, Server, ArrowRight, Newspaper } from '@lucide/vue';
+import type { Component } from 'vue';
+import { Search, X, User, Server, ArrowRight, Newspaper, ThumbsUp, Gift, Trophy, Puzzle } from '@lucide/vue';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
+
+const extIcons: Record<string, Component> = { ThumbsUp, Gift, Trophy, Puzzle };
+function extIcon(name: string): Component { return extIcons[name] ?? Puzzle; }
 
 const open = ref(false);
 const query = ref('');
@@ -12,16 +16,20 @@ interface UserResult  { id: number; username: string; display_name: string; avat
 interface ServerResult { id: number; name: string; game: string | null; game_icon: string | null; url: string }
 interface ArticleResult { id: number; title: string; excerpt: string | null; url: string }
 
+interface ExtResultRow { title: string; url: string; meta?: string | null }
+interface ExtGroup { key: string; label: string; icon: string; results: ExtResultRow[] }
+
 const users    = ref<UserResult[]>([]);
 const servers  = ref<ServerResult[]>([]);
 const articles = ref<ArticleResult[]>([]);
-const hasResults = computed(() => users.value.length > 0 || servers.value.length > 0 || articles.value.length > 0);
+const extensions = ref<ExtGroup[]>([]);
+const hasResults = computed(() => users.value.length > 0 || servers.value.length > 0 || articles.value.length > 0 || extensions.value.length > 0);
 
 let debounce: ReturnType<typeof setTimeout> | null = null;
 
 watch(query, (val) => {
     if (debounce) clearTimeout(debounce);
-    if (val.length < 2) { users.value = []; servers.value = []; articles.value = []; return; }
+    if (val.length < 2) { users.value = []; servers.value = []; articles.value = []; extensions.value = []; return; }
     loading.value = true;
     debounce = setTimeout(async () => {
         try {
@@ -32,6 +40,7 @@ watch(query, (val) => {
             users.value    = json.users    ?? [];
             servers.value  = json.servers  ?? [];
             articles.value = json.articles ?? [];
+            extensions.value = json.extensions ?? [];
         } finally {
             loading.value = false;
         }
@@ -44,6 +53,7 @@ function show() {
     users.value = [];
     servers.value = [];
     articles.value = [];
+    extensions.value = [];
     setTimeout(() => inputRef.value?.focus(), 50);
 }
 function hide() { open.value = false; }
@@ -138,6 +148,23 @@ useKeyboardShortcuts({
                                 <div class="flex-1 min-w-0">
                                     <p class="text-zinc-200 text-[13px] font-semibold truncate">{{ a.title }}</p>
                                     <p v-if="a.excerpt" class="text-zinc-600 text-[11px] truncate">{{ a.excerpt }}</p>
+                                </div>
+                                <ArrowRight :size="12" :stroke-width="2" class="text-zinc-700 group-hover:text-zinc-400 shrink-0 transition-colors" />
+                            </a>
+                        </div>
+
+                        <!-- Extension-registered result groups -->
+                        <div v-for="group in extensions" :key="group.key">
+                            <p class="px-4 pt-3 pb-1.5 text-[10px] uppercase tracking-widest font-bold text-zinc-600">{{ group.label }}</p>
+                            <a v-for="(row, i) in group.results" :key="i" :href="row.url"
+                                class="flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-900/60 transition-colors group"
+                                @click="hide">
+                                <div class="w-7 h-7 rounded-lg shrink-0 bg-zinc-800 border border-zinc-700 flex items-center justify-center">
+                                    <component :is="extIcon(group.icon)" :size="12" :stroke-width="1.8" class="text-zinc-500" />
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-zinc-200 text-[13px] font-semibold truncate">{{ row.title }}</p>
+                                    <p v-if="row.meta" class="text-zinc-600 text-[11px] truncate">{{ row.meta }}</p>
                                 </div>
                                 <ArrowRight :size="12" :stroke-width="2" class="text-zinc-700 group-hover:text-zinc-400 shrink-0 transition-colors" />
                             </a>

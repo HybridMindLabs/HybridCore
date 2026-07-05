@@ -15,7 +15,7 @@ use Inertia\Response;
 
 class UpdateController extends Controller
 {
-    public const VERSION = '0.2.0';
+    public const VERSION = '0.3.0';
 
     public function __construct(
         private readonly ActivityLogService $activity,
