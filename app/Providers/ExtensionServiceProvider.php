@@ -8,6 +8,7 @@ use App\Services\Auth\OAuthProviderRegistry;
 use App\Services\Extensions\ExtensionAutoloader;
 use App\Services\Extensions\Registries\AccountTabRegistry;
 use App\Services\Extensions\Registries\ActivityFeedRegistry;
+use App\Services\Extensions\Registries\BridgeEventRegistry;
 use App\Services\Extensions\Registries\ExtensionRegistry;
 use App\Services\Extensions\Registries\FilterRegistry;
 use App\Services\Extensions\Registries\FooterLinkRegistry;
@@ -63,6 +64,7 @@ class ExtensionServiceProvider extends ServiceProvider
         $this->app->singleton(ActivityFeedRegistry::class);
         $this->app->singleton(OnboardingStepRegistry::class);
         $this->app->singleton(ScheduledReportRegistry::class);
+        $this->app->singleton(BridgeEventRegistry::class);
         $this->app->singleton(WidgetRegistry::class);
         $this->app->singleton(PermissionRegistry::class);
         $this->app->singleton(SettingsRegistry::class);

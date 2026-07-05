@@ -51,4 +51,24 @@ class BridgeController extends Controller
 
         return response()->json(['acked' => $acked]);
     }
+
+    /**
+     * Ingest a batch of telemetry/events reported by the game server.
+     *
+     *   { "events": [ { "id": "seq-42", "type": "player.kill", "at": 1699999999, "data": {...} } ] }
+     */
+    public function events(Request $request): JsonResponse
+    {
+        /** @var Server $server */
+        $server = $request->attributes->get('bridgeServer');
+
+        $data = $request->validate([
+            'events' => ['required', 'array', 'max:'.BridgeService::INGEST_LIMIT],
+            'events.*' => ['array'],
+        ]);
+
+        $accepted = $this->bridge->ingest($server, $data['events']);
+
+        return response()->json(['accepted' => $accepted]);
+    }
 }

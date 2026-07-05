@@ -30,6 +30,7 @@ class ExtensionRegistry
         private readonly ActivityFeedRegistry $activityFeed,
         private readonly OnboardingStepRegistry $onboardingSteps,
         private readonly ScheduledReportRegistry $scheduledReports,
+        private readonly BridgeEventRegistry $bridgeEvents,
         private readonly WidgetRegistry $widgets,
         private readonly PermissionRegistry $permissions,
         private readonly SettingsRegistry $settings,
@@ -41,6 +42,12 @@ class ExtensionRegistry
     public function filters(): FilterRegistry
     {
         return $this->filters;
+    }
+
+    /** Handlers for telemetry/events sent up from game servers via the bridge. */
+    public function bridgeEvents(): BridgeEventRegistry
+    {
+        return $this->bridgeEvents;
     }
 
     public function navigation(): NavigationRegistry
