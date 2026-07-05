@@ -27,6 +27,8 @@ class ExtensionRegistry
         private readonly FooterLinkRegistry $footerLinks,
         private readonly QuickActionRegistry $quickActions,
         private readonly NotificationTypeRegistry $notificationTypes,
+        private readonly ActivityFeedRegistry $activityFeed,
+        private readonly OnboardingStepRegistry $onboardingSteps,
         private readonly WidgetRegistry $widgets,
         private readonly PermissionRegistry $permissions,
         private readonly SettingsRegistry $settings,
@@ -91,6 +93,18 @@ class ExtensionRegistry
     public function notificationTypes(): NotificationTypeRegistry
     {
         return $this->notificationTypes;
+    }
+
+    /** Community activity-feed contributors (home sidebar). */
+    public function activityFeed(): ActivityFeedRegistry
+    {
+        return $this->activityFeed;
+    }
+
+    /** Extra steps in the post-registration onboarding wizard. */
+    public function onboardingSteps(): OnboardingStepRegistry
+    {
+        return $this->onboardingSteps;
     }
 
     public function widgets(): WidgetRegistry

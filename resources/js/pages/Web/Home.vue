@@ -40,7 +40,7 @@ const props = defineProps<{
     latestNews: NewsCard[];
     whoIsOnline: { users: OnlineUser[]; guests: number; bots: number } | null;
     activeToday: { users: OnlineUser[]; guests: number; bots: number } | null;
-    communityActivity: { type: string; username: string | null; avatar: string | null; params: Record<string, string | number>; at: string; url: string | null }[];
+    communityActivity: { type: string; username: string | null; avatar: string | null; params: Record<string, string | number>; text?: string; at: string; url: string | null }[];
     preferredGameSlugs: string[];
 }>();
 

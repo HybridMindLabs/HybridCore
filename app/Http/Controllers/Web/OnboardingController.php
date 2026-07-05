@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Game;
 use App\Models\User;
 use App\Notifications\NewFollowerNotification;
+use App\Services\Extensions\Registries\OnboardingStepRegistry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -23,6 +24,7 @@ class OnboardingController extends Controller
         return Inertia::render('Onboarding/Welcome', [
             'games' => $games,
             'suggestedMembers' => $this->suggestedMembers(),
+            'extensionSteps' => app(OnboardingStepRegistry::class)->compose(),
         ]);
     }
 
