@@ -54,6 +54,11 @@ Schedule::call(function () {
     app(BridgeService::class)->prune();
 })->daily()->name('prune-bridge-commands');
 
+// Purge old ingested bridge events (rolling telemetry log)
+Schedule::call(function () {
+    app(BridgeService::class)->pruneEvents();
+})->daily()->name('prune-bridge-events');
+
 // Heartbeats for the admin System Health page — see SystemHealthController::checks().
 Schedule::call(function () {
     Cache::put('health.scheduler_last_run', now()->toIso8601String(), now()->addHour());

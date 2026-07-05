@@ -36,4 +36,5 @@ Route::prefix('bridge')
     ->group(function () {
         Route::post('poll', [BridgeController::class, 'poll'])->name('api.bridge.poll');
         Route::post('ack', [BridgeController::class, 'ack'])->name('api.bridge.ack');
+        Route::post('events', [BridgeController::class, 'events'])->name('api.bridge.events');
     });
