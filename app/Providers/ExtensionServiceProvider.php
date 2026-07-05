@@ -12,6 +12,7 @@ use App\Services\Extensions\Registries\FilterRegistry;
 use App\Services\Extensions\Registries\FooterLinkRegistry;
 use App\Services\Extensions\Registries\HookRegistry;
 use App\Services\Extensions\Registries\NavigationRegistry;
+use App\Services\Extensions\Registries\NotificationTypeRegistry;
 use App\Services\Extensions\Registries\PermissionRegistry;
 use App\Services\Extensions\Registries\ProfileTabRegistry;
 use App\Services\Extensions\Registries\PublicNavigationRegistry;
@@ -55,6 +56,7 @@ class ExtensionServiceProvider extends ServiceProvider
         $this->app->singleton(SearchProviderRegistry::class);
         $this->app->singleton(FooterLinkRegistry::class);
         $this->app->singleton(QuickActionRegistry::class);
+        $this->app->singleton(NotificationTypeRegistry::class);
         $this->app->singleton(WidgetRegistry::class);
         $this->app->singleton(PermissionRegistry::class);
         $this->app->singleton(SettingsRegistry::class);

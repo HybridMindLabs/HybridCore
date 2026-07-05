@@ -26,6 +26,7 @@ class ExtensionRegistry
         private readonly SearchProviderRegistry $search,
         private readonly FooterLinkRegistry $footerLinks,
         private readonly QuickActionRegistry $quickActions,
+        private readonly NotificationTypeRegistry $notificationTypes,
         private readonly WidgetRegistry $widgets,
         private readonly PermissionRegistry $permissions,
         private readonly SettingsRegistry $settings,
@@ -84,6 +85,12 @@ class ExtensionRegistry
     public function quickActions(): QuickActionRegistry
     {
         return $this->quickActions;
+    }
+
+    /** Notification-type styling (icon + accent) for extension notifications. */
+    public function notificationTypes(): NotificationTypeRegistry
+    {
+        return $this->notificationTypes;
     }
 
     public function widgets(): WidgetRegistry

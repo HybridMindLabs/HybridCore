@@ -13,6 +13,7 @@ use App\Services\Extensions\Registries\AccountTabRegistry;
 use App\Services\Extensions\Registries\FilterRegistry;
 use App\Services\Extensions\Registries\FooterLinkRegistry;
 use App\Services\Extensions\Registries\NavigationRegistry;
+use App\Services\Extensions\Registries\NotificationTypeRegistry;
 use App\Services\Extensions\Registries\PublicNavigationRegistry;
 use App\Services\Extensions\Registries\QuickActionRegistry;
 use App\Services\Extensions\Registries\SlotRegistry;
@@ -39,6 +40,7 @@ class HandleInertiaRequests extends Middleware
         private readonly UserMenuRegistry $userMenu,
         private readonly FooterLinkRegistry $footerLinks,
         private readonly QuickActionRegistry $quickActions,
+        private readonly NotificationTypeRegistry $notificationTypes,
         private readonly SlotRegistry $slots,
         private readonly LocaleService $locales,
         private readonly OAuthProviderRegistry $oauth,
@@ -218,6 +220,8 @@ class HandleInertiaRequests extends Middleware
                 fn (array $item) => $item['permission'] === null
                     || (bool) $request->user()->can($item['permission']),
             )) : [],
+            // Extension notification-type styling (type => {icon, accent}).
+            'notificationTypes' => fn () => $request->user() ? $this->notificationTypes->compose() : [],
             'adminBadges' => fn () => $request->user()?->is_admin ? [
                 'unread_contact' => ContactMessage::whereNull('read_at')->count(),
             ] : [],
