@@ -106,7 +106,7 @@ LEMP stack, etc.).
 ### First-time setup
 
 ```bash
-git clone <repo-url> hybridcore
+git clone https://github.com/HybridMindLabs/HybridCore.git hybridcore
 cd hybridcore
 
 composer install
