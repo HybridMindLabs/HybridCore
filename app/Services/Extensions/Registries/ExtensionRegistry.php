@@ -25,6 +25,7 @@ class ExtensionRegistry
         private readonly UserMenuRegistry $userMenu,
         private readonly SearchProviderRegistry $search,
         private readonly FooterLinkRegistry $footerLinks,
+        private readonly QuickActionRegistry $quickActions,
         private readonly WidgetRegistry $widgets,
         private readonly PermissionRegistry $permissions,
         private readonly SettingsRegistry $settings,
@@ -77,6 +78,12 @@ class ExtensionRegistry
     public function footerLinks(): FooterLinkRegistry
     {
         return $this->footerLinks;
+    }
+
+    /** Admin command-palette (Ctrl/Cmd+K) quick actions. */
+    public function quickActions(): QuickActionRegistry
+    {
+        return $this->quickActions;
     }
 
     public function widgets(): WidgetRegistry

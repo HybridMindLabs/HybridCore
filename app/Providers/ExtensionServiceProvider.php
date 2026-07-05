@@ -15,6 +15,7 @@ use App\Services\Extensions\Registries\NavigationRegistry;
 use App\Services\Extensions\Registries\PermissionRegistry;
 use App\Services\Extensions\Registries\ProfileTabRegistry;
 use App\Services\Extensions\Registries\PublicNavigationRegistry;
+use App\Services\Extensions\Registries\QuickActionRegistry;
 use App\Services\Extensions\Registries\SearchProviderRegistry;
 use App\Services\Extensions\Registries\SettingsRegistry;
 use App\Services\Extensions\Registries\SlotRegistry;
@@ -53,6 +54,7 @@ class ExtensionServiceProvider extends ServiceProvider
         $this->app->singleton(UserMenuRegistry::class);
         $this->app->singleton(SearchProviderRegistry::class);
         $this->app->singleton(FooterLinkRegistry::class);
+        $this->app->singleton(QuickActionRegistry::class);
         $this->app->singleton(WidgetRegistry::class);
         $this->app->singleton(PermissionRegistry::class);
         $this->app->singleton(SettingsRegistry::class);
