@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Controllers\Admin\UpdateController;
 use App\Models\ContactMessage;
 use App\Models\Extension;
 use App\Models\Game;
@@ -172,6 +173,7 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'app' => [
                 'name' => $this->settings->appName(),
+                'version' => UpdateController::VERSION,
                 'theme' => fn () => $this->resolveThemeProps(),
             ],
             'socialLinks' => fn () => array_filter([

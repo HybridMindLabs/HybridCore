@@ -91,7 +91,7 @@ class InstallerAccessTest extends TestCase
             $mock->shouldReceive('testDatabaseConnection')
                 ->once()
                 ->with('db', 3306, 'db', 'db', 'db')
-                ->andReturn(true);
+                ->andReturnNull(); // null = connected
         });
 
         $this->post('/install/database', [
@@ -108,7 +108,7 @@ class InstallerAccessTest extends TestCase
         $this->mock(InstallerService::class, function (Mockery\MockInterface $mock) {
             $mock->shouldReceive('testDatabaseConnection')
                 ->once()
-                ->andReturn(false);
+                ->andReturn("Access denied for user 'wrong_user'@'localhost'");
         });
 
         $this->post('/install/database', [
@@ -118,6 +118,12 @@ class InstallerAccessTest extends TestCase
             'db_username' => 'wrong_user',
             'db_password' => 'wrong_pass',
         ])->assertSessionHasErrors('db_host');
+
+        // The driver's reason reaches the user — that is the whole point.
+        $this->assertStringContainsString(
+            'Access denied',
+            session('errors')->first('db_host'),
+        );
     }
 
     public function test_database_step_rejects_invalid_port(): void

@@ -56,6 +56,28 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Most self-hosted installs sit behind Cloudflare, a load balancer or
+        // some other reverse proxy. The origin then sees a plain HTTP request
+        // from the proxy's IP, so without honouring the forwarded headers
+        // Laravel builds http:// URLs for an https:// site — redirects get
+        // blocked as mixed content — and every visitor shares the proxy's
+        // address, which quietly breaks rate limiting and IP bans.
+        //
+        // Defaults to trusting any proxy, because we cannot know the owner's
+        // topology. Set TRUSTED_PROXIES to a comma-separated list to restrict
+        // it (recommended when the origin is reachable directly, since a
+        // trusted proxy is allowed to declare the client's IP).
+        $trustedProxies = (string) env('TRUSTED_PROXIES', '*');
+
+        $middleware->trustProxies(
+            at: $trustedProxies === '*' ? '*' : array_map('trim', explode(',', $trustedProxies)),
+            headers: Request::HEADER_X_FORWARDED_FOR
+                | Request::HEADER_X_FORWARDED_HOST
+                | Request::HEADER_X_FORWARDED_PORT
+                | Request::HEADER_X_FORWARDED_PROTO
+                | Request::HEADER_X_FORWARDED_AWS_ELB,
+        );
+
         $middleware->append(SecurityHeaders::class);
 
         $middleware->web(append: [

@@ -74,7 +74,15 @@ class InstallerService
         return true;
     }
 
-    public function testDatabaseConnection(string $host, int $port, string $database, string $username, string $password): bool
+    /**
+     * Try to reach the database.
+     *
+     * Returns null on success, otherwise the reason it failed. The caller shows
+     * that reason verbatim: "check your credentials" is useless advice when the
+     * real answer is "unknown database" or "host unreachable", and the person
+     * installing has no logs to fall back on yet.
+     */
+    public function testDatabaseConnection(string $host, int $port, string $database, string $username, string $password): ?string
     {
         config([
             'database.connections.installer_test' => [
@@ -97,9 +105,12 @@ class InstallerService
             DB::purge('installer_test');
             DB::connection('installer_test')->select('SELECT 1');
 
-            return true;
-        } catch (Throwable) {
-            return false;
+            return null;
+        } catch (Throwable $e) {
+            // Prefer the driver's own message ("Access denied…", "Unknown
+            // database…"); it names the actual problem. It never contains the
+            // password — only the username and whether one was supplied.
+            return $e->getPrevious()?->getMessage() ?? $e->getMessage();
         } finally {
             DB::disconnect('installer_test');
         }
