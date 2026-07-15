@@ -27,8 +27,20 @@ return Application::configure(basePath: dirname(__DIR__))
         channels: __DIR__.'/../routes/channels.php',
         health: '/up',
         then: function (): void {
-            // Installer — accessible only when not yet installed
+            // Installer — accessible only when not yet installed.
+            //
+            // Every middleware that touches the database is excluded: before
+            // installation there is no database to touch, and the installer is
+            // precisely the page that must render when the database is absent
+            // or misconfigured. None of them are meaningful here anyway —
+            // there are no analytics, bans, or maintenance flags to read yet.
             Route::middleware(['web', RedirectIfInstalled::class])
+                ->withoutMiddleware([
+                    EnsureNotInMaintenance::class,
+                    TrackPageView::class,
+                    TrackLastSeen::class,
+                    CheckIpBan::class,
+                ])
                 ->prefix('install')
                 ->group(base_path('routes/installer.php'));
 

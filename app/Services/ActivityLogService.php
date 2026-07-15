@@ -18,7 +18,14 @@ class ActivityLogService
         ?Model $subject = null,
         ?array $properties = null,
     ): void {
-        if (! Schema::hasTable((new ActivityLog)->getTable())) {
+        try {
+            if (! Schema::hasTable((new ActivityLog)->getTable())) {
+                return;
+            }
+        } catch (\Throwable) {
+            // No reachable database — Schema::hasTable() throws rather than
+            // returning false. Logging is best-effort and must never break the
+            // action it is recording.
             return;
         }
 
