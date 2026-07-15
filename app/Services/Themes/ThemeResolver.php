@@ -25,13 +25,20 @@ class ThemeResolver
      */
     public function resolve(): ?Theme
     {
-        if (! Schema::hasTable('themes')) {
+        try {
+            if (! Schema::hasTable('themes')) {
+                return null;
+            }
+
+            return Theme::where('active', true)->first()
+                ?? Theme::where('slug', 'default')->first()
+                ?? Theme::whereNotNull('installed_at')->first();
+        } catch (\Throwable) {
+            // No reachable database (fresh install, outage). Schema::hasTable()
+            // throws rather than returning false here, so the check above is not
+            // enough on its own. Callers fall back to the default theme.
             return null;
         }
-
-        return Theme::where('active', true)->first()
-            ?? Theme::where('slug', 'default')->first()
-            ?? Theme::whereNotNull('installed_at')->first();
     }
 
     public function activeSlug(): string

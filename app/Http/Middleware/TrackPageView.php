@@ -21,22 +21,29 @@ class TrackPageView
     {
         $response = $next($request);
 
-        if ($this->shouldTrack($request, $response)) {
-            $data = [
-                'session_id' => substr(session()->getId(), 0, 40),
-                'user_id' => $request->user()?->id,
-                'ip_hash' => hash('sha256', $request->ip()),
-                'path' => substr($request->path(), 0, 500),
-                'route_name' => $request->route()?->getName(),
-                'device_type' => $this->deviceType($request->userAgent() ?? ''),
-                'country_code' => null,
-                'is_bot' => $this->isBot($request->userAgent() ?? ''),
-            ];
+        // Analytics is best-effort. A tracking failure — unreachable database,
+        // missing table on a fresh checkout — must never take down the page the
+        // visitor actually asked for.
+        try {
+            if ($this->shouldTrack($request, $response)) {
+                $data = [
+                    'session_id' => substr(session()->getId(), 0, 40),
+                    'user_id' => $request->user()?->id,
+                    'ip_hash' => hash('sha256', $request->ip()),
+                    'path' => substr($request->path(), 0, 500),
+                    'route_name' => $request->route()?->getName(),
+                    'device_type' => $this->deviceType($request->userAgent() ?? ''),
+                    'country_code' => null,
+                    'is_bot' => $this->isBot($request->userAgent() ?? ''),
+                ];
 
-            // Write after response is sent — zero latency impact on the user
-            app()->terminating(static function () use ($data): void {
-                PageView::create($data);
-            });
+                // Write after response is sent — zero latency impact on the user
+                app()->terminating(static function () use ($data): void {
+                    rescue(fn () => PageView::create($data), report: false);
+                });
+            }
+        } catch (\Throwable) {
+            // Swallowed by design — see above.
         }
 
         return $response;
