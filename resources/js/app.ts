@@ -7,17 +7,28 @@ import Pusher from 'pusher-js';
 import ExtensionSlot from '@/components/Core/ExtensionSlot.vue';
 
 // ── Laravel Echo (Reverb) ─────────────────────────────────────────────────────
-(window as unknown as Record<string, unknown>).Pusher = Pusher;
-(window as unknown as Record<string, unknown>).Echo = new Echo({
-    broadcaster: 'reverb',
-    key: import.meta.env.VITE_REVERB_APP_KEY,
-    wsHost: import.meta.env.VITE_REVERB_HOST,
-    wsPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
-    wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
-    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
-    enabledTransports: ['ws', 'wss'],
-    disableStats: true,
-});
+//
+// Optional. Reverb needs a websocket server the owner has to run themselves,
+// and there are no credentials at all before installation — so without a key
+// we leave window.Echo undefined rather than letting Pusher throw on every
+// page. Every consumer already treats Echo as possibly-absent and degrades to
+// no live updates.
+
+const reverbKey = import.meta.env.VITE_REVERB_APP_KEY;
+
+if (reverbKey) {
+    (window as unknown as Record<string, unknown>).Pusher = Pusher;
+    (window as unknown as Record<string, unknown>).Echo = new Echo({
+        broadcaster: 'reverb',
+        key: reverbKey,
+        wsHost: import.meta.env.VITE_REVERB_HOST,
+        wsPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
+        wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
+        forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
+        enabledTransports: ['ws', 'wss'],
+        disableStats: true,
+    });
+}
 
 // ── Theme resolution ──────────────────────────────────────────────────────────
 //
