@@ -12,6 +12,7 @@ use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\TrackLastSeen;
 use App\Http\Middleware\TrackPageView;
 use App\Services\Installer\InstallationStateService;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -80,4 +81,18 @@ return Application::configure(basePath: dirname(__DIR__))
             // Precognition validation pings expect JSON regardless of path.
             fn (Request $request) => $request->is('api/*') || $request->isPrecognitive(),
         );
+
+        // Safety net: before installation, any stray database error becomes a
+        // redirect to the installer instead of a raw 500. The installer itself
+        // is exempt so its own connection test errors still surface properly.
+        $exceptions->render(function (QueryException $e, Request $request) {
+            $installed = file_exists(storage_path('installed.lock'))
+                || (bool) config('app.installed', false);
+
+            if (! $installed && ! $request->is('install*') && ! $request->expectsJson()) {
+                return redirect('/install');
+            }
+
+            return null; // default handling
+        });
     })->create();

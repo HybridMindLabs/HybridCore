@@ -134,7 +134,12 @@ class HandleInertiaRequests extends Middleware
 
     private function resolveMenus(): array
     {
-        return Cache::remember(self::MENUS_CACHE_KEY, 3600, fn () => $this->buildMenus());
+        try {
+            return Cache::remember(self::MENUS_CACHE_KEY, 3600, fn () => $this->buildMenus());
+        } catch (\Throwable) {
+            // Database unreachable (installer / outage) — render without menus.
+            return [];
+        }
     }
 
     /** @return array<string, array<int, array<string, string>>> */
@@ -263,16 +268,16 @@ class HandleInertiaRequests extends Middleware
                 'bridge_token' => fn () => $request->session()->get('bridge_token'),
             ],
             'oauthProviders' => fn () => $this->oauth->compose(),
-            'legalPages' => fn () => Cache::remember(
+            'legalPages' => fn () => rescue(fn () => Cache::remember(
                 self::LEGAL_PAGES_CACHE_KEY,
                 3600,
                 fn () => LegalPage::orderBy('sort_order')->orderBy('id')
                     ->limit(5)
                     ->get(['slug', 'title'])
                     ->toArray(),
-            ),
+            ), [], report: false),
             'menus' => fn () => $this->resolveMenus(),
-            'authShell' => fn () => $this->resolveAuthShell(),
+            'authShell' => fn () => rescue(fn () => $this->resolveAuthShell(), null, report: false),
         ];
 
         // Extensions may add or reshape shared props via the filter chain.
