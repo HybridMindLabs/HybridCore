@@ -1,7 +1,12 @@
 ﻿<script setup lang="ts">
+import { computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
+
 interface Step { number: number; label: string }
 
 defineProps<{ currentStep: number }>();
+
+const version = computed(() => (usePage().props.app as { version?: string })?.version ?? '');
 
 const steps: Step[] = [
     { number: 1, label: 'Welcome'      },
@@ -24,7 +29,7 @@ const steps: Step[] = [
                 </div>
                 <span class="text-zinc-200 text-sm font-semibold">HybridCore Installer</span>
             </div>
-            <span class="text-zinc-600 text-xs font-mono">v0.2.0</span>
+            <span v-if="version" class="text-zinc-600 text-xs font-mono">v{{ version }}</span>
         </header>
 
         <!-- Step indicator -->

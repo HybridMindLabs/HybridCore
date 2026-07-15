@@ -64,7 +64,7 @@ class InstallerController extends Controller
     {
         $data = $request->validated();
 
-        $connected = $this->installer->testDatabaseConnection(
+        $failure = $this->installer->testDatabaseConnection(
             $data['db_host'],
             (int) $data['db_port'],
             $data['db_database'],
@@ -72,9 +72,9 @@ class InstallerController extends Controller
             $data['db_password'] ?? '',
         );
 
-        if (! $connected) {
+        if ($failure !== null) {
             return back()->withErrors([
-                'db_host' => 'Could not connect to the database. Please check the credentials and try again.',
+                'db_host' => 'Could not connect to the database: '.$failure,
             ])->withInput();
         }
 
