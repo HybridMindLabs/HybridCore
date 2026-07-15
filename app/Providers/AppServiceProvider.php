@@ -24,7 +24,37 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->forceSafeDriversUntilInstalled();
+    }
+
+    /**
+     * Before installation completes, force drivers that don't need a working
+     * database (file sessions/cache, sync queue). Otherwise a fresh clone with
+     * SESSION_DRIVER=database dies on "select * from sessions" before the
+     * installer can even render.
+     *
+     * Deliberately checks only the lock file and the .env flag — probing the
+     * database here would recreate the exact failure this guards against.
+     * Skipped in tests so the suite keeps its configured array/sync drivers.
+     */
+    private function forceSafeDriversUntilInstalled(): void
+    {
+        if ($this->app->runningUnitTests()) {
+            return;
+        }
+
+        $installed = file_exists(storage_path('installed.lock'))
+            || (bool) config('app.installed', false);
+
+        if ($installed) {
+            return;
+        }
+
+        config([
+            'session.driver' => 'file',
+            'cache.default' => 'file',
+            'queue.default' => 'sync',
+        ]);
     }
 
     public function boot(OAuthProviderRegistry $oauth): void

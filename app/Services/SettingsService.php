@@ -57,11 +57,18 @@ class SettingsService
     public function all(): array
     {
         return Cache::remember(self::CACHE_KEY, 3600, function () {
-            if (! Schema::hasTable('settings')) {
+            try {
+                if (! Schema::hasTable('settings')) {
+                    return [];
+                }
+
+                return Setting::all()->pluck('value', 'key')->toArray();
+            } catch (\Throwable) {
+                // Database unreachable/misconfigured (fresh install, outage):
+                // fall back to defaults so pages — the installer above all —
+                // can still render instead of dying on a settings read.
                 return [];
             }
-
-            return Setting::all()->pluck('value', 'key')->toArray();
         });
     }
 
