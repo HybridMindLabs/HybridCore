@@ -143,14 +143,14 @@ class SystemHealthController extends Controller
             label: 'Scheduler',
             cacheKey: 'health.scheduler_last_run',
             staleAfterMinutes: 3,
-            missingDetail: 'No heartbeat yet — cron isn\'t calling "php artisan schedule:run" every minute.',
+            missingDetail: 'No heartbeat yet — nothing is running the scheduler. Run "php artisan hybridcore:systemd" for a service that does.',
         );
 
         $checks[] = $this->heartbeatCheck(
             label: 'Queue Worker',
             cacheKey: 'health.queue_worker_last_run',
             staleAfterMinutes: 3,
-            missingDetail: 'No heartbeat yet — no worker has processed a job ("php artisan queue:work").',
+            missingDetail: 'No heartbeat yet — no worker has processed a job. Run "php artisan hybridcore:systemd" for a service that keeps one running.',
         );
 
         $checks[] = $this->reverbCheck();
