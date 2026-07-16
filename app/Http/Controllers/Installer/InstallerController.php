@@ -127,6 +127,20 @@ class InstallerController extends Controller
         return redirect()->route('installer.finish');
     }
 
+    /** A public username derived from the admin's name, suffixed until it's free. */
+    private function availableUsernameFor(string $name): string
+    {
+        $base = preg_replace('/[^a-z0-9_-]/i', '', strtolower(explode(' ', $name)[0])) ?: 'admin';
+        $username = $base;
+        $suffix = 2;
+
+        while (User::where('username', $username)->exists()) {
+            $username = $base.'_'.$suffix++;
+        }
+
+        return $username;
+    }
+
     public function finish(Request $request): Response
     {
         $database = $request->session()->get('installer.database');
@@ -168,19 +182,32 @@ class InstallerController extends Controller
                 ->withErrors(['error' => 'Installation data is incomplete. Please restart the installer.']);
         }
 
-        // 1. Write environment values
-        $this->installer->writeEnvValues([
-            'APP_NAME' => $settings['app_name'],
-            'APP_URL' => $settings['app_url'],
-            'APP_LOCALE' => $settings['app_locale'],
-            'APP_TIMEZONE' => $settings['app_timezone'],
-            'DB_CONNECTION' => 'mysql',
-            'DB_HOST' => $database['db_host'],
-            'DB_PORT' => $database['db_port'],
-            'DB_DATABASE' => $database['db_database'],
-            'DB_USERNAME' => $database['db_username'],
-            'DB_PASSWORD' => $database['db_password'] ?? '',
-        ]);
+        // 1. Write environment values. A failure here is almost always file
+        //    ownership, so say so — an unhandled 500 sends people looking for a
+        //    log that the same permissions problem often prevents writing.
+        try {
+            $this->installer->writeEnvValues([
+                'APP_NAME' => $settings['app_name'],
+                'APP_URL' => $settings['app_url'],
+                'APP_LOCALE' => $settings['app_locale'],
+                'APP_TIMEZONE' => $settings['app_timezone'],
+                'DB_CONNECTION' => 'mysql',
+                'DB_HOST' => $database['db_host'],
+                'DB_PORT' => $database['db_port'],
+                'DB_DATABASE' => $database['db_database'],
+                'DB_USERNAME' => $database['db_username'],
+                'DB_PASSWORD' => $database['db_password'] ?? '',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Installer: writing .env failed', [
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('installer.finish')->withErrors([
+                'error' => 'Could not write to the .env file. Give it to the user PHP runs as, then try again — the Requirements step names that user and the exact command.',
+            ]);
+        }
 
         // 2. Reconfigure the default mysql connection at runtime so migrations
         //    run against the correct DB. Purge first so Laravel discards any
@@ -212,21 +239,30 @@ class InstallerController extends Controller
                 ->withErrors(['error' => 'Database migration failed. Check the database credentials and database server logs, then try again.']);
         }
 
-        // 5. Create the first admin user and log them in
-        $adminBase = preg_replace('/[^a-z0-9_-]/i', '', strtolower(explode(' ', $admin['name'])[0])) ?: 'admin';
-        $adminUsername = $adminBase;
-        $ai = 2;
-        while (User::where('username', $adminUsername)->exists()) {
-            $adminUsername = $adminBase.'_'.$ai++;
-        }
+        // 5. Create the first admin user and log them in.
+        //
+        // Keyed on the email address so a retry after a failed install updates
+        // that account instead of colliding with it. Every other step here is
+        // already safe to repeat — writing .env, migrating, seeding — and this
+        // one has to be too, or a failure at any later point leaves the install
+        // permanently unable to finish.
+        $user = User::where('email', $admin['email'])->first();
 
-        $user = User::create([
-            'name' => $admin['name'],
-            'username' => $adminUsername,
-            'email' => $admin['email'],
-            'password' => Hash::make($admin['password']),
-            'is_admin' => true,
-        ]);
+        if ($user !== null) {
+            $user->update([
+                'name' => $admin['name'],
+                'password' => Hash::make($admin['password']),
+                'is_admin' => true,
+            ]);
+        } else {
+            $user = User::create([
+                'name' => $admin['name'],
+                'username' => $this->availableUsernameFor($admin['name']),
+                'email' => $admin['email'],
+                'password' => Hash::make($admin['password']),
+                'is_admin' => true,
+            ]);
+        }
 
         Auth::login($user);
 
