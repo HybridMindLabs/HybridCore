@@ -42,12 +42,30 @@ class InstallerAccessTest extends TestCase
 
     public function test_installer_admin_step_accessible(): void
     {
-        $this->get('/install/admin')->assertStatus(200);
+        $this->get('/install/account')->assertStatus(200);
     }
 
     public function test_installer_settings_step_accessible(): void
     {
         $this->get('/install/settings')->assertStatus(200);
+    }
+
+    /**
+     * No installer URL may contain "/admin". Cloudflare's managed rules and
+     * many shared hosts block such paths before they reach PHP, which 403'd
+     * this step with nothing in the log to explain it.
+     */
+    public function test_no_installer_route_uses_an_admin_path(): void
+    {
+        $paths = collect(app('router')->getRoutes())
+            ->filter(fn ($route) => str_starts_with($route->uri(), 'install'))
+            ->map(fn ($route) => $route->uri());
+
+        $this->assertNotEmpty($paths, 'Installer routes should be registered.');
+
+        foreach ($paths as $path) {
+            $this->assertStringNotContainsString('admin', $path, "Installer route [$path] uses a commonly blocked path.");
+        }
     }
 
     public function test_installer_finish_step_accessible(): void
@@ -100,7 +118,7 @@ class InstallerAccessTest extends TestCase
             'db_database' => 'db',
             'db_username' => 'db',
             'db_password' => 'db',
-        ])->assertRedirect('/install/admin');
+        ])->assertRedirect('/install/account');
     }
 
     public function test_database_step_returns_error_on_failed_connection(): void
@@ -138,14 +156,14 @@ class InstallerAccessTest extends TestCase
 
     public function test_admin_step_validates_required_fields(): void
     {
-        $this->post('/install/admin', [])->assertSessionHasErrors([
+        $this->post('/install/account', [])->assertSessionHasErrors([
             'name', 'email', 'password',
         ]);
     }
 
     public function test_admin_step_rejects_password_mismatch(): void
     {
-        $this->post('/install/admin', [
+        $this->post('/install/account', [
             'name' => 'Admin',
             'email' => 'admin@example.com',
             'password' => 'password123',
@@ -155,7 +173,7 @@ class InstallerAccessTest extends TestCase
 
     public function test_admin_step_rejects_short_password(): void
     {
-        $this->post('/install/admin', [
+        $this->post('/install/account', [
             'name' => 'Admin',
             'email' => 'admin@example.com',
             'password' => 'short',
