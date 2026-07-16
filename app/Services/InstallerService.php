@@ -8,6 +8,11 @@ use Throwable;
 
 class InstallerService
 {
+    /**
+     * Every check carries a "fix" string when it fails: the actual command that
+     * resolves it. Someone standing up their own server should not have to go
+     * and look up which user PHP runs as or what the package is called.
+     */
     public function checkRequirements(): array
     {
         $checks = [];
@@ -15,19 +20,28 @@ class InstallerService
         // PHP version
         $phpOk = version_compare(PHP_VERSION, '8.3.0', '>=');
         $checks[] = [
+            'group' => 'PHP',
             'label' => 'PHP >= 8.3',
             'value' => PHP_VERSION,
             'passed' => $phpOk,
             'critical' => true,
+            'fix' => $phpOk ? null : 'Upgrade PHP to 8.3 or newer, or point this domain at a newer PHP version in your hosting panel.',
         ];
 
         // Required extensions
         foreach (['pdo', 'pdo_mysql', 'mbstring', 'openssl', 'tokenizer', 'xml', 'ctype', 'json', 'fileinfo', 'bcmath'] as $ext) {
+            $loaded = extension_loaded($ext);
             $checks[] = [
+                'group' => 'PHP extensions',
                 'label' => "ext-{$ext}",
-                'value' => extension_loaded($ext) ? 'Loaded' : 'Missing',
-                'passed' => extension_loaded($ext),
+                'value' => $loaded ? 'Loaded' : 'Missing',
+                'passed' => $loaded,
                 'critical' => true,
+                'fix' => $loaded ? null : sprintf(
+                    'sudo apt install php%s.%s-%s && sudo systemctl restart php%s.%s-fpm',
+                    PHP_MAJOR_VERSION, PHP_MINOR_VERSION, str_replace('_', '-', $ext),
+                    PHP_MAJOR_VERSION, PHP_MINOR_VERSION,
+                ),
             ];
         }
 
@@ -49,29 +63,38 @@ class InstallerService
             $failure = $this->checkDirectoryIsWritable($dir);
 
             $checks[] = [
-                'label' => "{$relative}/ writable",
+                'group' => 'File permissions',
+                'label' => "{$relative}/",
                 'value' => $failure ?? 'Writable',
                 'passed' => $failure === null,
                 'critical' => true,
+                'fix' => $failure === null ? null : $this->fixCommand($relative),
             ];
         }
 
-        // .env file
-        $envExists = file_exists(base_path('.env'));
+        // .env file. The installer writes the database credentials here, so
+        // "it exists" is not enough — it has to be writable. Checking only for
+        // existence let the install run all the way to the final step before
+        // failing on the one write that matters.
+        $envFailure = $this->checkEnvIsWritable();
         $checks[] = [
-            'label' => '.env file',
-            'value' => $envExists ? 'Found' : 'Missing (will be created)',
-            'passed' => $envExists || is_writable(base_path()),
+            'group' => 'File permissions',
+            'label' => '.env',
+            'value' => $envFailure ?? (file_exists(base_path('.env')) ? 'Found and writable' : 'Will be created'),
+            'passed' => $envFailure === null,
             'critical' => true,
+            'fix' => $envFailure === null ? null : $this->fixCommand('.env'),
         ];
 
         // APP_KEY
         $hasKey = ! empty(config('app.key'));
         $checks[] = [
+            'group' => 'Application',
             'label' => 'APP_KEY',
-            'value' => $hasKey ? 'Set' : 'Not set (will be generated)',
+            'value' => $hasKey ? 'Set' : 'Will be generated',
             'passed' => true, // We generate it in finish step if missing
             'critical' => false,
+            'fix' => null,
         ];
 
         return $checks;
@@ -99,6 +122,52 @@ class InstallerService
         @unlink($probe);
 
         return null;
+    }
+
+    /**
+     * Returns null when .env can be written, otherwise why not. Created from
+     * .env.example when absent, which is what the install would do anyway.
+     */
+    private function checkEnvIsWritable(): ?string
+    {
+        $env = base_path('.env');
+
+        if (! file_exists($env)) {
+            if (! is_writable(base_path())) {
+                return 'Missing, and the project directory is not writable by '.$this->currentUser();
+            }
+
+            return null; // We can create it.
+        }
+
+        // Append nothing: proves writability without touching the contents.
+        $handle = @fopen($env, 'a');
+
+        if ($handle === false) {
+            return 'Found, but not writable by '.$this->currentUser();
+        }
+
+        fclose($handle);
+
+        return null;
+    }
+
+    /**
+     * The shell command that fixes ownership for a path, naming the user PHP
+     * actually runs as. Someone installing on their own server should not have
+     * to work out which account that is.
+     */
+    private function fixCommand(string $relativePath): string
+    {
+        $user = $this->currentUser();
+
+        return sprintf(
+            'sudo chown -R %s:%s %s && chmod -R 775 %s',
+            $user,
+            $user,
+            $relativePath,
+            $relativePath,
+        );
     }
 
     /** The user PHP runs as — the one that needs to own these directories. */

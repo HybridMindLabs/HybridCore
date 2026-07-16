@@ -67,6 +67,52 @@ class RequirementsWritableTest extends TestCase
         }
     }
 
+    public function test_an_unwritable_env_file_fails_the_check(): void
+    {
+        $env = base_path('.env');
+
+        if (! file_exists($env)) {
+            $this->markTestSkipped('No .env in this environment.');
+        }
+
+        $original = fileperms($env);
+        chmod($env, 0444); // readable, not writable
+
+        try {
+            $check = $this->checkFor('.env');
+
+            // The installer writes the database credentials here at the final
+            // step; "the file exists" was previously enough to pass, so the
+            // install died at the very end instead of failing here.
+            $this->assertFalse($check['passed'], 'A read-only .env must fail the check.');
+            $this->assertStringContainsString('not writable', strtolower($check['value']));
+            $this->assertNotNull($check['fix'], 'A failed check must come with a fix.');
+        } finally {
+            chmod($env, $original);
+        }
+    }
+
+    public function test_every_failed_check_carries_a_fix(): void
+    {
+        $dir = storage_path('framework/sessions');
+        $original = fileperms($dir);
+
+        chmod($dir, 0555);
+
+        try {
+            foreach (app(InstallerService::class)->checkRequirements() as $check) {
+                if (! $check['passed']) {
+                    $this->assertNotEmpty(
+                        $check['fix'],
+                        "Check [{$check['label']}] failed without telling the user how to fix it.",
+                    );
+                }
+            }
+        } finally {
+            chmod($dir, $original);
+        }
+    }
+
     public function test_requirements_do_not_pass_overall_when_a_directory_is_unwritable(): void
     {
         $dir = storage_path('framework/views');
