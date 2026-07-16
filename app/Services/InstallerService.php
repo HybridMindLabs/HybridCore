@@ -31,13 +31,27 @@ class InstallerService
             ];
         }
 
-        // Writable directories
-        foreach ([storage_path(), storage_path('logs'), base_path('bootstrap/cache')] as $dir) {
+        // Writable directories.
+        //
+        // Every directory the app actually writes to is listed, not just their
+        // parents: storage/ is routinely writable while storage/framework/cache
+        // underneath it is not (typically left owned by root after an artisan
+        // command was run with sudo), which passed this check and then failed at
+        // runtime instead.
+        foreach ([
+            storage_path('logs'),
+            storage_path('framework/cache/data'),
+            storage_path('framework/sessions'),
+            storage_path('framework/views'),
+            base_path('bootstrap/cache'),
+        ] as $dir) {
             $relative = str_replace(base_path().DIRECTORY_SEPARATOR, '', $dir);
+            $failure = $this->checkDirectoryIsWritable($dir);
+
             $checks[] = [
                 'label' => "{$relative}/ writable",
-                'value' => is_writable($dir) ? 'Writable' : 'Not writable',
-                'passed' => is_writable($dir),
+                'value' => $failure ?? 'Writable',
+                'passed' => $failure === null,
                 'critical' => true,
             ];
         }
@@ -61,6 +75,44 @@ class InstallerService
         ];
 
         return $checks;
+    }
+
+    /**
+     * Returns null when the directory can be written to, otherwise why not.
+     *
+     * Writes a real file rather than trusting is_writable(), which reports on
+     * the permission bits alone and so misses ACLs, read-only mounts and
+     * SELinux — exactly the setups where this goes wrong.
+     */
+    private function checkDirectoryIsWritable(string $dir): ?string
+    {
+        if (! is_dir($dir) && ! @mkdir($dir, 0775, true) && ! is_dir($dir)) {
+            return 'Missing (could not be created)';
+        }
+
+        $probe = $dir.DIRECTORY_SEPARATOR.'.hybridcore-write-test';
+
+        if (@file_put_contents($probe, 'ok') === false) {
+            return 'Not writable by '.$this->currentUser();
+        }
+
+        @unlink($probe);
+
+        return null;
+    }
+
+    /** The user PHP runs as — the one that needs to own these directories. */
+    private function currentUser(): string
+    {
+        if (function_exists('posix_geteuid') && function_exists('posix_getpwuid')) {
+            $info = posix_getpwuid(posix_geteuid());
+
+            if (is_array($info) && isset($info['name'])) {
+                return (string) $info['name'];
+            }
+        }
+
+        return get_current_user() ?: 'the web server user';
     }
 
     public function allRequirementsPassed(array $checks): bool
