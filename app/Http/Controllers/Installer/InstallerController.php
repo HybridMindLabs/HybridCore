@@ -129,12 +129,31 @@ class InstallerController extends Controller
 
     public function finish(Request $request): Response
     {
-        $hasDatabase = $request->session()->has('installer.database');
-        $hasAdmin = $request->session()->has('installer.admin');
-        $hasSettings = $request->session()->has('installer.settings');
+        $database = $request->session()->get('installer.database');
+        $admin = $request->session()->get('installer.admin');
+        $settings = $request->session()->get('installer.settings');
 
         return Inertia::render('Installer/Finish', [
-            'ready' => $hasDatabase && $hasAdmin && $hasSettings,
+            'ready' => $database !== null && $admin !== null && $settings !== null,
+            // A read-back of what was entered, so the last step is a review
+            // rather than a leap of faith. Passwords are deliberately absent.
+            'summary' => [
+                'database' => $database === null ? null : [
+                    'server' => $database['db_host'].':'.$database['db_port'],
+                    'name' => $database['db_database'],
+                    'user' => $database['db_username'],
+                ],
+                'admin' => $admin === null ? null : [
+                    'name' => $admin['name'],
+                    'email' => $admin['email'],
+                ],
+                'settings' => $settings === null ? null : [
+                    'name' => $settings['app_name'],
+                    'url' => $settings['app_url'],
+                    'locale' => $settings['app_locale'],
+                    'timezone' => $settings['app_timezone'],
+                ],
+            ],
         ]);
     }
 
