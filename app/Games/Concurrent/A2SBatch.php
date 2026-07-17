@@ -2,6 +2,7 @@
 
 namespace App\Games\Concurrent;
 
+use App\Games\Data\PlayerData;
 use App\Games\Data\QueryResult;
 use App\Games\Support\Buffer;
 
@@ -13,20 +14,25 @@ use App\Games\Support\Buffer;
  * than the sum of them — twenty dead servers cost one wait, not twenty. This is
  * the fast path for the scheduler, where most servers are the Source family.
  *
- * A per-server state machine walks INFO -> (challenge) -> parse. It never
- * throws; a server that misbehaves is simply marked offline with a reason.
+ * Each connection runs a small state machine:
+ *   INFO -> (challenge) -> parse info -> PLAYER -> (challenge) -> parse players
+ * so the player list is collected concurrently too, not just the summary. It
+ * never throws; a server that misbehaves is marked offline with a reason, and a
+ * server that answers INFO but refuses the player list still counts as online.
  */
 class A2SBatch
 {
     private const INFO_PREFIX = "\xFF\xFF\xFF\xFFTSource Engine Query\x00";
 
+    private const PLAYER_PREFIX = "\xFF\xFF\xFF\xFF\x55";
+
     /**
-     * @param  array<int|string, array{host: string, port: int}>  $targets  keyed by anything you want the results keyed by
+     * @param  array<int|string, array{host: string, port: int}>  $targets  keyed by whatever you want the results keyed by
      * @return array<int|string, QueryResult>
      */
     public function run(array $targets, float $timeout = 4.0): array
     {
-        /** @var array<int|string, array{sock: resource, host: string, port: int, sentAt: float, stage: string}> $conns */
+        /** @var array<int|string, array<string, mixed>> $conns */
         $conns = [];
         $results = [];
 
@@ -48,7 +54,7 @@ class A2SBatch
             stream_set_blocking($sock, false);
             fwrite($sock, self::INFO_PREFIX);
 
-            $conns[$key] = ['sock' => $sock, 'host' => $t['host'], 'port' => $t['port'], 'sentAt' => microtime(true), 'stage' => 'info'];
+            $conns[$key] = ['sock' => $sock, 'sentAt' => microtime(true), 'stage' => 'info', 'info' => null];
         }
 
         $deadline = microtime(true) + $timeout + 1.0;
@@ -71,29 +77,29 @@ class A2SBatch
                     continue;
                 }
 
-                $conn = $conns[$key];
                 $raw = @fread($sock, 65_535);
-
                 if ($raw === false || $raw === '') {
                     continue;
                 }
 
-                $outcome = $this->handle($conn, $raw);
+                $outcome = $this->advance($conns[$key], $raw);
 
                 if ($outcome instanceof QueryResult) {
                     $results[$key] = $outcome;
                     fclose($sock);
                     unset($conns[$key]);
                 } else {
-                    // A challenge came back; the socket was re-armed in handle().
-                    $conns[$key] = $outcome;
+                    $conns[$key] = $outcome; // re-armed for another read
                 }
             }
         }
 
-        // Anything still open never answered in time.
+        // Anything still open never finished in time. If INFO already arrived,
+        // keep it and just drop the player list; otherwise it's offline.
         foreach ($conns as $key => $conn) {
-            $results[$key] = QueryResult::offline('No response (timed out)');
+            $results[$key] = $conn['info'] !== null
+                ? $this->finalise($conn['info'], [])
+                : QueryResult::offline('No response (timed out)');
             fclose($conn['sock']);
         }
 
@@ -101,50 +107,93 @@ class A2SBatch
     }
 
     /**
-     * Advance one connection. Returns a QueryResult when done, or the updated
-     * connection state when it re-sent a challenge and needs another read.
+     * Advance one connection by one received packet. Returns a QueryResult when
+     * finished, or the updated connection state when it re-sent a request.
      *
-     * @param  array{sock: resource, host: string, port: int, sentAt: float, stage: string}  $conn
-     * @return QueryResult|array{sock: resource, host: string, port: int, sentAt: float, stage: string}
+     * @param  array<string, mixed>  $conn
+     * @return QueryResult|array<string, mixed>
      */
-    private function handle(array $conn, string $raw): QueryResult|array
+    private function advance(array $conn, string $raw): QueryResult|array
     {
         try {
             $buffer = new Buffer($raw);
 
             if ($buffer->readInt32() !== -1) {
-                // Split responses are rare for INFO; treat as unsupported here
-                // and let the per-server driver handle those edge cases.
-                return QueryResult::offline('Split INFO response');
+                // Split responses are rare here; the info summary is what the
+                // sweep needs, so if we already have it, finish with it.
+                return $conn['info'] !== null
+                    ? $this->finalise($conn['info'], [])
+                    : QueryResult::offline('Split response');
             }
 
             $type = $buffer->get(1);
 
-            if ($type === 'A') {
-                // Challenge: resend INFO with the token, once.
-                if ($conn['stage'] === 'challenged') {
-                    return QueryResult::offline('Repeated challenge');
-                }
-                $challenge = $buffer->get(4);
-                fwrite($conn['sock'], self::INFO_PREFIX.$challenge);
-                $conn['stage'] = 'challenged';
-
-                return $conn;
-            }
-
-            $ping = (int) round((microtime(true) - $conn['sentAt']) * 1000);
-
-            return match ($type) {
-                'I' => $this->parseSource($buffer, $ping),
-                'm' => $this->parseGoldSource($buffer, $ping),
-                default => QueryResult::offline('Unexpected type 0x'.bin2hex($type)),
+            return match ($conn['stage']) {
+                'info', 'info_challenged' => $this->onInfo($conn, $buffer, $type),
+                default => $this->onPlayers($conn, $buffer, $type),
             };
         } catch (\Throwable $e) {
-            return QueryResult::offline($e->getMessage());
+            return $conn['info'] !== null
+                ? $this->finalise($conn['info'], [])
+                : QueryResult::offline($e->getMessage());
         }
     }
 
-    private function parseSource(Buffer $b, int $ping): QueryResult
+    /** @param array<string, mixed> $conn @return QueryResult|array<string, mixed> */
+    private function onInfo(array $conn, Buffer $buffer, string $type): QueryResult|array
+    {
+        if ($type === 'A') {
+            if ($conn['stage'] === 'info_challenged') {
+                return QueryResult::offline('Repeated challenge');
+            }
+            fwrite($conn['sock'], self::INFO_PREFIX.$buffer->get(4));
+            $conn['stage'] = 'info_challenged';
+
+            return $conn;
+        }
+
+        $info = match ($type) {
+            'I' => $this->parseSource($buffer),
+            'm' => $this->parseGoldSource($buffer),
+            default => null,
+        };
+
+        if ($info === null) {
+            return QueryResult::offline('Unexpected INFO type 0x'.bin2hex($type));
+        }
+
+        $info['ping'] = (int) round((microtime(true) - $conn['sentAt']) * 1000);
+        $conn['info'] = $info;
+
+        // Move on to the player list — start with a challenge request.
+        fwrite($conn['sock'], self::PLAYER_PREFIX."\xFF\xFF\xFF\xFF");
+        $conn['stage'] = 'players';
+
+        return $conn;
+    }
+
+    /** @param array<string, mixed> $conn @return QueryResult|array<string, mixed> */
+    private function onPlayers(array $conn, Buffer $buffer, string $type): QueryResult|array
+    {
+        if ($type === 'A') {
+            if ($conn['stage'] === 'players_challenged') {
+                return $this->finalise($conn['info'], []); // give up on the list, keep info
+            }
+            fwrite($conn['sock'], self::PLAYER_PREFIX.$buffer->get(4));
+            $conn['stage'] = 'players_challenged';
+
+            return $conn;
+        }
+
+        if ($type !== 'D') {
+            return $this->finalise($conn['info'], []);
+        }
+
+        return $this->finalise($conn['info'], $this->parsePlayers($buffer));
+    }
+
+    /** @return array<string, mixed> */
+    private function parseSource(Buffer $b): array
     {
         $b->readUInt8();
         $name = $this->clean($b->readString());
@@ -161,14 +210,11 @@ class A2SBatch
         $vac = $b->readUInt8() === 1;
         $version = $b->isEmpty() ? null : $this->clean($b->readString());
 
-        return new QueryResult(
-            online: true, name: $name, map: $map,
-            playersOnline: $players, playersMax: $max, ping: $ping,
-            passwordProtected: $password, secure: $vac, version: $version,
-        );
+        return compact('name', 'map', 'players', 'max', 'password', 'vac', 'version');
     }
 
-    private function parseGoldSource(Buffer $b, int $ping): QueryResult
+    /** @return array<string, mixed> */
+    private function parseGoldSource(Buffer $b): array
     {
         $b->readString();
         $name = $this->clean($b->readString());
@@ -178,13 +224,50 @@ class A2SBatch
         $players = $b->readUInt8();
         $max = $b->readUInt8();
 
+        return ['name' => $name, 'map' => $map, 'players' => $players, 'max' => $max, 'password' => false, 'vac' => false, 'version' => null];
+    }
+
+    /** @return list<PlayerData> */
+    private function parsePlayers(Buffer $b): array
+    {
+        $count = $b->readUInt8();
+        $players = [];
+
+        for ($i = 0; $i < $count && ! $b->isEmpty(); $i++) {
+            $b->readUInt8(); // index
+            $name = $this->clean($b->readString());
+            $score = $b->readInt32();
+            $duration = (int) $b->readFloat32();
+
+            if ($name !== '') {
+                $players[] = new PlayerData($name, $score, max(0, $duration));
+            }
+        }
+
+        return $players;
+    }
+
+    /**
+     * @param  array<string, mixed>  $info
+     * @param  list<PlayerData>  $players
+     */
+    private function finalise(array $info, array $players): QueryResult
+    {
         return new QueryResult(
-            online: true, name: $name, map: $map,
-            playersOnline: $players, playersMax: $max, ping: $ping,
+            online: true,
+            name: $info['name'],
+            map: $info['map'],
+            playersOnline: $info['players'],
+            playersMax: $info['max'],
+            ping: $info['ping'] ?? null,
+            passwordProtected: $info['password'],
+            secure: $info['vac'],
+            version: $info['version'],
+            players: $players,
         );
     }
 
-    /** @param array<int|string, array{sock: resource, ...}> $conns */
+    /** @param array<int|string, array<string, mixed>> $conns */
     private function keyOf(array $conns, mixed $sock): int|string|null
     {
         foreach ($conns as $key => $conn) {
