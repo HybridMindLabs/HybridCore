@@ -9,7 +9,7 @@ import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
 import { ref, watch, computed } from 'vue';
 
-interface GameData { id: number; name: string; color: string; icon: string }
+interface GameData { id: number; name: string; color?: string; icon?: string; default_port?: number | null; default_query_port?: number | null }
 interface ServerStatus { is_online: boolean; failure_reason: string | null; players_online: number; players_max: number; map: string | null }
 interface ServerRow {
     id: number; ip: string; port: number; query_port: number | null; address: string; name: string | null;
@@ -111,6 +111,21 @@ function runBulk(action: BulkAction) {
 const showAdd = ref(false);
 const addForm = useForm({ game_id: '', address: '', query_port: '', tags: '' });
 const addFormError = ref('');
+
+// When a game is picked, offer its default ports so the operator doesn't have
+// to know that Rust queries on +2 or ARK on 27015. Only fills empty fields, so
+// anything typed by hand is left alone.
+watch(() => addForm.game_id, (id) => {
+    const game = props.games.find((g) => String(g.id) === String(id));
+    if (!game) return;
+
+    if (!addForm.address && game.default_port) {
+        addForm.address = `:${game.default_port}`;
+    }
+    if (!addForm.query_port && game.default_query_port) {
+        addForm.query_port = String(game.default_query_port);
+    }
+});
 
 function submitAdd() {
     addFormError.value = '';

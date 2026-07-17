@@ -13,12 +13,13 @@ class Game extends Model
 
     protected $fillable = [
         'name', 'slug', 'icon', 'color', 'query_driver',
-        'default_port', 'is_active', 'sort_order',
+        'default_port', 'default_query_port', 'is_active', 'sort_order',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'default_port' => 'integer',
+        'default_query_port' => 'integer',
         'sort_order' => 'integer',
     ];
 

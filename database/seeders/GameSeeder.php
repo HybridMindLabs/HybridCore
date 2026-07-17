@@ -62,6 +62,7 @@ class GameSeeder extends Seeder
                 'color' => '#ef4444',
                 'query_driver' => 'rust',
                 'default_port' => 28015,
+                'default_query_port' => 28017, // game port + 2
                 'sort_order' => 6,
             ],
             [
@@ -70,7 +71,8 @@ class GameSeeder extends Seeder
                 'icon' => 'shield',
                 'color' => '#84cc16',
                 'query_driver' => 'arkse',
-                'default_port' => 27015,
+                'default_port' => 7777,
+                'default_query_port' => 27015, // ARK's query port is unrelated to the game port
                 'sort_order' => 7,
             ],
             [
@@ -80,6 +82,7 @@ class GameSeeder extends Seeder
                 'color' => '#dc2626',
                 'query_driver' => 'sevendaystodie',
                 'default_port' => 26900,
+                'default_query_port' => 26901, // game port + 1
                 'sort_order' => 8,
             ],
             [
@@ -98,22 +101,86 @@ class GameSeeder extends Seeder
                 'color' => '#64748b',
                 'query_driver' => 'unturned',
                 'default_port' => 27015,
+                'default_query_port' => 27016, // game port + 1
                 'sort_order' => 10,
             ],
+
+            // Source-engine games the drivers already handle — just not seeded before.
             [
-                'name' => 'Hytale',
-                'slug' => 'hytale',
-                'icon' => 'sparkles',
-                'color' => '#a855f7',
-                'query_driver' => 'minecraft_java',
-                'default_port' => 25565,
+                'name' => 'Counter-Strike: Source',
+                'slug' => 'css',
+                'icon' => 'crosshair',
+                'color' => '#f59e0b',
+                'query_driver' => 'css',
+                'default_port' => 27015,
                 'sort_order' => 11,
-                'is_active' => false,
+            ],
+            [
+                'name' => 'Counter-Strike: GO (Legacy)',
+                'slug' => 'csgo',
+                'icon' => 'crosshair',
+                'color' => '#ca8a04',
+                'query_driver' => 'csgo',
+                'default_port' => 27015,
+                'sort_order' => 12,
+            ],
+            [
+                'name' => 'Left 4 Dead 2',
+                'slug' => 'l4d2',
+                'icon' => 'biohazard',
+                'color' => '#16a34a',
+                'query_driver' => 'l4d2',
+                'default_port' => 27015,
+                'sort_order' => 13,
+            ],
+            [
+                'name' => 'Valheim',
+                'slug' => 'valheim',
+                'icon' => 'axe',
+                'color' => '#0ea5e9',
+                'query_driver' => 'valheim',
+                'default_port' => 2456,
+                'default_query_port' => 2457, // game port + 1
+                'sort_order' => 14,
+            ],
+            [
+                'name' => 'Squad',
+                'slug' => 'squad',
+                'icon' => 'users',
+                'color' => '#65a30d',
+                'query_driver' => 'squad',
+                'default_port' => 7787,
+                'default_query_port' => 27165,
+                'sort_order' => 15,
+            ],
+            [
+                'name' => 'Insurgency',
+                'slug' => 'insurgency',
+                'icon' => 'target',
+                'color' => '#b91c1c',
+                'query_driver' => 'insurgency',
+                'default_port' => 27015,
+                'sort_order' => 16,
+            ],
+            [
+                'name' => 'RedM',
+                'slug' => 'redm',
+                'icon' => 'car',
+                'color' => '#dc2626',
+                'query_driver' => 'redm',
+                'default_port' => 30120,
+                'sort_order' => 17,
             ],
         ];
 
         foreach ($games as $game) {
             Game::updateOrCreate(['slug' => $game['slug']], $game);
         }
+
+        // Drop games we no longer ship (Hytale — unreleased, protocol unknown),
+        // but only when nobody has added a server for them.
+        Game::whereIn('slug', ['hytale'])
+            ->whereDoesntHave('servers')
+            ->delete();
     }
 }

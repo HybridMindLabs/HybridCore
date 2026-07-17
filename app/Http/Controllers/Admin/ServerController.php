@@ -57,7 +57,7 @@ class ServerController extends Controller
                 ] : null,
             ]);
 
-        $games = Game::orderBy('sort_order')->get(['id', 'name']);
+        $games = Game::orderBy('sort_order')->get(['id', 'name', 'default_port', 'default_query_port']);
 
         return Inertia::render('Admin/Servers/Index', [
             'servers' => $servers,
