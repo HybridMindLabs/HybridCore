@@ -31,13 +31,16 @@ class Game extends Model
             return null;
         }
 
-        $files = glob("{$dir}/*.{jpg,jpeg,png,webp,avif}", GLOB_BRACE);
-
-        if (empty($files)) {
-            return null;
+        // Prefer the most efficient format available: WebP/AVIF before the
+        // heavier raster formats, whatever was dropped into the folder.
+        foreach (['webp', 'avif', 'png', 'jpg', 'jpeg', 'gif'] as $ext) {
+            $match = glob("{$dir}/*.{$ext}");
+            if (! empty($match)) {
+                return asset('images/covers/'.$this->slug.'/'.basename($match[0]));
+            }
         }
 
-        return asset('images/covers/'.$this->slug.'/'.basename($files[0]));
+        return null;
     }
 
     /**

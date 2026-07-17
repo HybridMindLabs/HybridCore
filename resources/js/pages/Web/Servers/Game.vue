@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { Copy, Check, Heart, Search, RefreshCw, LayoutGrid, List, Wifi, Lock, Shield } from '@lucide/vue';
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import Breadcrumb from '@/components/UI/Breadcrumb.vue';
+import GameIcon from '@/components/UI/GameIcon.vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
 import { computed, ref } from 'vue';
@@ -124,21 +125,6 @@ function playerColor(s: ServerStatus | null) {
     if (pct >= 0.6) return '#f59e0b';
     return '#22c55e';
 }
-function onIconError(e: Event) {
-    const img = e.target as HTMLImageElement;
-    img.style.display = 'none';
-    const parent = img.parentElement;
-    if (parent) {
-        parent.style.backgroundColor = props.game.color + '25';
-        parent.style.display = 'flex';
-        parent.style.alignItems = 'center';
-        parent.style.justifyContent = 'center';
-        const span = document.createElement('span');
-        span.textContent = props.game.name.charAt(0);
-        span.style.cssText = `color:${props.game.color};font-size:22px;font-weight:900;`;
-        parent.appendChild(span);
-    }
-}
 </script>
 
 <template>
@@ -182,12 +168,7 @@ function onIconError(e: Event) {
                         class="w-14 h-14 rounded-xl shrink-0 shadow-lg border overflow-hidden"
                         :style="{ borderColor: game.color + '45' }"
                     >
-                        <img
-                            :src="`/images/games/icons/64x64/${game.slug}.png`"
-                            :alt="game.name"
-                            class="w-full h-full object-cover"
-                            @error="onIconError"
-                        />
+                        <GameIcon :slug="game.slug" :alt="game.name" />
                     </div>
                     <div>
                         <h1

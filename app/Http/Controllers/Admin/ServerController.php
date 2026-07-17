@@ -47,7 +47,7 @@ class ServerController extends Controller
                     'last_seen' => $s->bridge_last_seen_at?->diffForHumans(),
                     'online' => $s->bridge_last_seen_at !== null && $s->bridge_last_seen_at->gt(now()->subMinutes(2)),
                 ],
-                'game' => ['id' => $s->game->id, 'name' => $s->game->name, 'color' => $s->game->color, 'icon' => $s->game->icon],
+                'game' => ['id' => $s->game->id, 'name' => $s->game->name, 'slug' => $s->game->slug, 'color' => $s->game->color, 'icon' => $s->game->icon],
                 'status' => $s->latestSnapshot ? [
                     'is_online' => $s->latestSnapshot->is_online,
                     'failure_reason' => $s->latestSnapshot->failure_reason,

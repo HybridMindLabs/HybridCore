@@ -6,6 +6,7 @@ import PublicLayout from '@/layouts/PublicLayout.vue';
 import PublicSidebar from '@/components/UI/PublicSidebar.vue';
 import ExtensionSlot from '@/components/Core/ExtensionSlot.vue';
 import GameThumbnail from '@/components/UI/GameThumbnail.vue';
+import GameIcon from '@/components/UI/GameIcon.vue';
 import HomeNewsCard from '@/components/UI/HomeNewsCard.vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
@@ -222,7 +223,7 @@ function toggleFavourite(server: HomeServer) {
                             :class="dark ? 'border-zinc-800/80 bg-zinc-900 hover:border-zinc-700' : 'border-zinc-200 bg-white shadow-sm hover:border-zinc-300'"
                             :title="game.name"
                         >
-                            <img :src="`/images/games/icons/64x64/${game.slug}.png`" :alt="game.name" class="w-full h-full object-cover" />
+                            <GameIcon :slug="game.slug" :alt="game.name" />
                         </Link>
                     </div>
                 </div>
@@ -497,7 +498,7 @@ function toggleFavourite(server: HomeServer) {
                                         <!-- Game icon -->
                                         <div class="absolute top-3.5 right-4 w-14 h-14 rounded-xl overflow-hidden border"
                                             :class="dark ? 'border-zinc-800' : 'border-zinc-200 shadow-sm'">
-                                            <img :src="`/images/games/icons/64x64/${server.game_slug}.png`" :alt="server.game_name" class="w-full h-full object-cover" />
+                                            <GameIcon :slug="server.game_slug" :alt="server.game_name" />
                                         </div>
 
                                         <!-- Status -->
