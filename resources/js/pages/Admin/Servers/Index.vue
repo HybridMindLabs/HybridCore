@@ -10,9 +10,9 @@ import PageHeader from '@/components/UI/PageHeader.vue';
 import { ref, watch, computed } from 'vue';
 
 interface GameData { id: number; name: string; color: string; icon: string }
-interface ServerStatus { is_online: boolean; players_online: number; players_max: number; map: string | null }
+interface ServerStatus { is_online: boolean; failure_reason: string | null; players_online: number; players_max: number; map: string | null }
 interface ServerRow {
-    id: number; ip: string; port: number; address: string; name: string | null;
+    id: number; ip: string; port: number; query_port: number | null; address: string; name: string | null;
     country_code: string | null; tags: string[]; is_active: boolean;
     last_queried_at: string | null;
     bridge: { enabled: boolean; last_seen: string | null; online: boolean };
@@ -109,7 +109,7 @@ function runBulk(action: BulkAction) {
 
 // Add server form
 const showAdd = ref(false);
-const addForm = useForm({ game_id: '', address: '', tags: '' });
+const addForm = useForm({ game_id: '', address: '', query_port: '', tags: '' });
 const addFormError = ref('');
 
 function submitAdd() {
@@ -123,6 +123,7 @@ function submitAdd() {
         game_id: d.game_id,
         ip: parts[0].trim(),
         port: Number(parts[1]),
+        query_port: d.query_port ? Number(d.query_port) : null,
         tags: d.tags ? d.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
     })).post(route('admin.servers.store'), {
         onSuccess: () => { addForm.reset(); showAdd.value = false; },
@@ -131,7 +132,7 @@ function submitAdd() {
 
 // Inline edit
 const editing = ref<number | null>(null);
-const editForm = useForm({ game_id: '', address: '', name: '', is_active: true, tags: '' });
+const editForm = useForm({ game_id: '', address: '', query_port: '', name: '', is_active: true, tags: '' });
 const editFormError = ref('');
 
 function startEdit(s: ServerRow) {
@@ -139,6 +140,7 @@ function startEdit(s: ServerRow) {
     editFormError.value = '';
     editForm.game_id = String(s.game.id);
     editForm.address = s.address;
+    editForm.query_port = s.query_port ? String(s.query_port) : '';
     editForm.name = s.name ?? '';
     editForm.is_active = s.is_active;
     editForm.tags = s.tags.join(', ');
@@ -155,6 +157,7 @@ function submitEdit(id: number) {
         game_id: d.game_id,
         ip: parts[0].trim(),
         port: Number(parts[1]),
+        query_port: d.query_port ? Number(d.query_port) : null,
         name: d.name || null,
         is_active: d.is_active,
         tags: d.tags ? d.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
@@ -265,6 +268,14 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 round
                     <p v-else-if="addForm.errors.port" class="text-red-400 text-xs">{{ addForm.errors.port }}</p>
                 </div>
                 <div class="flex flex-col gap-1.5">
+                    <label class="text-zinc-500 text-xs font-medium">
+                        Query port
+                        <span class="text-zinc-700 font-normal ml-1">only if different from the game port — Rust +2, ARK 27015</span>
+                    </label>
+                    <input v-model="addForm.query_port" type="number" placeholder="same as game port" :class="[inputClass, 'font-mono']" />
+                    <p v-if="addForm.errors.query_port" class="text-red-400 text-xs">{{ addForm.errors.query_port }}</p>
+                </div>
+                <div class="flex flex-col gap-1.5">
                     <label class="text-zinc-500 text-xs font-medium">Tags <span class="text-zinc-700 font-normal">comma separated</span></label>
                     <input v-model="addForm.tags" type="text" placeholder="competitive, ranked" :class="inputClass" />
                 </div>
@@ -369,6 +380,10 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 round
                                             />
                                         </div>
                                         <div class="flex flex-col gap-1">
+                                            <label class="text-zinc-600 text-[11px]">Query port</label>
+                                            <input v-model="editForm.query_port" type="number" placeholder="same as game" :class="inputClass + ' font-mono !py-1.5 !text-xs'" />
+                                        </div>
+                                        <div class="flex flex-col gap-1">
                                             <label class="text-zinc-600 text-[11px]">Name override</label>
                                             <input v-model="editForm.name" type="text" placeholder="Optional display name" :class="inputClass + ' !py-1.5 !text-xs'" />
                                         </div>
@@ -441,12 +456,19 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 round
                                 </span>
                             </td>
                             <td class="px-4 py-3">
-                                <div v-if="server.status" class="flex items-center gap-1.5">
-                                    <CheckCircle2 v-if="server.status.is_online" :size="13" :stroke-width="2" class="text-emerald-400 shrink-0" />
-                                    <XCircle v-else :size="13" :stroke-width="2" class="text-red-400 shrink-0" />
-                                    <span class="text-xs font-medium" :class="server.status.is_online ? 'text-emerald-400' : 'text-red-400'">
-                                        {{ server.status.is_online ? 'Online' : 'Offline' }}
-                                    </span>
+                                <div v-if="server.status">
+                                    <div class="flex items-center gap-1.5">
+                                        <CheckCircle2 v-if="server.status.is_online" :size="13" :stroke-width="2" class="text-emerald-400 shrink-0" />
+                                        <XCircle v-else :size="13" :stroke-width="2" class="text-red-400 shrink-0" />
+                                        <span class="text-xs font-medium" :class="server.status.is_online ? 'text-emerald-400' : 'text-red-400'">
+                                            {{ server.status.is_online ? 'Online' : 'Offline' }}
+                                        </span>
+                                    </div>
+                                    <p
+                                        v-if="!server.status.is_online && server.status.failure_reason"
+                                        class="text-red-400/60 text-[11px] mt-0.5 max-w-[16rem] truncate"
+                                        :title="server.status.failure_reason"
+                                    >{{ server.status.failure_reason }}</p>
                                 </div>
                                 <div v-else class="flex items-center gap-1.5">
                                     <Minus :size="13" :stroke-width="2" class="text-zinc-700" />

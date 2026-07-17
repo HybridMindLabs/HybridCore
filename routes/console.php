@@ -1,10 +1,9 @@
 <?php
 
-use App\Jobs\QueryServerJob;
+use App\Jobs\QueryServersJob;
 use App\Jobs\QueueHeartbeatJob;
 use App\Models\NewsArticle;
 use App\Models\NewsComment;
-use App\Models\Server;
 use App\Models\ServerSnapshot;
 use App\Services\AnalyticsService;
 use App\Services\Bridge\BridgeService;
@@ -18,12 +17,13 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Query all active servers every 2 minutes
-Schedule::call(function () {
-    Server::active()->with('game')->get()->each(
-        fn (Server $server) => QueryServerJob::dispatch($server)
-    );
-})->everyTwoMinutes()->name('query-servers')->withoutOverlapping();
+// Query all active servers every 2 minutes. One job partitions them: the
+// Source/GoldSource servers are queried concurrently in a single batch, the
+// rest run as their own jobs.
+Schedule::job(new QueryServersJob)
+    ->everyTwoMinutes()
+    ->name('query-servers')
+    ->withoutOverlapping();
 
 // Prune snapshots older than 30 days
 Schedule::call(function () {

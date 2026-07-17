@@ -19,8 +19,16 @@ class ServerQueryService
 
     public function query(Server $server): ServerSnapshot
     {
-        $result = $this->run($server);
+        return $this->record($server, $this->run($server));
+    }
 
+    /**
+     * Persist a result as a snapshot and update the server. Public so the
+     * concurrent batch path (A2SBatch) records through exactly the same code as
+     * a single query — one place decides what a snapshot looks like.
+     */
+    public function record(Server $server, QueryResult $result): ServerSnapshot
+    {
         $snapshot = ServerSnapshot::create([
             'server_id' => $server->id,
             'is_online' => $result->online,
