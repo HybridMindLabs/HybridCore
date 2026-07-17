@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { Gamepad2, Users, Server, Wifi, Search } from '@lucide/vue';
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import Breadcrumb from '@/components/UI/Breadcrumb.vue';
+import GameIcon from '@/components/UI/GameIcon.vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
 import { computed, ref } from 'vue';
@@ -175,12 +176,7 @@ function onlinePercent(g: Game) {
                             class="absolute bottom-2.5 left-3.5 w-9 h-9 rounded-lg overflow-hidden border shadow-md"
                             :class="dark ? 'border-white/15' : 'border-white/50'"
                         >
-                            <img
-                                :src="`/images/games/icons/64x64/${game.slug}.png`"
-                                :alt="game.name"
-                                class="w-full h-full object-cover"
-                                @error="(e) => { (e.target as HTMLImageElement).style.display = 'none' }"
-                            />
+                            <GameIcon :slug="game.slug" :alt="game.name" />
                         </div>
                     </div>
 

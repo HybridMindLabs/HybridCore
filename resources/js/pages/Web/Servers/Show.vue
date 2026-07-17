@@ -10,6 +10,7 @@ import PublicLayout from '@/layouts/PublicLayout.vue';
 import ExtensionSlot from '@/components/Core/ExtensionSlot.vue';
 import ReportButton from '@/components/UI/ReportButton.vue';
 import Breadcrumb from '@/components/UI/Breadcrumb.vue';
+import GameIcon from '@/components/UI/GameIcon.vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
 import { computed, ref, onMounted, watch } from 'vue';
@@ -282,12 +283,7 @@ function drawChart() {
                         class="w-14 h-14 rounded-xl overflow-hidden border shrink-0 shadow-xl"
                         :style="{ borderColor: game.color + '45' }"
                     >
-                        <img
-                            :src="`/images/games/icons/64x64/${game.slug}.png`"
-                            :alt="game.name"
-                            class="w-full h-full object-cover"
-                            @error="(e) => { (e.target as HTMLImageElement).style.display = 'none' }"
-                        />
+                        <GameIcon :slug="game.slug" :alt="game.name" />
                     </div>
 
                     <div class="flex-1 min-w-0">

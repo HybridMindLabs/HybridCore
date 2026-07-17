@@ -1,18 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { toRef } from 'vue';
+import { useGameIcon } from '@/composables/useGameIcon';
 
 const props = defineProps<{
     game: string;
     size?: string;  /* tailwind size class, default 'w-[72px] h-[72px]' */
 }>();
 
-const failed = ref(false);
-
-const src = `/images/games/icons/64x64/${props.game}.png`;
-
-function onError() {
-    failed.value = true;
-}
+const { src, onError, failed } = useGameIcon(toRef(props, 'game'));
 
 const meta: Record<string, { color: string; bg: string; abbr: string }> = {
     cs16:      { color: '#f59e0b', bg: 'rgba(245,158,11,0.18)',  abbr: 'CS' },

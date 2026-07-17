@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import PublicLayout from '@/layouts/PublicLayout.vue';
+import GameIcon from '@/components/UI/GameIcon.vue';
 import { useLocale } from '@/composables/useLocale';
 import { useTheme } from '@/composables/useTheme';
 
@@ -78,13 +79,7 @@ const shell = computed(() => page.props.authShell ?? { games: [], servers: [] })
                                         ? 'border-zinc-800/70 bg-zinc-800/40 text-zinc-300'
                                         : 'border-zinc-200 bg-zinc-50 text-zinc-600'"
                                 >
-                                    <img
-                                        :src="`/images/games/icons/64x64/${game.slug}.png`"
-                                        :alt="game.name"
-                                        class="h-4 w-4 rounded object-cover"
-                                        loading="lazy"
-                                        @error="(e) => { (e.target as HTMLImageElement).style.display = 'none' }"
-                                    />
+                                    <GameIcon :slug="game.slug" :alt="game.name" img-class="h-4 w-4 rounded object-cover" />
                                     {{ game.name }}
                                 </div>
                             </div>
@@ -123,13 +118,7 @@ const shell = computed(() => page.props.authShell ?? { games: [], servers: [] })
                                             ? 'border-zinc-800/50 bg-[#111113]'
                                             : 'border-zinc-200 bg-white'"
                                     >
-                                        <img
-                                            :src="`/images/games/icons/64x64/${server.slug}.png`"
-                                            :alt="server.name"
-                                            class="h-9 w-9 rounded-lg object-cover shrink-0"
-                                            loading="lazy"
-                                            @error="(e) => { (e.target as HTMLImageElement).style.display = 'none' }"
-                                        />
+                                        <GameIcon :slug="server.slug" :alt="server.name" img-class="h-9 w-9 rounded-lg object-cover shrink-0" />
                                         <div class="min-w-0">
                                             <p class="truncate text-[13px] font-semibold" :class="dark ? 'text-zinc-100' : 'text-zinc-800'">
                                                 {{ server.name }}
