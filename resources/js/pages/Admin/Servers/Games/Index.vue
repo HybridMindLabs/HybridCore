@@ -3,6 +3,7 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Gamepad2, Plus, Pencil, Trash2, Check, X } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
+import GameIcon from '@/components/UI/GameIcon.vue';
 import { ref } from 'vue';
 
 interface GameRow {
@@ -111,8 +112,17 @@ const drivers = [
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs text-zinc-500 mb-1">Icon (lucide name)</label>
-                    <input v-model="addForm.icon" type="text" placeholder="gamepad-2" class="w-full bg-[#09090b] border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 font-mono placeholder-[#475569] focus:outline-none focus:border-blue-500/50" />
+                    <label class="block text-xs text-zinc-500 mb-1">Icon</label>
+                    <div class="flex items-center gap-3 bg-[#09090b] border border-zinc-800/70 rounded-lg px-3 py-2">
+                        <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border" :style="{ background: (addForm.color || '#3b82f6') + '14', borderColor: (addForm.color || '#3b82f6') + '33' }">
+                            <GameIcon v-if="addForm.slug" :slug="addForm.slug" :alt="addForm.name" :size="64" img-class="w-7 h-7 object-contain" />
+                            <Gamepad2 v-else :size="16" class="text-zinc-600" />
+                        </div>
+                        <p class="text-zinc-600 text-[11px] leading-snug">
+                            Upload <span class="font-mono text-zinc-400">{{ addForm.slug || 'slug' }}.png</span> (or .webp) to
+                            <span class="font-mono text-zinc-500">public/images/games/icons/16x16, 32x32, 64x64</span>. Preview updates from the slug.
+                        </p>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-xs text-zinc-500 mb-1">Sort Order</label>
@@ -176,10 +186,17 @@ const drivers = [
                         <!-- Normal row -->
                         <tr v-else class="border-b border-zinc-800/70 last:border-0 hover:bg-[#0f1929] transition-colors" :class="!game.is_active ? 'opacity-50' : ''">
                             <td class="px-4 py-3">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-3 h-3 rounded-full shrink-0" :style="{ backgroundColor: game.color }" />
-                                    <span class="text-zinc-100 font-medium">{{ game.name }}</span>
-                                    <span class="text-zinc-600 text-xs font-mono">{{ game.slug }}</span>
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border"
+                                        :style="{ background: game.color + '14', borderColor: game.color + '33' }"
+                                    >
+                                        <GameIcon :slug="game.slug" :alt="game.name" :size="32" img-class="w-6 h-6 object-contain" />
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-zinc-100 font-medium leading-tight">{{ game.name }}</p>
+                                        <p class="text-zinc-600 text-xs font-mono leading-tight">{{ game.slug }}</p>
+                                    </div>
                                 </div>
                             </td>
                             <td class="px-4 py-3 text-zinc-400 font-mono text-xs hidden sm:table-cell">{{ game.query_driver }}</td>

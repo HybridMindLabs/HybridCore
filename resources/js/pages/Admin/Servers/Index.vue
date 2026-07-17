@@ -7,6 +7,7 @@ import {
 } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
+import GameIcon from '@/components/UI/GameIcon.vue';
 import { ref, watch, computed } from 'vue';
 
 interface GameData { id: number; name: string; color?: string; icon?: string; default_port?: number | null; default_query_port?: number | null }
@@ -16,7 +17,7 @@ interface ServerRow {
     country_code: string | null; tags: string[]; is_active: boolean;
     last_queried_at: string | null;
     bridge: { enabled: boolean; last_seen: string | null; online: boolean };
-    game: { id: number; name: string; color: string; icon: string };
+    game: { id: number; name: string; slug: string; color: string; icon: string };
     status: ServerStatus | null;
 }
 
@@ -463,12 +464,15 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 round
                                 </div>
                             </td>
                             <td class="px-4 py-3 hidden sm:table-cell">
-                                <span
-                                    class="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full"
-                                    :style="{ background: server.game.color + '1a', color: server.game.color }"
-                                >
-                                    {{ server.game.name }}
-                                </span>
+                                <div class="inline-flex items-center gap-2">
+                                    <GameIcon :slug="server.game.slug" :alt="server.game.name" :size="32" img-class="w-6 h-6 rounded object-contain" />
+                                    <span
+                                        class="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full"
+                                        :style="{ background: server.game.color + '1a', color: server.game.color }"
+                                    >
+                                        {{ server.game.name }}
+                                    </span>
+                                </div>
                             </td>
                             <td class="px-4 py-3">
                                 <div v-if="server.status">
