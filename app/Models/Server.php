@@ -32,7 +32,7 @@ class Server extends Model
     }
 
     protected $fillable = [
-        'game_id', 'ip', 'port', 'name', 'country_code',
+        'game_id', 'ip', 'port', 'query_port', 'name', 'country_code',
         'tags', 'is_active', 'added_by', 'last_queried_at',
     ];
 
@@ -42,6 +42,7 @@ class Server extends Model
         'tags' => 'array',
         'is_active' => 'boolean',
         'port' => 'integer',
+        'query_port' => 'integer',
         'last_queried_at' => 'datetime',
         'bridge_enabled' => 'boolean',
         'bridge_last_seen_at' => 'datetime',

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Events\NotificationCreated;
+use App\Games\GameDriverRegistry;
 use App\Models\User;
 use App\Services\Auth\OAuthProviderRegistry;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -25,6 +26,10 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->forceSafeDriversUntilInstalled();
+
+        // Discovering drivers scans the filesystem once; keep the result for
+        // the whole request/worker cycle.
+        $this->app->singleton(GameDriverRegistry::class);
     }
 
     /**

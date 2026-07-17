@@ -35,6 +35,7 @@ class ServerController extends Controller
                 'id' => $s->id,
                 'ip' => $s->ip,
                 'port' => $s->port,
+                'query_port' => $s->query_port,
                 'address' => $s->address,
                 'name' => $s->name,
                 'country_code' => $s->country_code,
@@ -49,13 +50,14 @@ class ServerController extends Controller
                 'game' => ['id' => $s->game->id, 'name' => $s->game->name, 'color' => $s->game->color, 'icon' => $s->game->icon],
                 'status' => $s->latestSnapshot ? [
                     'is_online' => $s->latestSnapshot->is_online,
+                    'failure_reason' => $s->latestSnapshot->failure_reason,
                     'players_online' => $s->latestSnapshot->players_online,
                     'players_max' => $s->latestSnapshot->players_max,
                     'map' => $s->latestSnapshot->map,
                 ] : null,
             ]);
 
-        $games = Game::orderBy('sort_order')->get(['id', 'name']);
+        $games = Game::orderBy('sort_order')->get(['id', 'name', 'default_port', 'default_query_port']);
 
         return Inertia::render('Admin/Servers/Index', [
             'servers' => $servers,
@@ -93,6 +95,7 @@ class ServerController extends Controller
             'game_id' => ['required', 'exists:games,id'],
             'ip' => ['required', 'string', 'max:45'],
             'port' => ['required', 'integer', 'min:1', 'max:65535'],
+            'query_port' => ['nullable', 'integer', 'min:1', 'max:65535'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['string', 'max:30'],
         ]);
@@ -122,6 +125,7 @@ class ServerController extends Controller
             'game_id' => ['required', 'exists:games,id'],
             'ip' => ['required', 'string', 'max:45'],
             'port' => ['required', 'integer', 'min:1', 'max:65535'],
+            'query_port' => ['nullable', 'integer', 'min:1', 'max:65535'],
             'name' => ['nullable', 'string', 'max:100'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['string', 'max:30'],
