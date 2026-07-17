@@ -11,7 +11,7 @@ class ServerSnapshot extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'server_id', 'is_online', 'name', 'map',
+        'server_id', 'is_online', 'failure_reason', 'name', 'map',
         'players_online', 'players_max', 'ping',
         'is_password_protected', 'vac_secured', 'game_version', 'recorded_at',
     ];
