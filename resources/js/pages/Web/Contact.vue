@@ -196,7 +196,7 @@ const labelClass = computed(() =>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 <div class="flex flex-col gap-1.5">
                                     <label for="contact-name" :class="labelClass">
-                                        {{ t('contact.field_name') }} <span class="text-red-500" aria-hidden="true">*</span>
+                                        {{ t('contact.field_name') }} <span class="text-red-600 dark:text-red-400" aria-hidden="true">*</span>
                                     </label>
                                     <input
                                         id="contact-name"
@@ -211,11 +211,11 @@ const labelClass = computed(() =>
                                         @change="form.validate('name')"
                                     />
                                     <p v-if="form.errors.name" id="contact-name-error" role="alert"
-                                       class="text-[12px] text-red-500">{{ form.errors.name }}</p>
+                                       class="text-[12px] text-red-600 dark:text-red-400">{{ form.errors.name }}</p>
                                 </div>
                                 <div class="flex flex-col gap-1.5">
                                     <label for="contact-email" :class="labelClass">
-                                        {{ t('contact.field_email') }} <span class="text-red-500" aria-hidden="true">*</span>
+                                        {{ t('contact.field_email') }} <span class="text-red-600 dark:text-red-400" aria-hidden="true">*</span>
                                     </label>
                                     <input
                                         id="contact-email"
@@ -230,7 +230,7 @@ const labelClass = computed(() =>
                                         @change="form.validate('email')"
                                     />
                                     <p v-if="form.errors.email" id="contact-email-error" role="alert"
-                                       class="text-[12px] text-red-500">{{ form.errors.email }}</p>
+                                       class="text-[12px] text-red-600 dark:text-red-400">{{ form.errors.email }}</p>
                                     <p v-else id="contact-email-hint" class="text-[11.5px]"
                                        :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ t('contact.field_email_hint') }}</p>
                                 </div>
@@ -249,7 +249,7 @@ const labelClass = computed(() =>
 
                             <div class="flex flex-col gap-1.5">
                                 <label for="contact-message" :class="labelClass">
-                                    {{ t('contact.field_message') }} <span class="text-red-500" aria-hidden="true">*</span>
+                                    {{ t('contact.field_message') }} <span class="text-red-600 dark:text-red-400" aria-hidden="true">*</span>
                                 </label>
                                 <textarea
                                     id="contact-message"
@@ -264,7 +264,7 @@ const labelClass = computed(() =>
                                     @change="form.validate('message')"
                                 />
                                 <p v-if="form.errors.message" id="contact-message-error" role="alert"
-                                   class="text-[12px] text-red-500">{{ form.errors.message }}</p>
+                                   class="text-[12px] text-red-600 dark:text-red-400">{{ form.errors.message }}</p>
                                 <p v-else id="contact-message-hint" class="text-[11.5px]"
                                    :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ t('contact.field_message_hint') }}</p>
                             </div>
@@ -276,7 +276,7 @@ const labelClass = computed(() =>
                                 @token="onCaptchaToken"
                             />
                             <p v-if="form.errors.captcha_token" role="alert"
-                               class="text-[12px] text-red-500">{{ form.errors.captcha_token }}</p>
+                               class="text-[12px] text-red-600 dark:text-red-400">{{ form.errors.captcha_token }}</p>
 
                             <div>
                                 <button

@@ -102,7 +102,7 @@ function submit() {
                         <option value="">{{ t('account.pref_language_default') }}</option>
                         <option v-for="loc in supportedLocales" :key="loc.code" :value="loc.code">{{ loc.native_name }}</option>
                     </select>
-                    <p v-if="form.errors.locale" id="pref_locale_error" class="text-red-500 text-[12px] font-semibold">
+                    <p v-if="form.errors.locale" id="pref_locale_error" class="text-red-600 dark:text-red-400 text-[12px] font-semibold">
                         {{ form.errors.locale }}
                     </p>
                     <p v-else id="pref_locale_hint" class="text-[12px] leading-relaxed" :class="hint">
@@ -135,7 +135,7 @@ function submit() {
                         {{ t('account.pref_timezone_detect') }}
                     </button>
 
-                    <p v-if="form.errors.timezone" id="pref_timezone_error" class="text-red-500 text-[12px] font-semibold">
+                    <p v-if="form.errors.timezone" id="pref_timezone_error" class="text-red-600 dark:text-red-400 text-[12px] font-semibold">
                         {{ form.errors.timezone }}
                     </p>
                     <p v-else id="pref_timezone_hint" class="text-[12px] leading-relaxed" :class="hint">
@@ -164,7 +164,7 @@ function submit() {
                         v-if="form.recentlySuccessful"
                         role="status"
                         class="inline-flex items-center gap-1 text-[12px] font-semibold"
-                        :class="dark ? 'text-emerald-400' : 'text-emerald-600'"
+                        :class="dark ? 'text-emerald-400' : 'text-emerald-700'"
                     >
                         <Check :size="13" :stroke-width="2.4" />
                         {{ t('account.pref_saved') }}

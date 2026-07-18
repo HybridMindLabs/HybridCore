@@ -255,7 +255,7 @@ const heroStats = computed(() => [
                         :class="dark ? 'border-emerald-500/15 bg-emerald-500/[0.05]' : 'border-emerald-300/70 bg-emerald-500/[0.06]'">
                         <span class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                             :class="dark ? 'bg-emerald-500/15' : 'bg-emerald-500/15'" aria-hidden="true">
-                            <ShieldCheck :size="17" :stroke-width="1.9" class="text-emerald-600 dark:text-emerald-400" />
+                            <ShieldCheck :size="17" :stroke-width="1.9" class="text-emerald-700 dark:text-emerald-400" />
                         </span>
                         <div class="min-w-0">
                             <p class="text-[13px] font-bold" :class="dark ? 'text-zinc-200' : 'text-zinc-900'">

@@ -67,7 +67,7 @@ function confirm() {
                         :stroke-width="1.5"
                         aria-hidden="true"
                         :class="done
-                            ? dark ? 'text-emerald-400' : 'text-emerald-600'
+                            ? dark ? 'text-emerald-400' : 'text-emerald-700'
                             : dark ? 'text-cyan-400' : 'text-cyan-600'"
                     />
                 </div>

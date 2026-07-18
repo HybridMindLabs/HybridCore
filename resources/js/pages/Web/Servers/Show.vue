@@ -192,11 +192,17 @@ function pingLabel(ms: number | null) {
     if (ms === null) return '—';
     return ms + 'ms';
 }
+/**
+ * One token per theme. Measured on the light card, the previous single set was
+ * unreadable: emerald-500 2.54:1, amber-500 2.15:1, red-500 3.76:1, against
+ * the 4.5:1 this size of text needs.
+ */
 function pingColor(ms: number | null) {
-    if (ms === null) return dark.value ? 'text-zinc-600' : 'text-zinc-400';
-    if (ms < 50)  return 'text-emerald-500';
-    if (ms < 100) return 'text-amber-500';
-    return 'text-red-500';
+    if (ms === null) return dark.value ? 'text-zinc-400' : 'text-zinc-500';
+    if (ms < 50) return dark.value ? 'text-emerald-500' : 'text-emerald-700';
+    if (ms < 100) return dark.value ? 'text-amber-500' : 'text-amber-700';
+
+    return dark.value ? 'text-red-400' : 'text-red-600';
 }
 
 /**

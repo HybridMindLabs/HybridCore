@@ -646,7 +646,7 @@ const activityTiles = computed(() => [
                             <a
                                 :href="route('servers.connect', { game: game.slug, ip: server.ip, port: server.port })"
                                 class="w-8 h-8 flex items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                                :class="dark ? 'text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10' : 'text-zinc-500 hover:text-emerald-600 hover:bg-emerald-500/10'"
+                                :class="dark ? 'text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10' : 'text-zinc-500 hover:text-emerald-700 hover:bg-emerald-500/10'"
                                 :aria-label="t('home.connect_to', { name: server.name })"
                                 :title="t('home.connect_to', { name: server.name })"
                             >
@@ -798,7 +798,7 @@ const activityTiles = computed(() => [
                                 </button>
                                 <a :href="route('servers.connect', { game: game.slug, ip: server.ip, port: server.port })"
                                     class="w-7 h-7 flex items-center justify-center rounded-md transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                                    :class="dark ? 'text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10' : 'text-zinc-500 hover:text-emerald-600 hover:bg-emerald-500/10'"
+                                    :class="dark ? 'text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10' : 'text-zinc-500 hover:text-emerald-700 hover:bg-emerald-500/10'"
                                     :aria-label="t('home.connect_to', { name: server.name })"
                                     :title="t('home.connect_to', { name: server.name })">
                                     <Play :size="14" :stroke-width="2" fill="currentColor" aria-hidden="true" />

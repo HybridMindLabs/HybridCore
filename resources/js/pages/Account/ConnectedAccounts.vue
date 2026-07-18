@@ -132,7 +132,7 @@ function connect(providerId: string) {
                                 :stroke-width="1.75"
                                 aria-hidden="true"
                                 :class="connectionFor(provider.id)
-                                    ? dark ? 'text-emerald-400' : 'text-emerald-600'
+                                    ? dark ? 'text-emerald-400' : 'text-emerald-700'
                                     : dark ? 'text-zinc-400' : 'text-zinc-500'"
                             />
                         </div>

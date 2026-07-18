@@ -176,7 +176,7 @@ const presenceGroups = computed(() => [
         data: props.whoIsOnline,
         empty: t('home.no_registered_online'),
         live: true,
-        countClass: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+        countClass: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
     },
     {
         key: 'today',
@@ -242,8 +242,8 @@ async function copyAddress(server: HomeServer) {
 onUnmounted(() => { if (copyTimer) clearTimeout(copyTimer); });
 
 function pingColor(ping: number) {
-    if (ping < 50)  return dark.value ? 'text-emerald-400' : 'text-emerald-600';
-    if (ping < 100) return dark.value ? 'text-amber-400'   : 'text-amber-600';
+    if (ping < 50)  return dark.value ? 'text-emerald-400' : 'text-emerald-700';
+    if (ping < 100) return dark.value ? 'text-amber-400'   : 'text-amber-700';
     return 'text-red-400';
 }
 
@@ -351,7 +351,7 @@ function toggleFavourite(server: HomeServer) {
                                 {{ t('home.live_title') }}
                             </h2>
                             <span class="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest"
-                                :class="dark ? 'text-emerald-400' : 'text-emerald-600'">
+                                :class="dark ? 'text-emerald-400' : 'text-emerald-700'">
                                 <span class="hc-live-dot" aria-hidden="true" />{{ t('home.live_now') }}
                             </span>
                         </div>
@@ -729,7 +729,7 @@ function toggleFavourite(server: HomeServer) {
                                 <!-- Connect -->
                                 <a :href="server.connect_route"
                                     class="relative shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                                    :class="dark ? 'text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10' : 'text-zinc-500 hover:text-emerald-600 hover:bg-emerald-500/10'"
+                                    :class="dark ? 'text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10' : 'text-zinc-500 hover:text-emerald-700 hover:bg-emerald-500/10'"
                                     :aria-label="t('home.connect_to', { name: server.name })"
                                     :title="t('home.connect_to', { name: server.name })">
                                     <Play :size="15" :stroke-width="2" fill="currentColor" aria-hidden="true" />

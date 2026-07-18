@@ -92,7 +92,7 @@ const label = computed(() =>
                         :aria-invalid="!!exportForm.errors.password"
                         :class="[input, exportForm.errors.password ? '!border-red-500/60' : '']"
                     />
-                    <p v-if="exportForm.errors.password" class="text-red-500 text-[12px] font-semibold">
+                    <p v-if="exportForm.errors.password" class="text-red-600 dark:text-red-400 text-[12px] font-semibold">
                         {{ exportForm.errors.password }}
                     </p>
                 </div>
@@ -109,7 +109,7 @@ const label = computed(() =>
                         :aria-invalid="!!exportForm.errors.username_confirm"
                         :class="[input, 'font-mono', exportForm.errors.username_confirm ? '!border-red-500/60' : '']"
                     />
-                    <p v-if="exportForm.errors.username_confirm" class="text-red-500 text-[12px] font-semibold">
+                    <p v-if="exportForm.errors.username_confirm" class="text-red-600 dark:text-red-400 text-[12px] font-semibold">
                         {{ exportForm.errors.username_confirm }}
                     </p>
                     <p class="text-[12px] leading-relaxed" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
@@ -128,7 +128,7 @@ const label = computed(() =>
                             v-if="exportForm.recentlySuccessful"
                             role="status"
                             class="inline-flex items-center gap-1 text-[12px] font-semibold"
-                            :class="dark ? 'text-emerald-400' : 'text-emerald-600'"
+                            :class="dark ? 'text-emerald-400' : 'text-emerald-700'"
                         >
                             <Check :size="13" :stroke-width="2.4" />
                             {{ t('account.export_queued') }}
@@ -242,7 +242,7 @@ const label = computed(() =>
                             :aria-invalid="!!deleteForm.errors.username_confirm"
                             :class="[dangerInput, 'font-mono']"
                         />
-                        <p v-if="deleteForm.errors.username_confirm" class="text-red-500 text-[12px] font-semibold">
+                        <p v-if="deleteForm.errors.username_confirm" class="text-red-600 dark:text-red-400 text-[12px] font-semibold">
                             {{ deleteForm.errors.username_confirm }}
                         </p>
                     </div>
@@ -257,7 +257,7 @@ const label = computed(() =>
                             :aria-invalid="!!deleteForm.errors.password"
                             :class="dangerInput"
                         />
-                        <p v-if="deleteForm.errors.password" class="text-red-500 text-[12px] font-semibold">
+                        <p v-if="deleteForm.errors.password" class="text-red-600 dark:text-red-400 text-[12px] font-semibold">
                             {{ deleteForm.errors.password }}
                         </p>
                     </div>

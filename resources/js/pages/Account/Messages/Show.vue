@@ -174,7 +174,7 @@ onUnmounted(() => {
                 </button>
             </form>
             <p v-if="sendForm.errors.body" id="message-error" role="alert"
-               class="text-red-500 text-[11.5px] font-semibold mt-1">{{ sendForm.errors.body }}</p>
+               class="text-red-600 dark:text-red-400 text-[11.5px] font-semibold mt-1">{{ sendForm.errors.body }}</p>
             <p id="message-hint" class="text-[10.5px] mt-1.5" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                 {{ t('account.msg_enter_hint') }}
             </p>

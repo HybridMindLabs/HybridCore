@@ -607,7 +607,7 @@ const initials = computed(() => {
                             <button type="button" @click="copyLink"
                                 class="w-full flex items-center justify-center gap-2 py-2 rounded-xl border text-[12px] font-semibold transition"
                                 :class="copied
-                                    ? dark ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400' : 'border-emerald-400/40 bg-emerald-50 text-emerald-600'
+                                    ? dark ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400' : 'border-emerald-400/40 bg-emerald-50 text-emerald-700'
                                     : dark ? 'border-zinc-800/70 text-zinc-400 hover:text-zinc-100 hover:border-zinc-600' : 'border-zinc-200 text-zinc-500 hover:text-zinc-800 hover:border-zinc-400'">
                                 <component :is="copied ? Check : Copy" :size="12" :stroke-width="2" />
                                 {{ copied ? t('news.copied') : t('news.copy_link') }}

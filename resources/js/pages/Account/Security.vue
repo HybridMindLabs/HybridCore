@@ -35,9 +35,9 @@ const strength = computed(() => {
 
     const levels = [
         { min: 0, key: 'sec_pw_weak', bars: 1, bar: 'bg-red-500', text: dark.value ? 'text-red-400' : 'text-red-600' },
-        { min: 3, key: 'sec_pw_fair', bars: 2, bar: 'bg-amber-500', text: dark.value ? 'text-amber-400' : 'text-amber-600' },
-        { min: 4, key: 'sec_pw_good', bars: 3, bar: 'bg-lime-500', text: dark.value ? 'text-lime-400' : 'text-lime-600' },
-        { min: 5, key: 'sec_pw_strong', bars: 4, bar: 'bg-emerald-500', text: dark.value ? 'text-emerald-400' : 'text-emerald-600' },
+        { min: 3, key: 'sec_pw_fair', bars: 2, bar: 'bg-amber-500', text: dark.value ? 'text-amber-400' : 'text-amber-700' },
+        { min: 4, key: 'sec_pw_good', bars: 3, bar: 'bg-lime-500', text: dark.value ? 'text-lime-400' : 'text-lime-700' },
+        { min: 5, key: 'sec_pw_strong', bars: 4, bar: 'bg-emerald-500', text: dark.value ? 'text-emerald-400' : 'text-emerald-700' },
     ];
 
     return levels.filter((l) => score >= l.min).pop() ?? levels[0];
@@ -101,7 +101,7 @@ function submit() {
                     :class="[input, form.errors.current_password ? '!border-red-500/60' : '']"
                     @change="form.validate('current_password')"
                 />
-                <p v-if="form.errors.current_password" id="current_password_error" class="text-red-500 text-[12px] font-semibold">
+                <p v-if="form.errors.current_password" id="current_password_error" class="text-red-600 dark:text-red-400 text-[12px] font-semibold">
                     {{ form.errors.current_password }}
                 </p>
             </div>
@@ -147,7 +147,7 @@ function submit() {
                     </span>
                 </div>
 
-                <p v-if="form.errors.password" id="new_password_error" class="text-red-500 text-[12px] font-semibold">
+                <p v-if="form.errors.password" id="new_password_error" class="text-red-600 dark:text-red-400 text-[12px] font-semibold">
                     {{ form.errors.password }}
                 </p>
             </div>
@@ -163,7 +163,7 @@ function submit() {
                     :aria-describedby="mismatch ? 'password_confirmation_error' : undefined"
                     :class="[input, mismatch ? '!border-red-500/60' : '']"
                 />
-                <p v-if="mismatch" id="password_confirmation_error" role="alert" class="text-red-500 text-[12px] font-semibold">
+                <p v-if="mismatch" id="password_confirmation_error" role="alert" class="text-red-600 dark:text-red-400 text-[12px] font-semibold">
                     {{ t('account.sec_pw_mismatch') }}
                 </p>
             </div>

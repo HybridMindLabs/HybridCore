@@ -136,7 +136,7 @@ function submit() {
                         v-if="form.recentlySuccessful"
                         role="status"
                         class="inline-flex items-center gap-1 text-[12px] font-semibold"
-                        :class="dark ? 'text-emerald-400' : 'text-emerald-600'"
+                        :class="dark ? 'text-emerald-400' : 'text-emerald-700'"
                     >
                         <Check :size="13" :stroke-width="2.4" />
                         {{ t('account.email_saved') }}

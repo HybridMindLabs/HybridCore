@@ -177,7 +177,7 @@ function toggleBlock() {
                                 class="flex items-center gap-1.5 text-[12px] font-bold rounded-xl border px-3 py-2 transition backdrop-blur-sm"
                                 :class="profile.is_following
                                     ? (dark ? 'border-zinc-700/60 bg-zinc-900/70 text-zinc-300 hover:text-red-400 hover:border-red-500/40' : 'border-zinc-200/80 bg-white/80 text-zinc-600 hover:text-red-500')
-                                    : (dark ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100')"
+                                    : (dark ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100')"
                                 :disabled="followPending"
                                 @click="toggleFollow">
                                 <component :is="profile.is_following ? UserCheck : UserPlus" :size="12" :stroke-width="2" />
@@ -192,7 +192,7 @@ function toggleBlock() {
                             <button type="button"
                                 class="flex items-center gap-1.5 text-[12px] font-bold rounded-xl border px-3 py-2 transition backdrop-blur-sm"
                                 :class="profile.is_blocked
-                                    ? (dark ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'border-emerald-200 bg-emerald-50 text-emerald-600')
+                                    ? (dark ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'border-emerald-200 bg-emerald-50 text-emerald-700')
                                     : (dark ? 'border-zinc-700/60 bg-zinc-900/70 text-zinc-400 hover:text-red-400 hover:border-red-500/40' : 'border-zinc-200/80 bg-white/80 text-zinc-500 hover:text-red-500')"
                                 :disabled="blockPending"
                                 @click="toggleBlock">
@@ -389,7 +389,7 @@ function toggleBlock() {
                                 </div>
                             </component>
                             <a v-if="s.connect_url" :href="s.connect_url" class="shrink-0 text-[11px] font-bold px-2.5 py-1.5 rounded-lg border transition"
-                                :class="dark ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10' : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'">
+                                :class="dark ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10' : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'">
                                 {{ t('profile.connect') }}
                             </a>
                         </div>

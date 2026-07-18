@@ -197,7 +197,7 @@ const dangerBtn = computed(() =>
                     </div>
                 </div>
 
-                <p v-if="bannerForm.errors.banner" role="alert" class="text-red-500 text-[12px] font-semibold mb-3">
+                <p v-if="bannerForm.errors.banner" role="alert" class="text-red-600 dark:text-red-400 text-[12px] font-semibold mb-3">
                     {{ bannerForm.errors.banner }}
                 </p>
 
@@ -262,7 +262,7 @@ const dangerBtn = computed(() =>
                         </h3>
                         <p class="mb-2" :class="hint">{{ t('account.pf_avatar_hint') }}</p>
 
-                        <p v-if="avatarForm.errors.avatar" role="alert" class="text-red-500 text-[12px] font-semibold mb-2">
+                        <p v-if="avatarForm.errors.avatar" role="alert" class="text-red-600 dark:text-red-400 text-[12px] font-semibold mb-2">
                             {{ avatarForm.errors.avatar }}
                         </p>
 
@@ -328,7 +328,7 @@ const dangerBtn = computed(() =>
                                 @change="form.validate('username')"
                             />
                         </div>
-                        <p v-if="form.errors.username" id="pf_username_error" class="text-red-500 text-[12px] font-semibold">
+                        <p v-if="form.errors.username" id="pf_username_error" class="text-red-600 dark:text-red-400 text-[12px] font-semibold">
                             {{ form.errors.username }}
                         </p>
                         <p v-else id="pf_username_hint" :class="hint">
@@ -353,7 +353,7 @@ const dangerBtn = computed(() =>
                             :placeholder="t('account.pf_display_name_placeholder')"
                             :class="[input, form.errors.display_name ? '!border-red-500/60' : '']"
                         />
-                        <p v-if="form.errors.display_name" class="text-red-500 text-[12px] font-semibold">
+                        <p v-if="form.errors.display_name" class="text-red-600 dark:text-red-400 text-[12px] font-semibold">
                             {{ form.errors.display_name }}
                         </p>
                     </div>
@@ -379,7 +379,7 @@ const dangerBtn = computed(() =>
                             :class="[input, form.errors.email ? '!border-red-500/60' : '']"
                             @change="form.validate('email')"
                         />
-                        <p v-if="form.errors.email" id="pf_email_error" class="text-red-500 text-[12px] font-semibold">
+                        <p v-if="form.errors.email" id="pf_email_error" class="text-red-600 dark:text-red-400 text-[12px] font-semibold">
                             {{ form.errors.email }}
                         </p>
                         <!-- The controller clears email_verified_at on change; say so before saving, not after. -->
@@ -440,7 +440,7 @@ const dangerBtn = computed(() =>
                                 :class="[input, form.errors.website ? '!border-red-500/60' : '']"
                                 @change="form.validate('website')"
                             />
-                            <p v-if="form.errors.website" class="text-red-500 text-[12px] font-semibold">
+                            <p v-if="form.errors.website" class="text-red-600 dark:text-red-400 text-[12px] font-semibold">
                                 {{ form.errors.website }}
                             </p>
                         </div>
@@ -492,7 +492,7 @@ const dangerBtn = computed(() =>
                                 v-if="form.recentlySuccessful"
                                 role="status"
                                 class="inline-flex items-center gap-1 text-[12px] font-semibold"
-                                :class="dark ? 'text-emerald-400' : 'text-emerald-600'"
+                                :class="dark ? 'text-emerald-400' : 'text-emerald-700'"
                             >
                                 <Check :size="13" :stroke-width="2.4" />
                                 {{ t('account.pf_saved') }}

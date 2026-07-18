@@ -123,7 +123,7 @@ function startConversation() {
                 </form>
 
                 <p v-if="newDmForm.errors.username" id="dm-username-error" role="alert"
-                   class="text-red-500 text-[12px] font-semibold mt-1.5">{{ newDmForm.errors.username }}</p>
+                   class="text-red-600 dark:text-red-400 text-[12px] font-semibold mt-1.5">{{ newDmForm.errors.username }}</p>
             </div>
 
             <!-- Empty state -->
