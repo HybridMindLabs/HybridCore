@@ -59,6 +59,22 @@ export function useLocale() {
         return result;
     }
 
+    /**
+     * Format an ISO timestamp in the reader's language.
+     *
+     * Dates formatted server-side with format('d M Y') come out with English
+     * month names whatever locale the page is in, so pages should ship the ISO
+     * value and render it through here.
+     */
+    function formatDate(iso: string | null | undefined, options?: Intl.DateTimeFormatOptions): string {
+        if (!iso) return '';
+
+        const date = new Date(iso);
+        if (Number.isNaN(date.getTime())) return '';
+
+        return new Intl.DateTimeFormat(currentLocale.value, options ?? { dateStyle: 'medium' }).format(date);
+    }
+
     function isCurrentLocale(locale: string): boolean {
         return currentLocale.value === locale;
     }
@@ -79,5 +95,6 @@ export function useLocale() {
         isCurrentLocale,
         switchLocale,
         t,
+        formatDate,
     };
 }

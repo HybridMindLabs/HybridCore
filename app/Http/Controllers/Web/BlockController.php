@@ -45,6 +45,12 @@ class BlockController extends Controller
             'blocked_id' => $user->id,
         ]);
 
+        // Blocking someone who already follows you (or whom you follow) has to
+        // break the existing link too — otherwise the block only stops future
+        // follows and the old one silently survives.
+        $blocker->following()->detach($user->id);
+        $blocker->followers()->detach($user->id);
+
         return back()->with('success', __('account.user_blocked', ['name' => $user->username]));
     }
 

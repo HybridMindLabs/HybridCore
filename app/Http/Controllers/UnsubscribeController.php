@@ -33,8 +33,14 @@ class UnsubscribeController extends Controller
 
         $user = User::findOrFail($request->query('user'));
 
+        // The category comes straight from the URL, so it has to be checked
+        // against the real key list — otherwise any string lands as a new key
+        // in the preferences JSON that nothing will ever read.
+        $key = 'email_'.$category;
+        abort_unless(in_array($key, User::EMAIL_PREFERENCE_KEYS, true), 404);
+
         $prefs = $user->notification_preferences ?? [];
-        $prefs['email_'.$category] = false;
+        $prefs[$key] = false;
         $user->update(['notification_preferences' => $prefs]);
 
         return redirect()->back()->with('success', 'You have been unsubscribed from '.ucfirst($category).' emails.');

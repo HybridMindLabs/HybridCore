@@ -17,16 +17,25 @@ class FollowController extends Controller
 
     public function store(Request $request, User $user): RedirectResponse
     {
-        abort_if($request->user()->id === $user->id, 422, 'You cannot follow yourself.');
+        $follower = $request->user();
+
+        abort_if($follower->id === $user->id, 422, 'You cannot follow yourself.');
         abort_if($user->isBanned(), 404);
 
-        $wasNew = ! $request->user()->following()->where('followed_id', $user->id)->exists();
+        // A block cuts the relationship both ways: neither party can follow the
+        // other. Checked in both directions so blocking someone also stops them
+        // from following you, not just you from following them.
+        if ($follower->hasBlocked($user->id) || $follower->isBlockedBy($user->id)) {
+            return back()->withErrors(['follow' => __('account.follow_blocked')]);
+        }
 
-        $request->user()->following()->syncWithoutDetaching([$user->id]);
+        $wasNew = ! $follower->following()->where('followed_id', $user->id)->exists();
+
+        $follower->following()->syncWithoutDetaching([$user->id]);
 
         if ($wasNew) {
-            $user->notify(new NewFollowerNotification($request->user()));
-            app(HookRegistry::class)->fire(Hooks::USER_FOLLOWED, $request->user(), $user);
+            $user->notify(new NewFollowerNotification($follower));
+            app(HookRegistry::class)->fire(Hooks::USER_FOLLOWED, $follower, $user);
         }
 
         // "popular" is based on follower count of the followed user.

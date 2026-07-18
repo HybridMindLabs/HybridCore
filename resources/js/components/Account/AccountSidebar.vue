@@ -62,15 +62,15 @@ const tabs = computed(() => [
     { id: 'sessions',     label: t('account.tab_sessions'),  icon: Monitor,       badge: 0 },
     { id: 'prefs',        label: t('account.tab_prefs'),     icon: Settings,      badge: 0 },
     { id: 'connected',    label: t('account.tab_connected'), icon: Link2,         badge: 0 },
-    { id: 'notifications',label: 'Notifications',            icon: Bell,          badge: props.unreadNotifications ?? 0 },
-    { id: 'messages',     label: 'Messages',                 icon: MessageSquare, badge: props.unreadMessages ?? 0 },
-    { id: 'favorites',    label: 'Favorites',                icon: Star,          badge: 0 },
-    { id: 'activity',     label: 'Activity',                 icon: History,       badge: 0 },
-    { id: 'blocked',      label: 'Blocked users',            icon: Ban,           badge: 0 },
-    { id: 'email-prefs', label: 'Email Preferences',        icon: MailCheck,     badge: 0 },
+    { id: 'notifications', label: t('account.tab_notifications'), icon: Bell,          badge: props.unreadNotifications ?? 0 },
+    { id: 'messages',      label: t('account.tab_messages'),      icon: MessageSquare, badge: props.unreadMessages ?? 0 },
+    { id: 'favorites',     label: t('account.tab_favorites'),     icon: Star,          badge: 0 },
+    { id: 'activity',      label: t('account.tab_activity'),      icon: History,       badge: 0 },
+    { id: 'blocked',       label: t('account.tab_blocked'),       icon: Ban,           badge: 0 },
+    { id: 'email-prefs',   label: t('account.tab_email_prefs'),   icon: MailCheck,     badge: 0 },
 ]);
 
-const dangerTab = { id: 'danger', label: 'Danger zone', icon: Trash };
+const dangerTab = computed(() => ({ id: 'danger', label: t('account.tab_danger'), icon: Trash }));
 
 function logout() { router.post(route('logout')); }
 

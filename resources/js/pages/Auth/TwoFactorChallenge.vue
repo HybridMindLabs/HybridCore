@@ -1,94 +1,107 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
-import { ShieldCheck, KeyRound } from '@lucide/vue';
-import { computed, onMounted, ref } from 'vue';
+import { KeyRound, ShieldCheck } from '@lucide/vue';
+import { computed, ref } from 'vue';
+import AuthCard from '@/components/Auth/AuthCard.vue';
+import Button from '@/components/UI/Button.vue';
+import { useLocale } from '@/composables/useLocale';
 import { useTheme } from '@/composables/useTheme';
 
-const { theme, init: initTheme } = useTheme();
+const { t } = useLocale();
+const { theme } = useTheme();
 const dark = computed(() => theme.value === 'dark');
-onMounted(() => initTheme());
 
+/**
+ * This screen was the one auth page not built on AuthCard: its own standalone
+ * layout, outside PublicLayout, and the only one still in English. Anyone with
+ * two-factor on met it at every sign-in.
+ */
 const useRecovery = ref(false);
 const form = useForm({ code: '' });
 
+const subtitle = computed(() =>
+    useRecovery.value ? t('auth.two_factor.subtitle_recovery') : t('auth.two_factor.subtitle_app'),
+);
+const label = computed(() =>
+    useRecovery.value ? t('auth.two_factor.label_recovery') : t('auth.two_factor.label_app'),
+);
+
+function toggleMode() {
+    useRecovery.value = !useRecovery.value;
+    form.reset('code');
+    form.clearErrors();
+}
+
 function submit() {
     form.post(route('auth.2fa.verify'), {
-        onFinish: () => { if (useRecovery.value === false) form.reset('code'); },
+        // A recovery code is single-use; leaving it in the box after a failure
+        // invites retrying one that is already spent.
+        onFinish: () => form.reset('code'),
     });
 }
 </script>
 
 <template>
-    <Head title="Two-Factor Authentication" />
+    <Head :title="t('auth.two_factor.title')" />
 
-    <div class="relative min-h-screen flex items-center justify-center px-4 overflow-hidden"
-        :class="dark ? 'bg-[#09090b]' : 'bg-zinc-100'">
-        <!-- Glows + dot grid (same as Home hero) -->
-        <div class="absolute inset-0 pointer-events-none overflow-hidden">
-            <div class="absolute -top-40 left-1/3 w-[600px] h-[500px] rounded-full blur-[130px]"
-                :class="dark ? 'bg-blue-500/6' : 'bg-blue-400/8'" />
-            <div class="absolute -top-20 right-1/4 w-[350px] h-[350px] rounded-full blur-[100px]"
-                :class="dark ? 'bg-violet-500/5' : 'bg-violet-400/5'" />
-            <div v-if="dark" class="absolute inset-0 opacity-50"
-                style="background-image:radial-gradient(circle,rgba(255,255,255,0.035) 1px,transparent 1px);background-size:28px 28px" />
-        </div>
+    <AuthCard
+        :title="t('auth.two_factor.title')"
+        :subtitle="subtitle"
+        :shell-title="t('auth.two_factor.shell_title')"
+        :shell-subtitle="t('auth.two_factor.shell_subtitle')"
+    >
+        <form class="flex flex-col gap-4" @submit.prevent="submit">
+            <div>
+                <label for="code" class="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest"
+                    :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
+                    <component :is="useRecovery ? KeyRound : ShieldCheck" :size="12" :stroke-width="2.2" aria-hidden="true" />
+                    {{ label }}
+                </label>
 
-        <div class="relative z-10 w-full max-w-sm">
-            <div class="flex justify-center mb-8">
-                <div class="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                    <component :is="useRecovery ? KeyRound : ShieldCheck" :size="22" :stroke-width="1.6" class="text-blue-400" />
-                </div>
-            </div>
+                <input
+                    id="code"
+                    v-model="form.code"
+                    type="text"
+                    :inputmode="useRecovery ? 'text' : 'numeric'"
+                    :maxlength="useRecovery ? 21 : 6"
+                    :placeholder="useRecovery ? 'xxxxxxxxxx-xxxxxxxxxx' : '000000'"
+                    autofocus
+                    autocomplete="one-time-code"
+                    :aria-invalid="!!form.errors.code"
+                    :aria-describedby="form.errors.code ? 'code_error' : undefined"
+                    class="w-full rounded-xl border px-4 py-3 text-[15px] font-mono text-center tracking-[0.25em]
+                           placeholder:tracking-normal transition focus:outline-none focus:ring-2 focus:ring-blue-500/10"
+                    :class="[
+                        dark
+                            ? 'border-zinc-800 bg-zinc-900/60 text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500/50'
+                            : 'border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400 focus:border-blue-400',
+                        form.errors.code ? '!border-red-500/60' : '',
+                    ]"
+                />
 
-            <div class="rounded-2xl border p-8"
-                :class="dark ? 'bg-[#111113] border-zinc-800/70' : 'bg-white border-zinc-200 shadow-sm'">
-                <div class="mx-auto mb-5 h-1 w-12 rounded-full bg-gradient-to-r from-blue-500 to-violet-500" />
-
-                <h1 class="text-[18px] font-black text-center mb-1" :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
-                    Two-Factor Authentication
-                </h1>
-                <p class="text-[13px] text-center mb-6" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
-                    <template v-if="!useRecovery">Enter the 6-digit code from your authenticator app.</template>
-                    <template v-else>Enter one of your recovery codes.</template>
+                <p v-if="form.errors.code" id="code_error" role="alert"
+                    class="mt-1.5 text-center text-[12px] font-semibold text-red-600 dark:text-red-400">
+                    {{ form.errors.code }}
                 </p>
-
-                <form class="flex flex-col gap-4" @submit.prevent="submit">
-                    <div>
-                        <input
-                            v-model="form.code"
-                            type="text"
-                            :inputmode="useRecovery ? 'text' : 'numeric'"
-                            :maxlength="useRecovery ? 21 : 6"
-                            :placeholder="useRecovery ? 'xxxxxxxxxx-xxxxxxxxxx' : '000000'"
-                            autofocus
-                            autocomplete="one-time-code"
-                            class="w-full rounded-xl border px-4 py-3 text-[15px] font-mono text-center tracking-[0.25em] placeholder:tracking-normal focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition"
-                            :class="dark
-                                ? 'border-zinc-800 bg-zinc-900/60 text-zinc-100 placeholder:text-zinc-700 focus:border-blue-500/50'
-                                : 'border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-300 focus:border-blue-400'"
-                            @keyup.enter="submit"
-                        />
-                        <p v-if="form.errors.code" class="text-red-400 text-[12px] mt-1.5 text-center">{{ form.errors.code }}</p>
-                    </div>
-
-                    <button
-                        type="submit"
-                        :disabled="form.processing || form.code.length === 0"
-                        class="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-bold text-[14px] rounded-xl transition disabled:opacity-50 shadow-lg shadow-blue-500/20"
-                    >
-                        {{ form.processing ? 'Verifying…' : 'Continue' }}
-                    </button>
-                </form>
-
-                <button
-                    type="button"
-                    class="mt-4 w-full text-center text-[12px] transition"
-                    :class="dark ? 'text-zinc-600 hover:text-zinc-400' : 'text-zinc-400 hover:text-zinc-600'"
-                    @click="useRecovery = !useRecovery; form.reset('code')"
-                >
-                    {{ useRecovery ? 'Use authenticator code instead' : 'Use a recovery code instead' }}
-                </button>
             </div>
-        </div>
-    </div>
+
+            <Button type="submit" size="lg" :disabled="form.processing || !form.code.length" class="w-full justify-center">
+                {{ form.processing ? t('auth.two_factor.verifying') : t('auth.two_factor.submit') }}
+            </Button>
+        </form>
+
+        <button
+            type="button"
+            class="mt-4 w-full text-center text-[12px] font-semibold transition rounded
+                   focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+            :class="dark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'"
+            @click="toggleMode"
+        >
+            {{ useRecovery ? t('auth.two_factor.use_app') : t('auth.two_factor.use_recovery') }}
+        </button>
+
+        <template #footer>
+            {{ t('auth.two_factor.lost_access') }}
+        </template>
+    </AuthCard>
 </template>

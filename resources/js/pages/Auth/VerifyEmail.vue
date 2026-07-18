@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { MailCheck } from '@lucide/vue';
 import AuthCard from '@/components/Auth/AuthCard.vue';
 import Button from '@/components/UI/Button.vue';
@@ -27,14 +27,31 @@ function resend() {
             </div>
         </div>
 
-        <div v-if="status" class="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-[13px] font-medium text-emerald-600 dark:text-emerald-400">
+        <p
+            v-if="status"
+            role="status"
+            class="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-[13px] font-medium text-emerald-700 dark:text-emerald-400"
+        >
             {{ status }}
-        </div>
+        </p>
 
-        <p class="mb-5 text-center text-[13px] leading-relaxed text-zinc-500 dark:text-zinc-400">{{ t('auth.verify_hint') }}</p>
+        <p class="mb-5 text-center text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-400">{{ t('auth.verify_hint') }}</p>
 
         <Button type="button" size="lg" :disabled="form.processing" class="w-full justify-center" @click="resend">
             {{ t('auth.resend_verification') }}
         </Button>
+
+        <!-- Registering with a typo used to be a dead end: no link out, and the
+             address is not editable from here. -->
+        <template #footer>
+            {{ t('auth.verify_wrong_email') }}
+            <Link
+                :href="route('logout')"
+                method="post"
+                as="button"
+                type="button"
+                class="font-bold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+            >{{ t('auth.verify_sign_out') }}</Link>
+        </template>
     </AuthCard>
 </template>

@@ -6,19 +6,38 @@ import GameIcon from '@/components/UI/GameIcon.vue';
 import { useLocale } from '@/composables/useLocale';
 import { useTheme } from '@/composables/useTheme';
 
-defineProps<{ title: string; subtitle?: string }>();
+const props = defineProps<{
+    title: string;
+    subtitle?: string;
+    /**
+     * The left panel sells the network by default, which is right for
+     * sign-up but wrong mid-flow — someone half-way through a two-factor
+     * check does not need a pitch. Pages can replace it.
+     */
+    shellTitle?: string;
+    shellSubtitle?: string;
+}>();
 
 const { t } = useLocale();
 const { theme } = useTheme();
 const dark = computed(() => theme.value === 'dark');
 
 interface AuthShell {
-    games:   { name: string; slug: string }[];
+    players_online: number;
+    games: { name: string; slug: string }[];
     servers: { name: string; map: string; players: string; ping: string; slug: string }[];
 }
 
 const page = usePage<{ authShell?: AuthShell }>();
-const shell = computed(() => page.props.authShell ?? { games: [], servers: [] });
+const shell = computed(() => page.props.authShell ?? { players_online: 0, games: [], servers: [] });
+
+// Kept out of the template: backticks in an inline :style get mangled
+// travelling through the shell used to run these edits.
+const dotGrid = computed(() => {
+    const dot = dark.value ? 'rgba(255,255,255,0.035)' : 'rgba(24,24,27,0.05)';
+
+    return `background-image:radial-gradient(circle,${dot} 1px,transparent 1px);background-size:28px 28px`;
+});
 </script>
 
 <template>
@@ -26,12 +45,12 @@ const shell = computed(() => page.props.authShell ?? { games: [], servers: [] })
         <section class="relative min-h-[calc(100vh-64px)] flex items-start px-4 py-8 sm:px-6 lg:py-12 overflow-hidden">
             <!-- Glows + dot grid (same as Home hero) -->
             <div class="absolute inset-0 pointer-events-none overflow-hidden">
-                <div class="absolute -top-40 left-1/3 w-[600px] h-[500px] rounded-full blur-[130px]"
+                <div class="hc-hero-glow absolute -top-40 left-1/3 w-[600px] h-[500px] rounded-full blur-[130px]"
                     :class="dark ? 'bg-blue-500/6' : 'bg-blue-400/8'" />
-                <div class="absolute -top-20 right-1/4 w-[350px] h-[350px] rounded-full blur-[100px]"
+                <div class="hc-hero-glow hc-hero-glow--slow absolute -top-20 right-1/4 w-[350px] h-[350px] rounded-full blur-[100px]"
                     :class="dark ? 'bg-violet-500/5' : 'bg-violet-400/5'" />
-                <div v-if="dark" class="absolute inset-0 opacity-50"
-                    style="background-image:radial-gradient(circle,rgba(255,255,255,0.035) 1px,transparent 1px);background-size:28px 28px" />
+                <div class="absolute inset-0" :class="dark ? 'opacity-50' : 'opacity-[0.35]'"
+                    :style="dotGrid" />
             </div>
 
             <div class="relative z-10 mx-auto w-full max-w-[1100px]">
@@ -39,7 +58,7 @@ const shell = computed(() => page.props.authShell ?? { games: [], servers: [] })
 
                     <!-- ── Left: marketing panel ── -->
                     <div
-                        class="relative overflow-hidden rounded-2xl border p-6 lg:sticky lg:top-24 lg:p-8"
+                        class="hc-hero-in relative overflow-hidden rounded-2xl border p-6 lg:sticky lg:top-24 lg:p-8"
                         :class="dark
                             ? 'border-zinc-800/70 bg-[#111113]'
                             : 'border-zinc-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]'"
@@ -63,11 +82,11 @@ const shell = computed(() => page.props.authShell ?? { games: [], servers: [] })
                             <h2
                                 class="max-w-[520px] text-[28px] font-black leading-tight tracking-tight sm:text-[34px]"
                                 :class="dark ? 'text-zinc-50' : 'text-zinc-900'"
-                            >{{ t('auth.shell.title') }}</h2>
+                            >{{ props.shellTitle ?? t('auth.shell.title') }}</h2>
                             <p
                                 class="mt-3 max-w-[520px] text-[14px] leading-relaxed"
                                 :class="dark ? 'text-zinc-400' : 'text-zinc-500'"
-                            >{{ t('auth.shell.subtitle') }}</p>
+                            >{{ props.shellSubtitle ?? t('auth.shell.subtitle') }}</p>
 
                             <!-- Game pills -->
                             <div class="mt-6 flex flex-wrap gap-2">
@@ -104,16 +123,17 @@ const shell = computed(() => page.props.authShell ?? { games: [], servers: [] })
                                         class="flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold"
                                         :class="dark ? 'border-zinc-800/70 bg-zinc-800/50 text-zinc-300' : 'border-zinc-200 bg-white text-zinc-700'"
                                     >
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                        {{ t('auth.shell.online_now') }}
+                                        <span class="hc-live-dot w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                        {{ shell.players_online }}
                                     </div>
                                 </div>
 
                                 <div class="flex flex-col gap-2">
                                     <div
-                                        v-for="server in shell.servers"
+                                        v-for="(server, i) in shell.servers"
                                         :key="server.name"
-                                        class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border px-3 py-2.5"
+                                        class="hc-reveal grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border px-3 py-2.5"
+                                        :style="{ animationDelay: 0.12 + i * 0.06 + 's' }"
                                         :class="dark
                                             ? 'border-zinc-800/50 bg-[#111113]'
                                             : 'border-zinc-200 bg-white'"
@@ -139,7 +159,7 @@ const shell = computed(() => page.props.authShell ?? { games: [], servers: [] })
 
                     <!-- ── Right: form card ── -->
                     <div
-                        class="rounded-2xl border p-5 sm:p-6"
+                        class="hc-hero-in hc-hero-in--1 rounded-2xl border p-5 sm:p-6"
                         :class="dark
                             ? 'border-zinc-800/70 bg-[#111113]'
                             : 'border-zinc-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]'"

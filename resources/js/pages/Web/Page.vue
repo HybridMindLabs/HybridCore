@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { ChevronLeft } from '@lucide/vue';
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import { useTheme } from '@/composables/useTheme';
+import { useLocale } from '@/composables/useLocale';
 import { computed } from 'vue';
 
 interface PageData { title: string; body: string | null; layout?: string; format?: string }
@@ -19,6 +20,7 @@ const maxWidthClass = computed(() => {
 });
 
 const { theme } = useTheme();
+const { t } = useLocale();
 const dark = computed(() => theme.value === 'dark');
 </script>
 
@@ -42,7 +44,7 @@ const dark = computed(() => theme.value === 'dark');
                 :class="dark ? 'text-zinc-600 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-700'"
             >
                 <ChevronLeft :size="14" :stroke-width="2" />
-                Back to home
+                {{ t('navigation.back_to_home') }}
             </Link>
 
             <!-- Title + accent -->

@@ -31,6 +31,7 @@ return [
 
     /* Публична навигация */
     'nav_home' => 'Начало',
+    'language' => 'Език',
     'nav_servers' => 'Сървъри',
     'nav_rules' => 'Правила',
     'nav_contacts' => 'Контакти',
@@ -44,4 +45,6 @@ return [
         'system' => 'Система',
         'extensions' => 'Разширения',
     ],
+    'breadcrumb' => 'Навигационен път',
+    'back_to_home' => 'Обратно към началото',
 ];

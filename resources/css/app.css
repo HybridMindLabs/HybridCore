@@ -28,11 +28,49 @@
     --color-hc-info:    #3b82f6;
 }
 
+/*
+ * Light theme calibration.
+ *
+ * The palette is redefined here rather than edited across ~400 utility classes
+ * in the pages, so light mode stays consistent and there is one place to tune.
+ *
+ * Two problems are fixed at once:
+ *
+ *   Glare — the pages stack pure #fff cards (102 of them) on a near-white
+ *   background. Dropping white to #fcfcfd and deepening the page tint keeps the
+ *   card/background separation while cutting the overall luminance.
+ *
+ *   Contrast — zinc-400 is the most used text colour on the public pages (224
+ *   occurrences) and lands around 2.8:1 on white, well under the 4.5:1 WCAG AA
+ *   needs for body text. Faint grey text is read as "harsh" too, because it
+ *   forces squinting. The muted steps are darkened to pass.
+ */
+:root:not(.dark) {
+    --color-white:    #f7f8fa;   /* card and panel surfaces */
+    --color-zinc-50:  #eceef2;   /* page background */
+    --color-zinc-100: #e1e4ea;   /* subtle fills, hover states */
+    --color-zinc-200: #d3d7df;   /* borders — kept visible against the softer fills */
+
+    /* Muted text, computed against the page background above rather than
+       against #fff. zinc-400's default #a1a1aa lands near 2.5:1 here, so the
+       muted steps move down until the smallest one clears 4.5:1. */
+    --color-zinc-400: #6a6a74;
+    --color-zinc-500: #5c5c66;
+    --color-zinc-600: #4a4a54;
+}
+
 html, body {
     background-color: #050810;
     color: #f1f5f9;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+/* Light mode: the base document must not stay dark behind the layout, or the
+   page flashes black on first paint and shows through any gap. */
+html:not(.dark), html:not(.dark) body {
+    background-color: #eceef2;
+    color: #27272a;
 }
 
 /* Dot-grid background texture — apply .hc-texture to the page wrapper */
@@ -99,6 +137,110 @@ html, body {
     right: -1%;
     border-color: rgba(125, 183, 255, 0.08);
     transform: translateY(-50%) rotate(18deg);
+}
+
+/* ── Hero ────────────────────────────────────────────────────────
+   Entrance is a short staggered rise, drifting glows behind it, and bars that
+   grow from zero. Everything here is decorative, so the whole block is disabled
+   under prefers-reduced-motion at the bottom of this section. */
+
+@keyframes hc-hero-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+}
+.hc-hero-in {
+    animation: hc-hero-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.hc-hero-in--1 { animation-delay: 0.06s; }
+.hc-hero-in--2 { animation-delay: 0.12s; }
+.hc-hero-in--3 { animation-delay: 0.18s; }
+.hc-hero-in--4 { animation-delay: 0.24s; }
+
+@keyframes hc-hero-drift {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50%      { transform: translate3d(3%, 4%, 0) scale(1.08); }
+}
+.hc-hero-glow {
+    animation: hc-hero-drift 18s ease-in-out infinite;
+    will-change: transform;
+}
+.hc-hero-glow--slow {
+    animation-duration: 26s;
+    animation-direction: reverse;
+}
+
+/* Animated gradient on the headline accent. background-clip:text needs a
+   sized background, hence the 200% + position shift rather than a hue rotate. */
+@keyframes hc-hero-sheen {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+}
+.hc-hero-gradient {
+    background-image: linear-gradient(100deg, #3b82f6, #8b5cf6, #06b6d4, #3b82f6);
+    background-size: 200% auto;
+    animation: hc-hero-sheen 8s ease-in-out infinite;
+}
+
+/* Capacity + per-game bars grow from zero on first paint. */
+@keyframes hc-hero-bar {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+}
+.hc-hero-bar {
+    transform-origin: left center;
+    animation: hc-hero-bar 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.25s backwards;
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hc-hero-in,
+    .hc-hero-glow,
+    .hc-hero-gradient,
+    .hc-hero-bar,
+    .hc-live-dot {
+        animation: none;
+    }
+    .hc-hero-bar { transition: none; }
+}
+
+/* Server rows: the map screenshot bleeds in from the right and is masked to
+   nothing before it reaches the text, so it reads as texture, not content. */
+.hc-server-map {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.35) 40%, rgba(0, 0, 0, 0.85) 75%, #000 100%);
+    mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.35) 40%, rgba(0, 0, 0, 0.85) 75%, #000 100%);
+    transition: opacity 0.4s ease, transform 0.7s ease;
+}
+
+/* Rule cards: an accent line wipes across the top edge on hover. Drawn with a
+   pseudo-element so it costs no extra markup and animates on the compositor. */
+.hc-rule-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.hc-rule-card:hover::after,
+.hc-rule-card:focus-visible::after {
+    transform: scaleX(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hc-rule-card::after { transition: none; }
+}
+
+/* Generic staggered card reveal, shared by the sidebar and content sections. */
+.hc-reveal {
+    animation: hc-hero-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hc-reveal { animation: none; }
 }
 
 /* Card hover lift */

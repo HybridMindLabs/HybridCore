@@ -12,9 +12,7 @@ use App\Models\User;
 use App\Models\UserAchievement;
 use App\Services\AnalyticsService;
 use App\Services\Extensions\Registries\ActivityFeedRegistry;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -43,6 +41,7 @@ class HomeController extends Controller
                 ->map(fn (Server $s) => [
                     'id' => $s->id,
                     'name' => $s->name ?? $s->latestSnapshot?->name ?? $s->address,
+                    'address' => $s->address,
                     'game_slug' => $s->game->slug,
                     'game_name' => $s->game->name,
                     'game_id' => $s->game_id,
@@ -50,6 +49,7 @@ class HomeController extends Controller
                     'is_online' => (bool) ($s->latestSnapshot?->is_online ?? false),
                     'map' => $s->latestSnapshot?->map ?? '—',
                     'map_image' => Game::mapImageUrl($s->game->slug, $s->latestSnapshot?->map),
+                    'row_image' => Game::rowImageUrl($s->game->slug, $s->latestSnapshot?->map),
                     'players' => $s->latestSnapshot?->players_online ?? 0,
                     'max_players' => $s->latestSnapshot?->players_max ?? 0,
                     'ping' => $s->latestSnapshot?->ping ?? 0,
@@ -126,7 +126,6 @@ class HomeController extends Controller
             'latestNews' => $latestNews,
             'whoIsOnline' => Schema::hasTable('page_views') ? app(AnalyticsService::class)->whoIsOnline() : null,
             'activeToday' => Schema::hasTable('page_views') ? app(AnalyticsService::class)->activeToday() : null,
-            'playerHistory' => $this->playerHistory(),
             'viewer' => $this->viewerSummary(),
             'communityActivity' => $this->communityActivity(),
             'preferredGameSlugs' => auth()->check()
@@ -236,58 +235,5 @@ class HomeController extends Controller
             'role' => $role ? ['name' => $role->name, 'color' => $role->color] : null,
             'achievements' => $user->achievements->pluck('slug'),
         ];
-    }
-
-    /**
-     * Total players online across all active servers, one point per hour
-     * for the last 24 hours. For each server, only its most recent
-     * snapshot within each hour bucket counts (a server is queried every
-     * couple of minutes, so summing every snapshot would wildly overcount).
-     *
-     * @return array<int, int>
-     */
-    private function playerHistory(): array
-    {
-        return Cache::remember('home.player_history', 300, function () {
-            if (! Schema::hasTable('server_snapshots')) {
-                return [];
-            }
-
-            // Fetched in PHP (rather than a raw date_format/window-function
-            // query) so this works identically on MySQL/MariaDB and SQLite
-            // (used in tests).
-            $snapshots = DB::table('server_snapshots as ss')
-                ->join('servers as s', 's.id', '=', 'ss.server_id')
-                ->where('s.is_active', 1)
-                ->where('ss.recorded_at', '>=', now()->subHours(24))
-                ->orderBy('ss.recorded_at')
-                ->get(['ss.server_id', 'ss.recorded_at', 'ss.players_online']);
-
-            // Keep only the latest snapshot per server per hour bucket.
-            $latestPerServerHour = [];
-            foreach ($snapshots as $snapshot) {
-                $bucket = Carbon::parse($snapshot->recorded_at)->format('Y-m-d H:00:00');
-                $latestPerServerHour["{$snapshot->server_id}|{$bucket}"] = (int) $snapshot->players_online;
-            }
-
-            $totalsByBucket = [];
-            foreach ($latestPerServerHour as $key => $players) {
-                $bucket = explode('|', $key, 2)[1];
-                $totalsByBucket[$bucket] = ($totalsByBucket[$bucket] ?? 0) + $players;
-            }
-
-            // Fill in the full 24-hour range so gaps (no query ran that
-            // hour) render as a flat continuation rather than a dip to zero.
-            $history = [];
-            $last = 0;
-
-            for ($i = 23; $i >= 0; $i--) {
-                $bucket = now()->subHours($i)->format('Y-m-d H:00:00');
-                $last = $totalsByBucket[$bucket] ?? $last;
-                $history[] = $last;
-            }
-
-            return $history;
-        });
     }
 }

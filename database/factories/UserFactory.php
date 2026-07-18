@@ -30,6 +30,10 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            // A factory user stands for a normal registration, so the password
+            // counts as chosen. Tests covering OAuth-only accounts override
+            // this with null.
+            'password_set_at' => now(),
             'remember_token' => Str::random(10),
         ];
     }

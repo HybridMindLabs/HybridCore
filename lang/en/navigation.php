@@ -31,6 +31,7 @@ return [
 
     /* Public navbar */
     'nav_home' => 'Home',
+    'language' => 'Language',
     'nav_servers' => 'Servers',
     'nav_rules' => 'Rules',
     'nav_contacts' => 'Contacts',
@@ -44,4 +45,6 @@ return [
         'system' => 'System',
         'extensions' => 'Extensions',
     ],
+    'breadcrumb' => 'Breadcrumb',
+    'back_to_home' => 'Back to home',
 ];

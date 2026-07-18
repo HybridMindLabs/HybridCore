@@ -51,6 +51,9 @@ class RegisterController extends Controller
             'username' => $username,
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+            // Marks this as a password the user actually chose, unlike the
+            // random placeholder an OAuth signup gets.
+            'password_set_at' => now(),
             'is_admin' => false,
         ]);
 

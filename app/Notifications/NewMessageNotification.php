@@ -22,7 +22,11 @@ class NewMessageNotification extends Notification
         $prefs = $notifiable->notification_preferences ?? [];
         $channels = ['database'];
 
-        if (! in_array('dm_email', $prefs, true)) {
+        // Keyed lookup, matching how the Email Preferences page stores the
+        // column. This used to be in_array('dm_email', $prefs) — a list lookup
+        // against a map — which never matched, so the toggle did nothing and
+        // the mail always went out. Absent means opted in.
+        if (($prefs['email_messages'] ?? true) !== false) {
             $channels[] = 'mail';
         }
 

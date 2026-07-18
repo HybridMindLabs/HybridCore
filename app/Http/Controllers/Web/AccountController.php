@@ -8,9 +8,11 @@ use App\Http\Requests\Account\UpdateProfileRequest;
 use App\Jobs\GenerateDataExportJob;
 use App\Models\Game;
 use App\Models\Server;
+use App\Models\User;
 use App\Services\AchievementService;
 use App\Services\Auth\LoginSecurityService;
 use App\Services\Auth\OAuthProviderRegistry;
+use App\Services\Auth\SessionSecurityService;
 use App\Services\Localization\LocaleService;
 use App\Services\Media\AvatarService;
 use App\Services\Media\BannerService;
@@ -18,8 +20,10 @@ use App\Services\SettingsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -36,7 +40,8 @@ class AccountController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user()->load('achievements');
-        $sessionCtrl = new SessionController;
+        // Resolved rather than newed up so its own dependencies get injected.
+        $sessionCtrl = app(SessionController::class);
 
         return Inertia::render('Account/Index', [
             'account' => [
@@ -74,6 +79,9 @@ class AccountController extends Controller
                 'connected_at' => $acc->created_at->toFormattedDateString(),
             ]),
             'oauthProviders' => $this->oauth->compose(),
+            // Lets the page explain why unlinking the last provider is blocked
+            // instead of just failing when the user clicks.
+            'hasPassword' => $user->hasUsablePassword(),
             'achievements' => $user->achievements->map(fn ($a) => [
                 'slug' => $a->slug,
                 'awarded_at' => $a->awarded_at->toFormattedDateString(),
@@ -157,25 +165,24 @@ class AccountController extends Controller
         $data = $request->validate([
             'locale' => ['nullable', 'string', 'max:10'],
             'timezone' => ['nullable', 'string', 'timezone'],
-            'notification_preferences' => ['nullable', 'array'],
-            'notification_preferences.*' => ['string', 'in:dm_email,mention_email,system_email'],
         ]);
 
         if (! empty($data['locale']) && ! app(LocaleService::class)->isSupported($data['locale'])) {
             return back()->withErrors(['locale' => __('messages.language_unavailable')]);
         }
 
-        $existing = $request->user()->notification_preferences ?? [];
-        $channelKeys = ['dm_email', 'mention_email', 'system_email'];
-        $merged = array_merge(
-            array_diff_key($existing, array_flip($channelKeys)),
-            array_intersect($data['notification_preferences'] ?? [], $channelKeys),
-        );
-
+        // This used to also write a list-shaped notification_preferences into
+        // the same JSON column the Email Preferences page writes as a map — two
+        // incompatible formats fighting over one column. The page never sent
+        // the field, so the branch only ever stripped keys on save. Dropped.
+        //
+        // Empty select/input means "no preference", which is null; storing ''
+        // would make the column look set when it is not. Nullable rules leave
+        // absent fields out of $data entirely, so the key has to be guarded
+        // before the emptiness check.
         $request->user()->update([
-            'locale' => $data['locale'] ?? null,
-            'timezone' => $data['timezone'] ?? null,
-            'notification_preferences' => $merged,
+            'locale' => ($data['locale'] ?? null) ?: null,
+            'timezone' => ($data['timezone'] ?? null) ?: null,
         ]);
 
         if (! empty($data['locale'])) {
@@ -187,21 +194,33 @@ class AccountController extends Controller
 
     public function updateEmailPreferences(Request $request): RedirectResponse
     {
-        $allowed = ['email_messages', 'email_notifications', 'email_digest', 'email_announcements'];
+        // Only categories that have a sender behind them. email_notifications
+        // and email_announcements were offered here too, but nothing ever read
+        // them — a switch that silently does nothing is worse than no switch.
         $prefs = $request->user()->notification_preferences ?? [];
 
-        foreach ($allowed as $key) {
+        foreach (User::EMAIL_PREFERENCE_KEYS as $key) {
             $prefs[$key] = $request->boolean($key);
         }
 
         $request->user()->update(['notification_preferences' => $prefs]);
 
-        return back()->with('success', 'Email preferences updated.');
+        return back()->with('success', __('account.email_prefs_updated'));
     }
 
     public function updatePassword(UpdatePasswordRequest $request): RedirectResponse
     {
-        $request->user()->update(['password' => Hash::make($request->validated()['password'])]);
+        $user = $request->user();
+
+        $user->update([
+            'password' => Hash::make($request->validated()['password']),
+            'password_set_at' => now(),
+        ]);
+
+        // Changing a password is usually a reaction to it having leaked, so
+        // anything still signed in elsewhere on the old one goes with it. The
+        // device doing the change stays put.
+        app(SessionSecurityService::class)->signOutOtherDevices($request, $user);
 
         return back()->with('success', __('account.password_changed'));
     }
@@ -215,11 +234,17 @@ class AccountController extends Controller
             'game' => $s->game?->name,
             'game_slug' => $s->game?->slug,
             'game_icon' => $s->game?->cover_url,
+            'address' => $s->address,
             'map' => $s->latestSnapshot?->map,
             'map_image' => $s->game ? Game::mapImageUrl($s->game->slug, $s->latestSnapshot?->map) : null,
             'players' => $s->latestSnapshot?->players_online,
             'max_players' => $s->latestSnapshot?->players_max,
             'online' => $s->is_online,
+            // The favourites list previously had no way back to the server page
+            // — only a connect link — so the name was a dead end.
+            'show_url' => $s->game
+                ? route('servers.show', [$s->game->slug, $s->ip, $s->port])
+                : null,
             'connect_url' => $s->game
                 ? route('servers.connect', [$s->game->slug, $s->ip, $s->port])
                 : null,
@@ -253,14 +278,17 @@ class AccountController extends Controller
 
         $request->validate([
             'username_confirm' => ['required', 'string'],
-            'password' => ['required', 'string'],
+            // An account created through a provider has a random password its
+            // owner never saw, so demanding it here made deletion impossible
+            // for them. The username confirmation carries the intent instead.
+            'password' => [$user->hasUsablePassword() ? 'required' : 'nullable', 'string'],
         ]);
 
         if ($request->input('username_confirm') !== $user->username) {
             throw ValidationException::withMessages(['username_confirm' => __('account.delete_username_mismatch')]);
         }
 
-        if (! Hash::check($request->input('password'), $user->password)) {
+        if ($user->hasUsablePassword() && ! Hash::check($request->input('password'), $user->password)) {
             throw ValidationException::withMessages(['password' => __('account.wrong_current_password')]);
         }
 
@@ -270,14 +298,30 @@ class AccountController extends Controller
             'username' => 'deleted_'.$user->id,
             'display_name' => null,
             'email' => 'deleted_'.$user->id.'@deleted.invalid',
-            'password' => Hash::make(\Str::random(64)),
+            'password' => Hash::make(Str::random(64)),
+            'password_set_at' => null,
             'avatar' => null,
             'banner' => null,
             'bio' => null,
             'location' => null,
             'website' => null,
+            'notification_preferences' => null,
+            'two_factor_secret' => null,
+            'two_factor_recovery_codes' => null,
+            'two_factor_confirmed_at' => null,
+            'remember_token' => Str::random(60),
             'banned_at' => now(),
         ]);
+
+        // The row survives for referential integrity, so the cascades on these
+        // tables never fire — they have to be cleared by hand. Each holds data
+        // that identifies the person: provider ids, IP addresses, devices.
+        $user->connectedAccounts()->delete();
+        $user->loginHistories()->delete();
+
+        if (config('session.driver') === 'database') {
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+        }
 
         app(AvatarService::class)->delete($user);
         app(BannerService::class)->delete($user);
@@ -291,15 +335,28 @@ class AccountController extends Controller
 
     public function exportData(Request $request): RedirectResponse
     {
-        $request->validate(['password' => ['required', 'string']]);
+        $user = $request->user();
 
-        if (! Hash::check($request->input('password'), $request->user()->password)) {
-            throw ValidationException::withMessages(['password' => __('account.wrong_current_password')]);
+        // Same reasoning as deletion: a provider-only account has no password
+        // to confirm with, and the right to a copy of your data cannot hinge
+        // on a credential that was never issued to you.
+        if ($user->hasUsablePassword()) {
+            $request->validate(['password' => ['required', 'string']]);
+
+            if (! Hash::check($request->input('password'), $user->password)) {
+                throw ValidationException::withMessages(['password' => __('account.wrong_current_password')]);
+            }
+        } else {
+            $request->validate(['username_confirm' => ['required', 'string']]);
+
+            if ($request->input('username_confirm') !== $user->username) {
+                throw ValidationException::withMessages(['username_confirm' => __('account.delete_username_mismatch')]);
+            }
         }
 
         // Generated on the queue — the user gets a notification with a
         // download link when the file is ready.
-        GenerateDataExportJob::dispatch($request->user());
+        GenerateDataExportJob::dispatch($user);
 
         return back()->with('success', __('account.export_queued'));
     }

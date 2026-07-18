@@ -18,7 +18,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Laravel\Scout\Searchable;
 
 #[Fillable([
-    'name', 'username', 'display_name', 'email', 'password',
+    'name', 'username', 'display_name', 'email', 'password', 'password_set_at',
     'is_admin', 'banned_at', 'last_login_at', 'last_login_ip',
     'timezone', 'locale', 'avatar', 'banner', 'bio', 'location', 'website',
     'profile_privacy', 'notification_preferences', 'username_changed_at',
@@ -28,6 +28,14 @@ use Laravel\Scout\Searchable;
 #[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
+    /**
+     * Email categories the user can switch off, stored as keys in the
+     * notification_preferences JSON map. A key must only appear here once
+     * something actually consults it before sending — see
+     * NewMessageNotification::via() and EmailDigestCommand.
+     */
+    public const EMAIL_PREFERENCE_KEYS = ['email_messages', 'email_digest'];
+
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -54,6 +62,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'password_set_at' => 'datetime',
             'is_admin' => 'boolean',
             'banned_at' => 'datetime',
             'last_login_at' => 'datetime',
@@ -65,6 +74,17 @@ class User extends Authenticatable implements MustVerifyEmail
             'notification_preferences' => 'array',
             'onboarding_completed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Whether the user can sign in with a password they know.
+     *
+     * OAuth signups are stored with a random placeholder hash, so the password
+     * column being populated proves nothing on its own.
+     */
+    public function hasUsablePassword(): bool
+    {
+        return $this->password_set_at !== null;
     }
 
     public function hasCompletedOnboarding(): bool

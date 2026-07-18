@@ -52,7 +52,7 @@ function toggleFollowList(which: 'followers' | 'following') {
     openFollowList.value = openFollowList.value === which ? null : which;
 }
 const { theme } = useTheme();
-const { t } = useLocale();
+const { t, currentLocale } = useLocale();
 const dark = computed(() => theme.value === 'dark');
 
 const failedMapImages = reactive(new Set<number>());
@@ -119,7 +119,7 @@ function badgeDescription(slug: string): string {
 }
 
 function formatAwardedAt(date: string): string {
-    return new Date(date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    return new Date(date).toLocaleDateString(currentLocale.value, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 function badgeTooltip(ach: Achievement): string {
@@ -145,7 +145,7 @@ function toggleBlock() {
         <div class="max-w-[1100px] mx-auto px-4 sm:px-6 py-8">
 
             <Breadcrumb :items="[
-                { label: 'Home', href: route('home') },
+                { label: t('navigation.nav_home'), href: route('home') },
                 { label: t('profile.back_members'), href: route('members.index') },
                 { label: profile.display_name || profile.username },
             ]" />
@@ -156,7 +156,8 @@ function toggleBlock() {
 
                 <!-- Banner -->
                 <div class="relative h-48 overflow-hidden" :class="dark ? 'bg-[#0d0d0f]' : 'bg-zinc-100'">
-                    <img v-if="profile.banner" :src="profile.banner" class="w-full h-full object-cover" alt="Banner" />
+                    <!-- Decorative: the profile is already named by the heading below. -->
+                    <img v-if="profile.banner" :src="profile.banner" class="w-full h-full object-cover" alt="" />
                     <template v-else>
                         <div class="absolute inset-0" :style="`background:linear-gradient(125deg,${accentColor}22 0%,${accentColor}08 45%,transparent 70%)`" />
                         <div class="absolute inset-0" :style="`background:radial-gradient(ellipse at 80% 50%,${accentColor}18 0%,transparent 60%)`" />
@@ -169,14 +170,14 @@ function toggleBlock() {
                         <Link v-if="profile.is_self" :href="route('account.index')"
                             class="flex items-center gap-1.5 text-[12px] font-semibold rounded-xl border px-3 py-2 transition backdrop-blur-sm"
                             :class="dark ? 'border-zinc-700/60 bg-zinc-900/70 text-zinc-300 hover:text-white' : 'border-zinc-200/80 bg-white/80 text-zinc-600 hover:text-zinc-900'">
-                            <Pencil :size="12" :stroke-width="1.8" /> Edit profile
+                            <Pencil :size="12" :stroke-width="1.8" aria-hidden="true" /> {{ t('profile.edit_profile') }}
                         </Link>
                         <template v-if="!profile.is_self && profile.is_viewer_member">
                             <button type="button"
                                 class="flex items-center gap-1.5 text-[12px] font-bold rounded-xl border px-3 py-2 transition backdrop-blur-sm"
                                 :class="profile.is_following
                                     ? (dark ? 'border-zinc-700/60 bg-zinc-900/70 text-zinc-300 hover:text-red-400 hover:border-red-500/40' : 'border-zinc-200/80 bg-white/80 text-zinc-600 hover:text-red-500')
-                                    : (dark ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100')"
+                                    : (dark ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100')"
                                 :disabled="followPending"
                                 @click="toggleFollow">
                                 <component :is="profile.is_following ? UserCheck : UserPlus" :size="12" :stroke-width="2" />
@@ -191,7 +192,7 @@ function toggleBlock() {
                             <button type="button"
                                 class="flex items-center gap-1.5 text-[12px] font-bold rounded-xl border px-3 py-2 transition backdrop-blur-sm"
                                 :class="profile.is_blocked
-                                    ? (dark ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'border-emerald-200 bg-emerald-50 text-emerald-600')
+                                    ? (dark ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'border-emerald-200 bg-emerald-50 text-emerald-700')
                                     : (dark ? 'border-zinc-700/60 bg-zinc-900/70 text-zinc-400 hover:text-red-400 hover:border-red-500/40' : 'border-zinc-200/80 bg-white/80 text-zinc-500 hover:text-red-500')"
                                 :disabled="blockPending"
                                 @click="toggleBlock">
@@ -211,7 +212,8 @@ function toggleBlock() {
                                 <div v-else class="w-full h-full flex items-center justify-center text-[34px] font-black uppercase text-white" :style="{ backgroundColor: avatarBg(profile.username) }">{{ profile.username.charAt(0) }}</div>
                             </div>
                             <span v-if="profile.is_online" class="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-emerald-400 ring-4"
-                                :class="dark ? 'ring-[#111113]' : 'ring-white'" :title="'Active now'" />
+                                :class="dark ? 'ring-[#111113]' : 'ring-white'"
+                                role="img" :aria-label="t('profile.active_now')" :title="t('profile.active_now')" />
                         </div>
                         <div class="flex-1 min-w-0 pb-1.5">
                             <div class="flex items-center gap-2.5 flex-wrap">
@@ -220,7 +222,7 @@ function toggleBlock() {
                                 </h1>
                                 <BadgeCheck v-if="profile.verified" :size="18" :stroke-width="2.2" class="text-blue-400 shrink-0" />
                             </div>
-                            <p class="text-[13px] font-mono mt-1" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">@{{ profile.username }}</p>
+                            <p class="text-[13px] font-mono mt-1" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">@{{ profile.username }}</p>
                             <div class="flex items-center gap-2 mt-2.5 flex-wrap">
                                 <span v-if="profile.role" class="inline-flex items-center text-[12px] font-bold px-3 py-1 rounded-full border"
                                     :style="{ backgroundColor: profile.role.color + '18', color: profile.role.color, borderColor: profile.role.color + '38' }">
@@ -241,23 +243,25 @@ function toggleBlock() {
                         <!-- Stats row -->
                         <div class="flex items-center gap-4 pb-1.5 flex-wrap">
                             <div v-for="(stat, i) in [
-                                { value: profile.stats.joined_days_ago,   label: t('profile.stat_days'),      list: null },
-                                { value: profile.favourite_servers.length, label: t('profile.stat_favorites'), list: null },
-                                { value: profile.achievements.length,      label: t('profile.stat_badges'),    list: null },
-                                { value: profile.followers_count,           label: t('profile.stat_followers'), list: 'followers' as const },
-                                { value: profile.following_count,           label: t('profile.stat_following'), list: 'following' as const },
+                                { value: profile.stats.joined_days_ago,    label: t('profile.stat_days'),      hint: t('profile.stat_days_hint'),      list: null },
+                                { value: profile.favourite_servers.length, label: t('profile.stat_favorites'), hint: t('profile.stat_favorites_hint'), list: null },
+                                { value: profile.achievements.length,      label: t('profile.stat_badges'),    hint: t('profile.stat_badges_hint'),    list: null },
+                                { value: profile.followers_count,          label: t('profile.stat_followers'), hint: t('profile.stat_followers_hint'), list: 'followers' as const },
+                                { value: profile.following_count,          label: t('profile.stat_following'), hint: t('profile.stat_following_hint'), list: 'following' as const },
                             ]" :key="stat.label" class="flex items-center gap-4">
-                                <div v-if="i > 0" class="w-px h-8" :class="dark ? 'bg-zinc-800' : 'bg-zinc-200'" />
+                                <div v-if="i > 0" class="w-px h-8" :class="dark ? 'bg-zinc-800' : 'bg-zinc-200'" aria-hidden="true" />
                                 <component
                                     :is="stat.list ? 'button' : 'div'"
                                     :type="stat.list ? 'button' : undefined"
-                                    class="text-center"
-                                    :class="stat.list ? 'transition-opacity hover:opacity-70 cursor-pointer' : ''"
+                                    class="text-center rounded-lg px-1"
+                                    :class="stat.list ? 'transition hover:opacity-70 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50' : ''"
+                                    :title="stat.hint"
+                                    :aria-expanded="stat.list ? openFollowList === stat.list : undefined"
                                     @click="stat.list && toggleFollowList(stat.list)"
                                 >
-                                    <p class="text-[18px] font-black"
-                                        :class="openFollowList === stat.list && stat.list ? 'text-blue-400' : (dark ? 'text-zinc-100' : 'text-zinc-900')">{{ stat.value }}</p>
-                                    <p class="text-[10px] uppercase tracking-wider font-semibold" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">{{ stat.label }}</p>
+                                    <p class="text-[18px] font-black tabular-nums"
+                                        :class="openFollowList === stat.list && stat.list ? 'text-blue-500' : (dark ? 'text-zinc-100' : 'text-zinc-900')">{{ stat.value }}</p>
+                                    <p class="text-[10px] uppercase tracking-wider font-semibold" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ stat.label }}</p>
                                 </component>
                             </div>
                         </div>
@@ -385,7 +389,7 @@ function toggleBlock() {
                                 </div>
                             </component>
                             <a v-if="s.connect_url" :href="s.connect_url" class="shrink-0 text-[11px] font-bold px-2.5 py-1.5 rounded-lg border transition"
-                                :class="dark ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10' : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'">
+                                :class="dark ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10' : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'">
                                 {{ t('profile.connect') }}
                             </a>
                         </div>

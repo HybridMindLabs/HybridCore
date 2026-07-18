@@ -112,8 +112,14 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
-            // Precognition validation pings expect JSON regardless of path.
-            fn (Request $request) => $request->is('api/*') || $request->isPrecognitive(),
+            // expectsJson() is Laravel's own default and has to stay in the
+            // condition. Narrowing this to api/* alone made every fetch()-based
+            // endpoint outside that prefix answer a failed validation with a
+            // redirect instead of a 422, so the JSON the caller was waiting for
+            // never arrived — see the 2FA disable and recovery-code forms.
+            fn (Request $request) => $request->is('api/*')
+                || $request->isPrecognitive()
+                || $request->expectsJson(),
         );
 
         // Safety net: before installation, any stray database error becomes a

@@ -164,7 +164,7 @@ class TwoFactorTest extends TestCase
 
     // ── Setup & confirm ───────────────────────────────────────────────────────
 
-    public function test_setup_returns_secret_and_qr_url(): void
+    public function test_setup_returns_secret_and_qr_image(): void
     {
         $user = User::factory()->create();
 
@@ -172,10 +172,10 @@ class TwoFactorTest extends TestCase
             ->post(route('account.2fa.setup'));
 
         $response->assertOk()
-            ->assertJsonStructure(['secret', 'qr_url']);
+            ->assertJsonStructure(['secret', 'qr_svg']);
 
         $this->assertNotEmpty($response->json('secret'));
-        $this->assertNotEmpty($response->json('qr_url'));
+        $this->assertNotEmpty($response->json('qr_svg'));
     }
 
     public function test_setup_stores_secret_in_session(): void
@@ -201,7 +201,7 @@ class TwoFactorTest extends TestCase
         $this->actingAs($user)
             ->post(route('account.2fa.confirm'), ['code' => '123456'])
             ->assertOk()
-            ->assertJson(['message' => 'Two-factor authentication has been enabled.']);
+            ->assertJson(['message' => __('account.2fa_was_enabled')]);
 
         $this->assertNotNull($user->fresh()->two_factor_secret);
         $this->assertNotNull($user->fresh()->two_factor_confirmed_at);
@@ -221,7 +221,7 @@ class TwoFactorTest extends TestCase
         $this->actingAs($user)
             ->post(route('account.2fa.confirm'), ['code' => '000000'])
             ->assertStatus(422)
-            ->assertJson(['message' => 'The code is incorrect. Please try again.']);
+            ->assertJson(['message' => __('account.2fa_code_invalid')]);
 
         $this->assertNull($user->fresh()->two_factor_secret);
     }
@@ -246,7 +246,7 @@ class TwoFactorTest extends TestCase
         $this->actingAs($user)
             ->delete(route('account.2fa.disable'), ['password' => 'password'])
             ->assertOk()
-            ->assertJson(['message' => 'Two-factor authentication has been disabled.']);
+            ->assertJson(['message' => __('account.2fa_was_disabled')]);
 
         $fresh = $user->fresh();
         $this->assertNull($fresh->two_factor_secret);

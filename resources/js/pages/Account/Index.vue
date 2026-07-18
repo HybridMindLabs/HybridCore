@@ -26,7 +26,7 @@ interface Account {
     created_at: string; last_login_at: string | null;
     two_factor_enabled: boolean; two_factor_recovery_codes: string[] | null;
     can_change_username: boolean; username_change_available_at: string | null;
-    notification_preferences: string[];
+    notification_preferences: Record<string, boolean> | string[];
 }
 interface SessionItem {
     id: string; ip_address: string | null; last_activity: number; is_current: boolean;
@@ -43,6 +43,7 @@ const props = defineProps<{
     sessions: SessionItem[];
     connectedAccounts: Connected[];
     oauthProviders: Provider[];
+    hasPassword: boolean;
     notifications: { data: Notif[]; links: any; meta: any };
     blocks: BlockEntry[];
     unreadNotifications: number;
@@ -120,7 +121,12 @@ watch(activeTab, (tab) => {
                             <Preferences :account="account" />
                         </template>
                         <template v-else-if="activeTab === 'connected'">
-                            <ConnectedAccounts :connected-accounts="connectedAccounts" :oauth-providers="oauthProviders" />
+                            <ConnectedAccounts
+                                :connected-accounts="connectedAccounts"
+                                :oauth-providers="oauthProviders"
+                                :has-password="hasPassword"
+                                @update:active-tab="activeTab = $event"
+                            />
                         </template>
                         <template v-else-if="activeTab === 'notifications'">
                             <Notifications :notifications="notifications" />
@@ -135,7 +141,7 @@ watch(activeTab, (tab) => {
                             <EmailPreferences :preferences="account.notification_preferences" />
                         </template>
         <template v-else-if="activeTab === 'danger'">
-            <DangerZone :username="account.username" />
+            <DangerZone :username="account.username" :has-password="hasPassword" />
         </template>
     </AccountPage>
 </template>

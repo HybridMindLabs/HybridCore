@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Services\Auth\SessionSecurityService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class SessionController extends Controller
 {
+    public function __construct(private readonly SessionSecurityService $sessions) {}
+
     /** Return active sessions for the authenticated user. */
     public function index(Request $request): array
     {
@@ -30,10 +34,10 @@ class SessionController extends Controller
     }
 
     /** Revoke a specific session (cannot revoke the current one). */
-    public function destroy(Request $request, string $sessionId): RedirectResponse
+    public function destroy(Request $request, string $sessionId): JsonResponse|RedirectResponse
     {
         if ($sessionId === $request->session()->getId()) {
-            return back()->withErrors(['session' => 'You cannot revoke your current session.']);
+            return $this->fail($request, __('account.sessions_cannot_revoke_current'));
         }
 
         DB::table('sessions')
@@ -41,20 +45,36 @@ class SessionController extends Controller
             ->where('user_id', $request->user()->id)
             ->delete();
 
-        return back()->with('success', 'Session has been revoked.');
+        return $this->ok($request, __('account.sessions_revoked'));
     }
 
     /** Revoke all sessions except the current one. */
-    public function destroyOthers(Request $request): RedirectResponse
+    public function destroyOthers(Request $request): JsonResponse|RedirectResponse
     {
         $request->validate(['password' => ['required', 'string', 'current_password']]);
 
-        DB::table('sessions')
-            ->where('user_id', $request->user()->id)
-            ->where('id', '!=', $request->session()->getId())
-            ->delete();
+        $this->sessions->signOutOtherDevices($request, $request->user());
 
-        return back()->with('success', 'All other sessions have been revoked.');
+        return $this->ok($request, __('account.sessions_revoked_all'));
+    }
+
+    /**
+     * The account panel drives these over fetch() and reads res.json(). A
+     * redirect made that parse throw, so a revoke that had actually gone
+     * through still surfaced to the user as "Network error".
+     */
+    private function ok(Request $request, string $message): JsonResponse|RedirectResponse
+    {
+        return $request->expectsJson()
+            ? response()->json(['message' => $message])
+            : back()->with('success', $message);
+    }
+
+    private function fail(Request $request, string $message): JsonResponse|RedirectResponse
+    {
+        return $request->expectsJson()
+            ? response()->json(['message' => $message], 422)
+            : back()->withErrors(['session' => $message]);
     }
 
     private function parseDevice(string $ua): array

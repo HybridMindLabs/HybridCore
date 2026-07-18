@@ -24,6 +24,15 @@
 /public/hot
 /public/storage
 /public/extensions
+
+# Third-party / in-development extensions live in their own repos.
+# The core only ships the reference demo + the SDK docs.
+/extensions/*
+!/extensions/.gitkeep
+!/extensions/BUILDING_EXTENSIONS.md
+!/extensions/hybridcore
+/extensions/hybridcore/*
+!/extensions/hybridcore/demo
 /storage/*.key
 /storage/app/releases
 /storage/app/extension-builds
