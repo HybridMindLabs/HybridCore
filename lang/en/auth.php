@@ -118,4 +118,16 @@ return [
         'shell_title' => 'One more step',
         'shell_subtitle' => 'Your password was accepted. This second check keeps the account yours even if that password leaks.',
     ],
+    'password_field' => [
+        'show' => 'Show password',
+        'hide' => 'Hide password',
+        'weak' => 'Weak',
+        'fair' => 'Fair',
+        'good' => 'Good',
+        'strong' => 'Strong',
+        'mismatch' => 'The two passwords do not match.',
+    ],
+    'verify_wrong_email' => 'Signed up with the wrong address?',
+    'verify_sign_out' => 'Sign out and start again',
+    'reset_email_locked' => 'This reset link belongs to this address.',
 ];

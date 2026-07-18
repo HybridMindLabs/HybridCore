@@ -3,6 +3,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthCard from '@/components/Auth/AuthCard.vue';
 import Input from '@/components/UI/Input.vue';
 import Button from '@/components/UI/Button.vue';
+import PasswordField from '@/components/Auth/PasswordField.vue';
 import OAuthButtons from '@/components/Auth/OAuthButtons.vue';
 import { useLocale } from '@/composables/useLocale';
 
@@ -40,14 +41,23 @@ function submit() {
                 <label for="email" class="mb-2 block text-[11px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500">{{ t('auth.register.email') }}</label>
                 <Input id="email" v-model="form.email" type="email" placeholder="you@example.com" autocomplete="email" :error="form.errors.email" @change="form.validate('email')" />
             </div>
-            <div>
-                <label for="password" class="mb-2 block text-[11px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500">{{ t('auth.register.password') }}</label>
-                <Input id="password" v-model="form.password" type="password" autocomplete="new-password" :error="form.errors.password" @change="form.validate('password')" />
-            </div>
-            <div>
-                <label for="password_confirmation" class="mb-2 block text-[11px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500">{{ t('auth.register.password_confirmation') }}</label>
-                <Input id="password_confirmation" v-model="form.password_confirmation" type="password" autocomplete="new-password" :error="form.errors.password_confirmation" />
-            </div>
+            <PasswordField
+                id="password"
+                v-model="form.password"
+                :label="t('auth.register.password')"
+                autocomplete="new-password"
+                :error="form.errors.password"
+                show-strength
+                @change="form.validate('password')"
+            />
+            <PasswordField
+                id="password_confirmation"
+                v-model="form.password_confirmation"
+                :label="t('auth.register.password_confirmation')"
+                autocomplete="new-password"
+                :error="form.errors.password_confirmation"
+                :must-match="form.password"
+            />
             <Button type="submit" size="lg" :disabled="form.processing" class="w-full justify-center">{{ t('auth.register.submit') }}</Button>
         </form>
 

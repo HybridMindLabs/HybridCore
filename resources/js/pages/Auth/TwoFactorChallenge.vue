@@ -80,7 +80,7 @@ function submit() {
                 />
 
                 <p v-if="form.errors.code" id="code_error" role="alert"
-                    class="mt-1.5 text-center text-[12px] font-semibold text-red-500">
+                    class="mt-1.5 text-center text-[12px] font-semibold text-red-600 dark:text-red-400">
                     {{ form.errors.code }}
                 </p>
             </div>
