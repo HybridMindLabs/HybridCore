@@ -1,7 +1,7 @@
 ﻿<script setup lang="ts">
 import { Head, Link, useForm, usePage, router } from '@inertiajs/vue3';
 import { Clock, Eye, Tag, ChevronLeft, ChevronRight, Copy, Check, BookOpen, Calendar, User, MessageSquare, Trash2 } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
 import PublicLayout from '@/layouts/PublicLayout.vue';
@@ -17,7 +17,7 @@ interface ArticleCard {
 interface Article {
     id: number; title: string; slug: string; excerpt: string | null;
     body: string; format: string; featured_image_url: string | null;
-    reading_time: number; views: number;
+    reading_time: number; views: number; word_count: number;
     category: Category | null;
     author: { id: number; name: string; username: string | null; avatar: string | null } | null;
     tags: { id: number; name: string; slug: string }[];
@@ -27,21 +27,68 @@ interface Article {
 }
 
 interface Comment {
-    id: number; body: string; created_at: string; is_mine: boolean; can_delete: boolean;
+    id: number; body: string; created_at_iso: string; is_mine: boolean; can_delete: boolean;
     user: { username: string | null; name: string; avatar: string | null };
 }
+interface CommentPage { data: Comment[]; current_page: number; last_page: number; total: number }
 
 const props = defineProps<{
     article: Article;
     related: ArticleCard[];
     prev: { id: number; title: string; slug: string } | null;
     next: { id: number; title: string; slug: string } | null;
-    comments: Comment[];
+    comments: CommentPage;
 }>();
 
 // ── Comments ───────────────────────────────────────────────────────────────
 const page = usePage<{ auth: { user: { name: string } | null } }>();
 const authed = computed(() => !!page.props.auth?.user);
+
+/**
+ * Comments arrive a page at a time — the whole thread used to be serialised
+ * into the payload on first paint.
+ *
+ * A partial reload *replaces* the comments prop rather than extending it, so
+ * the thread is accumulated here and each fetched page appended to it.
+ */
+const visibleComments = ref<Comment[]>([...props.comments.data]);
+const loadedPage = ref(props.comments.current_page);
+const loadingMore = ref(false);
+
+const hasMoreComments = computed(() => loadedPage.value < props.comments.last_page);
+
+// Posting or deleting reloads the page from the top; start the thread over.
+watch(
+    () => props.comments,
+    (next) => {
+        if (next.current_page === 1) {
+            visibleComments.value = [...next.data];
+            loadedPage.value = 1;
+        }
+    },
+);
+
+function loadMoreComments() {
+    if (loadingMore.value) return;
+    loadingMore.value = true;
+
+    router.get(
+        route('news.show', props.article.slug),
+        { comments_page: loadedPage.value + 1 },
+        {
+            only: ['comments'],
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                visibleComments.value.push(...props.comments.data);
+                loadedPage.value = props.comments.current_page;
+            },
+            onFinish: () => {
+                loadingMore.value = false;
+            },
+        },
+    );
+}
 
 const commentForm = useForm({ body: '' });
 
@@ -65,11 +112,27 @@ function avatarBg(name: string) {
 }
 
 const { theme } = useTheme();
-const { t } = useLocale();
+const { t, formatDate } = useLocale();
 const dark = computed(() => theme.value === 'dark');
 
-// Word count from body (rough)
-const wordCount = computed(() => props.article.body.split(/\s+/).filter(Boolean).length);
+/**
+ * Search engines read this; it is the one page on the site where structured
+ * data is worth having, and it costs nothing at runtime.
+ */
+const jsonLd = computed(() =>
+    JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'NewsArticle',
+        headline: props.article.title,
+        description: props.article.meta_description ?? undefined,
+        image: props.article.og_image_url ?? props.article.featured_image_url ?? undefined,
+        datePublished: props.article.published_at_iso,
+        author: props.article.author ? { '@type': 'Person', name: props.article.author.name } : undefined,
+        articleSection: props.article.category?.name,
+        wordCount: props.article.word_count,
+        mainEntityOfPage: props.article.canonical,
+    }),
+);
 
 // Copy link
 const copied = ref(false);
@@ -95,8 +158,11 @@ const initials = computed(() => {
         <meta property="og:description" :content="article.meta_description ?? ''" />
         <meta v-if="article.og_image_url" property="og:image" :content="article.og_image_url" />
         <meta property="og:type" content="article" />
+        <meta property="og:url" :content="article.canonical" />
+        <meta name="twitter:card" :content="article.og_image_url ? 'summary_large_image' : 'summary'" />
         <link rel="canonical" :href="article.canonical" />
-        <link rel="alternate" type="application/rss+xml" title="News RSS" :href="route('news.feed')" />
+        <link rel="alternate" type="application/rss+xml" :title="t('news.page_title')" :href="route('news.feed')" />
+        <component :is="'script'" type="application/ld+json">{{ jsonLd }}</component>
     </Head>
 
     <PublicLayout>
@@ -120,11 +186,11 @@ const initials = computed(() => {
             <div class="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-6 py-14 sm:py-18">
 
                 <!-- Breadcrumb -->
-                <nav class="flex items-center gap-2 text-[12px] mb-7"
-                    :class="dark ? 'text-zinc-600' : 'text-zinc-400'">
+                <nav :aria-label="t('news.breadcrumb_news')" class="flex items-center gap-2 text-[12px] mb-7"
+                    :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                     <Link :href="route('news.index')" class="transition"
-                        :class="dark ? 'hover:text-zinc-300' : 'hover:text-zinc-700'">News</Link>
-                    <ChevronRight :size="11" :stroke-width="2" />
+                        :class="dark ? 'hover:text-zinc-200' : 'hover:text-zinc-800'">{{ t('news.breadcrumb_news') }}</Link>
+                    <ChevronRight :size="11" :stroke-width="2" aria-hidden="true" />
                     <Link v-if="article.category" :href="route('news.category', article.category.slug)"
                         class="font-semibold transition" :style="{ color: article.category.color }">
                         {{ article.category.name }}
@@ -164,9 +230,9 @@ const initials = computed(() => {
                         <!-- Stats pills (like Home's stat pills) -->
                         <div class="flex items-center gap-5 flex-wrap mb-7">
                             <div v-for="item in [
-                                { icon: Eye,      value: article.views.toLocaleString(), label: 'Views' },
-                                { icon: Clock,    value: article.reading_time + ' min',  label: 'Read'  },
-                                { icon: BookOpen, value: wordCount.toLocaleString(),      label: 'Words' },
+                                { icon: Eye,      value: article.views.toLocaleString(),      label: t('news.stat_views') },
+                                { icon: Clock,    value: t('news.stat_minutes', { m: article.reading_time }), label: t('news.stat_read') },
+                                { icon: BookOpen, value: article.word_count.toLocaleString(), label: t('news.stat_words') },
                             ]" :key="item.label" class="flex items-center gap-2.5">
                                 <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
                                     :class="dark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-zinc-200 shadow-sm'">
@@ -186,17 +252,19 @@ const initials = computed(() => {
                             <div v-if="article.author" class="flex items-center gap-2.5">
                                 <div class="w-8 h-8 rounded-full overflow-hidden border shrink-0 flex items-center justify-center text-[11px] font-bold"
                                     :class="dark ? 'border-zinc-700 bg-zinc-800 text-zinc-400' : 'border-zinc-200 bg-zinc-100 text-zinc-500'">
-                                    <img v-if="article.author.avatar" :src="article.author.avatar" class="w-full h-full object-cover" />
-                                    <span v-else>{{ initials }}</span>
+                                    <img v-if="article.author.avatar" :src="article.author.avatar"
+                                        :alt="t('news.author_avatar_alt', { name: article.author.name })"
+                                        class="w-full h-full object-cover" />
+                                    <span v-else aria-hidden="true">{{ initials }}</span>
                                 </div>
                                 <span class="text-[13px] font-semibold" :class="dark ? 'text-zinc-300' : 'text-zinc-700'">
                                     {{ article.author.name }}
                                 </span>
                             </div>
                             <div class="flex items-center gap-1 text-[13px]"
-                                :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
-                                <Calendar :size="12" :stroke-width="1.8" />
-                                <time :datetime="article.published_at_iso">{{ article.published_at }}</time>
+                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
+                                <Calendar :size="12" :stroke-width="1.8" aria-hidden="true" />
+                                <time :datetime="article.published_at_iso">{{ formatDate(article.published_at_iso, { dateStyle: 'long' }) }}</time>
                             </div>
                         </div>
                     </div>
@@ -205,7 +273,7 @@ const initials = computed(() => {
                     <div v-if="article.featured_image_url" class="hidden lg:block shrink-0 w-[420px]">
                         <div class="rounded-2xl overflow-hidden border aspect-[16/10]"
                             :class="dark ? 'border-zinc-800/80' : 'border-zinc-200 shadow-md'">
-                            <img :src="article.featured_image_url" class="w-full h-full object-cover" />
+                            <img :src="article.featured_image_url" :alt="t('news.article_image_alt', { title: article.title })" class="w-full h-full object-cover" />
                         </div>
                     </div>
                 </div>
@@ -248,7 +316,7 @@ const initials = computed(() => {
                                 : 'border-zinc-200 bg-white hover:border-zinc-300 hover:shadow-sm'">
                             <span class="text-[11px] font-bold uppercase tracking-widest flex items-center gap-1"
                                 :class="dark ? 'text-zinc-700' : 'text-zinc-400'">
-                                <ChevronLeft :size="11" :stroke-width="2.2" /> Previous
+                                <ChevronLeft :size="11" :stroke-width="2.2" aria-hidden="true" /> {{ t('news.prev_article') }}
                             </span>
                             <p class="text-[13px] font-semibold line-clamp-2 transition-colors"
                                 :class="dark ? 'text-zinc-300 group-hover:text-blue-300' : 'text-zinc-700 group-hover:text-blue-600'">
@@ -263,7 +331,7 @@ const initials = computed(() => {
                             ]">
                             <span class="text-[11px] font-bold uppercase tracking-widest flex items-center gap-1 justify-end"
                                 :class="dark ? 'text-zinc-700' : 'text-zinc-400'">
-                                Next <ChevronRight :size="11" :stroke-width="2.2" />
+                                {{ t('news.next_article') }} <ChevronRight :size="11" :stroke-width="2.2" aria-hidden="true" />
                             </span>
                             <p class="text-[13px] font-semibold line-clamp-2 transition-colors"
                                 :class="dark ? 'text-zinc-300 group-hover:text-blue-300' : 'text-zinc-700 group-hover:text-blue-600'">
@@ -279,7 +347,7 @@ const initials = computed(() => {
                             :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e]' : 'border-zinc-100 bg-zinc-50'">
                             <MessageSquare :size="13" :stroke-width="1.8" :class="dark ? 'text-zinc-600' : 'text-zinc-400'" />
                             <p class="text-[13px] font-semibold" :class="dark ? 'text-zinc-100' : 'text-zinc-800'">{{ t('news.comments') }}</p>
-                            <span class="text-[11px]" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">({{ comments.length }})</span>
+                            <span class="text-[11px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">({{ comments.total }})</span>
                         </div>
 
                         <!-- Write comment -->
@@ -316,16 +384,18 @@ const initials = computed(() => {
                         </div>
 
                         <!-- Comment list -->
-                        <div v-if="comments.length" class="divide-y" :class="dark ? 'divide-zinc-800/50' : 'divide-zinc-100'">
-                            <div v-for="comment in comments" :key="comment.id" class="px-5 py-4">
+                        <div v-if="visibleComments.length" class="divide-y" :class="dark ? 'divide-zinc-800/50' : 'divide-zinc-100'">
+                            <div v-for="comment in visibleComments" :key="comment.id" class="px-5 py-4">
                                 <div class="flex items-start gap-3">
                                     <component
                                         :is="comment.user.username ? Link : 'div'"
                                         :href="comment.user.username ? route('profile.show', comment.user.username) : undefined"
                                         class="w-9 h-9 rounded-xl overflow-hidden shrink-0"
                                     >
-                                        <img v-if="comment.user.avatar" :src="comment.user.avatar" class="w-full h-full object-cover" :alt="comment.user.name" />
-                                        <div v-else class="w-full h-full flex items-center justify-center text-[13px] font-black text-white uppercase"
+                                        <img v-if="comment.user.avatar" :src="comment.user.avatar" class="w-full h-full object-cover"
+                                            :alt="t('news.author_avatar_alt', { name: comment.user.name })" />
+                                        <div v-else aria-hidden="true"
+                                            class="w-full h-full flex items-center justify-center text-[13px] font-black text-white uppercase"
                                             :style="{ backgroundColor: avatarBg(comment.user.name) }">{{ comment.user.name[0] }}</div>
                                     </component>
                                     <div class="flex-1 min-w-0">
@@ -336,7 +406,10 @@ const initials = computed(() => {
                                                 class="text-[13px] font-bold truncate"
                                                 :class="[dark ? 'text-zinc-100' : 'text-zinc-800', comment.user.username ? (dark ? 'hover:text-blue-400' : 'hover:text-blue-600') : '']"
                                             >{{ comment.user.name }}</component>
-                                            <span class="text-[11px]" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">{{ comment.created_at }}</span>
+                                            <time :datetime="comment.created_at_iso" class="text-[11px]"
+                                                :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
+                                                {{ formatDate(comment.created_at_iso, { dateStyle: 'medium', timeStyle: 'short' }) }}
+                                            </time>
                                             <ReportButton v-if="authed && !comment.is_mine" type="comment" :id="comment.id" class="ml-auto" />
                                             <button
                                                 v-if="comment.can_delete"
@@ -356,8 +429,22 @@ const initials = computed(() => {
                             </div>
                         </div>
                         <div v-else class="flex flex-col items-center justify-center px-5 py-10 text-center">
-                            <MessageSquare :size="22" :stroke-width="1.5" class="mb-2" :class="dark ? 'text-zinc-800' : 'text-zinc-300'" />
-                            <p class="text-[13px]" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">{{ t('news.no_comments') }}</p>
+                            <MessageSquare :size="22" :stroke-width="1.5" aria-hidden="true" class="mb-2" :class="dark ? 'text-zinc-700' : 'text-zinc-300'" />
+                            <p class="text-[13px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ t('news.no_comments') }}</p>
+                        </div>
+
+                        <div v-if="hasMoreComments" class="px-5 py-4 border-t flex flex-col items-center gap-1.5"
+                            :class="dark ? 'border-zinc-800/50' : 'border-zinc-100'">
+                            <button type="button" :disabled="loadingMore"
+                                class="text-[12px] font-semibold transition disabled:opacity-60 rounded
+                                       focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                                :class="dark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'"
+                                @click="loadMoreComments">
+                                {{ t('news.load_more_comments') }}
+                            </button>
+                            <p class="text-[11px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
+                                {{ t('news.comments_shown', { shown: visibleComments.length, total: comments.total }) }}
+                            </p>
                         </div>
                     </div>
                 </article>
@@ -373,9 +460,9 @@ const initials = computed(() => {
                         <div class="grid grid-cols-4 divide-x"
                             :class="dark ? 'divide-zinc-800/60' : 'divide-zinc-100'">
                             <div v-for="stat in [
-                                { label: 'Views',  value: article.views,         icon: Eye },
-                                { label: 'Min',    value: article.reading_time,   icon: Clock },
-                                { label: 'Words',  value: wordCount,              icon: BookOpen },
+                                { label: t('news.stat_views'), value: article.views,       icon: Eye },
+                                { label: t('news.stat_read'),  value: article.reading_time, icon: Clock },
+                                { label: t('news.stat_words'), value: article.word_count,   icon: BookOpen },
                             ]" :key="stat.label"
                                 class="flex flex-col items-center justify-center gap-0.5 py-3 px-2 text-center">
                                 <component :is="stat.icon" :size="13" :stroke-width="1.5" class="text-blue-400" />
@@ -393,7 +480,7 @@ const initials = computed(() => {
                         <div class="border-b px-4 py-3"
                             :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e]' : 'border-zinc-100 bg-zinc-50'">
                             <h3 class="text-[12px] font-bold uppercase tracking-widest"
-                                :class="dark ? 'text-zinc-500' : 'text-zinc-400'">Author</h3>
+                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ t('news.sidebar_author') }}</h3>
                         </div>
                         <div class="p-4 flex items-center gap-3">
                             <div class="w-10 h-10 rounded-full overflow-hidden border shrink-0 flex items-center justify-center font-bold text-[13px]"
@@ -416,7 +503,7 @@ const initials = computed(() => {
                         <div class="border-b px-4 py-3"
                             :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e]' : 'border-zinc-100 bg-zinc-50'">
                             <h3 class="text-[12px] font-bold uppercase tracking-widest"
-                                :class="dark ? 'text-zinc-500' : 'text-zinc-400'">Share</h3>
+                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ t('news.sidebar_share') }}</h3>
                         </div>
                         <div class="p-3">
                             <button type="button" @click="copyLink"
@@ -425,7 +512,7 @@ const initials = computed(() => {
                                     ? dark ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400' : 'border-emerald-400/40 bg-emerald-50 text-emerald-600'
                                     : dark ? 'border-zinc-800/70 text-zinc-400 hover:text-zinc-100 hover:border-zinc-600' : 'border-zinc-200 text-zinc-500 hover:text-zinc-800 hover:border-zinc-400'">
                                 <component :is="copied ? Check : Copy" :size="12" :stroke-width="2" />
-                                {{ copied ? 'Copied!' : 'Copy link' }}
+                                {{ copied ? t('news.copied') : t('news.copy_link') }}
                             </button>
                         </div>
                     </div>
@@ -436,7 +523,7 @@ const initials = computed(() => {
                         <div class="border-b px-4 py-3"
                             :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e]' : 'border-zinc-100 bg-zinc-50'">
                             <h3 class="text-[12px] font-bold uppercase tracking-widest"
-                                :class="dark ? 'text-zinc-500' : 'text-zinc-400'">Tags</h3>
+                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ t('news.sidebar_tags') }}</h3>
                         </div>
                         <div class="p-3 flex flex-wrap gap-1.5">
                             <Link v-for="t in article.tags" :key="t.slug"
@@ -456,7 +543,7 @@ const initials = computed(() => {
                         <div class="border-b px-4 py-3"
                             :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e]' : 'border-zinc-100 bg-zinc-50'">
                             <h3 class="text-[12px] font-bold uppercase tracking-widest"
-                                :class="dark ? 'text-zinc-500' : 'text-zinc-400'">Related</h3>
+                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ t('news.sidebar_related') }}</h3>
                         </div>
                         <div class="p-3 flex flex-col gap-1">
                             <Link v-for="a in related" :key="a.id"

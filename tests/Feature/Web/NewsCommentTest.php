@@ -163,7 +163,7 @@ class NewsCommentTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($p) => $p
                 ->component('Web/News/Show')
-                ->has('comments', 1)
-                ->where('comments.0.body', 'Visible comment'));
+                ->has('comments.data', 1)
+                ->where('comments.data.0.body', 'Visible comment'));
     }
 }

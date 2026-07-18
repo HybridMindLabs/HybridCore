@@ -52,4 +52,23 @@ return [
 
     'pagination_label' => 'Страници със статии',
     'page_number' => 'Страница :page',
+
+    'deleted_user' => 'Изтрит потребител',
+    'breadcrumb_news' => 'Новини',
+    'stat_views' => 'Прегледа',
+    'stat_read' => 'Четене',
+    'stat_words' => 'Думи',
+    'stat_minutes' => ':m мин',
+    'prev_article' => 'Предишна',
+    'next_article' => 'Следваща',
+    'sidebar_author' => 'Автор',
+    'sidebar_share' => 'Сподели',
+    'sidebar_tags' => 'Етикети',
+    'sidebar_related' => 'Свързани',
+    'copy_link' => 'Копирай връзката',
+    'copied' => 'Копирано',
+    'load_more_comments' => 'Покажи още коментари',
+    'comments_shown' => 'Показани :shown от :total',
+    'author_avatar_alt' => 'Аватар на :name',
+    'article_image_alt' => 'Илюстрация към :title',
 ];

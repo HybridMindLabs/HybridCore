@@ -53,4 +53,23 @@ return [
 
     'pagination_label' => 'Article pages',
     'page_number' => 'Page :page',
+
+    'deleted_user' => 'Deleted user',
+    'breadcrumb_news' => 'News',
+    'stat_views' => 'Views',
+    'stat_read' => 'Read',
+    'stat_words' => 'Words',
+    'stat_minutes' => ':m min',
+    'prev_article' => 'Previous',
+    'next_article' => 'Next',
+    'sidebar_author' => 'Author',
+    'sidebar_share' => 'Share',
+    'sidebar_tags' => 'Tags',
+    'sidebar_related' => 'Related',
+    'copy_link' => 'Copy link',
+    'copied' => 'Copied',
+    'load_more_comments' => 'Load more comments',
+    'comments_shown' => 'Showing :shown of :total',
+    'author_avatar_alt' => 'Avatar of :name',
+    'article_image_alt' => 'Illustration for :title',
 ];
