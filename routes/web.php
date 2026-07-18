@@ -103,7 +103,9 @@ Route::middleware([EnsureAppIsInstalled::class, EnsureNotInMaintenance::class])
 
             // 2FA
             Route::post('/account/two-factor/setup', [TwoFactorController::class, 'setup'])->name('account.2fa.setup');
-            Route::post('/account/two-factor/confirm', [TwoFactorController::class, 'confirm'])->name('account.2fa.confirm');
+            // Throttled like the login challenge is: a 6-digit code is only a
+            // million guesses, and confirm() had no limit at all.
+            Route::post('/account/two-factor/confirm', [TwoFactorController::class, 'confirm'])->middleware('throttle:10,1')->name('account.2fa.confirm');
             Route::delete('/account/two-factor', [TwoFactorController::class, 'disable'])->name('account.2fa.disable');
             Route::post('/account/two-factor/recovery-codes', [TwoFactorController::class, 'regenerateCodes'])->name('account.2fa.recovery-codes');
 

@@ -143,8 +143,10 @@ class GameServerController extends Controller
 
         // Average per server per bucket first, then sum across servers, so a
         // server polled several times inside one bucket is not counted twice.
+        $epoch = $this->epochExpression('recorded_at');
+
         $perServerBucket = ServerSnapshot::query()
-            ->selectRaw("server_id, FLOOR(UNIX_TIMESTAMP(recorded_at) / {$seconds}) AS bucket")
+            ->selectRaw("server_id, CAST({$epoch} / {$seconds} AS INTEGER) AS bucket")
             ->selectRaw('AVG(CASE WHEN is_online = 1 THEN players_online ELSE 0 END) AS avg_players')
             ->whereIn('server_id', $serverIds)
             ->where('recorded_at', '>=', $since)
@@ -178,7 +180,9 @@ class GameServerController extends Controller
         $uptime = ServerSnapshot::query()
             ->whereIn('server_id', $serverIds)
             ->where('recorded_at', '>=', $since)
-            ->selectRaw('COUNT(*) AS total, SUM(is_online = 1) AS online')
+            // CASE rather than `SUM(is_online = 1)`: the boolean-as-integer
+            // shorthand is a MySQL extension.
+            ->selectRaw('COUNT(*) AS total, SUM(CASE WHEN is_online = 1 THEN 1 ELSE 0 END) AS online')
             ->first();
 
         return [
@@ -192,6 +196,21 @@ class GameServerController extends Controller
             // uses this to decide whether a chart is honest yet.
             'samples' => count($counts),
         ];
+    }
+
+    /**
+     * Seconds-since-epoch for a column, in the current driver's dialect.
+     *
+     * UNIX_TIMESTAMP() is MySQL-only, so hardcoding it made the insight queries
+     * blow up with "no such function" on the SQLite the test suite runs on.
+     */
+    private function epochExpression(string $column): string
+    {
+        return match (DB::connection()->getDriverName()) {
+            'sqlite' => "strftime('%s', {$column})",
+            'pgsql' => "EXTRACT(EPOCH FROM {$column})",
+            default => "UNIX_TIMESTAMP({$column})",
+        };
     }
 
     /** @param  Collection<int, int>  $serverIds */
