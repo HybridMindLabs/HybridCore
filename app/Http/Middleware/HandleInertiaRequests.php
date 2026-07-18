@@ -96,6 +96,8 @@ class HandleInertiaRequests extends Middleware
 
     public const LEGAL_PAGES_CACHE_KEY = 'inertia.legal_pages';
 
+    public const FOOTER_CACHE_KEY = 'inertia.site_footer';
+
     /**
      * messages.php of every enabled extension, nested as ext.{namespace} so the
      * frontend resolves t('ext.{namespace}.{key}'). Failures are silently
@@ -131,6 +133,46 @@ class HandleInertiaRequests extends Middleware
         } catch (\Throwable) {
             return [];
         }
+    }
+
+    /**
+     * Games hosted here plus a live snapshot, for the public footer.
+     *
+     * @return array{games: array<int, array{slug: string, name: string, servers: int, players: int}>, servers_online: int, servers_total: int, players_online: int}
+     */
+    private function buildFooter(): array
+    {
+        $servers = Server::query()
+            ->where('is_active', true)
+            ->with(['latestSnapshot', 'game:id,slug,name'])
+            ->get();
+
+        $online = $servers->filter(fn (Server $s) => (bool) ($s->latestSnapshot?->is_online ?? false));
+
+        $games = $servers
+            ->filter(fn (Server $s) => $s->game !== null)
+            ->groupBy(fn (Server $s) => $s->game->slug)
+            ->map(fn ($group) => [
+                'slug' => $group->first()->game->slug,
+                'name' => $group->first()->game->name,
+                'servers' => $group->count(),
+                'players' => $group->sum(
+                    fn (Server $s) => ($s->latestSnapshot?->is_online ?? false)
+                        ? ($s->latestSnapshot->players_online ?? 0)
+                        : 0
+                ),
+            ])
+            ->sortByDesc('players')
+            ->values()
+            ->take(8)
+            ->all();
+
+        return [
+            'games' => $games,
+            'servers_online' => $online->count(),
+            'servers_total' => $servers->count(),
+            'players_online' => $online->sum(fn (Server $s) => $s->latestSnapshot->players_online ?? 0),
+        ];
     }
 
     private function resolveMenus(): array
@@ -253,6 +295,8 @@ class HandleInertiaRequests extends Middleware
                 'profile' => trans('profile'),
                 'servers' => trans('servers'),
                 'news' => trans('news'),
+                'rules' => trans('rules'),
+                'contact' => trans('contact'),
                 'achievements' => trans('achievements'),
                 'onboarding' => trans('onboarding'),
                 'report' => trans('report'),
@@ -278,6 +322,14 @@ class HandleInertiaRequests extends Middleware
                     ->get(['slug', 'title'])
                     ->toArray(),
             ), [], report: false),
+            // Footer content for the public layout: the games actually hosted
+            // here plus a live line. The footer renders on every public page,
+            // most of which have no other status indicator.
+            'siteFooter' => fn () => rescue(fn () => Cache::remember(
+                self::FOOTER_CACHE_KEY,
+                120,
+                fn () => $this->buildFooter(),
+            ), null, report: false),
             'menus' => fn () => $this->resolveMenus(),
             'authShell' => fn () => rescue(fn () => $this->resolveAuthShell(), null, report: false),
         ];

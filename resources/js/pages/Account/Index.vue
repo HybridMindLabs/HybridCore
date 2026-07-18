@@ -26,7 +26,7 @@ interface Account {
     created_at: string; last_login_at: string | null;
     two_factor_enabled: boolean; two_factor_recovery_codes: string[] | null;
     can_change_username: boolean; username_change_available_at: string | null;
-    notification_preferences: string[];
+    notification_preferences: Record<string, boolean> | string[];
 }
 interface SessionItem {
     id: string; ip_address: string | null; last_activity: number; is_current: boolean;

@@ -11,9 +11,10 @@ import ExtensionSlot from '@/components/Core/ExtensionSlot.vue';
 import ReportButton from '@/components/UI/ReportButton.vue';
 import Breadcrumb from '@/components/UI/Breadcrumb.vue';
 import GameIcon from '@/components/UI/GameIcon.vue';
+import PlayerAreaChart from '@/components/UI/PlayerAreaChart.vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
-import { computed, ref, onMounted, watch } from 'vue';
+import { computed, ref } from 'vue';
 
 interface PlayerStatus {
     is_online: boolean; map: string | null; players_online: number; players_max: number;
@@ -29,7 +30,13 @@ interface Game {
     id: number; name: string; slug: string; icon: string; color: string;
     cover_url?: string | null;
 }
-interface HistoryPoint { time: string; players: number | null; max: number }
+interface HistoryRangeData {
+    history: { t: string; players: number | null }[];
+    peak: number;
+    average: number;
+    uptime: number;
+    samples: number;
+}
 interface Review {
     id: number; rating: number; body: string | null; created_at: string; is_mine: boolean;
     user: { username: string | null; name: string; avatar: string | null };
@@ -39,7 +46,7 @@ const props = defineProps<{
     game: Game;
     server: GameServer;
     map_image: string | null;
-    history: HistoryPoint[];
+    history_ranges: Record<'24h' | '7d' | '30d', HistoryRangeData>;
     stats: {
         total_clicks: number; clicks_today: number; peak_players: number;
         uptime_24h: number; uptime_7d: number | null; uptime_30d: number | null;
@@ -114,16 +121,40 @@ function avatarBg(name: string) {
     return colors[(name.charCodeAt(0) ?? 0) % colors.length];
 }
 
-function copyIp() {
-    navigator.clipboard.writeText(props.server.address);
-    copied.value = true;
-    setTimeout(() => { copied.value = false; }, 1500);
+/**
+ * The Clipboard API needs a secure context. Over plain http it throws, and the
+ * old version still flipped the button to "copied" without copying anything.
+ */
+async function writeClipboard(text: string) {
+    try {
+        await navigator.clipboard.writeText(text);
+        return;
+    } catch {
+        const field = document.createElement('textarea');
+        field.value = text;
+        field.setAttribute('readonly', '');
+        field.style.position = 'fixed';
+        field.style.opacity = '0';
+        document.body.appendChild(field);
+        field.select();
+        try {
+            document.execCommand('copy');
+        } finally {
+            document.body.removeChild(field);
+        }
+    }
 }
 
-function copyLink() {
-    navigator.clipboard.writeText(window.location.href);
+async function copyIp() {
+    await writeClipboard(props.server.address);
+    copied.value = true;
+    setTimeout(() => { copied.value = false; }, 1600);
+}
+
+async function copyLink() {
+    await writeClipboard(window.location.href);
     linkCopied.value = true;
-    setTimeout(() => { linkCopied.value = false; }, 1500);
+    setTimeout(() => { linkCopied.value = false; }, 1600);
 }
 
 async function toggleFavourite() {
@@ -157,9 +188,6 @@ function playerBarColor(online: number, max: number) {
     if (pct >= 0.6) return '#f59e0b';
     return '#22c55e';
 }
-function countryFlag(code: string) {
-    return code.toUpperCase().replace(/./g, c => String.fromCodePoint(c.charCodeAt(0) + 127397));
-}
 function pingLabel(ms: number | null) {
     if (ms === null) return '—';
     return ms + 'ms';
@@ -171,76 +199,86 @@ function pingColor(ms: number | null) {
     return 'text-red-500';
 }
 
-// Chart
-const chartRef = ref<HTMLCanvasElement | null>(null);
+/**
+ * The old canvas chart dropped every null before plotting, so an hour with no
+ * snapshot silently became a straight line between two distant readings — it
+ * claimed data that was never collected. Nulls are passed through instead and
+ * PlayerAreaChart breaks the line across them.
+ *
+ * It also never redrew on resize and had no hover readout; the shared component
+ * covers both.
+ */
+type HistoryRange = '24h' | '7d' | '30d';
 
-onMounted(() => drawChart());
-watch(dark, () => drawChart());
+const historyRange = ref<HistoryRange>('24h');
 
-function drawChart() {
-    const canvas = chartRef.value;
-    if (!canvas || !props.history.length) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const dpr = window.devicePixelRatio || 1;
-    const w = canvas.offsetWidth;
-    const h = canvas.offsetHeight;
-    canvas.width = w * dpr;
-    canvas.height = h * dpr;
-    ctx.scale(dpr, dpr);
+const historyTabs = computed<{ key: HistoryRange; label: string }[]>(() => [
+    { key: '24h', label: t('servers.range_24h') },
+    { key: '7d', label: t('servers.range_7d') },
+    { key: '30d', label: t('servers.range_30d') },
+]);
 
-    const data = props.history.filter(p => p.players !== null) as (HistoryPoint & { players: number })[];
-    if (data.length < 2) return;
+const activeHistory = computed(() => props.history_ranges[historyRange.value]);
 
-    const maxVal = Math.max(...data.map(p => p.max), 1);
-    const pad = { top: 12, right: 12, bottom: 32, left: 32 };
-    const cw = w - pad.left - pad.right;
-    const ch = h - pad.top - pad.bottom;
-    const accent = props.game.color;
-    const grid = dark.value ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)';
-    const textC = dark.value ? '#52525b' : '#a1a1aa';
+const chartData = computed(() => activeHistory.value.history);
 
-    ctx.clearRect(0, 0, w, h);
+const historyTiles = computed(() => [
+    {
+        label: t('servers.average_players'),
+        value: activeHistory.value.average.toLocaleString(),
+        suffix: '',
+        hint: t('servers.average_players_hint'),
+    },
+    {
+        label: t('servers.peak_players'),
+        value: activeHistory.value.peak.toLocaleString(),
+        suffix: '',
+        hint: t('servers.peak_players_hint'),
+    },
+    {
+        label: t('servers.uptime_label'),
+        value: String(activeHistory.value.uptime),
+        suffix: '%',
+        hint: t('servers.uptime_label_hint'),
+    },
+]);
 
-    for (let i = 0; i <= 4; i++) {
-        const y = pad.top + (ch / 4) * i;
-        ctx.strokeStyle = grid; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
-        ctx.fillStyle = textC; ctx.font = '10px system-ui'; ctx.textAlign = 'right';
-        ctx.fillText(String(Math.round(maxVal * (1 - i / 4))), pad.left - 4, y + 3);
-    }
+const heroStats = computed(() => {
+    const status = props.server.status;
+    const capacity = status && status.players_max
+        ? Math.min(100, Math.round((status.players_online / status.players_max) * 100))
+        : 0;
 
-    const xStep = cw / (data.length - 1);
-    const gradient = ctx.createLinearGradient(0, pad.top, 0, pad.top + ch);
-    gradient.addColorStop(0, accent + '38');
-    gradient.addColorStop(1, accent + '00');
-
-    ctx.beginPath();
-    data.forEach((p, i) => {
-        const x = pad.left + i * xStep;
-        const y = pad.top + ch - (p.players / maxVal) * ch;
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    });
-    ctx.lineTo(pad.left + (data.length - 1) * xStep, pad.top + ch);
-    ctx.lineTo(pad.left, pad.top + ch);
-    ctx.closePath();
-    ctx.fillStyle = gradient; ctx.fill();
-
-    ctx.beginPath();
-    ctx.strokeStyle = accent; ctx.lineWidth = 2; ctx.lineJoin = 'round';
-    data.forEach((p, i) => {
-        const x = pad.left + i * xStep;
-        const y = pad.top + ch - (p.players / maxVal) * ch;
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-
-    ctx.fillStyle = textC; ctx.font = '10px system-ui'; ctx.textAlign = 'center';
-    data.forEach((p, i) => {
-        if (i % 6 === 0 || i === data.length - 1)
-            ctx.fillText(p.time, pad.left + i * xStep, h - 6);
-    });
-}
+    return [
+        {
+            label: t('servers.players'),
+            value: status?.is_online ? `${status.players_online}/${status.players_max}` : '—',
+            suffix: '',
+            hint: t('servers.hero_players_now_hint'),
+            class: undefined as string | undefined,
+            bar: status?.is_online ? capacity : undefined,
+            barColor: status ? playerBarColor(status.players_online, status.players_max) : '#71717a',
+        },
+        {
+            label: t('servers.col_ping'),
+            value: pingLabel(status?.ping ?? null),
+            suffix: '',
+            hint: t('servers.hero_ping_hint'),
+            class: pingColor(status?.ping ?? null),
+            bar: undefined,
+            barColor: '',
+        },
+        {
+            label: t('servers.uptime_label'),
+            value: String(props.stats.uptime_24h),
+            suffix: '%',
+            hint: t('servers.hero_uptime_hint'),
+            class: undefined as string | undefined,
+            bar: undefined,
+            barColor: '',
+        },
+    ];
+});
 </script>
 
 <template>
@@ -253,108 +291,155 @@ function drawChart() {
             <div v-if="game.cover_url" class="absolute inset-0 overflow-hidden">
                 <div
                     class="absolute inset-[-10%] bg-cover bg-center"
-                    :style="{ backgroundImage: `url(${game.cover_url})`, filter: 'blur(18px) brightness(0.28) saturate(1.3)' }"
+                    :style="{ backgroundImage: `url(${game.cover_url})`, filter: dark ? 'blur(18px) brightness(0.42) saturate(1.2)' : 'blur(18px) brightness(1.06) saturate(1.1)' }"
                 />
             </div>
             <div v-else class="absolute inset-0" :style="{ background: `linear-gradient(135deg, ${game.color}40, ${game.color}10)` }" />
-            <div class="absolute inset-0" style="background: linear-gradient(to right, rgba(9,9,11,0.65) 0%, transparent 65%)" />
+            <!-- This side wash was hard-coded to near-black in both themes, so in
+                 light mode the near-black heading sat on a dark scrim. Each theme
+                 now scrims with its own page colour. -->
+            <div class="absolute inset-0" aria-hidden="true"
+                :style="dark
+                    ? 'background: linear-gradient(to right, rgba(9,9,11,0.88) 0%, rgba(9,9,11,0.70) 45%, transparent 85%)'
+                    : 'background: linear-gradient(to right, rgba(236,238,242,0.95) 0%, rgba(236,238,242,0.82) 45%, rgba(236,238,242,0.30) 85%)'" />
             <div
-                class="absolute inset-0"
+                class="absolute inset-0" aria-hidden="true"
                 :style="dark
                     ? 'background: linear-gradient(to bottom, transparent 40%, rgba(9,9,11,1) 100%)'
-                    : 'background: linear-gradient(to bottom, transparent 35%, rgba(244,244,245,1) 100%)'"
+                    : 'background: linear-gradient(to bottom, transparent 35%, rgba(236,238,242,1) 100%)'"
             />
-            <!-- Dot grid (same as Home hero) -->
-            <div v-if="dark" class="absolute inset-0 pointer-events-none opacity-50"
-                style="background-image:radial-gradient(circle,rgba(255,255,255,0.035) 1px,transparent 1px);background-size:28px 28px" />
+            <div class="absolute inset-0 pointer-events-none" aria-hidden="true"
+                :class="dark ? 'opacity-50' : 'opacity-[0.3]'"
+                :style="`background-image:radial-gradient(circle,${dark ? 'rgba(255,255,255,0.035)' : 'rgba(24,24,27,0.05)'} 1px,transparent 1px);background-size:28px 28px`" />
 
             <div class="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-6 py-8 pb-0">
                 <Breadcrumb :items="[
-                    { label: 'Home', href: route('home') },
+                    { label: t('navigation.nav_home'), href: route('home') },
                     { label: t('servers.title'), href: route('servers.index') },
                     { label: game.name, href: route('servers.game', game.slug) },
                     { label: server.address },
                 ]" />
 
-                <!-- Server identity -->
-                <div class="flex items-start gap-4 mb-5 flex-wrap">
-                    <!-- Game icon -->
-                    <div
-                        class="w-14 h-14 rounded-xl overflow-hidden border shrink-0 shadow-xl"
-                        :style="{ borderColor: game.color + '45' }"
-                    >
-                        <GameIcon :slug="game.slug" :alt="game.name" />
-                    </div>
+                <div class="grid gap-6 lg:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,320px)] lg:items-end mt-4 pb-6">
 
-                    <div class="flex-1 min-w-0">
-                        <!-- Name + status -->
-                        <div class="flex items-center gap-3 flex-wrap mb-1.5">
-                            <h1
-                                class="text-[24px] sm:text-[30px] font-black leading-tight tracking-tight truncate"
-                                :class="dark ? 'text-white' : 'text-zinc-900'"
-                            >{{ server.name }}</h1>
-                            <div class="flex items-center gap-2 shrink-0">
-                                <span
-                                    class="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border"
-                                    :class="server.status?.is_online
-                                        ? 'border-emerald-500/30 bg-emerald-500/12 text-emerald-500'
-                                        : dark ? 'border-white/10 bg-white/4 text-white/30' : 'border-zinc-300 bg-zinc-100 text-zinc-400'"
-                                >
-                                    <span
-                                        class="w-1.5 h-1.5 rounded-full"
-                                        :class="server.status?.is_online ? 'bg-emerald-500 animate-pulse' : dark ? 'bg-zinc-600' : 'bg-zinc-300'"
-                                    />
-                                    {{ server.status?.is_online ? t('servers.online') : t('servers.offline') }}
-                                </span>
-                                <span v-if="average_rating"
-                                    class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border border-amber-500/30 bg-amber-500/12 text-amber-500">
-                                    <Star :size="10" :stroke-width="2" fill="currentColor" />
-                                    {{ Number(average_rating).toFixed(1) }}
-                                </span>
-                                <span v-if="server.country_code" class="text-[20px]">{{ countryFlag(server.country_code) }}</span>
+                    <div class="min-w-0">
+                        <!-- Status. aria-live so a screen reader hears it change. -->
+                        <div class="hc-hero-in inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[10.5px] font-bold uppercase tracking-widest"
+                            :class="server.status?.is_online
+                                ? (dark ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700')
+                                : (dark ? 'border-zinc-700 bg-zinc-800/60 text-zinc-400' : 'border-zinc-300 bg-zinc-200/70 text-zinc-600')"
+                            aria-live="polite">
+                            <span v-if="server.status?.is_online" class="hc-live-dot" aria-hidden="true" />
+                            {{ server.status?.is_online ? t('servers.online') : t('servers.offline') }}
+                        </div>
+
+                        <div class="hc-hero-in hc-hero-in--1 flex items-start gap-4 mt-4">
+                            <Link :href="route('servers.game', game.slug)"
+                                class="w-14 h-14 rounded-xl overflow-hidden ring-2 shrink-0 shadow-xl transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-blue-500"
+                                :class="dark ? 'ring-zinc-800' : 'ring-white'"
+                                :title="t('servers.game_servers_title', { game: game.name })">
+                                <GameIcon :slug="game.slug" :alt="game.name" />
+                            </Link>
+
+                            <div class="min-w-0">
+                                <h1 class="text-[24px] sm:text-[30px] font-black leading-tight tracking-tight"
+                                    :class="dark ? 'text-white' : 'text-zinc-900'">{{ server.name }}</h1>
+
+                                <div class="flex items-center gap-2 flex-wrap mt-2">
+                                    <Link :href="route('servers.game', game.slug)"
+                                        class="text-[12.5px] font-semibold transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                                        :class="dark ? 'text-zinc-400 hover:text-zinc-100' : 'text-zinc-600 hover:text-zinc-900'">
+                                        {{ game.name }}
+                                    </Link>
+                                    <span v-if="average_rating"
+                                        class="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border border-amber-500/30 bg-amber-500/10"
+                                        :class="dark ? 'text-amber-400' : 'text-amber-700'"
+                                        :title="t('servers.rating_hint', { count: reviews.total })">
+                                        <Star :size="10" :stroke-width="2" fill="currentColor" aria-hidden="true" />
+                                        {{ Number(average_rating).toFixed(1) }}
+                                    </span>
+                                    <span v-if="server.country_code"
+                                        class="px-2 py-0.5 rounded-full border text-[10px] font-bold tracking-wide"
+                                        :class="dark ? 'border-zinc-700 bg-zinc-800/70 text-zinc-300' : 'border-zinc-300 bg-zinc-200/70 text-zinc-700'"
+                                        :title="server.country_code.toUpperCase()">{{ server.country_code.toUpperCase() }}</span>
+                                    <span v-if="server.status?.is_password_protected"
+                                        class="inline-flex items-center gap-1 text-[10.5px] font-bold px-2 py-0.5 rounded-full border border-amber-500/30 bg-amber-500/10"
+                                        :class="dark ? 'text-amber-400' : 'text-amber-700'"
+                                        :title="t('servers.password_protected')">
+                                        <Lock :size="9" :stroke-width="2.4" aria-hidden="true" />
+                                        {{ t('servers.password_protected') }}
+                                    </span>
+                                    <span v-if="server.status?.vac_secured"
+                                        class="inline-flex items-center gap-1 text-[10.5px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/10"
+                                        :class="dark ? 'text-emerald-400' : 'text-emerald-700'"
+                                        :title="t('servers.vac_secured')">
+                                        <Shield :size="9" :stroke-width="2.4" aria-hidden="true" />VAC
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Meta row -->
-                        <div class="flex items-center gap-3 flex-wrap">
-                            <span class="font-mono text-[13px]" :class="dark ? 'text-white/35' : 'text-zinc-400'">{{ server.address }}</span>
-                            <span v-if="server.status?.map" class="flex items-center gap-1 text-[12px]" :class="dark ? 'text-white/35' : 'text-zinc-400'">
-                                <Map :size="11" :stroke-width="1.8" />{{ server.status.map }}
+                        <!-- The address is the thing people came for; it used to be
+                             one faint line of meta text. -->
+                        <div class="hc-hero-in hc-hero-in--2 flex items-center gap-2 mt-4 flex-wrap">
+                            <div class="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-xl border backdrop-blur-md"
+                                :class="dark ? 'border-zinc-700/70 bg-zinc-900/80' : 'border-zinc-300 bg-white'">
+                                <span class="font-mono text-[13.5px] font-semibold"
+                                    :class="dark ? 'text-zinc-100' : 'text-zinc-900'">{{ server.address }}</span>
+                                <button type="button" @click="copyIp"
+                                    class="w-7 h-7 flex items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                                    :class="copied
+                                        ? 'text-emerald-500'
+                                        : dark ? 'text-zinc-500 hover:text-zinc-100 hover:bg-white/[0.06]' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200/70'"
+                                    :aria-label="t('home.copy_address', { address: server.address })"
+                                    :title="copied ? t('home.copied') : t('home.copy_address', { address: server.address })">
+                                    <component :is="copied ? Check : Copy" :size="14" :stroke-width="2" aria-hidden="true" />
+                                </button>
+                            </div>
+
+                            <span v-if="server.status?.map"
+                                class="inline-flex items-center gap-1.5 text-[12.5px] font-mono px-2.5 py-1.5 rounded-xl border"
+                                :class="dark ? 'border-zinc-800 bg-zinc-900/60 text-zinc-300' : 'border-zinc-300 bg-white/80 text-zinc-700'"
+                                :title="t('servers.current_map_hint')">
+                                <Map :size="12" :stroke-width="1.8" aria-hidden="true" />{{ server.status.map }}
                             </span>
-                            <Lock v-if="server.status?.is_password_protected" :size="11" :stroke-width="2" class="text-amber-400" />
-                            <span v-if="server.status?.vac_secured" class="flex items-center gap-1 text-[11px] font-semibold text-emerald-500">
-                                <Shield :size="11" :stroke-width="2" />VAC
-                            </span>
-                            <span
-                                v-for="tag in server.tags"
-                                :key="tag"
-                                class="text-[10px] font-medium px-2 py-0.5 rounded border"
-                                :class="dark ? 'border-white/10 text-white/30' : 'border-zinc-200 text-zinc-400'"
+                        </div>
+
+                        <div v-if="server.tags.length" class="hc-hero-in hc-hero-in--3 flex items-center gap-1.5 flex-wrap mt-2.5">
+                            <span v-for="tag in server.tags" :key="tag"
+                                class="text-[10px] font-semibold px-2 py-0.5 rounded"
+                                :class="dark ? 'bg-zinc-800/80 text-zinc-400' : 'bg-zinc-200/80 text-zinc-600'"
                             >{{ tag }}</span>
                         </div>
                     </div>
-                </div>
 
-                <!-- Players bar -->
-                <div v-if="server.status?.is_online" class="pb-6">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-[12px] flex items-center gap-1.5" :class="dark ? 'text-white/35' : 'text-zinc-400'">
-                            <Users :size="12" :stroke-width="1.8" />
-                            {{ server.status.players_online }} / {{ server.status.players_max }} {{ t('servers.players').toLowerCase() }}
-                        </span>
-                        <span v-if="server.status.ping != null" class="flex items-center gap-1 text-[12px]" :class="pingColor(server.status.ping)">
-                            <Wifi :size="11" :stroke-width="1.8" />{{ pingLabel(server.status.ping) }}
-                        </span>
-                    </div>
-                    <div class="h-1.5 w-full rounded-full overflow-hidden" :class="dark ? 'bg-white/8' : 'bg-zinc-200/70'">
-                        <div
-                            class="h-full rounded-full transition-all"
-                            :style="{
-                                width: playerBarWidth(server.status.players_online, server.status.players_max),
-                                backgroundColor: playerBarColor(server.status.players_online, server.status.players_max),
-                            }"
-                        />
-                    </div>
+                    <!-- Every figure explains itself, and the player count keeps
+                         its capacity bar. -->
+                    <dl class="hc-hero-in hc-hero-in--2 grid grid-cols-3 gap-2.5">
+                        <div v-for="(item, i) in heroStats" :key="item.label"
+                            class="hc-reveal rounded-xl border px-3 py-2.5 backdrop-blur-md"
+                            :style="{ animationDelay: 0.18 + i * 0.06 + 's' }"
+                            :class="dark
+                                ? 'border-zinc-700/70 bg-zinc-900/85 shadow-lg shadow-black/30'
+                                : 'border-zinc-300 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.10)]'"
+                            :title="item.hint">
+                            <dd class="text-[19px] font-black leading-none tabular-nums"
+                                :class="item.class ?? (dark ? 'text-zinc-100' : 'text-zinc-900')">
+                                {{ item.value }}<span v-if="item.suffix" class="text-[12px] font-bold"
+                                    :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ item.suffix }}</span>
+                            </dd>
+                            <dt class="text-[10px] font-bold uppercase tracking-widest mt-1.5"
+                                :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ item.label }}</dt>
+
+                            <span v-if="item.bar !== undefined" class="mt-2 block h-1 rounded-full overflow-hidden"
+                                :class="dark ? 'bg-zinc-800' : 'bg-zinc-200'" aria-hidden="true">
+                                <span class="hc-hero-bar block h-full rounded-full"
+                                    :style="{ width: item.bar + '%', backgroundColor: item.barColor }" />
+                            </span>
+                            <p v-else class="text-[10.5px] leading-snug mt-1"
+                               :class="dark ? 'text-zinc-600' : 'text-zinc-500'">{{ item.hint }}</p>
+                        </div>
+                    </dl>
                 </div>
             </div>
         </div>
@@ -366,19 +451,46 @@ function drawChart() {
                 <!-- ── Left: chart + players ── -->
                 <div class="flex flex-col gap-5 min-w-0">
 
-                    <!-- Player history chart -->
+                    <!-- Player history -->
                     <div class="rounded-xl border overflow-hidden" :class="card">
-                        <div class="flex items-center justify-between px-5 py-3.5 border-b" :class="cardHead">
+                        <div class="px-5 py-3.5 border-b" :class="cardHead">
                             <p class="text-[13px] font-semibold" :class="textPri">{{ t('servers.player_history') }}</p>
-                            <span class="text-[11px]" :class="textMute">24h</span>
+                            <p class="text-[11.5px] mt-0.5" :class="textMute">{{ t('servers.player_history_hint') }}</p>
                         </div>
-                        <div class="p-5">
-                            <div v-if="history.length >= 2" class="h-52 w-full">
-                                <canvas ref="chartRef" class="w-full h-full" />
-                            </div>
-                            <div v-else class="flex flex-col items-center justify-center h-36">
-                                <Activity :size="24" :stroke-width="1.5" class="mb-2" :class="dark ? 'text-zinc-800' : 'text-zinc-300'" />
-                                <p class="text-[13px]" :class="textMute">No history data yet</p>
+
+                        <div class="flex items-center gap-0.5 px-3 border-b overflow-x-auto"
+                            :class="dark ? 'border-zinc-800/60' : 'border-zinc-200'"
+                            role="group" :aria-label="t('servers.range_group')">
+                            <button v-for="tab in historyTabs" :key="tab.key" type="button"
+                                class="px-4 py-2.5 text-[12.5px] font-semibold border-b-2 -mb-px whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50"
+                                :class="historyRange === tab.key
+                                    ? 'text-blue-500 border-blue-500'
+                                    : dark ? 'text-zinc-500 border-transparent hover:text-zinc-200' : 'text-zinc-600 border-transparent hover:text-zinc-900'"
+                                :aria-pressed="historyRange === tab.key"
+                                @click="historyRange = tab.key">
+                                {{ tab.label }}
+                            </button>
+                        </div>
+
+                        <div class="px-5 pt-5 pb-3">
+                            <PlayerAreaChart
+                                :data="chartData"
+                                :dark="dark"
+                                :height="208"
+                                :label="t('servers.player_history')"
+                                :empty-label="t('servers.not_enough_data')"
+                            />
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-px border-t"
+                            :class="dark ? 'bg-zinc-800/60 border-zinc-800/60' : 'bg-zinc-200 border-zinc-200'">
+                            <div v-for="tile in historyTiles" :key="tile.label"
+                                class="px-4 py-3 text-center" :class="dark ? 'bg-[#111113]' : 'bg-white'"
+                                :title="tile.hint">
+                                <p class="text-[11px] font-semibold" :class="textSec">{{ tile.label }}</p>
+                                <p class="text-[20px] font-black leading-none tabular-nums mt-1.5" :class="textPri">
+                                    {{ tile.value }}<span v-if="tile.suffix" class="text-[12px] font-bold" :class="textMute">{{ tile.suffix }}</span>
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -661,7 +773,8 @@ function drawChart() {
                                 <span class="text-[12px] flex items-center gap-1.5" :class="textMute">
                                     <Globe2 :size="12" :stroke-width="1.8" />Country
                                 </span>
-                                <span class="text-[18px]">{{ countryFlag(server.country_code) }}</span>
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide"
+                                    :class="dark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-200 text-zinc-700'">{{ server.country_code.toUpperCase() }}</span>
                             </div>
                             <div v-if="server.status?.ping != null" class="flex items-center justify-between px-5 py-3">
                                 <span class="text-[12px] flex items-center gap-1.5" :class="textMute">

@@ -40,6 +40,50 @@ const dark = computed(() => theme.value === 'dark');
 // ── Live online count via Reverb presence channel ─────────────────────────
 const liveOnlineCount = ref(props.online_count ?? 0);
 
+/** Translated name for an achievement, falling back to the slug if a key is missing. */
+function badgeLabel(slug: string): string {
+    const key = `achievements.${slug}.label`;
+    const label = t(key);
+    return label === key ? slug : label;
+}
+
+function badgeDescription(slug: string): string {
+    const key = `achievements.${slug}.description`;
+    const description = t(key);
+    return description === key ? badgeLabel(slug) : description;
+}
+
+/** Two named badges fit a card; the rest collapse into a "+N" with a tooltip. */
+function visibleBadges(member: Member) {
+    return member.achievements.slice(0, 2).map(slug => ({
+        slug,
+        icon: achievementIcons[slug] ?? BadgeCheck,
+        label: badgeLabel(slug),
+        description: badgeDescription(slug),
+    }));
+}
+
+function remainingBadgeNames(member: Member): string {
+    return member.achievements.slice(2).map(badgeLabel).join(', ');
+}
+
+const heroStats = computed(() => [
+    {
+        icon: Users,
+        value: props.total.toLocaleString(),
+        label: t('members.stat_total'),
+        hint: t('members.stat_total_hint'),
+        accent: false,
+    },
+    {
+        icon: Wifi,
+        value: liveOnlineCount.value.toLocaleString(),
+        label: t('members.stat_online'),
+        hint: t('members.stat_online_hint'),
+        accent: liveOnlineCount.value > 0,
+    },
+]);
+
 // ── Search ─────────────────────────────────────────────────────────────────
 const search = ref(props.filters.search);
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -136,63 +180,105 @@ function accentColor(member: Member): string {
     <PublicLayout>
 
         <!-- ═══════════════════════════════════════════════════ HERO -->
-        <div
+        <section
             class="relative overflow-hidden border-b"
             :class="dark ? 'border-zinc-800/60 bg-[#09090b]' : 'border-zinc-200 bg-zinc-50'"
+            :aria-label="t('members.title')"
         >
-            <!-- Glows + dot grid (same as Home) -->
-            <div class="absolute inset-0 pointer-events-none overflow-hidden">
-                <div class="absolute -top-40 left-1/3 w-[600px] h-[500px] rounded-full blur-[130px]"
-                    :class="dark ? 'bg-blue-500/6' : 'bg-blue-400/8'" />
-                <div class="absolute -top-20 right-1/4 w-[350px] h-[350px] rounded-full blur-[100px]"
-                    :class="dark ? 'bg-violet-500/5' : 'bg-violet-400/5'" />
-                <div v-if="dark" class="absolute inset-0 opacity-50"
-                    style="background-image:radial-gradient(circle,rgba(255,255,255,0.035) 1px,transparent 1px);background-size:28px 28px" />
+            <div class="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+                <div class="hc-hero-glow absolute -top-32 left-1/4 w-[520px] h-[380px] rounded-full blur-[120px]"
+                    :class="dark ? 'bg-blue-500/8' : 'bg-blue-400/10'" />
+                <div class="hc-hero-glow hc-hero-glow--slow absolute -top-16 right-1/4 w-[320px] h-[300px] rounded-full blur-[100px]"
+                    :class="dark ? 'bg-violet-500/6' : 'bg-violet-400/8'" />
+                <div class="absolute inset-0" :class="dark ? 'opacity-50' : 'opacity-[0.35]'"
+                    :style="`background-image:radial-gradient(circle,${dark ? 'rgba(255,255,255,0.035)' : 'rgba(24,24,27,0.05)'} 1px,transparent 1px);background-size:28px 28px`" />
             </div>
 
-            <div class="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-6 py-12 sm:py-16">
-                <Breadcrumb :items="[{ label: 'Home', href: route('home') }, { label: t('members.title') }]" />
+            <div class="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-6 py-8 sm:py-12">
+                <Breadcrumb :items="[
+                    { label: t('navigation.nav_home'), href: route('home') },
+                    { label: t('members.title') },
+                ]" />
 
-                <div class="max-w-2xl">
-                    <div
-                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11px] font-bold uppercase tracking-widest mb-6"
-                        :class="dark ? 'border-emerald-500/25 bg-emerald-500/8 text-emerald-400' : 'border-emerald-400/30 bg-emerald-50 text-emerald-600'"
-                    >
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        {{ t('members.online_now', { count: liveOnlineCount }) }}
+                <div class="grid gap-8 lg:gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,300px)] lg:items-end mt-4">
+
+                    <div class="max-w-xl">
+                        <!-- aria-live: the count updates over the presence channel -->
+                        <div
+                            class="hc-hero-in inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-[11px] font-bold uppercase tracking-widest"
+                            :class="liveOnlineCount > 0
+                                ? (dark ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700')
+                                : (dark ? 'border-zinc-700 bg-zinc-800/60 text-zinc-400' : 'border-zinc-300 bg-zinc-200/70 text-zinc-600')"
+                            aria-live="polite"
+                        >
+                            <span v-if="liveOnlineCount > 0" class="hc-live-dot" aria-hidden="true" />
+                            {{ t('members.online_now', { count: liveOnlineCount }) }}
+                        </div>
+
+                        <h1 class="hc-hero-in hc-hero-in--1 mt-4 text-[30px] sm:text-[40px] font-black tracking-tight leading-[1.07]"
+                            :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
+                            {{ t('members.heading_1') }}
+                            <span class="hc-hero-gradient bg-clip-text text-transparent">{{ t('members.heading_2') }}</span>
+                        </h1>
+
+                        <p class="hc-hero-in hc-hero-in--2 mt-3 text-[15px] leading-relaxed max-w-lg"
+                           :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                            {{ t('members.hero_description') }}
+                        </p>
+
+                        <!-- Search -->
+                        <div class="hc-hero-in hc-hero-in--3 mt-6 w-full max-w-md">
+                            <label for="member-search" class="sr-only">{{ t('members.search_placeholder') }}</label>
+                            <div class="relative">
+                                <Search :size="16" :stroke-width="1.9" aria-hidden="true"
+                                    class="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                                    :class="dark ? 'text-zinc-500' : 'text-zinc-500'" />
+                                <input
+                                    id="member-search"
+                                    v-model="search"
+                                    type="search"
+                                    autocomplete="off"
+                                    :placeholder="t('members.search_placeholder')"
+                                    class="w-full rounded-xl border pl-10 pr-10 py-3 text-[14px] font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+                                    :class="dark
+                                        ? 'border-zinc-800 bg-zinc-900/70 text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500/50'
+                                        : 'border-zinc-300 bg-white text-zinc-900 placeholder:text-zinc-500 focus:border-blue-500/60'"
+                                />
+                                <button v-if="search" type="button" @click="search = ''"
+                                    class="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                                    :class="dark ? 'text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.06]' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200/70'"
+                                    :aria-label="t('members.clear_search')" :title="t('members.clear_search')">
+                                    <X :size="15" :stroke-width="2" aria-hidden="true" />
+                                </button>
+                            </div>
+                            <p class="sr-only" role="status" aria-live="polite">
+                                {{ t('members.results_count', { count: members.total }) }}
+                            </p>
+                        </div>
                     </div>
 
-                    <h1 class="text-4xl sm:text-5xl font-black tracking-tight leading-[1.05]"
-                        :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
-                        {{ t('members.hero_prefix') }}
-                        <span class="bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">{{ t('members.title') }}</span>
-                    </h1>
-
-                    <p class="mt-4 text-[15px] leading-relaxed max-w-lg"
-                       :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
-                        {{ t('members.subtitle').replace(':count', total.toLocaleString()) }}
-                    </p>
-
-                    <!-- Search -->
-                    <div class="relative w-full max-w-sm mt-8">
-                        <Search :size="14" :stroke-width="1.75" class="absolute left-3.5 top-1/2 -translate-y-1/2" :class="dark ? 'text-zinc-600' : 'text-zinc-400'" />
-                        <input
-                            v-model="search" type="text"
-                            :placeholder="t('members.search_placeholder')"
-                            class="w-full rounded-xl border pl-10 pr-9 py-3 text-[14px] font-medium transition focus:outline-none focus:ring-2"
+                    <dl class="hc-hero-in hc-hero-in--2 grid grid-cols-2 gap-2.5">
+                        <div v-for="(item, i) in heroStats" :key="item.label"
+                            class="hc-reveal rounded-xl border px-3 py-2.5 backdrop-blur-md"
+                            :style="{ animationDelay: 0.18 + i * 0.06 + 's' }"
                             :class="dark
-                                ? 'border-zinc-800 bg-zinc-900/60 text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500/50 focus:ring-blue-500/10'
-                                : 'border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400 focus:border-blue-400/60 focus:ring-blue-500/10'"
-                        />
-                        <button v-if="search" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                            :class="dark ? 'text-zinc-600 hover:text-zinc-400' : 'text-zinc-400 hover:text-zinc-600'"
-                            @click="search = ''">
-                            <X :size="13" :stroke-width="1.75" />
-                        </button>
-                    </div>
+                                ? 'border-zinc-700/70 bg-zinc-900/85 shadow-lg shadow-black/30'
+                                : 'border-zinc-300 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.10)]'"
+                            :title="item.hint">
+                            <component :is="item.icon" :size="13" :stroke-width="1.9"
+                                class="mb-1.5" :class="item.accent ? 'text-emerald-500' : 'text-blue-500'"
+                                aria-hidden="true" />
+                            <dd class="text-[19px] font-black leading-none tabular-nums"
+                                :class="dark ? 'text-zinc-100' : 'text-zinc-900'">{{ item.value }}</dd>
+                            <dt class="text-[10px] font-bold uppercase tracking-widest mt-1.5"
+                                :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ item.label }}</dt>
+                            <p class="text-[10.5px] leading-snug mt-1"
+                               :class="dark ? 'text-zinc-600' : 'text-zinc-500'">{{ item.hint }}</p>
+                        </div>
+                    </dl>
                 </div>
             </div>
-        </div>
+        </section>
         <!-- ═════════════════════════════════════════════ END HERO -->
 
         <div class="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
@@ -263,22 +349,40 @@ function accentColor(member: Member): string {
                         <!-- Bio -->
                         <p v-if="member.bio" class="text-[13px] leading-relaxed line-clamp-2" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ member.bio }}</p>
 
-                        <!-- Badges -->
-                        <div v-if="member.achievements.length > 0" class="flex items-center gap-1.5">
-                            <component :is="achievementIcons[slug] ?? BadgeCheck" v-for="slug in member.achievements.slice(0, 5)" :key="slug"
-                                :size="13" :stroke-width="1.8" :title="slug" :class="dark ? 'text-zinc-500' : 'text-zinc-400'" />
-                            <span v-if="member.achievements.length > 5" class="text-[10px]" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">
-                                +{{ member.achievements.length - 5 }}
-                            </span>
-                        </div>
+                        <!-- Badges. These used to be a row of 13px grey icons with
+                             the raw slug as the tooltip, so "early_adopter" was the
+                             best a reader could get. Each one now carries its
+                             translated name, and the tooltip explains how it is
+                             earned. -->
+                        <ul v-if="member.achievements.length" class="flex flex-wrap items-center gap-1.5">
+                            <li v-for="badge in visibleBadges(member)" :key="badge.slug">
+                                <span class="inline-flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-lg text-[11px] font-semibold"
+                                    :class="dark ? 'bg-zinc-800/80 text-zinc-300' : 'bg-zinc-100 text-zinc-700'"
+                                    :title="badge.description">
+                                    <component :is="badge.icon" :size="12" :stroke-width="2"
+                                        class="shrink-0 text-amber-500" aria-hidden="true" />
+                                    {{ badge.label }}
+                                </span>
+                            </li>
+                            <li v-if="member.achievements.length > 2">
+                                <span class="inline-flex items-center px-2 py-1 rounded-lg text-[11px] font-bold"
+                                    :class="dark ? 'bg-zinc-800/60 text-zinc-400' : 'bg-zinc-100 text-zinc-600'"
+                                    :title="remainingBadgeNames(member)">
+                                    +{{ member.achievements.length - 2 }}
+                                </span>
+                            </li>
+                        </ul>
 
                         <!-- Footer -->
                         <div class="flex items-center gap-3 text-[11px] mt-auto pt-2.5 border-t"
-                            :class="dark ? 'border-zinc-800/60 text-zinc-600' : 'border-zinc-100 text-zinc-400'">
-                            <span v-if="member.location" class="flex items-center gap-1 truncate">
-                                <MapPin :size="10" :stroke-width="1.75" />{{ member.location }}
+                            :class="dark ? 'border-zinc-800/60 text-zinc-500' : 'border-zinc-200 text-zinc-500'">
+                            <span v-if="member.location" class="flex items-center gap-1 truncate"
+                                  :title="t('members.location_hint')">
+                                <MapPin :size="11" :stroke-width="1.9" aria-hidden="true" />{{ member.location }}
                             </span>
-                            <span class="ml-auto shrink-0">{{ t('members.joined') }} {{ member.joined_at }}</span>
+                            <span class="ml-auto shrink-0" :title="t('members.joined_hint')">
+                                {{ t('members.joined') }} {{ member.joined_at }}
+                            </span>
                         </div>
                     </div>
                 </Link>

@@ -43,6 +43,7 @@ class HomeController extends Controller
                 ->map(fn (Server $s) => [
                     'id' => $s->id,
                     'name' => $s->name ?? $s->latestSnapshot?->name ?? $s->address,
+                    'address' => $s->address,
                     'game_slug' => $s->game->slug,
                     'game_name' => $s->game->name,
                     'game_id' => $s->game_id,
@@ -50,6 +51,7 @@ class HomeController extends Controller
                     'is_online' => (bool) ($s->latestSnapshot?->is_online ?? false),
                     'map' => $s->latestSnapshot?->map ?? '—',
                     'map_image' => Game::mapImageUrl($s->game->slug, $s->latestSnapshot?->map),
+                    'row_image' => Game::rowImageUrl($s->game->slug, $s->latestSnapshot?->map),
                     'players' => $s->latestSnapshot?->players_online ?? 0,
                     'max_players' => $s->latestSnapshot?->players_max ?? 0,
                     'ping' => $s->latestSnapshot?->ping ?? 0,

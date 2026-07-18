@@ -8,6 +8,7 @@ use App\Http\Requests\Account\UpdateProfileRequest;
 use App\Jobs\GenerateDataExportJob;
 use App\Models\Game;
 use App\Models\Server;
+use App\Models\User;
 use App\Services\AchievementService;
 use App\Services\Auth\LoginSecurityService;
 use App\Services\Auth\OAuthProviderRegistry;
@@ -187,16 +188,18 @@ class AccountController extends Controller
 
     public function updateEmailPreferences(Request $request): RedirectResponse
     {
-        $allowed = ['email_messages', 'email_notifications', 'email_digest', 'email_announcements'];
+        // Only categories that have a sender behind them. email_notifications
+        // and email_announcements were offered here too, but nothing ever read
+        // them — a switch that silently does nothing is worse than no switch.
         $prefs = $request->user()->notification_preferences ?? [];
 
-        foreach ($allowed as $key) {
+        foreach (User::EMAIL_PREFERENCE_KEYS as $key) {
             $prefs[$key] = $request->boolean($key);
         }
 
         $request->user()->update(['notification_preferences' => $prefs]);
 
-        return back()->with('success', 'Email preferences updated.');
+        return back()->with('success', __('account.email_prefs_updated'));
     }
 
     public function updatePassword(UpdatePasswordRequest $request): RedirectResponse
@@ -215,11 +218,17 @@ class AccountController extends Controller
             'game' => $s->game?->name,
             'game_slug' => $s->game?->slug,
             'game_icon' => $s->game?->cover_url,
+            'address' => $s->address,
             'map' => $s->latestSnapshot?->map,
             'map_image' => $s->game ? Game::mapImageUrl($s->game->slug, $s->latestSnapshot?->map) : null,
             'players' => $s->latestSnapshot?->players_online,
             'max_players' => $s->latestSnapshot?->players_max,
             'online' => $s->is_online,
+            // The favourites list previously had no way back to the server page
+            // — only a connect link — so the name was a dead end.
+            'show_url' => $s->game
+                ? route('servers.show', [$s->game->slug, $s->ip, $s->port])
+                : null,
             'connect_url' => $s->game
                 ? route('servers.connect', [$s->game->slug, $s->ip, $s->port])
                 : null,

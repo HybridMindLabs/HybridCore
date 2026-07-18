@@ -44,6 +44,35 @@ class Game extends Model
     }
 
     /**
+     * Backdrop for a server row in the public listings.
+     *
+     * Prefers a screenshot of the map actually being played; falls back to the
+     * game's own row artwork in public/images/server_rows/{slug}.{ext} so rows
+     * still get their texture before any map screenshots are uploaded.
+     */
+    public static function rowImageUrl(string $gameSlug, ?string $map): ?string
+    {
+        if ($mapImage = self::mapImageUrl($gameSlug, $map)) {
+            return $mapImage;
+        }
+
+        $slug = preg_replace('/[^a-z0-9_\-]/i', '', $gameSlug);
+
+        if ($slug === '') {
+            return null;
+        }
+
+        foreach (['webp', 'avif', 'png', 'jpg', 'jpeg'] as $ext) {
+            $file = public_path("images/server_rows/{$slug}.{$ext}");
+            if (is_file($file)) {
+                return asset("images/server_rows/{$slug}.{$ext}");
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Thumbnail for a map, e.g. public/images/maps/cs2/de_dust2.jpg.
      * Extension-agnostic — whatever image is dropped in that folder is used.
      */

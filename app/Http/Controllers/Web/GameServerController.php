@@ -7,13 +7,16 @@ use App\Models\Game;
 use App\Models\Server;
 use App\Models\ServerConnectionClick;
 use App\Models\ServerReview;
+use App\Models\ServerSnapshot;
 use App\Services\AchievementService;
 use App\Services\Extensions\Registries\FilterRegistry;
 use App\Support\Filters;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -67,7 +70,9 @@ class GameServerController extends Controller
     {
         $servers = Server::active()
             ->where('game_id', $game->id)
-            ->with(['latestSnapshot'])
+            // `game` is eager loaded because formatServer() reads its slug for
+            // the row artwork — without it every row fires its own query.
+            ->with(['latestSnapshot', 'game:id,slug'])
             ->withExists(['favouritedBy as is_favourited' => fn ($q) => $q->where('user_id', auth()->id())])
             ->get()
             ->map(fn (Server $s) => $this->formatServer($s));
@@ -89,7 +94,127 @@ class GameServerController extends Controller
                 'online' => $onlineServers->count(),
                 'players' => $onlineServers->sum(fn ($s) => $s['status']['players_online'] ?? 0),
             ],
+            'insights' => $this->gameInsights($game),
         ]);
+    }
+
+    /** Bucket size and slot count per selectable range. */
+    private const INSIGHT_RANGES = [
+        '24h' => ['seconds' => 3600, 'slots' => 24],
+        '7d' => ['seconds' => 21600, 'slots' => 28],   // six-hour buckets
+        '30d' => ['seconds' => 86400, 'slots' => 30],  // daily
+    ];
+
+    /**
+     * Aggregate activity for a whole game, built from the snapshots the query
+     * scheduler already records. Cached for five minutes — snapshots land every
+     * ~2 min, so this is never meaningfully stale.
+     */
+    private function gameInsights(Game $game): array
+    {
+        return Cache::remember("servers.game_insights.{$game->id}", 300, function () use ($game) {
+            $serverIds = Server::active()->where('game_id', $game->id)->pluck('id');
+
+            $ranges = [];
+            foreach (array_keys(self::INSIGHT_RANGES) as $key) {
+                $ranges[$key] = $serverIds->isEmpty()
+                    ? ['history' => [], 'peak' => 0, 'average' => 0, 'uptime' => 0, 'samples' => 0]
+                    : $this->insightRange($serverIds, $key);
+            }
+
+            return [
+                'updated_at' => now()->toIso8601String(),
+                'ranges' => $ranges,
+                'maps' => $serverIds->isEmpty() ? [] : $this->topMaps($serverIds),
+            ];
+        });
+    }
+
+    /**
+     * One range of the activity series, padded to a fixed number of buckets.
+     *
+     * @param  Collection<int, int>  $serverIds
+     */
+    private function insightRange($serverIds, string $range): array
+    {
+        ['seconds' => $seconds, 'slots' => $slots] = self::INSIGHT_RANGES[$range];
+
+        $since = now()->subSeconds($seconds * ($slots - 1))->startOfMinute();
+
+        // Average per server per bucket first, then sum across servers, so a
+        // server polled several times inside one bucket is not counted twice.
+        $perServerBucket = ServerSnapshot::query()
+            ->selectRaw("server_id, FLOOR(UNIX_TIMESTAMP(recorded_at) / {$seconds}) AS bucket")
+            ->selectRaw('AVG(CASE WHEN is_online = 1 THEN players_online ELSE 0 END) AS avg_players')
+            ->whereIn('server_id', $serverIds)
+            ->where('recorded_at', '>=', $since)
+            ->groupBy('server_id', 'bucket');
+
+        $recorded = DB::query()
+            ->fromSub($perServerBucket, 'b')
+            ->selectRaw('bucket, ROUND(SUM(avg_players)) AS players')
+            ->groupBy('bucket')
+            ->pluck('players', 'bucket');
+
+        // Emit every bucket, with null where nothing was recorded. Dropping the
+        // empty ones would let the chart join two distant points with a straight
+        // line and imply data that was never collected.
+        $history = [];
+        $lastBucket = intdiv(now()->getTimestamp(), $seconds);
+
+        for ($i = $slots - 1; $i >= 0; $i--) {
+            $bucket = $lastBucket - $i;
+            $history[] = [
+                't' => now()->setTimestamp($bucket * $seconds)->toIso8601String(),
+                'players' => isset($recorded[$bucket]) ? (int) $recorded[$bucket] : null,
+            ];
+        }
+
+        $counts = array_values(array_filter(
+            array_column($history, 'players'),
+            fn ($v) => $v !== null,
+        ));
+
+        $uptime = ServerSnapshot::query()
+            ->whereIn('server_id', $serverIds)
+            ->where('recorded_at', '>=', $since)
+            ->selectRaw('COUNT(*) AS total, SUM(is_online = 1) AS online')
+            ->first();
+
+        return [
+            'history' => $history,
+            'peak' => $counts ? max($counts) : 0,
+            'average' => $counts ? (int) round(array_sum($counts) / count($counts)) : 0,
+            'uptime' => $uptime && $uptime->total > 0
+                ? (int) round($uptime->online / $uptime->total * 100)
+                : 0,
+            // Buckets actually covered, not the padded length — the frontend
+            // uses this to decide whether a chart is honest yet.
+            'samples' => count($counts),
+        ];
+    }
+
+    /** @param  Collection<int, int>  $serverIds */
+    private function topMaps($serverIds): array
+    {
+        $maps = ServerSnapshot::query()
+            ->whereIn('server_id', $serverIds)
+            ->where('recorded_at', '>=', now()->subDays(7))
+            ->where('is_online', true)
+            ->whereNotNull('map')
+            ->where('map', '!=', '')
+            ->selectRaw('map, COUNT(*) AS samples')
+            ->groupBy('map')
+            ->orderByDesc('samples')
+            ->limit(8)
+            ->get();
+
+        $total = max(1, (int) $maps->sum('samples'));
+
+        return $maps->map(fn ($m) => [
+            'map' => (string) $m->map,
+            'share' => (int) round($m->samples / $total * 100),
+        ])->all();
     }
 
     public function show(Game $game, string $ip, int $port): Response
@@ -101,16 +226,19 @@ class GameServerController extends Controller
 
         $snapshot = $server->latestSnapshot()->with('players')->first();
 
-        // Player history last 24h (one per 10 min bucket)
-        $history = $server->snapshots()
-            ->where('recorded_at', '>=', now()->subHours(24))
-            ->orderBy('recorded_at')
-            ->get(['players_online', 'players_max', 'is_online', 'recorded_at'])
-            ->map(fn ($s) => [
-                'time' => $s->recorded_at->format('H:i'),
-                'players' => $s->is_online ? $s->players_online : null,
-                'max' => $s->players_max,
-            ]);
+        // Same bucketing as the per-game page, so both charts read the same way.
+        // Timestamps are ISO rather than a formatted "H:i" string — the chart
+        // needs a real date to label and group by, and raw snapshots every
+        // ~2 min put ~720 points behind a 600px-wide plot.
+        $historyRanges = Cache::remember(
+            "servers.history.{$server->id}",
+            300,
+            fn () => collect(array_keys(self::INSIGHT_RANGES))
+                ->mapWithKeys(fn (string $range) => [
+                    $range => $this->insightRange(collect([$server->id]), $range),
+                ])
+                ->all(),
+        );
 
         $stats = [
             'total_clicks' => $server->connectionClicks()->count(),
@@ -152,7 +280,7 @@ class GameServerController extends Controller
             'game' => ['id' => $game->id, 'name' => $game->name, 'slug' => $game->slug, 'icon' => $game->icon, 'color' => $game->color, 'cover_url' => $game->cover_url],
             'server' => $this->formatServer($server, $snapshot),
             'map_image' => Game::mapImageUrl($game->slug, $snapshot?->map),
-            'history' => $history,
+            'history_ranges' => $historyRanges,
             'stats' => $stats,
             'uptime_daily' => $uptimeDaily,
             'reviews' => $server->serverReviews()
@@ -227,6 +355,7 @@ class GameServerController extends Controller
             'address' => $server->address,
             'name' => $server->name ?? $snapshot?->name ?? $server->address,
             'country_code' => $server->country_code,
+            'row_image' => Game::rowImageUrl($server->game->slug, $snapshot?->map),
             'tags' => $server->tags ?? [],
             'is_favourited' => (bool) ($server->is_favourited ?? false),
             'status' => $snapshot ? [

@@ -19,6 +19,28 @@ return [
     'category' => 'Category',
     'tags' => 'Tags',
 
+    /* ── Index page ── */
+    'page_title' => 'News',
+    'heading' => 'Latest',
+    'heading_accent' => 'News',
+    'subtitle' => 'Announcements, updates and stories from across the community.',
+    // Singular/plural handled in the view — the frontend t() does replacements
+    // only, not Laravel's pluralisation syntax.
+    'article_one' => '1 article',
+    'articles_many' => ':count articles',
+    'search_heading' => 'Search: ":query"',
+    'tagged_heading' => 'Tagged #:tag',
+    'featured' => 'Featured',
+    'featured_hint' => 'Hand-picked by the team.',
+    'browse_categories' => 'Browse by category',
+    'all' => 'All',
+    'all_articles_heading' => 'All articles',
+    'rss_feed' => 'RSS feed',
+    'read_time_short' => ':m min',
+    'no_articles_hint' => 'Try a different search, or browse all categories.',
+    'clear_search' => 'Clear search',
+    'showing' => 'Page :current of :last',
+
     /* ── Comments ── */
     'comments' => 'Comments',
     'comment_placeholder' => 'Share your thoughts…',

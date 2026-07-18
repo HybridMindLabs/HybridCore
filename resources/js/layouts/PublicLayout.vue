@@ -3,8 +3,8 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 import {
     Menu, X, UserCircle, Users, User, LogOut, BadgeCheck,
     Home, Server, BookOpen, Phone, Star, ShieldCheck,
-    Globe, ChevronDown, Check, Moon, Sun, Bell,
-    ThumbsUp, Trophy, Gift, Package, Link as LinkIcon,
+    ChevronDown, Check, Moon, Sun, Bell,
+    ThumbsUp, Trophy, Gift, Package, Link as LinkIcon, ArrowRight,
 } from '@lucide/vue';
 import type { Component } from 'vue';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
@@ -12,6 +12,7 @@ import { useLocale } from '@/composables/useLocale';
 import { useTheme } from '@/composables/useTheme';
 import { useDesktopNotifications } from '@/composables/useDesktopNotifications';
 import ToastManager from '@/components/UI/ToastManager.vue';
+import FlagIcon from '@/components/UI/FlagIcon.vue';
 import { useFlashToast } from '@/composables/useFlashToast';
 
 const { t, currentLocale, supportedLocales, switcherEnabled, isCurrentLocale, switchLocale } = useLocale();
@@ -150,6 +151,30 @@ const navLinks = [
     { key: 'nav_contacts', href: route('contact.show'),  icon: Phone    },
 ];
 
+// ── Active navigation ────────────────────────────────────────────
+// Without this the header gives no clue which page you're on, which is the
+// single biggest reason the nav reads as an undifferentiated row of links.
+const currentPath = computed(() => (page.url || '/').split('?')[0].replace(/\/+$/, '') || '/');
+
+function pathOf(href: string): string {
+    if (typeof window === 'undefined') return href;
+    try {
+        return new URL(href, window.location.origin).pathname.replace(/\/+$/, '') || '/';
+    } catch {
+        return href;
+    }
+}
+
+function isActive(href: string): boolean {
+    const target = pathOf(href);
+
+    // Home only matches exactly; every other section also matches its children,
+    // so /servers/cs2 still highlights "Servers".
+    return target === '/'
+        ? currentPath.value === '/'
+        : currentPath.value === target || currentPath.value.startsWith(`${target}/`);
+}
+
 // Public header links registered by enabled extensions (e.g. Vote).
 interface PublicNavItem { label: string; url: string; icon: string }
 const publicNavIcons: Record<string, Component> = { ThumbsUp, Trophy, Gift, Package, Server, BookOpen, Star };
@@ -157,6 +182,38 @@ const publicNav = computed(() => (page.props.publicNav as PublicNavItem[] | unde
 const userMenu = computed(() => (page.props.userMenu as PublicNavItem[] | undefined) ?? []);
 const footerNav = computed(() => (page.props.footerNav as { label: string; url: string }[] | undefined) ?? []);
 function publicNavIcon(name: string): Component { return publicNavIcons[name] ?? LinkIcon; }
+
+// ── Footer ───────────────────────────────────────────────────────
+interface SiteFooter {
+    games: { slug: string; name: string; servers: number; players: number }[];
+    servers_online: number;
+    servers_total: number;
+    players_online: number;
+}
+
+const footerData = computed(() => (page.props.siteFooter as SiteFooter | null | undefined) ?? null);
+
+/** Fallback when no footer menu is configured in admin. */
+const communityLinks = computed(() => [
+    { label: t('home.link_news'), href: route('news.index') },
+    { label: t('members.title'), href: route('members.index') },
+    { label: t('home.link_rules'), href: route('rules.index') },
+    { label: t('home.footer_contact'), href: route('contact.show') },
+]);
+
+const accountLinks = computed(() => page.props.auth?.user
+    ? [
+        ...(page.props.auth.user.username
+            ? [{ label: t('home.my_profile'), href: route('profile.show', { username: page.props.auth.user.username }) }]
+            : []),
+        { label: t('home.my_servers'), href: route('account.favorites') },
+        { label: t('navigation.settings'), href: route('account.index') },
+    ]
+    : [
+        { label: t('home.login'), href: route('login') },
+        { label: t('home.create_account'), href: route('register') },
+        { label: t('home.link_support'), href: route('contact.show') },
+    ]);
 
 const socialSvgs: Record<string, { label: string; svg: string; viewBox: string }> = {
     discord: { label: 'Discord', svg: `<path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.033.054a19.9 19.9 0 0 0 5.993 3.03.077.077 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>`, viewBox: '0 0 24 24' },
@@ -196,29 +253,48 @@ const socialLinks = computed(() => {
 
         <!-- ── Navbar ── -->
         <header
-            class="sticky top-0 z-50 border-b backdrop-blur-sm transition-colors duration-200"
-            :class="dark ? 'border-zinc-800/60 bg-[#09090b]/95' : 'border-zinc-200/80 bg-zinc-100/95'"
+            class="sticky top-0 z-50 border-b backdrop-blur-xl transition-colors duration-200"
+            :class="dark ? 'border-zinc-800/60 bg-[#09090b]/80' : 'border-zinc-200/70 bg-white/80'"
         >
-            <div class="max-w-[1600px] mx-auto px-4 sm:px-6 h-14 flex items-center gap-6">
+            <div class="max-w-[1600px] mx-auto px-4 sm:px-6 h-16 flex items-center gap-6">
 
-                <!-- Logo -->
-                <Link :href="route('home')" class="flex items-center gap-2.5 shrink-0">
-                    <span class="text-[15px] font-bold tracking-tight" :class="dark ? 'text-white' : 'text-zinc-900'">
+                <!-- Brand — a plain wordmark. Initials in a box read as a
+                     placeholder for a logo that isn't there; the name alone is
+                     cleaner until the owner can upload a real one. -->
+                <Link
+                    :href="route('home')"
+                    class="group flex items-center shrink-0 rounded-lg px-1 -mx-1 outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                >
+                    <span
+                        class="text-[17px] font-black tracking-tight transition-colors duration-200"
+                        :class="dark ? 'text-white group-hover:text-blue-300' : 'text-zinc-900 group-hover:text-blue-600'"
+                    >
                         {{ page.props.app.name }}
                     </span>
                 </Link>
 
                 <!-- Desktop nav -->
-                <nav class="hidden md:flex items-center gap-0.5 flex-1">
+                <nav class="hidden md:flex items-center gap-0.5 flex-1" :aria-label="t('navigation.nav_home')">
                     <a
                         v-for="link in navLinks"
                         :key="link.key"
                         :href="link.href"
-                        class="flex items-center gap-1.5 px-3 py-1.5 text-[13px] rounded-md transition-colors"
-                        :class="dark ? 'text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800/60' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100'"
+                        :aria-current="isActive(link.href) ? 'page' : undefined"
+                        class="group relative flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium rounded-lg outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                        :class="isActive(link.href)
+                            ? (dark ? 'text-white bg-zinc-800/70' : 'text-zinc-900 bg-zinc-100')
+                            : (dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/40' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100/70')"
                     >
-                        <component :is="link.icon" :size="14" :stroke-width="1.75" />
+                        <component
+                            :is="link.icon" :size="14" :stroke-width="1.75"
+                            class="transition-transform duration-200 group-hover:-translate-y-px"
+                        />
                         {{ t('navigation.' + link.key) }}
+                        <span
+                            v-if="isActive(link.href)"
+                            class="absolute inset-x-3 -bottom-px h-px rounded-full bg-blue-500"
+                            aria-hidden="true"
+                        />
                     </a>
 
                     <!-- Extension-registered public links -->
@@ -226,33 +302,55 @@ const socialLinks = computed(() => {
                         v-for="item in publicNav"
                         :key="item.url"
                         :href="item.url"
-                        class="flex items-center gap-1.5 px-3 py-1.5 text-[13px] rounded-md transition-colors"
-                        :class="dark ? 'text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800/60' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100'"
+                        :aria-current="isActive(item.url) ? 'page' : undefined"
+                        class="group relative flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium rounded-lg outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                        :class="isActive(item.url)
+                            ? (dark ? 'text-white bg-zinc-800/70' : 'text-zinc-900 bg-zinc-100')
+                            : (dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/40' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100/70')"
                     >
-                        <component :is="publicNavIcon(item.icon)" :size="14" :stroke-width="1.75" />
+                        <component
+                            :is="publicNavIcon(item.icon)" :size="14" :stroke-width="1.75"
+                            class="transition-transform duration-200 group-hover:-translate-y-px"
+                        />
                         {{ item.label }}
+                        <span
+                            v-if="isActive(item.url)"
+                            class="absolute inset-x-3 -bottom-px h-px rounded-full bg-blue-500"
+                            aria-hidden="true"
+                        />
                     </a>
 
                     <template v-for="item in headerMenuItems" :key="item.label">
+                        <!-- focus-within keeps the submenu reachable by keyboard; hover
+                             alone left it unusable without a mouse. -->
                         <div v-if="item.children?.length" class="relative group">
                             <button
                                 type="button"
-                                class="flex items-center gap-1 px-3 py-1.5 text-[13px] rounded-md transition-colors"
-                                :class="dark ? 'text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800/60' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100'"
+                                :aria-expanded="false"
+                                aria-haspopup="true"
+                                class="flex items-center gap-1 px-3 py-2 text-[13px] font-medium rounded-lg outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                                :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/40' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100/70'"
                             >
                                 {{ item.label }}
-                                <ChevronDown :size="11" :stroke-width="2" class="transition-transform group-hover:rotate-180" />
+                                <ChevronDown
+                                    :size="11" :stroke-width="2"
+                                    class="transition-transform duration-200 group-hover:rotate-180 group-focus-within:rotate-180"
+                                />
                             </button>
                             <div
-                                class="absolute top-full left-0 mt-1 min-w-[160px] rounded-lg border shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50"
-                                :class="dark ? 'bg-zinc-900 border-zinc-800 shadow-black/40' : 'bg-white border-zinc-200 shadow-zinc-200/60'"
+                                class="absolute top-full left-0 mt-1.5 min-w-[180px] rounded-xl border shadow-xl py-1.5 z-50
+                                       opacity-0 invisible -translate-y-1
+                                       group-hover:opacity-100 group-hover:visible group-hover:translate-y-0
+                                       group-focus-within:opacity-100 group-focus-within:visible group-focus-within:translate-y-0
+                                       transition-all duration-200"
+                                :class="dark ? 'bg-zinc-900/95 backdrop-blur-xl border-zinc-800 shadow-black/50' : 'bg-white/95 backdrop-blur-xl border-zinc-200 shadow-zinc-300/40'"
                             >
                                 <a
                                     v-for="child in item.children"
                                     :key="child.label"
                                     :href="child.url"
                                     :target="child.target"
-                                    class="block px-3 py-2 text-[13px] transition-colors"
+                                    class="block px-3.5 py-2 text-[13px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50"
                                     :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'"
                                 >{{ child.label }}</a>
                             </div>
@@ -261,8 +359,8 @@ const socialLinks = computed(() => {
                             v-else
                             :href="item.url"
                             :target="item.target"
-                            class="px-3 py-1.5 text-[13px] rounded-md transition-colors"
-                            :class="dark ? 'text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800/60' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100'"
+                            class="px-3 py-2 text-[13px] font-medium rounded-lg outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                            :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/40' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100/70'"
                         >{{ item.label }}</a>
                     </template>
                 </nav>
@@ -285,36 +383,67 @@ const socialLinks = computed(() => {
                         </a>
                     </div>
 
-                    <!-- Language -->
+                    <!-- Language.
+                         The flag is decoration only; the label is the language's
+                         own name, because a flag names a country, not a language
+                         (Arabic has no flag for that reason). Each option carries
+                         lang/hreflang so screen readers pronounce it correctly. -->
                     <div v-if="switcherEnabled && supportedLocales.length > 1" ref="langRef" class="relative">
                         <button
                             type="button"
-                            class="flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] rounded-md border transition-colors uppercase tracking-wide font-medium"
-                            :class="dark ? 'border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60' : 'border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100'"
+                            :aria-expanded="langOpen"
+                            aria-haspopup="listbox"
+                            :aria-label="t('navigation.language')"
+                            :title="t('navigation.language')"
+                            class="flex items-center gap-2 px-2.5 h-9 text-[12px] rounded-lg border outline-none transition-all duration-200 uppercase tracking-wide font-semibold focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                            :class="dark
+                                ? 'border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800/60 hover:border-zinc-700'
+                                : 'border-zinc-200 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 hover:border-zinc-300'"
                             @click.stop="langOpen = !langOpen"
+                            @keydown.escape="langOpen = false"
                         >
-                            <Globe :size="13" :stroke-width="1.75" />
+                            <FlagIcon :code="currentLocale" />
                             {{ currentLocale }}
+                            <ChevronDown
+                                :size="11" :stroke-width="2.5"
+                                class="transition-transform duration-200"
+                                :class="langOpen ? 'rotate-180' : ''"
+                            />
                         </button>
-                        <div
-                            v-if="langOpen"
-                            class="absolute right-0 top-full mt-1 w-40 rounded-lg border shadow-lg py-1 z-50"
-                            :class="dark ? 'bg-zinc-900 border-zinc-800 shadow-black/40' : 'bg-white border-zinc-200 shadow-zinc-200/60'"
+
+                        <transition
+                            enter-active-class="transition duration-150 ease-out"
+                            enter-from-class="opacity-0 -translate-y-1"
+                            leave-active-class="transition duration-100 ease-in"
+                            leave-to-class="opacity-0 -translate-y-1"
                         >
-                            <button
-                                v-for="locale in supportedLocales"
-                                :key="locale.code"
-                                type="button"
-                                class="flex items-center justify-between w-full px-3 py-2 text-[12px] transition-colors"
-                                :class="isCurrentLocale(locale.code)
-                                    ? 'text-blue-500'
-                                    : dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'"
-                                @click.stop="selectLocale(locale.code)"
+                            <div
+                                v-if="langOpen"
+                                role="listbox"
+                                :aria-label="t('navigation.language')"
+                                class="absolute right-0 top-full mt-1.5 w-52 rounded-xl border shadow-xl py-1.5 z-50"
+                                :class="dark ? 'bg-zinc-900/95 backdrop-blur-xl border-zinc-800 shadow-black/50' : 'bg-white/95 backdrop-blur-xl border-zinc-200 shadow-zinc-300/40'"
+                                @keydown.escape="langOpen = false"
                             >
-                                <span class="flex items-center gap-2">{{ locale.flag }} {{ locale.native_name }}</span>
-                                <Check v-if="isCurrentLocale(locale.code)" :size="11" :stroke-width="2.5" />
-                            </button>
-                        </div>
+                                <button
+                                    v-for="locale in supportedLocales"
+                                    :key="locale.code"
+                                    type="button"
+                                    role="option"
+                                    :aria-selected="isCurrentLocale(locale.code)"
+                                    :lang="locale.code"
+                                    class="flex items-center gap-2.5 w-full px-3 py-2 text-[13px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50"
+                                    :class="isCurrentLocale(locale.code)
+                                        ? (dark ? 'text-blue-400 bg-blue-500/10' : 'text-blue-600 bg-blue-50')
+                                        : dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'"
+                                    @click.stop="selectLocale(locale.code)"
+                                >
+                                    <FlagIcon :code="locale.code" />
+                                    <span class="font-medium">{{ locale.native_name }}</span>
+                                    <Check v-if="isCurrentLocale(locale.code)" :size="13" :stroke-width="2.5" class="ml-auto" />
+                                </button>
+                            </div>
+                        </transition>
                     </div>
 
                     <!-- Theme toggle -->
@@ -539,41 +668,114 @@ const socialLinks = computed(() => {
 
         <!-- Footer -->
         <footer class="border-t transition-colors" :class="dark ? 'border-zinc-800/60 bg-[#09090b]' : 'border-zinc-200/70 bg-zinc-100'">
-            <div class="max-w-[1600px] mx-auto px-4 sm:px-6 py-10">
-                <div class="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-8">
+            <!-- Live strip. The footer is on every public page; most of them
+                 have no other indication that anything is running. -->
+            <div v-if="footerData" class="border-b" :class="dark ? 'border-zinc-800/60' : 'border-zinc-200'">
+                <div class="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex items-center gap-x-5 gap-y-1.5 flex-wrap text-[12px]">
+                    <span class="inline-flex items-center gap-2 font-bold"
+                        :class="dark ? 'text-emerald-400' : 'text-emerald-700'">
+                        <span class="hc-live-dot" aria-hidden="true" />
+                        {{ t('home.servers_live', { online: footerData.servers_online, total: footerData.servers_total }) }}
+                    </span>
+                    <span :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                        <strong class="font-bold tabular-nums" :class="dark ? 'text-zinc-200' : 'text-zinc-900'">
+                            {{ footerData.players_online.toLocaleString() }}
+                        </strong>
+                        {{ t('home.stat_players').toLowerCase() }}
+                    </span>
+                    <Link :href="route('servers.index')"
+                        class="group ml-auto inline-flex items-center gap-1.5 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded px-1"
+                        :class="dark ? 'text-zinc-400 hover:text-zinc-100' : 'text-zinc-600 hover:text-zinc-900'">
+                        {{ t('home.browse_all') }}
+                        <ArrowRight :size="12" :stroke-width="2"
+                            class="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                    </Link>
+                </div>
+            </div>
+
+            <div class="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
+                <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
 
                     <!-- Brand -->
                     <div>
-                        <Link :href="route('home')" class="inline-block mb-3">
+                        <Link :href="route('home')"
+                            class="inline-block mb-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded">
                             <span class="text-[15px] font-bold tracking-tight" :class="dark ? 'text-zinc-100' : 'text-zinc-900'">{{ page.props.app.name }}</span>
                         </Link>
-                        <p class="text-[13px] leading-relaxed mb-5 max-w-[260px]" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">
+                        <p class="text-[12.5px] leading-relaxed mb-4 max-w-[280px]" :class="dark ? 'text-zinc-500' : 'text-zinc-600'">
                             {{ t('home.footer_tagline') }}
                         </p>
-                        <div class="flex items-center gap-3">
-                            <a v-for="s in socialLinks" :key="s.label" :href="s.href" :aria-label="s.label" target="_blank" rel="noopener noreferrer" class="transition-colors" :class="dark ? 'text-zinc-700 hover:text-zinc-400' : 'text-zinc-300 hover:text-zinc-600'">
-                                <svg :viewBox="s.viewBox" class="w-[14px] h-[14px]" fill="currentColor"><g v-html="s.svg" /></svg>
+                        <div v-if="socialLinks.length" class="flex items-center gap-2">
+                            <a v-for="s in socialLinks" :key="s.label" :href="s.href" :aria-label="s.label" :title="s.label"
+                                target="_blank" rel="noopener noreferrer"
+                                class="w-8 h-8 rounded-lg border flex items-center justify-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                                :class="dark ? 'border-zinc-800 text-zinc-500 hover:text-zinc-100 hover:border-zinc-600' : 'border-zinc-300 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400'">
+                                <svg :viewBox="s.viewBox" class="w-[14px] h-[14px]" fill="currentColor" aria-hidden="true"><g v-html="s.svg" /></svg>
                             </a>
                         </div>
                     </div>
 
-                    <!-- Navigation -->
+                    <!-- Games actually hosted here — the one thing a player wants
+                         from a footer, and it was not linked anywhere. -->
+                    <div v-if="footerData?.games.length">
+                        <h2 class="text-[11px] uppercase tracking-widest font-bold mb-3.5" :class="dark ? 'text-zinc-400' : 'text-zinc-700'">
+                            {{ t('home.footer_games') }}
+                        </h2>
+                        <ul class="flex flex-col gap-2">
+                            <li v-for="g in footerData.games" :key="g.slug">
+                                <Link :href="route('servers.game', g.slug)"
+                                    class="group flex items-center gap-2 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded"
+                                    :class="dark ? 'text-zinc-500 hover:text-zinc-100' : 'text-zinc-600 hover:text-zinc-900'"
+                                    :title="t('home.footer_game_hint', { servers: g.servers, players: g.players })">
+                                    <span class="truncate">{{ g.name }}</span>
+                                    <span class="text-[11px] font-semibold tabular-nums shrink-0"
+                                        :class="g.players > 0
+                                            ? 'text-emerald-500'
+                                            : dark ? 'text-zinc-700' : 'text-zinc-400'">{{ g.players }}</span>
+                                </Link>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Community -->
                     <div>
-                        <p class="text-[11px] uppercase tracking-widest font-semibold mb-4" :class="dark ? 'text-zinc-700' : 'text-zinc-300'">{{ t('home.footer_nav') }}</p>
+                        <h2 class="text-[11px] uppercase tracking-widest font-bold mb-3.5" :class="dark ? 'text-zinc-400' : 'text-zinc-700'">
+                            {{ t('home.footer_community') }}
+                        </h2>
                         <ul class="flex flex-col gap-2">
                             <template v-if="footerNavItems.length">
                                 <li v-for="item in footerNavItems" :key="item.label">
-                                    <a :href="item.url" :target="item.target" class="text-[13px] transition-colors" :class="dark ? 'text-zinc-500 hover:text-zinc-200' : 'text-zinc-500 hover:text-zinc-900'">{{ item.label }}</a>
+                                    <a :href="item.url" :target="item.target"
+                                        class="text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded"
+                                        :class="dark ? 'text-zinc-500 hover:text-zinc-100' : 'text-zinc-600 hover:text-zinc-900'">{{ item.label }}</a>
                                 </li>
                             </template>
                             <template v-else>
-                                <li v-for="link in navLinks" :key="link.key">
-                                    <a :href="link.href" class="text-[13px] transition-colors" :class="dark ? 'text-zinc-500 hover:text-zinc-200' : 'text-zinc-500 hover:text-zinc-900'">{{ t('navigation.' + link.key) }}</a>
+                                <li v-for="link in communityLinks" :key="link.href">
+                                    <Link :href="link.href"
+                                        class="text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded"
+                                        :class="dark ? 'text-zinc-500 hover:text-zinc-100' : 'text-zinc-600 hover:text-zinc-900'">{{ link.label }}</Link>
                                 </li>
                             </template>
                             <!-- Extension-registered footer links -->
                             <li v-for="item in footerNav" :key="item.url">
-                                <a :href="item.url" class="text-[13px] transition-colors" :class="dark ? 'text-zinc-500 hover:text-zinc-200' : 'text-zinc-500 hover:text-zinc-900'">{{ item.label }}</a>
+                                <a :href="item.url"
+                                    class="text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded"
+                                    :class="dark ? 'text-zinc-500 hover:text-zinc-100' : 'text-zinc-600 hover:text-zinc-900'">{{ item.label }}</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Account -->
+                    <div>
+                        <h2 class="text-[11px] uppercase tracking-widest font-bold mb-3.5" :class="dark ? 'text-zinc-400' : 'text-zinc-700'">
+                            {{ t('home.footer_account') }}
+                        </h2>
+                        <ul class="flex flex-col gap-2">
+                            <li v-for="link in accountLinks" :key="link.href">
+                                <Link :href="link.href"
+                                    class="text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded"
+                                    :class="dark ? 'text-zinc-500 hover:text-zinc-100' : 'text-zinc-600 hover:text-zinc-900'">{{ link.label }}</Link>
                             </li>
                         </ul>
                     </div>

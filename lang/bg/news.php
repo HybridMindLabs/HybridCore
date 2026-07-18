@@ -19,6 +19,27 @@ return [
     'category' => 'Категория',
     'tags' => 'Тагове',
 
+    /* ── Index page ── */
+    'page_title' => 'Новини',
+    'heading' => 'Последни',
+    'heading_accent' => 'новини',
+    'subtitle' => 'Обяви, обновления и истории от общността.',
+    // Единствено/множествено се решава във view-то — t() прави само замествания.
+    'article_one' => '1 статия',
+    'articles_many' => ':count статии',
+    'search_heading' => 'Търсене: „:query"',
+    'tagged_heading' => 'С таг #:tag',
+    'featured' => 'Избрани',
+    'featured_hint' => 'Подбрани от екипа.',
+    'browse_categories' => 'Разгледай по категория',
+    'all' => 'Всички',
+    'all_articles_heading' => 'Всички статии',
+    'rss_feed' => 'RSS',
+    'read_time_short' => ':m мин.',
+    'no_articles_hint' => 'Опитай друго търсене или разгледай всички категории.',
+    'clear_search' => 'Изчисти търсенето',
+    'showing' => 'Страница :current от :last',
+
     /* ── Comments ── */
     'comments' => 'Коментари',
     'comment_placeholder' => 'Сподели мнението си…',

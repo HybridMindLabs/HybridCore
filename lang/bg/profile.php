@@ -41,4 +41,10 @@ return [
     'favourite_servers_title' => 'Любими сървъри',
     'connect' => 'Свържи се',
     'earned' => 'Спечелен :date',
+    'edit_profile' => 'Редактирай профила',
+    'stat_days_hint' => 'Дни, откакто се е присъединил',
+    'stat_favorites_hint' => 'Сървъри, запазени като любими',
+    'stat_badges_hint' => 'Спечелени постижения',
+    'stat_followers_hint' => 'Кой го следва — кликни, за да видиш',
+    'stat_following_hint' => 'Кого следва — кликни, за да видиш',
 ];

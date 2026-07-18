@@ -41,4 +41,10 @@ return [
     'favourite_servers_title' => 'Favourite Servers',
     'connect' => 'Connect',
     'earned' => 'Earned :date',
+    'edit_profile' => 'Edit profile',
+    'stat_days_hint' => 'Days since they joined the community',
+    'stat_favorites_hint' => 'Servers they saved as favourites',
+    'stat_badges_hint' => 'Achievements they have earned',
+    'stat_followers_hint' => 'Members following them — click to see who',
+    'stat_following_hint' => 'Members they follow — click to see who',
 ];

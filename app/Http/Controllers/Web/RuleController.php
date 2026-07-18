@@ -16,16 +16,23 @@ class RuleController extends Controller
     public function index(): Response
     {
         // Flushed via Rule model events whenever a rule is saved/deleted.
+        //
+        // Cached as plain arrays, not as an Eloquent collection. A serialised
+        // collection can come back as __PHP_Incomplete_Class, which Inertia then
+        // ships to the page as {"__PHP_Incomplete_Class_Name": "..."} instead of
+        // a list — every field reads as undefined and route('rules.show', slug)
+        // throws. Arrays survive serialisation regardless.
         $rules = Cache::remember(Rule::LIST_CACHE_KEY, 3600, fn () => Rule::published()
             ->orderBy('sort_order')
             ->orderBy('id')
-            ->get(['id', 'slug', 'title', 'excerpt', 'is_system', 'updated_at']));
+            ->get(['id', 'slug', 'title', 'excerpt', 'is_system', 'updated_at'])
+            ->toArray());
 
         return Inertia::render('Web/Rules/Index', [
             'rules' => $rules,
             'seo' => [
-                'title' => 'Rules — '.$this->settings->get('app_name', config('app.name')),
-                'description' => 'Read the community rules and guidelines.',
+                'title' => trans('rules.title').' — '.$this->settings->get('app_name', config('app.name')),
+                'description' => trans('rules.seo_description'),
             ],
         ]);
     }

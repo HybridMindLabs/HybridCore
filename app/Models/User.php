@@ -28,6 +28,14 @@ use Laravel\Scout\Searchable;
 #[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
+    /**
+     * Email categories the user can switch off, stored as keys in the
+     * notification_preferences JSON map. A key must only appear here once
+     * something actually consults it before sending — see
+     * NewMessageNotification::via() and EmailDigestCommand.
+     */
+    public const EMAIL_PREFERENCE_KEYS = ['email_messages', 'email_digest'];
+
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 

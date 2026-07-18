@@ -1,28 +1,20 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import {
-    LogIn, Users, Star, ShieldCheck,
-    Gamepad2, Server, UsersRound, Signal,
+    LogIn, Users, Star, ShieldCheck, ArrowRight,
+    Gamepad2, UsersRound,
     BookOpen, MessageSquare, HelpCircle, Newspaper, Trophy,
     Sprout, Medal, CircleCheck, Lock, FileText, Mail, Puzzle,
     PenLine, Flame, Compass, MessagesSquare, Heart, Activity,
 } from '@lucide/vue';
 import { computed } from 'vue';
-import LiveChart from '@/components/UI/LiveChart.vue';
-import GameThumbnail from '@/components/UI/GameThumbnail.vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
-
-interface GameStat { slug: string; name: string; players: number }
 
 interface Viewer { banner: string | null; role: { name: string; color: string } | null; achievements: string[] }
 interface CommunityActivityItem { type: string; username: string | null; avatar: string | null; params: Record<string, string | number>; text?: string; at: string; url: string | null }
 
 const props = defineProps<{
-    gameStats: GameStat[];
-    totalPlayers: number;
-    maxPlayers: number;
-    playerHistory: number[];
     viewer: Viewer | null;
     stats: { games: number; servers: number; members: number; online_servers: number };
     communityActivity: CommunityActivityItem[];
@@ -63,14 +55,6 @@ const iconBg    = computed(() => dark.value ? 'bg-zinc-800/80'                  
 const btnBorder = computed(() => dark.value
     ? 'border-zinc-700/70 text-zinc-400 hover:border-zinc-600 hover:text-zinc-100 hover:bg-white/[0.05]'
     : 'border-zinc-200   text-zinc-500 hover:border-zinc-300 hover:text-zinc-800 hover:bg-zinc-50');
-const trackBg   = computed(() => dark.value ? 'bg-zinc-800'                      : 'bg-zinc-200/60');
-
-const statsDisplay = computed(() => [
-    { value: String(props.stats.games),                    label: t('home.stat_games'),   icon: Gamepad2   },
-    { value: String(props.stats.servers),                  label: t('home.stat_servers'), icon: Server     },
-    { value: props.stats.members.toLocaleString(),         label: t('home.stat_members'), icon: UsersRound },
-    { value: String(props.stats.online_servers) + ' live', label: t('home.stat_uptime'),  icon: Signal     },
-]);
 
 function activityLabel(item: CommunityActivityItem): string {
     // Extension rows carry a pre-localized `text`.
@@ -107,18 +91,13 @@ const quickLinks = computed(() => {
     ];
 });
 
-const maxGamePlayers = computed(() => Math.max(...props.gameStats.map(g => g.players), 1));
-const activeGameStats = computed(() =>
-    [...props.gameStats].filter(g => g.players > 0).sort((a, b) => b.players - a.players)
-);
-const capacityPct    = computed(() => Math.min(100, Math.round(props.totalPlayers / Math.max(props.maxPlayers, 1) * 100)));
 </script>
 
 <template>
     <aside class="flex flex-col gap-4">
 
         <!-- ── Auth card ── -->
-        <div class="rounded-xl border overflow-hidden" :class="card">
+        <div class="hc-reveal rounded-xl border overflow-hidden" :class="card">
             <!-- Logged in -->
             <template v-if="page.props.auth?.user">
                 <!-- Banner: user's own, or a gradient in their role colour -->
@@ -267,81 +246,19 @@ const capacityPct    = computed(() => Math.min(100, Math.round(props.totalPlayer
             </template>
         </div>
 
-        <!-- ── Live overview ── -->
-        <div class="rounded-xl border overflow-hidden" :class="card">
-            <div class="flex items-center justify-between px-4 py-3 border-b" :class="cardHead">
-                <p class="text-[13px] font-semibold" :class="textPri">{{ t('home.live_title') }}</p>
-                <span class="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-500">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Live
-                </span>
-            </div>
-
-            <div class="px-4 pt-4 pb-3">
-                <div class="flex items-baseline gap-2 mb-0.5">
-                    <span class="text-[28px] font-bold tabular-nums leading-none" :class="textPri">
-                        {{ totalPlayers.toLocaleString() }}
-                    </span>
-                    <span class="text-[13px]" :class="textMute">/ {{ maxPlayers.toLocaleString() }}</span>
-                </div>
-                <p class="text-[12px] mb-3" :class="textSec">{{ t('home.players_online') }}</p>
-
-                <!-- Capacity bar -->
-                <div class="w-full h-1.5 rounded-full mb-4" :class="trackBg">
-                    <div
-                        class="h-full rounded-full bg-blue-500 transition-all duration-700"
-                        :style="{ width: capacityPct + '%' }"
-                    />
-                </div>
-
-                <LiveChart :dark="dark" :data="props.playerHistory" />
-            </div>
-
-            <!-- Per-game breakdown -->
-            <div class="border-t px-4 py-3 flex flex-col gap-3.5" :class="dark ? 'border-zinc-800/60' : 'border-zinc-100'">
-                <p v-if="activeGameStats.length === 0" class="text-[12px] text-center py-2" :class="textMute">No players online right now.</p>
-                <div v-for="game in activeGameStats" :key="game.slug" class="flex items-center gap-3">
-                    <GameThumbnail :game="game.slug" size="w-6 h-6 rounded-md shrink-0" />
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center justify-between mb-1.5">
-                            <span class="text-[12px] font-medium truncate" :class="textSec">{{ game.name }}</span>
-                            <span class="text-[11px] tabular-nums shrink-0 ml-2" :class="textMute">{{ game.players }}</span>
-                        </div>
-                        <div class="w-full h-1 rounded-full" :class="trackBg">
-                            <div
-                                class="h-full rounded-full transition-all duration-500"
-                                :class="dark ? 'bg-blue-500/50' : 'bg-blue-400/70'"
-                                :style="{ width: Math.round(game.players / maxGamePlayers * 100) + '%' }"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ── Network stats ── -->
-        <div class="rounded-xl border overflow-hidden" :class="card">
-            <div class="px-4 py-3 border-b" :class="cardHead">
-                <p class="text-[13px] font-semibold" :class="textPri">Network</p>
-            </div>
-            <div class="divide-y" :class="divider">
-                <div v-for="stat in statsDisplay" :key="stat.label" class="flex items-center gap-3 px-4 py-3">
-                    <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" :class="iconBg">
-                        <component :is="stat.icon" :size="15" :stroke-width="1.75" :class="textSec" />
-                    </div>
-                    <div>
-                        <p class="text-[15px] font-bold leading-none tabular-nums" :class="textPri">{{ stat.value }}</p>
-                        <p class="text-[11px] mt-0.5" :class="textMute">{{ stat.label }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- Live player figures used to live here as a chart. They now sit in the
+             hero and the stats strip, where they get the width to be readable —
+             repeating them here only pushed the useful links further down. -->
 
         <!-- ── Community activity ── -->
-        <div v-if="communityActivity.length" class="rounded-xl border overflow-hidden" :class="card">
-            <div class="px-4 py-3 border-b flex items-center gap-2" :class="cardHead">
-                <Activity :size="13" :stroke-width="1.8" :class="dark ? 'text-blue-400' : 'text-blue-500'" />
-                <p class="text-[13px] font-semibold" :class="textPri">{{ t('home.community_activity') }}</p>
+        <div v-if="communityActivity.length" class="hc-reveal rounded-xl border overflow-hidden" :class="card"
+            style="animation-delay:0.06s">
+            <div class="px-4 py-3 border-b" :class="cardHead">
+                <div class="flex items-center gap-2">
+                    <Activity :size="13" :stroke-width="1.8" :class="dark ? 'text-blue-400' : 'text-blue-500'" />
+                    <p class="text-[13px] font-semibold" :class="textPri">{{ t('home.community_activity') }}</p>
+                </div>
+                <p class="text-[11px] mt-0.5 leading-snug" :class="textMute">{{ t('home.community_activity_hint') }}</p>
             </div>
             <div class="divide-y" :class="divider">
                 <component
@@ -368,9 +285,10 @@ const capacityPct    = computed(() => Math.min(100, Math.round(props.totalPlayer
         </div>
 
         <!-- ── Quick links ── -->
-        <div class="rounded-xl border overflow-hidden" :class="card">
+        <div class="hc-reveal rounded-xl border overflow-hidden" :class="card" style="animation-delay:0.12s">
             <div class="px-4 py-3 border-b" :class="cardHead">
-                <p class="text-[13px] font-semibold" :class="textPri">Quick Links</p>
+                <p class="text-[13px] font-semibold" :class="textPri">{{ t('home.links_title') }}</p>
+                <p class="text-[11px] mt-0.5 leading-snug" :class="textMute">{{ t('home.links_hint') }}</p>
             </div>
             <div class="divide-y" :class="divider">
                 <component
@@ -380,15 +298,17 @@ const capacityPct    = computed(() => Math.min(100, Math.round(props.totalPlayer
                     :href="link.href"
                     :target="link.external ? '_blank' : undefined"
                     :rel="link.external ? 'noopener noreferrer' : undefined"
-                    class="flex items-center gap-3 px-4 py-2.5 transition-colors"
+                    class="group flex items-center gap-3 px-4 py-2.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50"
                     :class="[textSec, rowHover]"
                 >
-                    <component :is="link.icon" :size="14" :stroke-width="1.75" class="shrink-0" :class="textMute" />
+                    <component :is="link.icon" :size="14" :stroke-width="1.75"
+                        class="shrink-0 transition-colors group-hover:text-blue-500" :class="textMute" />
                     <span class="text-[13px]">{{ link.label }}</span>
+                    <ArrowRight :size="12" :stroke-width="2"
+                        class="ml-auto shrink-0 opacity-0 -translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0"
+                        :class="textMute" aria-hidden="true" />
                 </component>
             </div>
         </div>
-
-
     </aside>
 </template>
