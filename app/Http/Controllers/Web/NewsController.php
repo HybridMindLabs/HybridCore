@@ -193,6 +193,7 @@ class NewsController extends Controller
         return Inertia::render('Web/News/Category', [
             'category' => $category->only(['id', 'name', 'slug', 'description', 'color', 'icon', 'meta_title', 'meta_description']),
             'articles' => $articles,
+            'canonical' => Seo::canonical('/news/category/'.$category->slug),
         ]);
     }
 
@@ -209,6 +210,7 @@ class NewsController extends Controller
         return Inertia::render('Web/News/Tag', [
             'tag' => $tag->only(['id', 'name', 'slug']),
             'articles' => $articles,
+            'canonical' => Seo::canonical('/news/tag/'.$tag->slug),
         ]);
     }
 

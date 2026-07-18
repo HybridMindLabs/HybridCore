@@ -78,4 +78,14 @@ return [
     'back_to_top' => 'Back to top',
     'jump_to_comments' => 'Jump to comments',
     'meta_by' => 'by :name',
+
+    'category_eyebrow' => 'Category',
+    'tag_eyebrow' => 'Tag',
+    'category_empty' => 'Nothing published in this category yet.',
+    'category_empty_hint' => 'Check back later, or browse everything.',
+    'tag_empty' => 'Nothing tagged with this yet.',
+    'tag_empty_hint' => 'Try another tag, or browse everything.',
+    'all_news' => 'All news',
+    'category_meta' => 'Articles filed under :name.',
+    'tag_meta' => 'Articles tagged :name.',
 ];

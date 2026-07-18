@@ -359,4 +359,14 @@ return [
     'pf_visibility_private' => 'Private',
     'pf_visibility_private_desc' => 'Only you.',
     'pf_saved' => 'Saved',
+
+    // Unsubscribe
+    'unsub_title' => 'Unsubscribe',
+    'unsub_greeting' => 'Hi :name,',
+    'unsub_body' => 'You are about to stop receiving :category emails. You can switch them back on at any time from your email preferences.',
+    'unsub_button' => 'Stop these emails',
+    'unsub_done_title' => 'Done',
+    'unsub_done_body' => 'You will no longer receive :category emails.',
+    'unsub_back' => 'Back to the site',
+    'unsub_manage' => 'Manage all email preferences',
 ];

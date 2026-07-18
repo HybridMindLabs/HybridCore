@@ -1,93 +1,79 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { computed, onMounted, ref, nextTick } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import Breadcrumb from '@/components/UI/Breadcrumb.vue';
 import { useTheme } from '@/composables/useTheme';
-import { FileText, Shield, Cookie, Scale, Clock } from '@lucide/vue';
-import { marked } from 'marked';
+import { useLocale } from '@/composables/useLocale';
+import { Clock, Cookie, FileText, Scale, Shield } from '@lucide/vue';
+
+interface TocEntry { id: string; text: string; level: number }
 
 const props = defineProps<{
     slug: string;
     title: string;
     subtitle: string;
+    /**
+     * Already HTML. It used to arrive as markdown and be parsed in the browser
+     * with `marked`, which meant the legal text — the content most in need of
+     * being readable without scripts — only appeared after JS ran.
+     */
     content: string;
+    toc: TocEntry[];
     updated_at: string;
     allPages?: { slug: string; title: string }[];
+    canonical: string;
 }>();
 
 const { theme } = useTheme();
+const { t, formatDate } = useLocale();
 const dark = computed(() => theme.value === 'dark');
 
 const icons: Record<string, unknown> = { terms: FileText, privacy: Shield, cookies: Cookie };
 const icon = computed(() => icons[props.slug] ?? Scale);
 
-const parsedContent = ref('');
+const formattedDate = computed(() => formatDate(props.updated_at, { dateStyle: 'long' }));
 
-interface TocEntry { id: string; text: string; level: number }
-const toc = ref<TocEntry[]>([]);
+const navPages = computed(() => props.allPages ?? []);
+
+/** Highlights the section being read. Ids now come from the server. */
 const activeId = ref('');
+let observer: IntersectionObserver | null = null;
 
-onMounted(async () => {
-    marked.setOptions({ breaks: true });
+onMounted(() => {
+    if (!props.toc.length) return;
 
-    // Custom renderer to add IDs to headings
-    const renderer = new marked.Renderer();
-    const entries: TocEntry[] = [];
-
-    renderer.heading = ({ text, depth }: { text: string; depth: number }) => {
-        const id = text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
-        if (depth <= 3) entries.push({ id, text, level: depth });
-        return `<h${depth} id="${id}">${text}</h${depth}>`;
-    };
-
-    parsedContent.value = await marked.parse(props.content, { renderer }) as string;
-    toc.value = entries;
-
-    await nextTick();
-
-    // Intersection observer for active TOC highlight
-    const observer = new IntersectionObserver(
-        (obs) => {
-            for (const entry of obs) {
+    observer = new IntersectionObserver(
+        (entries) => {
+            for (const entry of entries) {
                 if (entry.isIntersecting) activeId.value = entry.target.id;
             }
         },
         { rootMargin: '-20% 0px -70% 0px' },
     );
-    document.querySelectorAll('.legal-body h1, .legal-body h2, .legal-body h3').forEach(el => observer.observe(el));
+
+    props.toc.forEach((entry) => {
+        const el = document.getElementById(entry.id);
+        if (el) observer!.observe(el);
+    });
 });
 
-const formattedDate = computed(() => {
-    try {
-        return new Date(props.updated_at).toLocaleDateString('en-GB', {
-            day: 'numeric', month: 'long', year: 'numeric',
-        });
-    } catch { return props.updated_at; }
-});
-
-const navPages = computed(() => props.allPages ?? [
-    { slug: 'terms',   title: 'Terms of Service' },
-    { slug: 'privacy', title: 'Privacy Policy' },
-    { slug: 'cookies', title: 'Cookie Policy' },
-]);
-
-function scrollTo(id: string) {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
+onBeforeUnmount(() => observer?.disconnect());
 </script>
 
 <template>
-    <Head :title="title" />
+    <Head>
+        <title>{{ title }}</title>
+        <meta name="description" :content="subtitle || t('legal.meta_fallback')" />
+        <link rel="canonical" :href="canonical" />
+    </Head>
 
     <PublicLayout>
 
         <!-- ═══════════════════════════════════════════════════ HERO -->
-        <div
-            class="relative overflow-hidden border-b"
-            :class="dark ? 'border-zinc-800/60 bg-[#09090b]' : 'border-zinc-200 bg-zinc-50'"
-        >
-            <!-- Glows + dot grid (same as Home) -->
+        <div class="relative overflow-hidden border-b"
+            :class="dark ? 'border-zinc-800/60 bg-[#09090b]' : 'border-zinc-200 bg-zinc-50'">
+
             <div class="absolute inset-0 pointer-events-none overflow-hidden">
                 <div class="absolute -top-40 left-1/3 w-[600px] h-[500px] rounded-full blur-[130px]"
                     :class="dark ? 'bg-blue-500/6' : 'bg-blue-400/8'" />
@@ -98,15 +84,17 @@ function scrollTo(id: string) {
             </div>
 
             <div class="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-6 py-12 sm:py-16">
-                <Breadcrumb :items="[{ label: 'Home', href: '/' }, { label: 'Legal' }, { label: title }]" />
+                <Breadcrumb :items="[
+                    { label: t('navigation.nav_home'), href: route('home') },
+                    { label: t('legal.breadcrumb') },
+                    { label: title },
+                ]" />
 
                 <div class="max-w-2xl">
-                    <div
-                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11px] font-bold uppercase tracking-widest mb-6"
-                        :class="dark ? 'border-blue-500/25 bg-blue-500/8 text-blue-400' : 'border-blue-400/30 bg-blue-50 text-blue-600'"
-                    >
-                        <component :is="icon" :size="11" :stroke-width="2.2" />
-                        Legal
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11px] font-bold uppercase tracking-widest mb-6"
+                        :class="dark ? 'border-blue-500/25 bg-blue-500/10 text-blue-400' : 'border-blue-400/30 bg-blue-50 text-blue-700'">
+                        <component :is="icon" :size="11" :stroke-width="2.2" aria-hidden="true" />
+                        {{ t('legal.eyebrow') }}
                     </div>
 
                     <h1 class="text-4xl sm:text-5xl font-black tracking-tight leading-[1.05]"
@@ -114,27 +102,25 @@ function scrollTo(id: string) {
                         {{ title }}
                     </h1>
 
-                    <p
-                        v-if="subtitle"
-                        class="mt-4 text-[15px] leading-relaxed max-w-lg"
-                        :class="dark ? 'text-zinc-400' : 'text-zinc-500'"
-                    >{{ subtitle }}</p>
+                    <p v-if="subtitle" class="mt-4 text-[15px] leading-relaxed max-w-lg"
+                        :class="dark ? 'text-zinc-400' : 'text-zinc-600'">{{ subtitle }}</p>
 
-                    <p class="flex items-center gap-1.5 mt-4 text-[12px]" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">
-                        <Clock :size="12" :stroke-width="1.8" />
-                        Last updated {{ formattedDate }}
+                    <p class="flex items-center gap-1.5 mt-4 text-[12px]" :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
+                        <Clock :size="12" :stroke-width="1.8" aria-hidden="true" />
+                        <time :datetime="updated_at">{{ t('legal.last_updated', { date: formattedDate }) }}</time>
                     </p>
 
-                    <!-- Page switcher -->
-                    <nav class="flex flex-wrap gap-2 mt-6">
+                    <nav v-if="navPages.length > 1" :aria-label="t('legal.other_pages')" class="flex flex-wrap gap-2 mt-6">
                         <Link
                             v-for="p in navPages"
                             :key="p.slug"
                             :href="`/legal/${p.slug}`"
-                            class="px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all"
+                            :aria-current="p.slug === slug ? 'page' : undefined"
+                            class="px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all
+                                   focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                             :class="p.slug === slug
-                                ? (dark ? 'bg-blue-500/12 text-blue-400 border-blue-500/25 font-semibold' : 'bg-blue-50 text-blue-600 border-blue-200 font-semibold')
-                                : (dark ? 'text-zinc-500 border-zinc-800 hover:border-zinc-600 hover:text-zinc-300' : 'text-zinc-500 border-zinc-200 hover:border-zinc-400 hover:text-zinc-700')"
+                                ? dark ? 'bg-blue-500/12 text-blue-400 border-blue-500/25 font-semibold' : 'bg-blue-50 text-blue-700 border-blue-200 font-semibold'
+                                : dark ? 'text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-zinc-200' : 'text-zinc-600 border-zinc-200 hover:border-zinc-400 hover:text-zinc-900'"
                         >{{ p.title }}</Link>
                     </nav>
                 </div>
@@ -142,47 +128,66 @@ function scrollTo(id: string) {
         </div>
         <!-- ═════════════════════════════════════════════ END HERO -->
 
-        <!-- ── Body ──────────────────────────────────────────────── -->
         <div class="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
             <div class="flex gap-6 items-start">
 
-                <!-- TOC sidebar -->
-                <aside
-                    v-if="toc.length"
-                    class="hidden lg:block w-60 xl:w-64 shrink-0 sticky top-24 self-start"
-                >
-                    <div class="rounded-2xl border overflow-hidden"
+                <!-- Contents. Anchors, not buttons: a section is now something
+                     you can link to, open in a new tab and reach by keyboard. -->
+                <aside v-if="toc.length" class="hidden lg:block w-60 xl:w-64 shrink-0 sticky top-24 self-start">
+                    <nav class="rounded-2xl border overflow-hidden" :aria-label="t('legal.toc_title')"
                         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-sm'">
                         <p class="px-4 py-3 border-b text-[11px] font-black uppercase tracking-widest"
-                            :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e] text-zinc-500' : 'border-zinc-100 bg-zinc-50 text-zinc-400'"
-                        >On this page</p>
-                        <nav class="flex flex-col p-2 gap-0.5">
-                            <button
-                                v-for="entry in toc"
-                                :key="entry.id"
-                                class="text-left text-[13px] py-1.5 transition-colors truncate border-l-2 px-3"
-                                :class="[
-                                    entry.level === 3 ? 'pl-6 text-[12px]' : '',
-                                    activeId === entry.id
-                                        ? (dark ? 'border-blue-500 text-blue-400' : 'border-blue-500 text-blue-600')
-                                        : (dark ? 'border-transparent text-zinc-600 hover:text-zinc-300' : 'border-transparent text-zinc-500 hover:text-zinc-800'),
-                                ]"
-                                @click="scrollTo(entry.id)"
-                            >{{ entry.text }}</button>
-                        </nav>
-                    </div>
+                            :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e] text-zinc-400' : 'border-zinc-100 bg-zinc-50 text-zinc-500'">
+                            {{ t('legal.toc_title') }}
+                        </p>
+                        <ol class="flex flex-col p-2 gap-0.5">
+                            <li v-for="entry in toc" :key="entry.id">
+                                <a :href="`#${entry.id}`"
+                                    :aria-current="activeId === entry.id ? 'true' : undefined"
+                                    class="block text-left text-[13px] py-1.5 transition-colors truncate border-l-2 px-3 rounded-r
+                                           focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                                    :class="[
+                                        entry.level === 3 ? 'pl-6 text-[12px]' : '',
+                                        activeId === entry.id
+                                            ? dark ? 'border-blue-500 text-blue-400' : 'border-blue-500 text-blue-700'
+                                            : dark ? 'border-transparent text-zinc-400 hover:text-zinc-200' : 'border-transparent text-zinc-600 hover:text-zinc-900',
+                                    ]"
+                                >{{ entry.text }}</a>
+                            </li>
+                        </ol>
+                    </nav>
                 </aside>
 
-                <!-- Content -->
                 <div class="flex-1 min-w-0">
+                    <!-- Collapsed contents for narrow screens, which had none
+                         at all — the sidebar was hidden below lg. -->
+                    <details v-if="toc.length" class="lg:hidden mb-4 rounded-2xl border overflow-hidden"
+                        :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-sm'">
+                        <summary class="px-4 py-3 text-[12px] font-bold uppercase tracking-widest cursor-pointer"
+                            :class="dark ? 'text-zinc-300' : 'text-zinc-700'">
+                            {{ t('legal.toc_toggle') }}
+                        </summary>
+                        <ol class="flex flex-col p-2 gap-0.5 border-t"
+                            :class="dark ? 'border-zinc-800/60' : 'border-zinc-100'">
+                            <li v-for="entry in toc" :key="entry.id">
+                                <a :href="`#${entry.id}`"
+                                    class="block text-[13px] py-1.5 px-3 rounded transition-colors"
+                                    :class="[
+                                        entry.level === 3 ? 'pl-6 text-[12px]' : '',
+                                        dark ? 'text-zinc-400 hover:text-zinc-100' : 'text-zinc-600 hover:text-zinc-900',
+                                    ]"
+                                >{{ entry.text }}</a>
+                            </li>
+                        </ol>
+                    </details>
+
                     <div class="rounded-2xl border overflow-hidden"
                         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-sm'">
                         <!-- eslint-disable-next-line vue/no-v-html -->
-                        <div
-                            class="legal-body p-6 sm:p-8"
-                            :class="dark ? 'legal-dark' : 'legal-light'"
-                            v-html="parsedContent"
-                        />
+                        <div v-if="content" class="legal-body p-6 sm:p-8" :class="dark ? 'legal-dark' : 'legal-light'" v-html="content" />
+                        <p v-else class="p-8 text-[13px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
+                            {{ t('legal.empty') }}
+                        </p>
                     </div>
                 </div>
 
@@ -196,6 +201,8 @@ function scrollTo(id: string) {
 .legal-body {
     font-size: 0.9375rem;
     line-height: 1.8;
+    /* Legal text is dense; an unbounded measure made it much harder to read. */
+    max-width: 72ch;
 }
 .legal-body h1, .legal-body h2, .legal-body h3, .legal-body h4 {
     font-weight: 700;
@@ -257,7 +264,7 @@ function scrollTo(id: string) {
 .legal-dark strong { color: #f4f4f5; }
 .legal-dark code { background: #27272a; color: #a5f3fc; }
 .legal-dark a { color: #60a5fa; }
-.legal-dark blockquote { border-left-color: #3f3f46; background: #18181b; color: #71717a; }
+.legal-dark blockquote { border-left-color: #3f3f46; background: #18181b; color: #a1a1aa; }
 .legal-dark hr { border-top-color: #27272a; }
 .legal-dark table { border: 1px solid #27272a; }
 .legal-dark thead { border-bottom-color: #3f3f46; background: #18181b; }
@@ -273,11 +280,11 @@ function scrollTo(id: string) {
 .legal-light strong { color: #0f172a; }
 .legal-light code { background: #f1f5f9; color: #0f766e; border: 1px solid #e2e8f0; }
 .legal-light a { color: #2563eb; }
-.legal-light blockquote { border-left-color: #cbd5e1; background: #f8fafc; color: #64748b; }
+.legal-light blockquote { border-left-color: #cbd5e1; background: #f8fafc; color: #475569; }
 .legal-light hr { border-top-color: #e2e8f0; }
 .legal-light table { border: 1px solid #e2e8f0; }
 .legal-light thead { border-bottom-color: #cbd5e1; background: #f8fafc; }
-.legal-light th { color: #64748b; }
+.legal-light th { color: #475569; }
 .legal-light td { color: #374151; }
 .legal-light tbody tr:not(:last-child) { border-bottom-color: #f1f5f9; }
 .legal-light tbody tr:hover { background: #fafafa; }

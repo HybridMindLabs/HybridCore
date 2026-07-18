@@ -77,4 +77,14 @@ return [
     'back_to_top' => 'Обратно нагоре',
     'jump_to_comments' => 'Към коментарите',
     'meta_by' => 'от :name',
+
+    'category_eyebrow' => 'Категория',
+    'tag_eyebrow' => 'Етикет',
+    'category_empty' => 'В тази категория още няма публикувано.',
+    'category_empty_hint' => 'Върни се по-късно или разгледай всичко.',
+    'tag_empty' => 'Още няма нищо с този етикет.',
+    'tag_empty_hint' => 'Пробвай друг етикет или разгледай всичко.',
+    'all_news' => 'Всички новини',
+    'category_meta' => 'Статии в категория :name.',
+    'tag_meta' => 'Статии с етикет :name.',
 ];

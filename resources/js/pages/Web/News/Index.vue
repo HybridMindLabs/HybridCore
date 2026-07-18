@@ -1,27 +1,26 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import { Search, Clock, Eye, Rss, Newspaper, Star, LayoutGrid, X, ChevronLeft, ChevronRight } from '@lucide/vue';
+import { Clock, Eye, LayoutGrid, Newspaper, Rss, Search, Star, X } from '@lucide/vue';
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import Breadcrumb from '@/components/UI/Breadcrumb.vue';
+import ArticleCard, { type NewsArticleCard } from '@/components/News/ArticleCard.vue';
+import NewsPagination from '@/components/News/NewsPagination.vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
 
 interface Category { id: number; name: string; slug: string; color: string; icon: string; articles_count: number }
-interface ArticleCard {
-    id: number; title: string; slug: string; excerpt: string | null;
-    featured_image_url: string | null; reading_time: number; views: number;
-    category: Category | null; author: { name: string } | null;
-    published_at: string; published_at_iso: string | null;
-    is_featured: boolean; is_pinned: boolean;
-    tags: { name: string; slug: string }[];
+/** Featured entries carry a couple of extra flags the shared card ignores. */
+interface FeaturedArticle extends NewsArticleCard {
+    is_featured: boolean;
+    is_pinned: boolean;
 }
-interface Pagination { data: ArticleCard[]; current_page: number; last_page: number; total: number }
+interface Pagination { data: NewsArticleCard[]; current_page: number; last_page: number; total: number }
 
 const props = defineProps<{
     articles: Pagination;
     categories: Category[];
-    featuredArticles: ArticleCard[];
+    featuredArticles: FeaturedArticle[];
     currentCategory: string | null;
     currentCategoryName: string | null;
     currentTag: string | null;
@@ -60,19 +59,6 @@ const countLabel = computed(() =>
 const showFeatured = computed(() =>
     !props.currentCategory && !props.currentTag && !props.search && props.featuredArticles.length > 0,
 );
-
-/**
- * A short window of page links around the current page. Rendering every page
- * turns a large archive into hundreds of links.
- */
-const pageWindow = computed(() => {
-    const { current_page: current, last_page: last } = props.articles;
-    const span = 2;
-    const from = Math.max(1, current - span);
-    const to = Math.min(last, current + span);
-
-    return Array.from({ length: to - from + 1 }, (_, i) => from + i);
-});
 
 function pageLink(page: number) {
     return route('news.index', {
@@ -267,41 +253,7 @@ function pageLink(page: number) {
                 </h2>
 
                 <div v-if="articles.data.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    <Link v-for="a in articles.data" :key="a.id" :href="route('news.show', a.slug)"
-                        class="group rounded-2xl border overflow-hidden flex flex-col transition-all duration-200"
-                        :class="dark
-                            ? 'border-zinc-800/70 bg-[#111113] hover:border-zinc-700/60'
-                            : 'border-zinc-200 bg-white hover:border-zinc-300 hover:shadow-md shadow-sm'">
-                        <div class="relative overflow-hidden h-40 shrink-0" :class="dark ? 'bg-zinc-900/60' : 'bg-zinc-100'">
-                            <img v-if="a.featured_image_url" :src="a.featured_image_url" :alt="a.title"
-                                loading="lazy" decoding="async"
-                                class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                                :class="dark ? 'opacity-80 group-hover:opacity-100' : ''" />
-                            <div v-else class="w-full h-full flex items-center justify-center">
-                                <Newspaper :size="24" :stroke-width="1.2" :class="dark ? 'text-zinc-800' : 'text-zinc-300'" />
-                            </div>
-                            <div v-if="a.category" class="absolute top-2 left-2">
-                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm"
-                                    :style="{ backgroundColor: a.category.color+'25', color: a.category.color }">{{ a.category.name }}</span>
-                            </div>
-                        </div>
-                        <div class="p-4 flex flex-col gap-2 flex-1">
-                            <h3 class="text-[14px] font-bold line-clamp-2 transition"
-                                :class="dark ? 'text-zinc-100 group-hover:text-blue-100' : 'text-zinc-900 group-hover:text-blue-700'">{{ a.title }}</h3>
-                            <p v-if="a.excerpt" class="text-[12px] line-clamp-2 flex-1" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ a.excerpt }}</p>
-                            <!-- A news card without a date makes a two-year-old
-                                 post look current. Rendered from the ISO value
-                                 so month names follow the reader's language. -->
-                            <div class="flex flex-col gap-1.5 mt-auto text-[11px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
-                                <div class="flex items-center gap-3">
-                                    <time v-if="a.published_at_iso" :datetime="a.published_at_iso">{{ formatDate(a.published_at_iso) }}</time>
-                                    <span class="flex items-center gap-1"><Clock :size="10" aria-hidden="true" />{{ t('news.read_time_short', { m: a.reading_time }) }}</span>
-                                    <span class="flex items-center gap-1"><Eye :size="10" aria-hidden="true" />{{ a.views }}</span>
-                                </div>
-                                <span v-if="a.author" class="truncate">{{ a.author.name }}</span>
-                            </div>
-                        </div>
-                    </Link>
+                    <ArticleCard v-for="a in articles.data" :key="a.id" :article="a" />
                 </div>
 
                 <!-- Empty state that offers a way out instead of a dead end -->
@@ -320,49 +272,11 @@ function pageLink(page: number) {
             </section>
 
             <!-- Windowed pagination with prev/next and a position readout -->
-            <nav v-if="articles.last_page > 1" :aria-label="t('news.pagination_label')" class="flex flex-col items-center gap-2 mt-8">
-                <div class="flex items-center gap-1">
-                    <Link v-if="articles.current_page > 1" :href="pageLink(articles.current_page - 1)"
-                        class="h-9 px-3 flex items-center gap-1 rounded-xl border text-[12px] font-semibold transition"
-                        :class="dark ? 'border-zinc-800/70 text-zinc-400 hover:text-zinc-100 hover:border-zinc-600' : 'border-zinc-200 text-zinc-500 hover:text-zinc-800 hover:border-zinc-300'">
-                        <ChevronLeft :size="13" :stroke-width="2" /> {{ t('news.prev') }}
-                    </Link>
-
-                    <Link v-if="pageWindow[0] > 1" :href="pageLink(1)"
-                        class="w-9 h-9 flex items-center justify-center rounded-xl border text-[13px] font-bold transition"
-                        :class="dark ? 'border-zinc-800/70 text-zinc-500 hover:text-zinc-200' : 'border-zinc-200 text-zinc-500 hover:text-zinc-800'">1</Link>
-                    <span v-if="pageWindow[0] > 2" class="px-1" :class="dark ? 'text-zinc-700' : 'text-zinc-400'">…</span>
-
-                    <Link v-for="p in pageWindow" :key="p" :href="pageLink(p)"
-                        :aria-current="p === articles.current_page ? 'page' : undefined"
-                        :aria-label="t('news.page_number', { page: p })"
-                        class="w-9 h-9 flex items-center justify-center rounded-xl border text-[13px] font-bold transition"
-                        :class="p === articles.current_page
-                            ? 'border-blue-500/40 bg-blue-500/10 text-blue-400'
-                            : dark
-                                ? 'border-zinc-800/70 text-zinc-500 hover:text-zinc-200 hover:border-zinc-600'
-                                : 'border-zinc-200 text-zinc-500 hover:text-zinc-800 hover:border-zinc-300'">
-                        {{ p }}
-                    </Link>
-
-                    <span v-if="pageWindow[pageWindow.length - 1] < articles.last_page - 1" class="px-1" :class="dark ? 'text-zinc-700' : 'text-zinc-400'">…</span>
-                    <Link v-if="pageWindow[pageWindow.length - 1] < articles.last_page" :href="pageLink(articles.last_page)"
-                        class="w-9 h-9 flex items-center justify-center rounded-xl border text-[13px] font-bold transition"
-                        :class="dark ? 'border-zinc-800/70 text-zinc-500 hover:text-zinc-200' : 'border-zinc-200 text-zinc-500 hover:text-zinc-800'">
-                        {{ articles.last_page }}
-                    </Link>
-
-                    <Link v-if="articles.current_page < articles.last_page" :href="pageLink(articles.current_page + 1)"
-                        class="h-9 px-3 flex items-center gap-1 rounded-xl border text-[12px] font-semibold transition"
-                        :class="dark ? 'border-zinc-800/70 text-zinc-400 hover:text-zinc-100 hover:border-zinc-600' : 'border-zinc-200 text-zinc-500 hover:text-zinc-800 hover:border-zinc-300'">
-                        {{ t('news.next') }} <ChevronRight :size="13" :stroke-width="2" />
-                    </Link>
-                </div>
-
-                <p class="text-[11px]" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">
-                    {{ t('news.showing', { current: articles.current_page, last: articles.last_page }) }}
-                </p>
-            </nav>
+            <NewsPagination
+                :current-page="articles.current_page"
+                :last-page="articles.last_page"
+                :href="pageLink"
+            />
         </div>
     </PublicLayout>
 </template>

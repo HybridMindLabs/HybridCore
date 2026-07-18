@@ -46,4 +46,5 @@ return [
         'extensions' => 'Extensions',
     ],
     'breadcrumb' => 'Breadcrumb',
+    'back_to_home' => 'Back to home',
 ];

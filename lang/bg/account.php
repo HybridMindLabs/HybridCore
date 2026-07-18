@@ -359,4 +359,14 @@ return [
     'pf_visibility_private' => 'Личен',
     'pf_visibility_private_desc' => 'Само ти.',
     'pf_saved' => 'Запазено',
+
+    // Unsubscribe
+    'unsub_title' => 'Отписване',
+    'unsub_greeting' => 'Здравей, :name,',
+    'unsub_body' => 'На път си да спреш писмата от типа „:category“. Можеш да ги включиш пак по всяко време от имейл настройките си.',
+    'unsub_button' => 'Спри тези писма',
+    'unsub_done_title' => 'Готово',
+    'unsub_done_body' => 'Повече няма да получаваш писма от типа „:category“.',
+    'unsub_back' => 'Обратно към сайта',
+    'unsub_manage' => 'Управление на всички имейл настройки',
 ];

@@ -297,6 +297,7 @@ class HandleInertiaRequests extends Middleware
                 'news' => trans('news'),
                 'rules' => trans('rules'),
                 'contact' => trans('contact'),
+                'legal' => trans('legal'),
                 'achievements' => trans('achievements'),
                 'onboarding' => trans('onboarding'),
                 'report' => trans('report'),
