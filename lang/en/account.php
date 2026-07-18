@@ -302,4 +302,13 @@ return [
     'pref_saved' => 'Saved',
     'help_preferences_1' => 'Language here overrides the site default for your account only.',
     'help_preferences_2' => 'Set your timezone and every date on the site lines up with your own clock.',
+
+    // Connected accounts
+    'oauth_title' => 'Connected accounts',
+    'oauth_subtitle' => 'Link a gaming or social account and you can sign in with one click instead of typing a password.',
+    'oauth_connected_since' => 'Connected :date',
+    'oauth_last_login' => 'This is the only way you can sign in. Set a password first, then you can unlink it.',
+    'oauth_last_login_short' => 'Only sign-in method',
+    'oauth_set_password' => 'Set a password',
+    'oauth_disabled_hint' => 'The site owner has not enabled this provider.',
 ];

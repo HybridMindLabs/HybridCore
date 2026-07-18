@@ -43,6 +43,7 @@ const props = defineProps<{
     sessions: SessionItem[];
     connectedAccounts: Connected[];
     oauthProviders: Provider[];
+    hasPassword: boolean;
     notifications: { data: Notif[]; links: any; meta: any };
     blocks: BlockEntry[];
     unreadNotifications: number;
@@ -120,7 +121,12 @@ watch(activeTab, (tab) => {
                             <Preferences :account="account" />
                         </template>
                         <template v-else-if="activeTab === 'connected'">
-                            <ConnectedAccounts :connected-accounts="connectedAccounts" :oauth-providers="oauthProviders" />
+                            <ConnectedAccounts
+                                :connected-accounts="connectedAccounts"
+                                :oauth-providers="oauthProviders"
+                                :has-password="hasPassword"
+                                @update:active-tab="activeTab = $event"
+                            />
                         </template>
                         <template v-else-if="activeTab === 'notifications'">
                             <Notifications :notifications="notifications" />

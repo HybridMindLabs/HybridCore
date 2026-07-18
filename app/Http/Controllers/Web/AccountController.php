@@ -75,6 +75,9 @@ class AccountController extends Controller
                 'connected_at' => $acc->created_at->toFormattedDateString(),
             ]),
             'oauthProviders' => $this->oauth->compose(),
+            // Lets the page explain why unlinking the last provider is blocked
+            // instead of just failing when the user clicks.
+            'hasPassword' => $user->hasUsablePassword(),
             'achievements' => $user->achievements->map(fn ($a) => [
                 'slug' => $a->slug,
                 'awarded_at' => $a->awarded_at->toFormattedDateString(),
@@ -203,7 +206,10 @@ class AccountController extends Controller
 
     public function updatePassword(UpdatePasswordRequest $request): RedirectResponse
     {
-        $request->user()->update(['password' => Hash::make($request->validated()['password'])]);
+        $request->user()->update([
+            'password' => Hash::make($request->validated()['password']),
+            'password_set_at' => now(),
+        ]);
 
         return back()->with('success', __('account.password_changed'));
     }

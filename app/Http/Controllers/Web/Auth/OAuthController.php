@@ -47,7 +47,19 @@ class OAuthController extends Controller
     {
         abort_unless($this->registry->has($provider), 404, __('auth.oauth_unknown'));
 
-        $this->accounts->disconnect($request->user(), $provider);
+        $user = $request->user();
+
+        // An account created through OAuth has no password its owner knows, so
+        // unlinking the last provider would leave nothing to sign in with. The
+        // page hides the button in that case; this is the check that counts.
+        $isLastLogin = ! $user->hasUsablePassword()
+            && $user->connectedAccounts()->where('provider', '!=', $provider)->doesntExist();
+
+        if ($isLastLogin) {
+            return back()->withErrors(['provider' => __('account.oauth_last_login')]);
+        }
+
+        $this->accounts->disconnect($user, $provider);
 
         return back()->with('success', __('account.account_disconnected'));
     }
