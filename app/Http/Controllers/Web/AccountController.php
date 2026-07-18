@@ -20,8 +20,10 @@ use App\Services\SettingsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -276,14 +278,17 @@ class AccountController extends Controller
 
         $request->validate([
             'username_confirm' => ['required', 'string'],
-            'password' => ['required', 'string'],
+            // An account created through a provider has a random password its
+            // owner never saw, so demanding it here made deletion impossible
+            // for them. The username confirmation carries the intent instead.
+            'password' => [$user->hasUsablePassword() ? 'required' : 'nullable', 'string'],
         ]);
 
         if ($request->input('username_confirm') !== $user->username) {
             throw ValidationException::withMessages(['username_confirm' => __('account.delete_username_mismatch')]);
         }
 
-        if (! Hash::check($request->input('password'), $user->password)) {
+        if ($user->hasUsablePassword() && ! Hash::check($request->input('password'), $user->password)) {
             throw ValidationException::withMessages(['password' => __('account.wrong_current_password')]);
         }
 
@@ -293,14 +298,30 @@ class AccountController extends Controller
             'username' => 'deleted_'.$user->id,
             'display_name' => null,
             'email' => 'deleted_'.$user->id.'@deleted.invalid',
-            'password' => Hash::make(\Str::random(64)),
+            'password' => Hash::make(Str::random(64)),
+            'password_set_at' => null,
             'avatar' => null,
             'banner' => null,
             'bio' => null,
             'location' => null,
             'website' => null,
+            'notification_preferences' => null,
+            'two_factor_secret' => null,
+            'two_factor_recovery_codes' => null,
+            'two_factor_confirmed_at' => null,
+            'remember_token' => Str::random(60),
             'banned_at' => now(),
         ]);
+
+        // The row survives for referential integrity, so the cascades on these
+        // tables never fire — they have to be cleared by hand. Each holds data
+        // that identifies the person: provider ids, IP addresses, devices.
+        $user->connectedAccounts()->delete();
+        $user->loginHistories()->delete();
+
+        if (config('session.driver') === 'database') {
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+        }
 
         app(AvatarService::class)->delete($user);
         app(BannerService::class)->delete($user);
@@ -314,15 +335,28 @@ class AccountController extends Controller
 
     public function exportData(Request $request): RedirectResponse
     {
-        $request->validate(['password' => ['required', 'string']]);
+        $user = $request->user();
 
-        if (! Hash::check($request->input('password'), $request->user()->password)) {
-            throw ValidationException::withMessages(['password' => __('account.wrong_current_password')]);
+        // Same reasoning as deletion: a provider-only account has no password
+        // to confirm with, and the right to a copy of your data cannot hinge
+        // on a credential that was never issued to you.
+        if ($user->hasUsablePassword()) {
+            $request->validate(['password' => ['required', 'string']]);
+
+            if (! Hash::check($request->input('password'), $user->password)) {
+                throw ValidationException::withMessages(['password' => __('account.wrong_current_password')]);
+            }
+        } else {
+            $request->validate(['username_confirm' => ['required', 'string']]);
+
+            if ($request->input('username_confirm') !== $user->username) {
+                throw ValidationException::withMessages(['username_confirm' => __('account.delete_username_mismatch')]);
+            }
         }
 
         // Generated on the queue — the user gets a notification with a
         // download link when the file is ready.
-        GenerateDataExportJob::dispatch($request->user());
+        GenerateDataExportJob::dispatch($user);
 
         return back()->with('success', __('account.export_queued'));
     }

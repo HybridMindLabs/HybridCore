@@ -141,7 +141,7 @@ watch(activeTab, (tab) => {
                             <EmailPreferences :preferences="account.notification_preferences" />
                         </template>
         <template v-else-if="activeTab === 'danger'">
-            <DangerZone :username="account.username" />
+            <DangerZone :username="account.username" :has-password="hasPassword" />
         </template>
     </AccountPage>
 </template>
