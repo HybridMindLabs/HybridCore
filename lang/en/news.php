@@ -50,4 +50,7 @@ return [
     'comment_login_suffix' => 'to join the discussion.',
     'no_comments' => 'No comments yet — start the discussion.',
     'delete_comment' => 'Delete comment',
+
+    'pagination_label' => 'Article pages',
+    'page_number' => 'Page :page',
 ];

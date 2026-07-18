@@ -31,17 +31,37 @@ class NewsController extends Controller
         }
 
         if ($request->filled('q')) {
-            $search = $request->q;
-            $query->where(fn ($q) => $q->where('title', 'like', "%{$search}%")->orWhere('excerpt', 'like', "%{$search}%"));
+            // % and _ are wildcards to LIKE, so a search for "100%" or "a_b"
+            // silently matched far more than the reader asked for. The ESCAPE
+            // clause is spelled out because only MySQL assumes a backslash —
+            // SQLite and Postgres treat it as an ordinary character without it.
+            $like = '%'.addcslashes($request->string('q')->toString(), '%_\\').'%';
+
+            $query->where(fn ($q) => $q
+                ->whereRaw("title LIKE ? ESCAPE '\\'", [$like])
+                ->orWhereRaw("excerpt LIKE ? ESCAPE '\\'", [$like])
+            );
         }
 
         return Inertia::render('Web/News/Index', [
             'articles' => $query->paginate(12)->withQueryString()->through(fn (NewsArticle $a) => $this->articleCard($a)),
-            'categories' => NewsCategory::withCount('publishedArticles')->orderBy('sort_order')->get(['id', 'name', 'slug', 'color', 'icon']),
+            // Aliased: withCount('publishedArticles') names the column
+            // published_articles_count, so the page's articles_count read back
+            // undefined and every category pill showed a blank count.
+            'categories' => NewsCategory::withCount('publishedArticles as articles_count')
+                ->orderBy('sort_order')
+                ->get(['id', 'name', 'slug', 'color', 'icon']),
             'featuredArticles' => NewsArticle::published()->where('is_featured', true)->with(['category', 'author'])->orderByDesc('published_at')->limit(3)->get()->map(fn ($a) => $this->articleCard($a)),
             'currentCategory' => $request->category,
+            // The heading printed the raw slug from the query string. These
+            // params predate the dedicated /news/category and /news/tag pages
+            // and still answer inbound links, so they resolve to a real name.
+            'currentCategoryName' => $request->filled('category')
+                ? NewsCategory::where('slug', $request->category)->value('name')
+                : null,
             'currentTag' => $request->tag,
             'search' => $request->q,
+            'canonical' => Seo::canonical('/news'),
         ]);
     }
 
@@ -176,7 +196,8 @@ class NewsController extends Controller
         $xml .= '  <title>'.e($appName)." News</title>\n";
         $xml .= '  <link>'.e($siteUrl)."</link>\n";
         $xml .= '  <description>Latest news from '.e($appName)."</description>\n";
-        $xml .= '  <language>en-us</language>'."\n";
+        $xml .= '  <language>'.e(str_replace('_', '-', app()->getLocale()))."</language>\n";
+        $xml .= '  <lastBuildDate>'.($articles->first()?->published_at?->format('r') ?? now()->format('r'))."</lastBuildDate>\n";
         $xml .= '  <atom:link href="'.e($feedUrl).'" rel="self" type="application/rss+xml"/>'."\n";
 
         foreach ($articles as $a) {

@@ -49,4 +49,7 @@ return [
     'comment_login_suffix' => 'за да се включиш в дискусията.',
     'no_comments' => 'Все още няма коментари — започни дискусията.',
     'delete_comment' => 'Изтрий коментара',
+
+    'pagination_label' => 'Страници със статии',
+    'page_number' => 'Страница :page',
 ];

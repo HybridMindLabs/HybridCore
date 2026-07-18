@@ -12,7 +12,8 @@ interface ArticleCard {
     id: number; title: string; slug: string; excerpt: string | null;
     featured_image_url: string | null; reading_time: number; views: number;
     category: Category | null; author: { name: string } | null;
-    published_at: string; is_featured: boolean; is_pinned: boolean;
+    published_at: string; published_at_iso: string | null;
+    is_featured: boolean; is_pinned: boolean;
     tags: { name: string; slug: string }[];
 }
 interface Pagination { data: ArticleCard[]; current_page: number; last_page: number; total: number }
@@ -22,18 +23,25 @@ const props = defineProps<{
     categories: Category[];
     featuredArticles: ArticleCard[];
     currentCategory: string | null;
+    currentCategoryName: string | null;
     currentTag: string | null;
     search: string | null;
+    canonical: string;
 }>();
 
 const { theme } = useTheme();
-const { t } = useLocale();
+const { t, formatDate } = useLocale();
 const dark = computed(() => theme.value === 'dark');
 
 const q = ref(props.search ?? '');
 
+/**
+ * The parameter is `q` — the controller reads $request->q. This used to send
+ * `search`, which nothing on the server looked at, so the box did nothing at
+ * all and every submission just reloaded the unfiltered list.
+ */
 function doSearch() {
-    router.get(route('news.index'), { search: q.value || undefined }, { preserveState: true });
+    router.get(route('news.index'), { q: q.value || undefined }, { preserveState: true });
 }
 
 function clearSearch() {
@@ -69,7 +77,9 @@ const pageWindow = computed(() => {
 function pageLink(page: number) {
     return route('news.index', {
         page,
-        search: props.search || undefined,
+        q: props.search || undefined,
+        category: props.currentCategory || undefined,
+        tag: props.currentTag || undefined,
     });
 }
 </script>
@@ -77,6 +87,10 @@ function pageLink(page: number) {
 <template>
     <Head>
         <title>{{ t('news.page_title') }}</title>
+        <meta name="description" :content="t('news.subtitle')" />
+        <!-- Filters and pages are all variations of one listing; point them at
+             the clean URL so they are not indexed as separate pages. -->
+        <link rel="canonical" :href="canonical" />
         <link rel="alternate" type="application/rss+xml" :title="t('news.page_title')" :href="route('news.feed')" />
     </Head>
 
@@ -110,7 +124,7 @@ function pageLink(page: number) {
 
                         <h1 class="text-4xl sm:text-5xl font-black tracking-tight leading-[1.05]"
                             :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
-                            <template v-if="currentCategory">{{ currentCategory }}</template>
+                            <template v-if="currentCategory">{{ currentCategoryName ?? currentCategory }}</template>
                             <template v-else-if="currentTag">{{ t('news.tagged_heading', { tag: currentTag }) }}</template>
                             <template v-else-if="search">{{ t('news.search_heading', { query: search }) }}</template>
                             <template v-else>
@@ -125,16 +139,18 @@ function pageLink(page: number) {
                         </p>
 
                         <!-- Search -->
-                        <form class="relative w-full max-w-sm mt-8" @submit.prevent="doSearch">
-                            <Search :size="14" :stroke-width="1.8" class="absolute left-3.5 top-1/2 -translate-y-1/2"
-                                :class="dark ? 'text-zinc-600' : 'text-zinc-400'" />
-                            <input v-model="q" type="text" :placeholder="t('news.search')"
+                        <form class="relative w-full max-w-sm mt-8" role="search" @submit.prevent="doSearch">
+                            <label for="news_search" class="sr-only">{{ t('news.search') }}</label>
+                            <Search :size="14" :stroke-width="1.8" aria-hidden="true"
+                                class="absolute left-3.5 top-1/2 -translate-y-1/2"
+                                :class="dark ? 'text-zinc-500' : 'text-zinc-400'" />
+                            <input id="news_search" v-model="q" type="search" :placeholder="t('news.search')"
                                 class="w-full rounded-xl border pl-10 pr-10 py-3 text-[14px] font-medium transition focus:outline-none focus:ring-2"
                                 :class="dark
                                     ? 'border-zinc-800 bg-zinc-900/60 text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500/50 focus:ring-blue-500/10'
                                     : 'border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400 focus:border-blue-400/60 focus:ring-blue-500/10'"
                                 @keydown.enter="doSearch" />
-                            <button v-if="search" type="button" :title="t('news.clear_search')"
+                            <button v-if="search" type="button" :aria-label="t('news.clear_search')" :title="t('news.clear_search')"
                                 class="absolute right-3 top-1/2 -translate-y-1/2 transition"
                                 :class="dark ? 'text-zinc-600 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-700'"
                                 @click="clearSearch">
@@ -183,9 +199,12 @@ function pageLink(page: number) {
                             </div>
                             <h3 class="text-[22px] font-black text-white leading-snug mb-2 group-hover:text-blue-100 transition">{{ featuredArticles[0].title }}</h3>
                             <p v-if="featuredArticles[0].excerpt" class="text-[13px] text-zinc-300 line-clamp-2">{{ featuredArticles[0].excerpt }}</p>
-                            <div class="flex items-center gap-3 mt-3 text-[12px] text-zinc-400">
-                                <span class="flex items-center gap-1"><Clock :size="11" />{{ t('news.read_time_short', { m: featuredArticles[0].reading_time }) }}</span>
-                                <span class="flex items-center gap-1"><Eye :size="11" />{{ featuredArticles[0].views }}</span>
+                            <div class="flex items-center gap-3 mt-3 text-[12px] text-zinc-300">
+                                <time v-if="featuredArticles[0].published_at_iso" :datetime="featuredArticles[0].published_at_iso">
+                                    {{ formatDate(featuredArticles[0].published_at_iso) }}
+                                </time>
+                                <span class="flex items-center gap-1"><Clock :size="11" aria-hidden="true" />{{ t('news.read_time_short', { m: featuredArticles[0].reading_time }) }}</span>
+                                <span class="flex items-center gap-1"><Eye :size="11" aria-hidden="true" />{{ featuredArticles[0].views }}</span>
                             </div>
                         </div>
                     </Link>
@@ -270,10 +289,16 @@ function pageLink(page: number) {
                             <h3 class="text-[14px] font-bold line-clamp-2 transition"
                                 :class="dark ? 'text-zinc-100 group-hover:text-blue-100' : 'text-zinc-900 group-hover:text-blue-700'">{{ a.title }}</h3>
                             <p v-if="a.excerpt" class="text-[12px] line-clamp-2 flex-1" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ a.excerpt }}</p>
-                            <div class="flex items-center gap-3 mt-auto text-[11px]" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">
-                                <span class="flex items-center gap-1"><Clock :size="10" />{{ t('news.read_time_short', { m: a.reading_time }) }}</span>
-                                <span class="flex items-center gap-1"><Eye :size="10" />{{ a.views }}</span>
-                                <span v-if="a.author" class="ml-auto truncate">{{ a.author.name }}</span>
+                            <!-- A news card without a date makes a two-year-old
+                                 post look current. Rendered from the ISO value
+                                 so month names follow the reader's language. -->
+                            <div class="flex flex-col gap-1.5 mt-auto text-[11px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
+                                <div class="flex items-center gap-3">
+                                    <time v-if="a.published_at_iso" :datetime="a.published_at_iso">{{ formatDate(a.published_at_iso) }}</time>
+                                    <span class="flex items-center gap-1"><Clock :size="10" aria-hidden="true" />{{ t('news.read_time_short', { m: a.reading_time }) }}</span>
+                                    <span class="flex items-center gap-1"><Eye :size="10" aria-hidden="true" />{{ a.views }}</span>
+                                </div>
+                                <span v-if="a.author" class="truncate">{{ a.author.name }}</span>
                             </div>
                         </div>
                     </Link>
@@ -295,7 +320,7 @@ function pageLink(page: number) {
             </section>
 
             <!-- Windowed pagination with prev/next and a position readout -->
-            <nav v-if="articles.last_page > 1" class="flex flex-col items-center gap-2 mt-8">
+            <nav v-if="articles.last_page > 1" :aria-label="t('news.pagination_label')" class="flex flex-col items-center gap-2 mt-8">
                 <div class="flex items-center gap-1">
                     <Link v-if="articles.current_page > 1" :href="pageLink(articles.current_page - 1)"
                         class="h-9 px-3 flex items-center gap-1 rounded-xl border text-[12px] font-semibold transition"
@@ -309,6 +334,8 @@ function pageLink(page: number) {
                     <span v-if="pageWindow[0] > 2" class="px-1" :class="dark ? 'text-zinc-700' : 'text-zinc-400'">…</span>
 
                     <Link v-for="p in pageWindow" :key="p" :href="pageLink(p)"
+                        :aria-current="p === articles.current_page ? 'page' : undefined"
+                        :aria-label="t('news.page_number', { page: p })"
                         class="w-9 h-9 flex items-center justify-center rounded-xl border text-[13px] font-bold transition"
                         :class="p === articles.current_page
                             ? 'border-blue-500/40 bg-blue-500/10 text-blue-400'
