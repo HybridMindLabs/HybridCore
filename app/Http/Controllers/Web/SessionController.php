@@ -3,15 +3,16 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Services\Auth\SessionSecurityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class SessionController extends Controller
 {
+    public function __construct(private readonly SessionSecurityService $sessions) {}
+
     /** Return active sessions for the authenticated user. */
     public function index(Request $request): array
     {
@@ -52,32 +53,7 @@ class SessionController extends Controller
     {
         $request->validate(['password' => ['required', 'string', 'current_password']]);
 
-        $user = $request->user();
-
-        // Deleting the rows alone does not sign anyone out for good: a device
-        // that ticked "remember me" still holds a cookie that logs it straight
-        // back in on its next request, in a brand new session.
-        //
-        // Laravel's own logoutOtherDevices() is no help here — it rehashes the
-        // password and leans on the AuthenticateSession middleware, which this
-        // app does not run. There is a single remember_token per user, so the
-        // only way to kill those cookies is to cycle it, which invalidates this
-        // device's cookie too; it gets a fresh one below.
-        $hadRecaller = $request->cookies->has(Auth::guard()->getRecallerName());
-
-        $user->setRememberToken(Str::random(60));
-        $user->save();
-
-        if ($hadRecaller) {
-            // Re-issues the recaller against the new token. This also rotates
-            // the session id, so the row to keep is read back afterwards.
-            Auth::login($user, true);
-        }
-
-        DB::table('sessions')
-            ->where('user_id', $user->id)
-            ->where('id', '!=', $request->session()->getId())
-            ->delete();
+        $this->sessions->signOutOtherDevices($request, $request->user());
 
         return $this->ok($request, __('account.sessions_revoked_all'));
     }

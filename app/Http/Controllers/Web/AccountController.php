@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\AchievementService;
 use App\Services\Auth\LoginSecurityService;
 use App\Services\Auth\OAuthProviderRegistry;
+use App\Services\Auth\SessionSecurityService;
 use App\Services\Localization\LocaleService;
 use App\Services\Media\AvatarService;
 use App\Services\Media\BannerService;
@@ -37,7 +38,8 @@ class AccountController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user()->load('achievements');
-        $sessionCtrl = new SessionController;
+        // Resolved rather than newed up so its own dependencies get injected.
+        $sessionCtrl = app(SessionController::class);
 
         return Inertia::render('Account/Index', [
             'account' => [
@@ -206,10 +208,17 @@ class AccountController extends Controller
 
     public function updatePassword(UpdatePasswordRequest $request): RedirectResponse
     {
-        $request->user()->update([
+        $user = $request->user();
+
+        $user->update([
             'password' => Hash::make($request->validated()['password']),
             'password_set_at' => now(),
         ]);
+
+        // Changing a password is usually a reaction to it having leaked, so
+        // anything still signed in elsewhere on the old one goes with it. The
+        // device doing the change stays put.
+        app(SessionSecurityService::class)->signOutOtherDevices($request, $user);
 
         return back()->with('success', __('account.password_changed'));
     }
