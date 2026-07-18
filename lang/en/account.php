@@ -280,4 +280,12 @@ return [
     '2fa_network_error' => 'Could not reach the server. Check your connection and try again.',
     '2fa_recovery_download' => 'Download codes',
     '2fa_recovery_warning' => 'Save these somewhere safe now. They are shown in full only here, and each one works once.',
+
+    // Sessions
+    'sessions_revoked' => 'That device has been signed out.',
+    'sessions_revoked_all' => 'Every other device has been signed out.',
+    'sessions_cannot_revoke_current' => 'This is the device you are using right now, so it cannot be signed out from here.',
+    'sessions_remember_note' => 'Signing out every other device also invalidates any "remember me" cookies, so those devices will need the password again.',
+    'sessions_network_error' => 'Could not reach the server. Check your connection and try again.',
+    'sessions_current_ip' => 'Last seen from',
 ];
