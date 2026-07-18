@@ -1,18 +1,17 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { computed, onMounted, ref, nextTick } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import Breadcrumb from '@/components/UI/Breadcrumb.vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
 import { BookOpen, Clock, ArrowLeft, ArrowRight } from '@lucide/vue';
-import { marked } from 'marked';
-
 interface Rule {
     id: number;
     slug: string;
     title: string;
     excerpt: string | null;
+    /** Already HTML — the browser used to parse the markdown itself. */
     content: string | null;
     is_system: boolean;
     updated_at: string;
@@ -31,76 +30,52 @@ interface Seo {
     description: string;
 }
 
+interface TocEntry { id: string; text: string; level: number }
+
 const props = defineProps<{
     rule: Rule;
     allRules: RuleNav[];
+    toc: TocEntry[];
+    reading_minutes: number;
     seo: Seo;
 }>();
 
 const { theme } = useTheme();
-const { t, currentLocale } = useLocale();
+const { t, formatDate } = useLocale();
 const dark = computed(() => theme.value === 'dark');
 
-const parsedContent = ref('');
+const parsedContent = computed(() => props.rule.content ?? '');
 
-interface TocEntry { id: string; text: string; level: number }
-const toc = ref<TocEntry[]>([]);
+/** Highlights the section being read. Ids now come from the server. */
 const activeId = ref('');
+let observer: IntersectionObserver | null = null;
 
-onMounted(async () => {
-    marked.setOptions({ breaks: true });
-    const renderer = new marked.Renderer();
-    const entries: TocEntry[] = [];
+onMounted(() => {
+    if (!props.toc.length) return;
 
-    renderer.heading = ({ text, depth }: { text: string; depth: number }) => {
-        const id = text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
-        if (depth <= 3) entries.push({ id, text, level: depth });
-        return `<h${depth} id="${id}">${text}</h${depth}>`;
-    };
-
-    parsedContent.value = await marked.parse(props.rule.content ?? '', { renderer }) as string;
-    toc.value = entries;
-
-    await nextTick();
-
-    const observer = new IntersectionObserver(
-        (obs) => { for (const e of obs) { if (e.isIntersecting) activeId.value = e.target.id; } },
+    observer = new IntersectionObserver(
+        (entries) => {
+            for (const entry of entries) {
+                if (entry.isIntersecting) activeId.value = entry.target.id;
+            }
+        },
         { rootMargin: '-20% 0px -70% 0px' },
     );
-    document.querySelectorAll('.rule-body h1,.rule-body h2,.rule-body h3').forEach(el => observer.observe(el));
+
+    props.toc.forEach((entry) => {
+        const el = document.getElementById(entry.id);
+        if (el) observer!.observe(el);
+    });
 });
 
-const formattedDate = computed(() => {
-    try {
-        return new Date(props.rule.updated_at).toLocaleDateString(currentLocale.value, { day: 'numeric', month: 'long', year: 'numeric' });
-    } catch { return props.rule.updated_at; }
-});
+onBeforeUnmount(() => observer?.disconnect());
 
-function scrollTo(id: string) {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
+const formattedDate = computed(() => formatDate(props.rule.updated_at, { dateStyle: 'long' }));
+const readingMinutes = computed(() => props.reading_minutes);
 
 const ruleIndex = computed(() => props.allRules.findIndex(r => r.slug === props.rule.slug));
-/** Rough reading time from the raw markdown, at ~200 words per minute. */
-const readingMinutes = computed(() => {
-    const words = (props.rule.content ?? '')
-        .replace(/[#*_`>\-\[\]()]/g, ' ')
-        .split(/\s+/)
-        .filter(Boolean).length;
 
-    return Math.max(1, Math.round(words / 200));
-});
-
-const shortDate = computed(() => {
-    try {
-        return new Date(props.rule.updated_at).toLocaleDateString(currentLocale.value, {
-            day: 'numeric',
-            month: 'short',
-        });
-    } catch {
-        return props.rule.updated_at;
-    }
-});
+const shortDate = computed(() => formatDate(props.rule.updated_at, { day: 'numeric', month: 'short' }));
 
 const canonicalUrl = computed(() => route('rules.show', props.rule.slug));
 
@@ -296,7 +271,6 @@ const nextRule = computed(() => ruleIndex.value < props.allRules.length - 1 ? pr
                                         : (dark ? 'border-transparent text-zinc-500 hover:text-zinc-200' : 'border-transparent text-zinc-600 hover:text-zinc-900'),
                                 ]"
                                 :aria-current="activeId === entry.id ? 'location' : undefined"
-                                @click.prevent="scrollTo(entry.id)"
                             >{{ entry.text }}</a>
                         </nav>
                     </div>

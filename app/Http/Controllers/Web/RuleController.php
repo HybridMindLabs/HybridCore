@@ -5,13 +5,17 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Rule;
 use App\Services\SettingsService;
+use App\Support\MarkdownRenderer;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class RuleController extends Controller
 {
-    public function __construct(private readonly SettingsService $settings) {}
+    public function __construct(
+        private readonly SettingsService $settings,
+        private readonly MarkdownRenderer $markdown,
+    ) {}
 
     public function index(): Response
     {
@@ -46,8 +50,26 @@ class RuleController extends Controller
             ->orderBy('id')
             ->get(['id', 'slug', 'title', 'is_system', 'excerpt']);
 
+        // Rendered here, like the legal pages. The browser used to parse the
+        // markdown, so the rule text only existed after JavaScript ran and the
+        // heading ids were built with an ASCII-only pattern that reduced every
+        // Cyrillic heading to the same value.
+        ['html' => $html, 'toc' => $toc] = $this->markdown->render($rule->content);
+
         return Inertia::render('Web/Rules/Show', [
-            'rule' => $rule,
+            'rule' => [
+                'id' => $rule->id,
+                'slug' => $rule->slug,
+                'title' => $rule->title,
+                'excerpt' => $rule->excerpt,
+                'content' => $html,
+                'is_system' => $rule->is_system,
+                'updated_at' => $rule->updated_at->toIso8601String(),
+            ],
+            'toc' => $toc,
+            // Counted from the prose. The page derived this from the raw
+            // markdown, so syntax characters were counted as words.
+            'reading_minutes' => max(1, (int) round($this->markdown->wordCount($html) / 200)),
             'allRules' => $allRules,
             'seo' => [
                 'title' => $rule->title.' — '.$this->settings->get('app_name', config('app.name')),
