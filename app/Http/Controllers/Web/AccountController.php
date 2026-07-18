@@ -158,25 +158,24 @@ class AccountController extends Controller
         $data = $request->validate([
             'locale' => ['nullable', 'string', 'max:10'],
             'timezone' => ['nullable', 'string', 'timezone'],
-            'notification_preferences' => ['nullable', 'array'],
-            'notification_preferences.*' => ['string', 'in:dm_email,mention_email,system_email'],
         ]);
 
         if (! empty($data['locale']) && ! app(LocaleService::class)->isSupported($data['locale'])) {
             return back()->withErrors(['locale' => __('messages.language_unavailable')]);
         }
 
-        $existing = $request->user()->notification_preferences ?? [];
-        $channelKeys = ['dm_email', 'mention_email', 'system_email'];
-        $merged = array_merge(
-            array_diff_key($existing, array_flip($channelKeys)),
-            array_intersect($data['notification_preferences'] ?? [], $channelKeys),
-        );
-
+        // This used to also write a list-shaped notification_preferences into
+        // the same JSON column the Email Preferences page writes as a map — two
+        // incompatible formats fighting over one column. The page never sent
+        // the field, so the branch only ever stripped keys on save. Dropped.
+        //
+        // Empty select/input means "no preference", which is null; storing ''
+        // would make the column look set when it is not. Nullable rules leave
+        // absent fields out of $data entirely, so the key has to be guarded
+        // before the emptiness check.
         $request->user()->update([
-            'locale' => $data['locale'] ?? null,
-            'timezone' => $data['timezone'] ?? null,
-            'notification_preferences' => $merged,
+            'locale' => ($data['locale'] ?? null) ?: null,
+            'timezone' => ($data['timezone'] ?? null) ?: null,
         ]);
 
         if (! empty($data['locale'])) {

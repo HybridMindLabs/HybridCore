@@ -288,4 +288,18 @@ return [
     'sessions_remember_note' => 'Signing out every other device also invalidates any "remember me" cookies, so those devices will need the password again.',
     'sessions_network_error' => 'Could not reach the server. Check your connection and try again.',
     'sessions_current_ip' => 'Last seen from',
+
+    // Preferences
+    'pref_title' => 'Language and time',
+    'pref_subtitle' => 'How the site talks to you and how it shows dates. These only affect your own account, not what other members see.',
+    'pref_language_hint' => 'Leave this on the site default to follow whatever language the site is set to.',
+    'pref_language_default' => 'Site default',
+    'pref_timezone_hint' => 'Timestamps — last seen, message times, server history — are shown in this zone.',
+    'pref_timezone_default' => 'Site default',
+    'pref_timezone_detect' => 'Use my current timezone',
+    'pref_timezone_detected' => 'Your browser reports :zone.',
+    'pref_preview' => 'Right now that reads as',
+    'pref_saved' => 'Saved',
+    'help_preferences_1' => 'Language here overrides the site default for your account only.',
+    'help_preferences_2' => 'Set your timezone and every date on the site lines up with your own clock.',
 ];
