@@ -5,7 +5,7 @@ import PublicLayout from '@/layouts/PublicLayout.vue';
 import Breadcrumb from '@/components/UI/Breadcrumb.vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
-import { Clock, Cookie, FileText, Scale, Shield } from '@lucide/vue';
+import { ArrowRight, Clock, Cookie, FileText, History, List, Scale, Shield } from '@lucide/vue';
 
 interface TocEntry { id: string; text: string; level: number }
 
@@ -20,6 +20,7 @@ const props = defineProps<{
      */
     content: string;
     toc: TocEntry[];
+    reading_minutes: number;
     updated_at: string;
     allPages?: { slug: string; title: string }[];
     canonical: string;
@@ -35,6 +36,25 @@ const icon = computed(() => icons[props.slug] ?? Scale);
 const formattedDate = computed(() => formatDate(props.updated_at, { dateStyle: 'long' }));
 
 const navPages = computed(() => props.allPages ?? []);
+/** The switcher lists where you can go, so the page you are on is left out. */
+const otherPages = computed(() => navPages.value.filter((p) => p.slug !== props.slug));
+
+const sectionsLabel = computed(() =>
+    props.toc.length === 1 ? t('legal.sections_one') : t('legal.sections_many', { count: props.toc.length }),
+);
+
+const firstSectionHref = computed(() => (props.toc.length ? `#${props.toc[0].id}` : '#'));
+
+function pageHref(slug: string) {
+    return `/legal/${slug}`;
+}
+
+// Built here so the template stays free of backtick interpolation.
+const dotGrid = computed(() => {
+    const dot = dark.value ? 'rgba(255,255,255,0.035)' : 'rgba(24,24,27,0.05)';
+
+    return `background-image:radial-gradient(circle,${dot} 1px,transparent 1px);background-size:28px 28px`;
+});
 
 /** Highlights the section being read. Ids now come from the server. */
 const activeId = ref('');
@@ -71,61 +91,107 @@ onBeforeUnmount(() => observer?.disconnect());
     <PublicLayout>
 
         <!-- ═══════════════════════════════════════════════════ HERO -->
-        <div class="relative overflow-hidden border-b"
-            :class="dark ? 'border-zinc-800/60 bg-[#09090b]' : 'border-zinc-200 bg-zinc-50'">
-
-            <div class="absolute inset-0 pointer-events-none overflow-hidden">
-                <div class="absolute -top-40 left-1/3 w-[600px] h-[500px] rounded-full blur-[130px]"
-                    :class="dark ? 'bg-blue-500/6' : 'bg-blue-400/8'" />
-                <div class="absolute -top-20 right-1/4 w-[350px] h-[350px] rounded-full blur-[100px]"
-                    :class="dark ? 'bg-violet-500/5' : 'bg-violet-400/5'" />
-                <div v-if="dark" class="absolute inset-0 opacity-50"
-                    style="background-image:radial-gradient(circle,rgba(255,255,255,0.035) 1px,transparent 1px);background-size:28px 28px" />
+        <section
+            class="relative overflow-hidden border-b"
+            :class="dark ? 'border-zinc-800/60 bg-[#09090b]' : 'border-zinc-200 bg-zinc-50'"
+            :aria-label="t('legal.breadcrumb')"
+        >
+            <div class="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+                <div class="hc-hero-glow absolute -top-32 left-1/4 w-[520px] h-[380px] rounded-full blur-[120px]"
+                    :class="dark ? 'bg-blue-500/8' : 'bg-blue-400/10'" />
+                <div class="hc-hero-glow hc-hero-glow--slow absolute -top-16 right-1/4 w-[320px] h-[300px] rounded-full blur-[100px]"
+                    :class="dark ? 'bg-violet-500/6' : 'bg-violet-400/8'" />
+                <!-- The grid was dark-only, so the light theme lost the texture
+                     every other page has. -->
+                <div class="absolute inset-0" :class="dark ? 'opacity-50' : 'opacity-[0.35]'"
+                    :style="dotGrid" />
             </div>
 
-            <div class="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-6 py-12 sm:py-16">
+            <div class="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-6 py-8 sm:py-12">
                 <Breadcrumb :items="[
                     { label: t('navigation.nav_home'), href: route('home') },
                     { label: t('legal.breadcrumb') },
                     { label: title },
                 ]" />
 
-                <div class="max-w-2xl">
-                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11px] font-bold uppercase tracking-widest mb-6"
-                        :class="dark ? 'border-blue-500/25 bg-blue-500/10 text-blue-400' : 'border-blue-400/30 bg-blue-50 text-blue-700'">
-                        <component :is="icon" :size="11" :stroke-width="2.2" aria-hidden="true" />
-                        {{ t('legal.eyebrow') }}
+                <div class="grid gap-8 lg:gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)] lg:items-end mt-4">
+
+                    <div class="max-w-xl">
+                        <div class="hc-hero-in inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-[11px] font-bold uppercase tracking-widest"
+                            :class="dark ? 'border-blue-500/25 bg-blue-500/10 text-blue-400' : 'border-blue-500/30 bg-blue-500/10 text-blue-700'">
+                            <component :is="icon" :size="11" :stroke-width="2.2" aria-hidden="true" />
+                            {{ t('legal.eyebrow') }}
+                        </div>
+
+                        <h1 class="hc-hero-in hc-hero-in--1 mt-4 text-[30px] sm:text-[40px] font-black tracking-tight leading-[1.07]"
+                            :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
+                            {{ title }}
+                        </h1>
+
+                        <p v-if="subtitle" class="hc-hero-in hc-hero-in--2 mt-3 text-[15px] leading-relaxed max-w-lg"
+                            :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                            {{ subtitle }}
+                        </p>
+
+                        <div class="hc-hero-in hc-hero-in--3 flex items-center gap-2.5 mt-6 flex-wrap">
+                            <a v-if="toc.length" :href="firstSectionHref"
+                                class="group inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[13.5px] px-5 py-2.5 rounded-xl transition shadow-md shadow-blue-600/25 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50">
+                                {{ t('legal.jump_first') }}
+                                <ArrowRight :size="14" :stroke-width="2.2" aria-hidden="true"
+                                    class="transition-transform group-hover:translate-x-0.5" />
+                            </a>
+                            <Link :href="route('contact.show')"
+                                class="inline-flex items-center font-bold text-[13.5px] px-5 py-2.5 rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                                :class="dark ? 'border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600 hover:bg-white/[0.04]' : 'border-zinc-300 text-zinc-700 hover:border-zinc-400 hover:bg-white'">
+                                {{ t('legal.ask_us') }}
+                            </Link>
+                        </div>
                     </div>
 
-                    <h1 class="text-4xl sm:text-5xl font-black tracking-tight leading-[1.05]"
-                        :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
-                        {{ title }}
-                    </h1>
-
-                    <p v-if="subtitle" class="mt-4 text-[15px] leading-relaxed max-w-lg"
-                        :class="dark ? 'text-zinc-400' : 'text-zinc-600'">{{ subtitle }}</p>
-
-                    <p class="flex items-center gap-1.5 mt-4 text-[12px]" :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
-                        <Clock :size="12" :stroke-width="1.8" aria-hidden="true" />
-                        <time :datetime="updated_at">{{ t('legal.last_updated', { date: formattedDate }) }}</time>
-                    </p>
-
-                    <nav v-if="navPages.length > 1" :aria-label="t('legal.other_pages')" class="flex flex-wrap gap-2 mt-6">
-                        <Link
-                            v-for="p in navPages"
-                            :key="p.slug"
-                            :href="`/legal/${p.slug}`"
-                            :aria-current="p.slug === slug ? 'page' : undefined"
-                            class="px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all
-                                   focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
-                            :class="p.slug === slug
-                                ? dark ? 'bg-blue-500/12 text-blue-400 border-blue-500/25 font-semibold' : 'bg-blue-50 text-blue-700 border-blue-200 font-semibold'
-                                : dark ? 'text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-zinc-200' : 'text-zinc-600 border-zinc-200 hover:border-zinc-400 hover:text-zinc-900'"
-                        >{{ p.title }}</Link>
-                    </nav>
+                    <!-- The other policies, as a real block. They used to be a
+                         row of pills wedged under the text, leaving the whole
+                         right side of the hero empty. -->
+                    <div v-if="otherPages.length" class="hc-hero-in hc-hero-in--2">
+                        <p class="text-[10px] font-bold uppercase tracking-widest mb-2.5"
+                            :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ t('legal.switcher_title') }}</p>
+                        <div class="flex flex-col gap-2">
+                            <Link v-for="(p, i) in otherPages" :key="p.slug" :href="pageHref(p.slug)"
+                                class="hc-reveal hc-card-hover group flex items-center justify-between gap-3 rounded-xl border px-4 py-3 backdrop-blur-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                                :style="{ animationDelay: 0.18 + i * 0.06 + 's' }"
+                                :class="dark
+                                    ? 'border-zinc-700/70 bg-zinc-900/85 shadow-lg shadow-black/30'
+                                    : 'border-zinc-300 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.10)]'">
+                                <span class="text-[13px] font-bold" :class="dark ? 'text-zinc-100' : 'text-zinc-900'">{{ p.title }}</span>
+                                <ArrowRight :size="13" :stroke-width="2.2" aria-hidden="true"
+                                    class="shrink-0 transition-transform group-hover:translate-x-0.5"
+                                    :class="dark ? 'text-zinc-500' : 'text-zinc-400'" />
+                            </Link>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- What a reader wants before committing: how long, how many
+                     parts, how fresh. -->
+                <dl class="hc-hero-in hc-hero-in--4 flex flex-wrap items-center gap-x-5 gap-y-2 mt-7 text-[12.5px]"
+                    :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                    <div class="flex items-center gap-1.5">
+                        <Clock :size="12" :stroke-width="1.9" aria-hidden="true" />
+                        <dt class="sr-only">{{ t('legal.reading_time', { m: reading_minutes }) }}</dt>
+                        <dd>{{ t('legal.reading_time', { m: reading_minutes }) }}</dd>
+                    </div>
+                    <div v-if="toc.length" class="flex items-center gap-1.5">
+                        <List :size="12" :stroke-width="1.9" aria-hidden="true" />
+                        <dt class="sr-only">{{ sectionsLabel }}</dt>
+                        <dd>{{ sectionsLabel }}</dd>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <History :size="12" :stroke-width="1.9" aria-hidden="true" />
+                        <dt class="sr-only">{{ t('legal.updated_short') }}</dt>
+                        <dd><time :datetime="updated_at">{{ t('legal.last_updated', { date: formattedDate }) }}</time></dd>
+                    </div>
+                </dl>
             </div>
-        </div>
+        </section>
         <!-- ═════════════════════════════════════════════ END HERO -->
 
         <div class="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
@@ -134,7 +200,7 @@ onBeforeUnmount(() => observer?.disconnect());
                 <!-- Contents. Anchors, not buttons: a section is now something
                      you can link to, open in a new tab and reach by keyboard. -->
                 <aside v-if="toc.length" class="hidden lg:block w-60 xl:w-64 shrink-0 sticky top-24 self-start">
-                    <nav class="rounded-2xl border overflow-hidden" :aria-label="t('legal.toc_title')"
+                    <nav class="hc-reveal rounded-2xl border overflow-hidden" :aria-label="t('legal.toc_title')"
                         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-sm'">
                         <p class="px-4 py-3 border-b text-[11px] font-black uppercase tracking-widest"
                             :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e] text-zinc-400' : 'border-zinc-100 bg-zinc-50 text-zinc-500'">
@@ -181,7 +247,7 @@ onBeforeUnmount(() => observer?.disconnect());
                         </ol>
                     </details>
 
-                    <div class="rounded-2xl border overflow-hidden"
+                    <div class="hc-reveal rounded-2xl border overflow-hidden" style="animation-delay:0.08s"
                         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-sm'">
                         <!-- eslint-disable-next-line vue/no-v-html -->
                         <div v-if="content" class="legal-body p-6 sm:p-8" :class="dark ? 'legal-dark' : 'legal-light'" v-html="content" />

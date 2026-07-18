@@ -77,6 +77,12 @@ class HandleInertiaRequests extends Middleware
                 ->get();
 
             return [
+                // A real figure for the badge beside the preview, which used to
+                // repeat the same label as the heading above it.
+                'players_online' => (int) Server::whereHas(
+                    'latestSnapshot',
+                    fn ($q) => $q->where('is_online', true)
+                )->with('latestSnapshot')->get()->sum(fn (Server $s) => $s->latestSnapshot?->players_online ?? 0),
                 'games' => $games->map(fn (Game $g) => [
                     'name' => $g->name,
                     'slug' => $g->slug,

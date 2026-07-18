@@ -104,4 +104,18 @@ return [
     'mail_verify_line1' => 'Tap the button below to verify your email address and unlock your account.',
     'mail_verify_action' => 'Verify Email',
     'mail_verify_line2' => "If you didn't create an account, no further action is required.",
+    'two_factor' => [
+        'title' => 'Two-step verification',
+        'subtitle_app' => 'Open your authenticator app and enter the 6-digit code it shows.',
+        'subtitle_recovery' => 'Enter one of the recovery codes you saved when you turned this on.',
+        'label_app' => 'Authentication code',
+        'label_recovery' => 'Recovery code',
+        'submit' => 'Continue',
+        'verifying' => 'Checking…',
+        'use_recovery' => 'Use a recovery code instead',
+        'use_app' => 'Use your authenticator app instead',
+        'lost_access' => 'Lost both your phone and your recovery codes? Contact the site staff.',
+        'shell_title' => 'One more step',
+        'shell_subtitle' => 'Your password was accepted. This second check keeps the account yours even if that password leaks.',
+    ],
 ];

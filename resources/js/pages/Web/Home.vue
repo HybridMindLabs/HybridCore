@@ -36,7 +36,6 @@ const props = defineProps<{
     gameStats: GameStat[];
     totalPlayers: number;
     maxPlayers: number;
-    playerHistory: number[];
     viewer: { banner: string | null; role: { name: string; color: string } | null; achievements: string[] } | null;
     stats: { games: number; servers: number; members: number; online_servers: number };
     latestNews: NewsCard[];
