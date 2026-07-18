@@ -1,7 +1,7 @@
 ﻿<script setup lang="ts">
 import { Head, Link, useForm, usePage, router } from '@inertiajs/vue3';
-import { Clock, Eye, Tag, ChevronLeft, ChevronRight, Copy, Check, BookOpen, Calendar, User, MessageSquare, Trash2 } from '@lucide/vue';
-import { computed, ref, watch } from 'vue';
+import { Check, ChevronLeft, ChevronRight, Clock, Copy, Eye, MessageSquare, Tag, Trash2 } from '@lucide/vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
 import PublicLayout from '@/layouts/PublicLayout.vue';
@@ -134,6 +134,54 @@ const jsonLd = computed(() =>
     }),
 );
 
+/**
+ * Long articles had no way to skim or jump. Headings are pulled out of the
+ * rendered body and given stable ids, which powers both the sidebar contents
+ * list and any deep link into a section.
+ */
+const parsedBody = computed(() => {
+    if (typeof window === 'undefined') {
+        return { html: props.article.body, headings: [] as { id: string; text: string; level: number }[] };
+    }
+
+    const doc = new DOMParser().parseFromString(props.article.body, 'text/html');
+    const headings: { id: string; text: string; level: number }[] = [];
+
+    doc.querySelectorAll('h2, h3').forEach((node, index) => {
+        const text = node.textContent?.trim() ?? '';
+        if (!text) return;
+
+        const id = node.id || `section-${index + 1}`;
+        node.id = id;
+        headings.push({ id, text, level: node.tagName === 'H2' ? 2 : 3 });
+    });
+
+    return { html: doc.body.innerHTML, headings };
+});
+
+const readingProgress = ref(0);
+const articleEl = ref<HTMLElement | null>(null);
+
+function updateProgress() {
+    const el = articleEl.value;
+    if (!el) return;
+
+    const start = el.offsetTop;
+    const scrollable = el.offsetHeight - window.innerHeight;
+
+    if (scrollable <= 0) {
+        readingProgress.value = window.scrollY > start ? 100 : 0;
+
+        return;
+    }
+
+    const passed = window.scrollY - start;
+    readingProgress.value = Math.min(100, Math.max(0, Math.round((passed / scrollable) * 100)));
+}
+
+onMounted(() => window.addEventListener('scroll', updateProgress, { passive: true }));
+onBeforeUnmount(() => window.removeEventListener('scroll', updateProgress));
+
 // Copy link
 const copied = ref(false);
 function copyLink() {
@@ -167,6 +215,17 @@ const initials = computed(() => {
 
     <PublicLayout>
 
+        <!-- Position in a long read, which the page gave no sense of. -->
+        <div class="fixed top-0 left-0 right-0 h-0.5 z-50 pointer-events-none">
+            <div class="h-full bg-blue-500 transition-[width] duration-150 ease-out"
+                role="progressbar"
+                :aria-label="t('news.reading_progress')"
+                :aria-valuenow="readingProgress"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                :style="{ width: readingProgress + '%' }" />
+        </div>
+
         <!-- ══════════════════════════════════════════════ HERO -->
         <div class="relative overflow-hidden border-b"
             :class="dark ? 'border-zinc-800/60 bg-[#09090b]' : 'border-zinc-200 bg-zinc-50'">
@@ -183,98 +242,77 @@ const initials = computed(() => {
                     style="background-image:radial-gradient(circle,rgba(255,255,255,0.035) 1px,transparent 1px);background-size:28px 28px" />
             </div>
 
-            <div class="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-6 py-14 sm:py-18">
+            <!-- Same container as the body below. The hero used to sit in a
+                 1600px shell over a 1100px article, so the headline started
+                 well left of its own text and left a band of dead space. -->
+            <div class="relative z-10 max-w-[1180px] mx-auto px-4 sm:px-6 pt-10 pb-12">
 
-                <!-- Breadcrumb -->
-                <nav :aria-label="t('news.breadcrumb_news')" class="flex items-center gap-2 text-[12px] mb-7"
+                <nav :aria-label="t('news.breadcrumb_news')" class="flex items-center gap-2 text-[12px] mb-6 min-w-0"
                     :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
-                    <Link :href="route('news.index')" class="transition"
+                    <Link :href="route('news.index')" class="transition shrink-0"
                         :class="dark ? 'hover:text-zinc-200' : 'hover:text-zinc-800'">{{ t('news.breadcrumb_news') }}</Link>
-                    <ChevronRight :size="11" :stroke-width="2" aria-hidden="true" />
+                    <ChevronRight :size="11" :stroke-width="2" aria-hidden="true" class="shrink-0" />
                     <Link v-if="article.category" :href="route('news.category', article.category.slug)"
-                        class="font-semibold transition" :style="{ color: article.category.color }">
+                        class="font-semibold transition shrink-0" :style="{ color: article.category.color }">
                         {{ article.category.name }}
                     </Link>
-                    <ChevronRight v-if="article.category" :size="11" :stroke-width="2" />
-                    <span class="truncate max-w-[200px]">{{ article.title }}</span>
+                    <ChevronRight v-if="article.category" :size="11" :stroke-width="2" aria-hidden="true" class="shrink-0" />
+                    <span class="truncate">{{ article.title }}</span>
                 </nav>
 
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-10">
+                <!-- One column, measured. A headline is easier to read short. -->
+                <div class="max-w-[46rem]">
+                    <Link v-if="article.category" :href="route('news.category', article.category.slug)"
+                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11px] font-bold uppercase tracking-widest transition mb-5"
+                        :style="{
+                            color: article.category.color,
+                            borderColor: article.category.color + '40',
+                            backgroundColor: article.category.color + '12'
+                        }">
+                        <span class="w-1.5 h-1.5 rounded-full" :style="{ background: article.category.color }" />
+                        {{ article.category.name }}
+                    </Link>
 
-                    <!-- Left: headline block -->
-                    <div class="max-w-2xl">
-                        <!-- Category badge -->
-                        <div v-if="article.category" class="mb-5">
-                            <Link :href="route('news.category', article.category.slug)"
-                                class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11px] font-bold uppercase tracking-widest transition"
-                                :style="{
-                                    color: article.category.color,
-                                    borderColor: article.category.color + '40',
-                                    backgroundColor: article.category.color + '12'
-                                }">
-                                <span class="w-1.5 h-1.5 rounded-full" :style="{ background: article.category.color }" />
-                                {{ article.category.name }}
-                            </Link>
+                    <h1 class="text-3xl sm:text-[2.75rem] font-black tracking-tight leading-[1.1]"
+                        :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
+                        {{ article.title }}
+                    </h1>
+
+                    <p v-if="article.excerpt" class="mt-4 text-[16px] leading-relaxed"
+                        :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                        {{ article.excerpt }}
+                    </p>
+
+                    <!-- One quiet meta line. These numbers were three large
+                         stat pills plus a duplicate strip in the sidebar. -->
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mt-6 text-[13px]"
+                        :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
+                        <div v-if="article.author" class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full overflow-hidden border shrink-0 flex items-center justify-center text-[10px] font-bold"
+                                :class="dark ? 'border-zinc-700 bg-zinc-800 text-zinc-400' : 'border-zinc-200 bg-zinc-100 text-zinc-500'">
+                                <img v-if="article.author.avatar" :src="article.author.avatar"
+                                    :alt="t('news.author_avatar_alt', { name: article.author.name })"
+                                    class="w-full h-full object-cover" />
+                                <span v-else aria-hidden="true">{{ initials }}</span>
+                            </span>
+                            <span class="font-semibold" :class="dark ? 'text-zinc-200' : 'text-zinc-800'">{{ article.author.name }}</span>
                         </div>
-
-                        <h1 class="text-4xl sm:text-5xl font-black tracking-tight leading-[1.05] mb-4"
-                            :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
-                            {{ article.title }}
-                        </h1>
-
-                        <p v-if="article.excerpt" class="mt-4 text-[15px] leading-relaxed max-w-lg mb-7"
-                            :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
-                            {{ article.excerpt }}
-                        </p>
-
-                        <!-- Stats pills (like Home's stat pills) -->
-                        <div class="flex items-center gap-5 flex-wrap mb-7">
-                            <div v-for="item in [
-                                { icon: Eye,      value: article.views.toLocaleString(),      label: t('news.stat_views') },
-                                { icon: Clock,    value: t('news.stat_minutes', { m: article.reading_time }), label: t('news.stat_read') },
-                                { icon: BookOpen, value: article.word_count.toLocaleString(), label: t('news.stat_words') },
-                            ]" :key="item.label" class="flex items-center gap-2.5">
-                                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-                                    :class="dark ? 'bg-zinc-900 border border-zinc-800' : 'bg-white border border-zinc-200 shadow-sm'">
-                                    <component :is="item.icon" :size="14" :stroke-width="1.8" class="text-blue-400" />
-                                </div>
-                                <div>
-                                    <p class="text-[16px] font-black leading-none tabular-nums"
-                                        :class="dark ? 'text-zinc-100' : 'text-zinc-800'">{{ item.value }}</p>
-                                    <p class="text-[10px] font-bold uppercase tracking-widest mt-0.5"
-                                        :class="dark ? 'text-zinc-600' : 'text-zinc-400'">{{ item.label }}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Author + date -->
-                        <div class="flex flex-wrap items-center gap-4">
-                            <div v-if="article.author" class="flex items-center gap-2.5">
-                                <div class="w-8 h-8 rounded-full overflow-hidden border shrink-0 flex items-center justify-center text-[11px] font-bold"
-                                    :class="dark ? 'border-zinc-700 bg-zinc-800 text-zinc-400' : 'border-zinc-200 bg-zinc-100 text-zinc-500'">
-                                    <img v-if="article.author.avatar" :src="article.author.avatar"
-                                        :alt="t('news.author_avatar_alt', { name: article.author.name })"
-                                        class="w-full h-full object-cover" />
-                                    <span v-else aria-hidden="true">{{ initials }}</span>
-                                </div>
-                                <span class="text-[13px] font-semibold" :class="dark ? 'text-zinc-300' : 'text-zinc-700'">
-                                    {{ article.author.name }}
-                                </span>
-                            </div>
-                            <div class="flex items-center gap-1 text-[13px]"
-                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
-                                <Calendar :size="12" :stroke-width="1.8" aria-hidden="true" />
-                                <time :datetime="article.published_at_iso">{{ formatDate(article.published_at_iso, { dateStyle: 'long' }) }}</time>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right: featured image (like Home's game icon grid) -->
-                    <div v-if="article.featured_image_url" class="hidden lg:block shrink-0 w-[420px]">
-                        <div class="rounded-2xl overflow-hidden border aspect-[16/10]"
-                            :class="dark ? 'border-zinc-800/80' : 'border-zinc-200 shadow-md'">
-                            <img :src="article.featured_image_url" :alt="t('news.article_image_alt', { title: article.title })" class="w-full h-full object-cover" />
-                        </div>
+                        <span aria-hidden="true" :class="dark ? 'text-zinc-700' : 'text-zinc-300'">·</span>
+                        <time :datetime="article.published_at_iso">{{ formatDate(article.published_at_iso, { dateStyle: 'long' }) }}</time>
+                        <span aria-hidden="true" :class="dark ? 'text-zinc-700' : 'text-zinc-300'">·</span>
+                        <span class="flex items-center gap-1.5">
+                            <Clock :size="12" :stroke-width="1.8" aria-hidden="true" />
+                            {{ t('news.stat_minutes', { m: article.reading_time }) }}
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <Eye :size="12" :stroke-width="1.8" aria-hidden="true" />
+                            {{ article.views.toLocaleString() }}
+                        </span>
+                        <a :href="'#comments'" class="flex items-center gap-1.5 font-semibold transition"
+                            :class="dark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'">
+                            <MessageSquare :size="12" :stroke-width="2" aria-hidden="true" />
+                            {{ comments.total }}
+                        </a>
                     </div>
                 </div>
             </div>
@@ -282,16 +320,34 @@ const initials = computed(() => {
         <!-- ══════════════════════════════════════════ END HERO -->
 
         <!-- ══════════════════════ CONTENT + SIDEBAR -->
-        <div class="max-w-[1100px] mx-auto px-4 sm:px-6 py-10">
-            <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_280px] gap-10 items-start">
+        <div class="max-w-[1180px] mx-auto px-4 sm:px-6 py-10">
+
+            <!-- The lead image was hidden below lg, so phone readers never saw
+                 it at all. Full width here, above the text, on every size. -->
+            <figure v-if="article.featured_image_url" class="mb-10">
+                <img :src="article.featured_image_url"
+                    :alt="t('news.article_image_alt', { title: article.title })"
+                    class="w-full rounded-2xl border object-cover aspect-[21/9]"
+                    :class="dark ? 'border-zinc-800/80' : 'border-zinc-200 shadow-sm'" />
+            </figure>
+
+            <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-10 items-start">
+
+                <!-- Article and its comments are one column; the sidebar is the
+                     other. Relying on auto-placement here put the comments in
+                     the sidebar track. -->
+                <div class="min-w-0">
 
                 <!-- ── Article body ── -->
-                <article>
-                    <div class="prose max-w-none"
+                <article ref="articleEl">
+                    <!-- Capped measure: a full-width column ran to well over a
+                         hundred characters a line, which is where the reading
+                         got hard. ~70 is the comfortable range. -->
+                    <div class="prose max-w-[68ch] prose-headings:scroll-mt-24"
                         :class="dark
                             ? 'prose-invert prose-zinc prose-headings:text-zinc-100 prose-headings:font-black prose-p:text-zinc-300 prose-a:text-blue-400 prose-strong:text-zinc-100 prose-code:text-blue-300 prose-code:bg-zinc-900/60 prose-code:text-[13px] prose-pre:bg-[#0d0d0f] prose-pre:border prose-pre:border-zinc-800/70 prose-blockquote:border-l-blue-500/50 prose-blockquote:text-zinc-400 prose-blockquote:bg-zinc-900/30 prose-hr:border-zinc-800/70 prose-img:rounded-xl prose-img:border prose-img:border-zinc-800/70'
                             : 'prose-zinc prose-headings:font-black prose-a:text-blue-600 prose-code:bg-zinc-100 prose-pre:bg-zinc-50 prose-pre:border prose-pre:border-zinc-200 prose-blockquote:border-l-blue-400 prose-img:rounded-xl prose-img:border prose-img:border-zinc-200'"
-                        v-html="article.body" />
+                        v-html="parsedBody.html" />
 
                     <!-- Tags -->
                     <div v-if="article.tags.length" class="flex flex-wrap gap-2 mt-10 pt-7 border-t"
@@ -340,7 +396,11 @@ const initials = computed(() => {
                         </Link>
                     </div>
 
-                    <!-- ── Comments ── -->
+                </article>
+
+                <!-- Comments sit outside <article>: they are responses to it,
+                     not part of the piece itself. -->
+                <section id="comments" class="scroll-mt-20">
                     <div class="mt-8 rounded-2xl border overflow-hidden"
                         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-sm'">
                         <div class="px-5 py-3.5 border-b flex items-center gap-2"
@@ -447,32 +507,38 @@ const initials = computed(() => {
                             </p>
                         </div>
                     </div>
-                </article>
+                </section>
+
+                </div>
 
                 <!-- ── Sidebar ── -->
-                <aside class="flex flex-col gap-4 sticky top-6">
+                <aside class="flex flex-col gap-4 xl:sticky xl:top-20">
 
                     <ExtensionSlot name="news.show.sidebar" :context="{ articleId: article.id }" />
 
-                    <!-- Stats (mobile — also show here) -->
-                    <div class="xl:hidden rounded-2xl border overflow-hidden"
+                    <!-- Contents: the only way to skim a long piece. Built from
+                         the headings in the body, so it costs no extra data. -->
+                    <nav v-if="parsedBody.headings.length > 1" :aria-label="t('news.toc_title')"
+                        class="rounded-2xl border overflow-hidden"
                         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white'">
-                        <div class="grid grid-cols-4 divide-x"
-                            :class="dark ? 'divide-zinc-800/60' : 'divide-zinc-100'">
-                            <div v-for="stat in [
-                                { label: t('news.stat_views'), value: article.views,       icon: Eye },
-                                { label: t('news.stat_read'),  value: article.reading_time, icon: Clock },
-                                { label: t('news.stat_words'), value: article.word_count,   icon: BookOpen },
-                            ]" :key="stat.label"
-                                class="flex flex-col items-center justify-center gap-0.5 py-3 px-2 text-center">
-                                <component :is="stat.icon" :size="13" :stroke-width="1.5" class="text-blue-400" />
-                                <p class="text-[14px] font-black tabular-nums"
-                                    :class="dark ? 'text-zinc-100' : 'text-zinc-800'">{{ stat.value }}</p>
-                                <p class="text-[9px] font-bold uppercase tracking-widest"
-                                    :class="dark ? 'text-zinc-700' : 'text-zinc-400'">{{ stat.label }}</p>
-                            </div>
+                        <div class="border-b px-4 py-3"
+                            :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e]' : 'border-zinc-100 bg-zinc-50'">
+                            <h3 class="text-[12px] font-bold uppercase tracking-widest"
+                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ t('news.toc_title') }}</h3>
                         </div>
-                    </div>
+                        <ol class="p-3 flex flex-col gap-0.5">
+                            <li v-for="heading in parsedBody.headings" :key="heading.id">
+                                <a :href="`#${heading.id}`"
+                                    class="block py-1.5 px-2 rounded-lg text-[12px] leading-snug transition"
+                                    :class="[
+                                        heading.level === 3 ? 'pl-5' : '',
+                                        dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.04]' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50',
+                                    ]">
+                                    {{ heading.text }}
+                                </a>
+                            </li>
+                        </ol>
+                    </nav>
 
                     <!-- Author card -->
                     <div v-if="article.author" class="rounded-2xl border overflow-hidden"

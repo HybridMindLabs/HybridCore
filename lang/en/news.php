@@ -72,4 +72,10 @@ return [
     'comments_shown' => 'Showing :shown of :total',
     'author_avatar_alt' => 'Avatar of :name',
     'article_image_alt' => 'Illustration for :title',
+
+    'toc_title' => 'On this page',
+    'reading_progress' => 'Reading progress',
+    'back_to_top' => 'Back to top',
+    'jump_to_comments' => 'Jump to comments',
+    'meta_by' => 'by :name',
 ];

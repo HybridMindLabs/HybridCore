@@ -71,4 +71,10 @@ return [
     'comments_shown' => 'Показани :shown от :total',
     'author_avatar_alt' => 'Аватар на :name',
     'article_image_alt' => 'Илюстрация към :title',
+
+    'toc_title' => 'В тази статия',
+    'reading_progress' => 'Прогрес на четене',
+    'back_to_top' => 'Обратно нагоре',
+    'jump_to_comments' => 'Към коментарите',
+    'meta_by' => 'от :name',
 ];
