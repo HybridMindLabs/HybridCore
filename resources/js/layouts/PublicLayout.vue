@@ -625,9 +625,11 @@ const socialLinks = computed(() => {
                         type="button"
                         class="md:hidden w-8 h-8 flex items-center justify-center rounded-md border transition-colors"
                         :class="dark ? 'border-zinc-800 text-zinc-400 hover:text-zinc-100' : 'border-zinc-200 text-zinc-500 hover:text-zinc-900'"
+                        :aria-label="mobileOpen ? t('navigation.close_menu') : t('navigation.open_menu')"
+                        :aria-expanded="mobileOpen"
                         @click="mobileOpen = !mobileOpen"
                     >
-                        <component :is="mobileOpen ? X : Menu" :size="15" :stroke-width="1.75" />
+                        <component :is="mobileOpen ? X : Menu" :size="15" :stroke-width="1.75" aria-hidden="true" />
                     </button>
                 </div>
             </div>

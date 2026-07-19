@@ -428,8 +428,15 @@ function toggleFavourite(server: HomeServer) {
         <section class="border-b" :aria-label="t('home.hero_region')"
             :class="dark ? 'border-zinc-800/60 bg-[#0b0b0e]' : 'border-zinc-200 bg-white'">
             <dl class="max-w-[1600px] mx-auto px-4 sm:px-6 grid grid-cols-2 lg:grid-cols-4">
+                <!--
+                    A <dl> may only group its children as <dt>/<dd> pairs, so the
+                    icon and the hint live inside the <dd> rather than beside it,
+                    and the term comes first in the DOM with `order` putting the
+                    figure back on top visually. pl-12 lines the text up under
+                    the value: w-9 (2.25rem) plus the gap-3 (0.75rem) beside it.
+                -->
                 <div v-for="(item, i) in networkStats" :key="item.label"
-                    class="hc-hero-in flex items-start gap-3 py-5 sm:py-6 lg:px-6 first:lg:pl-0 last:lg:pr-0"
+                    class="hc-hero-in flex flex-col py-5 sm:py-6 lg:px-6 first:lg:pl-0 last:lg:pr-0"
                     :style="{ animationDelay: 0.28 + i * 0.07 + 's' }"
                     :class="[
                         dark ? 'border-zinc-800/60' : 'border-zinc-200',
@@ -437,21 +444,21 @@ function toggleFavourite(server: HomeServer) {
                         i < 2 ? 'border-b lg:border-b-0' : '',
                         i > 0 ? 'lg:border-l' : '',
                     ]">
-                    <span class="mt-0.5 w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                        :class="dark ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-500/10 text-blue-600'"
-                        aria-hidden="true">
-                        <component :is="item.icon" :size="16" :stroke-width="1.9" />
-                    </span>
-                    <div class="min-w-0">
-                        <dd class="text-[22px] sm:text-[26px] font-black leading-none tabular-nums"
+                    <dt class="order-2 pl-12 text-[12px] font-bold mt-1.5"
+                        :class="dark ? 'text-zinc-300' : 'text-zinc-700'">{{ item.label }}</dt>
+                    <dd class="order-1 flex items-start gap-3 min-w-0">
+                        <span class="mt-0.5 w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                            :class="dark ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-500/10 text-blue-600'"
+                            aria-hidden="true">
+                            <component :is="item.icon" :size="16" :stroke-width="1.9" />
+                        </span>
+                        <span class="text-[22px] sm:text-[26px] font-black leading-none tabular-nums"
                             :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
                             {{ item.value.toLocaleString() }}
-                        </dd>
-                        <dt class="text-[12px] font-bold mt-1.5"
-                            :class="dark ? 'text-zinc-300' : 'text-zinc-700'">{{ item.label }}</dt>
-                        <p class="text-[11px] leading-snug mt-0.5"
-                           :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ item.hint }}</p>
-                    </div>
+                        </span>
+                    </dd>
+                    <dd class="order-3 pl-12 text-[11px] leading-snug mt-0.5"
+                        :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ item.hint }}</dd>
                 </div>
             </dl>
         </section>
