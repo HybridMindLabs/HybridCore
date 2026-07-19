@@ -5,8 +5,10 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 
 /**
- * Prints ready-to-use systemd units for the two background processes
- * HybridCore needs: the scheduler and the queue worker.
+ * Prints ready-to-use systemd units for HybridCore's background processes: the
+ * scheduler and queue worker, which every install needs, plus the websocket
+ * server and the SSR renderer, which are only printed when they are actually
+ * switched on.
  *
  * The paths and the user are read from the running process rather than left as
  * placeholders, because a unit file with the wrong user is the single easiest
@@ -19,20 +21,39 @@ use Illuminate\Console\Command;
 class SystemdCommand extends Command
 {
     protected $signature = 'hybridcore:systemd
-                            {--user= : The user the services run as (default: the current one)}';
+                            {--user= : The user the services run as (default: the current one)}
+                            {--all : Print every unit, including ones this install has switched off}';
 
-    protected $description = 'Print systemd unit files for the scheduler and queue worker';
+    protected $description = 'Print systemd unit files for the background services';
 
     public function handle(): int
     {
         $user = (string) ($this->option('user') ?: $this->currentUser());
         $php = (string) (PHP_BINARY ?: 'php');
         $root = base_path();
+        $all = (bool) $this->option('all');
 
         if (str_contains($php, 'php-fpm')) {
             // PHP_BINARY under FPM points at the FPM daemon, which cannot run
             // artisan. The CLI binary sits beside it often enough to guess.
             $php = str_replace('php-fpm', 'php', $php);
+        }
+
+        $reverbOn = config('broadcasting.default') === 'reverb';
+        $ssrOn = (bool) config('inertia.ssr.enabled');
+
+        /** @var array<int, array{name: string, unit: string}> $units */
+        $units = [
+            ['name' => 'hybridcore-scheduler', 'unit' => $this->schedulerUnit($user, $php, $root)],
+            ['name' => 'hybridcore-worker', 'unit' => $this->workerUnit($user, $php, $root)],
+        ];
+
+        if ($reverbOn || $all) {
+            $units[] = ['name' => 'hybridcore-reverb', 'unit' => $this->reverbUnit($user, $php, $root)];
+        }
+
+        if ($ssrOn || $all) {
+            $units[] = ['name' => 'hybridcore-ssr', 'unit' => $this->ssrUnit($user, $php, $root)];
         }
 
         $this->components->info('systemd units for HybridCore');
@@ -41,36 +62,61 @@ class SystemdCommand extends Command
         $this->components->twoColumnDetail('<fg=gray>User</>', $user);
         $this->components->twoColumnDetail('<fg=gray>Directory</>', $root);
         $this->components->twoColumnDetail('<fg=gray>PHP</>', $php);
+        $this->components->twoColumnDetail('<fg=gray>Websockets (Reverb)</>', $reverbOn ? 'enabled' : 'off');
+        $this->components->twoColumnDetail('<fg=gray>Server-side rendering</>', $ssrOn ? 'enabled' : 'off');
         $this->line('');
 
-        $this->line('<fg=yellow>1.</> Create <fg=white>/etc/systemd/system/hybridcore-scheduler.service</>');
-        $this->line('');
-        $this->line($this->schedulerUnit($user, $php, $root));
+        if (! $all && (! $reverbOn || ! $ssrOn)) {
+            $this->components->bulletList([
+                'Units for the disabled services are not printed — run with --all to see them anyway.',
+            ]);
+            $this->line('');
+        }
 
-        $this->line('<fg=yellow>2.</> Create <fg=white>/etc/systemd/system/hybridcore-worker.service</>');
-        $this->line('');
-        $this->line($this->workerUnit($user, $php, $root));
+        $step = 1;
+        $names = [];
 
-        $this->line('<fg=yellow>3.</> Enable and start both');
+        foreach ($units as $service) {
+            $names[] = $service['name'];
+
+            $this->line(sprintf(
+                '<fg=yellow>%d.</> Create <fg=white>/etc/systemd/system/%s.service</>',
+                $step++,
+                $service['name'],
+            ));
+            $this->line('');
+            $this->line($service['unit']);
+        }
+
+        $list = implode(' ', $names);
+
+        $this->line("<fg=yellow>{$step}.</> Enable and start them");
+        $step++;
         $this->line('');
-        $this->line(<<<'SH'
+        $this->line(<<<SH
   sudo systemctl daemon-reload
-  sudo systemctl enable --now hybridcore-scheduler hybridcore-worker
+  sudo systemctl enable --now {$list}
 
 SH);
 
-        $this->line('<fg=yellow>4.</> Check they are running');
+        $this->line("<fg=yellow>{$step}.</> Check they are running");
         $this->line('');
-        $this->line(<<<'SH'
-  systemctl status hybridcore-scheduler hybridcore-worker
+        $this->line(<<<SH
+  systemctl status {$list}
   journalctl -u hybridcore-worker -f
 
 SH);
 
-        $this->components->bulletList([
-            'Admin → Health shows a heartbeat for both within a minute of starting.',
+        $notes = [
+            'Admin → Health shows a heartbeat for the scheduler and worker within a minute of starting.',
             'After deploying new code: sudo systemctl restart hybridcore-worker (workers hold old code in memory).',
-        ]);
+        ];
+
+        if ($ssrOn || $all) {
+            $notes[] = 'Restart hybridcore-ssr on every deploy too — it holds the built bundle in memory, and when it is down pages still render, just more slowly and with no error anywhere.';
+        }
+
+        $this->components->bulletList($notes);
 
         $this->newLine();
         $this->components->warn('Do not run these as root — files written to storage/ would stop being writable by the web server.');
@@ -129,6 +175,80 @@ TimeoutStopSec=90
 WantedBy=multi-user.target
 
 UNIT;
+    }
+
+    private function reverbUnit(string $user, string $php, string $root): string
+    {
+        $host = (string) config('reverb.servers.reverb.host', '0.0.0.0');
+        $port = (string) config('reverb.servers.reverb.port', 8080);
+
+        return <<<UNIT
+[Unit]
+Description=HybridCore websocket server
+After=network.target mysql.service
+
+[Service]
+Type=simple
+User={$user}
+WorkingDirectory={$root}
+ExecStart={$php} artisan reverb:start --host={$host} --port={$port}
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
+UNIT;
+    }
+
+    private function ssrUnit(string $user, string $php, string $root): string
+    {
+        $runtime = $this->resolveRuntime();
+
+        // The command spawns the configured runtime against the built bundle.
+        // systemd hands a service a far barer PATH than a login shell, so a
+        // node installed through nvm is simply not found — hence the absolute
+        // path in Environment rather than trusting a bare `node`.
+        $env = str_contains($runtime, '/')
+            ? "Environment=INERTIA_SSR_RUNTIME={$runtime}\n"
+            : '';
+
+        return <<<UNIT
+[Unit]
+Description=HybridCore server-side rendering
+After=network.target
+
+[Service]
+Type=simple
+User={$user}
+WorkingDirectory={$root}
+{$env}ExecStart={$php} artisan inertia:start-ssr
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
+UNIT;
+    }
+
+    /**
+     * The absolute path to the SSR runtime where it can be found, so the unit
+     * does not depend on systemd's PATH. Falls back to whatever is configured,
+     * which then has to be on the PATH to work.
+     */
+    private function resolveRuntime(): string
+    {
+        $configured = (string) config('inertia.ssr.runtime', 'node');
+
+        if (str_contains($configured, '/')) {
+            return $configured;
+        }
+
+        $found = @shell_exec('command -v '.escapeshellarg($configured).' 2>/dev/null');
+        $found = is_string($found) ? trim($found) : '';
+
+        return $found !== '' ? $found : $configured;
     }
 
     private function currentUser(): string
