@@ -19,6 +19,9 @@ return [
         'create_account' => 'Създай акаунт',
     ],
     'register' => [
+        // Shown as a toast on the home page right after signing up, which is
+        // where a new account now lands.
+        'welcome' => 'Добре дошъл. Избери игрите си в Акаунт → Предпочитания и началната страница ще ги следва.',
         'title' => 'Създай своя акаунт',
         'subtitle' => 'Присъедини се към HybridCore и намери следващия си сървър по-бързо.',
         'name' => 'Име в профила',

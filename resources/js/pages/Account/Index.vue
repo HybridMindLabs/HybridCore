@@ -49,6 +49,7 @@ const props = defineProps<{
     unreadNotifications: number;
     unreadMessages: number;
     loginHistory: { data: any[]; links: any; meta: any };
+    games: { id: number; name: string; slug: string }[];
 }>();
 
 const { theme } = useTheme();
@@ -118,7 +119,7 @@ watch(activeTab, (tab) => {
                             <Sessions :sessions="sessions" />
                         </template>
                         <template v-else-if="activeTab === 'prefs'">
-                            <Preferences :account="account" />
+                            <Preferences :account="account" :games="games" />
                         </template>
                         <template v-else-if="activeTab === 'connected'">
                             <ConnectedAccounts

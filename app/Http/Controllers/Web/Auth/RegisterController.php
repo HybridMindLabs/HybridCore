@@ -79,6 +79,10 @@ class RegisterController extends Controller
             return redirect()->route('verification.notice');
         }
 
-        return redirect()->route('onboarding.show');
+        // Straight in. A new account used to land on a four-step wizard asking
+        // for a display name, games, a bio and people to follow before it would
+        // let go; none of it is needed to look at a server list. Games moved to
+        // Account → Preferences, where they can be set whenever.
+        return redirect()->route('home')->with('success', __('auth.register.welcome'));
     }
 }

@@ -294,6 +294,8 @@ return [
     'pref_language_hint' => 'Leave this on the site default to follow whatever language the site is set to.',
     'pref_language_default' => 'Site default',
     'pref_timezone_hint' => 'Timestamps — last seen, message times, server history — are shown in this zone.',
+    'pref_games' => 'Your games',
+    'pref_games_hint' => 'The home page gets a "My games" filter for whatever you pick here. Leave it empty and the filter stays hidden.',
     'pref_timezone_default' => 'Site default',
     'pref_timezone_detect' => 'Use my current timezone',
     'pref_timezone_detected' => 'Your browser reports :zone.',

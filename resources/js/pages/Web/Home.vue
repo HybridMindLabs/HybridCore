@@ -65,7 +65,7 @@ const gameFilters = computed(() => {
         { key: 'all', label: t('home.all_games'), players: props.totalPlayers, max: props.maxPlayers },
     ];
 
-    // "My games" — only when the user picked favourite games in onboarding.
+    // "My games" — only when the user picked games in Account → Preferences.
     if (preferred.length) {
         const mine = props.gameStats.filter(g => preferred.includes(g.slug));
         filters.push({

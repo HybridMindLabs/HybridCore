@@ -24,7 +24,6 @@ use App\Http\Controllers\Web\MessageController;
 use App\Http\Controllers\Web\NewsCommentController;
 use App\Http\Controllers\Web\NewsController;
 use App\Http\Controllers\Web\NotificationController;
-use App\Http\Controllers\Web\OnboardingController;
 use App\Http\Controllers\Web\PageController;
 use App\Http\Controllers\Web\ProfileController;
 use App\Http\Controllers\Web\RuleController as WebRuleController;
@@ -124,10 +123,6 @@ Route::middleware([EnsureAppIsInstalled::class, EnsureNotInMaintenance::class])
             // Notifications API (polling)
             Route::get('/api/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('api.notifications.unread-count');
             Route::get('/api/notifications/recent', [NotificationController::class, 'recent'])->name('api.notifications.recent');
-
-            // Onboarding
-            Route::get('/welcome', [OnboardingController::class, 'show'])->name('onboarding.show');
-            Route::post('/welcome', [OnboardingController::class, 'complete'])->name('onboarding.complete');
 
             // Messages (DM)
             Route::get('/account/messages', [MessageController::class, 'index'])->name('account.messages.index');

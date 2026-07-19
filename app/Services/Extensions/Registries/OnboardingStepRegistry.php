@@ -5,6 +5,16 @@ namespace App\Services\Extensions\Registries;
 use Closure;
 
 /**
+ * @deprecated Nothing renders these any more.
+ *
+ * The post-registration wizard this fed was removed — a new account now goes
+ * straight to the site. Registering a step still works and still throws no
+ * errors, so extensions calling it keep booting; the step simply never appears.
+ *
+ * Kept only so installed extensions do not fatal on a method that vanished.
+ * Remove it once the bundled vote extension stops calling it, and drop the
+ * corresponding section from BUILDING_EXTENSIONS.md at the same time.
+ *
  * Lets extensions add a step to the post-registration onboarding wizard. Each
  * step is a self-contained global slot component rendered as an extra slide
  * after the core steps — informational or link-out by nature (any data it needs
