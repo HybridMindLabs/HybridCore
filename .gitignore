@@ -23,6 +23,9 @@
 # ran a build collided with the tracked copy — and a manifest pointing at files
 # that are not there fails quietly instead of loudly.
 /public/build/*
+# The SSR bundle is build output too, produced by `npm run build` on whichever
+# machine serves it.
+/bootstrap/ssr
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage

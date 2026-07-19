@@ -27,6 +27,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Middleware;
+use Tighten\Ziggy\Ziggy;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -339,6 +340,20 @@ class HandleInertiaRequests extends Middleware
             ), null, report: false),
             'menus' => fn () => $this->resolveMenus(),
             'authShell' => fn () => rescue(fn () => $this->resolveAuthShell(), null, report: false),
+            // The SSR renderer has no window, so ZiggyVue cannot pick the route
+            // list up from @routes the way the browser does — it has to travel
+            // in the page object instead.
+            //
+            // Only on a full page load: that is the only kind of request SSR
+            // renders. Inertia's own XHR navigations are rendered by the client,
+            // which already has window.Ziggy, so sending the whole route list
+            // again with every navigation would be pure weight.
+            ...($request->inertia() ? [] : [
+                'ziggy' => fn () => [
+                    ...(new Ziggy)->toArray(),
+                    'location' => $request->url(),
+                ],
+            ]),
         ];
 
         // Extensions may add or reshape shared props via the filter chain.
