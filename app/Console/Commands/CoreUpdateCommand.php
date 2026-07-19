@@ -71,7 +71,40 @@ class CoreUpdateCommand extends Command
 
         $this->components->info('Update complete. Current version: '.UpdateController::VERSION);
 
+        $this->remainingSteps();
+
         return self::SUCCESS;
+    }
+
+    /**
+     * What this command deliberately does not do.
+     *
+     * Building assets needs Node, which plenty of installs do not have because
+     * they deploy a release with the build already in it. Restarting a service
+     * needs root, and this command must never be a reason to run artisan under
+     * sudo. Both are therefore printed rather than performed — and printed
+     * loudly, because a stale SSR process fails silently: the site keeps
+     * serving, just the previous build's markup.
+     */
+    private function remainingSteps(): void
+    {
+        $steps = [];
+
+        if (is_dir(base_path('.git'))) {
+            $steps[] = 'Rebuild assets if this install builds its own: npm ci && npm run build';
+        }
+
+        if (config('inertia.ssr.enabled')) {
+            $steps[] = 'Restart the renderer, which still holds the previous bundle in memory: sudo systemctl restart hybridcore-ssr';
+        }
+
+        if ($steps === []) {
+            return;
+        }
+
+        $this->newLine();
+        $this->components->warn('Still to do by hand:');
+        $this->components->bulletList($steps);
     }
 
     /** @param array<int, string> $command */
