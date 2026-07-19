@@ -14,6 +14,15 @@ return [
 
         'url' => env('INERTIA_SSR_URL', 'http://127.0.0.1:13714'),
 
+        /*
+         * What runs the bundle. Bare `node` relies on it being on the PATH of
+         * whichever user Supervisor starts the process as, which is often not
+         * the same PATH an interactive shell has — set an absolute path here
+         * (`/usr/bin/node`) if the process dies immediately on boot. `bun` also
+         * works.
+         */
+        'runtime' => env('INERTIA_SSR_RUNTIME', 'node'),
+
     ],
 
     'testing' => [
