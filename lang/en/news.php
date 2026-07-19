@@ -88,4 +88,5 @@ return [
     'all_news' => 'All news',
     'category_meta' => 'Articles filed under :name.',
     'tag_meta' => 'Articles tagged :name.',
+    'comment_label' => 'Your comment',
 ];

@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
+import { useLocale } from '@/composables/useLocale';
 import type { Component } from 'vue';
 import { Search, X, User, Server, ArrowRight, Newspaper, ThumbsUp, Gift, Trophy, Puzzle } from '@lucide/vue';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
+
+const { t } = useLocale();
 
 const extIcons: Record<string, Component> = { ThumbsUp, Gift, Trophy, Puzzle };
 function extIcon(name: string): Component { return extIcons[name] ?? Puzzle; }
@@ -70,7 +73,7 @@ useKeyboardShortcuts({
         class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/60 text-zinc-600 text-[12px] hover:border-zinc-700 hover:text-zinc-400 transition-colors"
         @click="show">
         <Search :size="12" :stroke-width="1.8" />
-        <span>Search</span>
+        <span>{{ t('navigation.search') }}</span>
         <kbd class="ml-1 px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-600 text-[10px] font-mono border border-zinc-700">/</kbd>
     </button>
 
@@ -82,16 +85,26 @@ useKeyboardShortcuts({
                 style="background:rgba(9,9,11,0.85);backdrop-filter:blur(6px)"
                 @mousedown.self="hide">
 
-                <div class="w-full max-w-xl bg-[#111113] border border-zinc-800/80 rounded-2xl shadow-2xl overflow-hidden">
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    :aria-label="t('navigation.search_dialog')"
+                    class="w-full max-w-xl bg-[#111113] border border-zinc-800/80 rounded-2xl shadow-2xl overflow-hidden">
 
                     <!-- Input -->
                     <div class="flex items-center gap-3 px-4 py-3.5 border-b border-zinc-800/60">
                         <Search :size="15" :stroke-width="1.8" class="text-zinc-500 shrink-0" />
-                        <input ref="inputRef" v-model="query" type="text"
-                            placeholder="Search users, servers…"
-                            class="flex-1 bg-transparent text-zinc-100 text-[14px] placeholder:text-zinc-600 outline-none" />
+                        <label for="global-search" class="sr-only">{{ t('navigation.search') }}</label>
+                        <input
+                            id="global-search"
+                            ref="inputRef"
+                            v-model="query"
+                            type="search"
+                            :placeholder="t('navigation.search_placeholder')"
+                            class="flex-1 bg-transparent text-zinc-100 text-[14px] placeholder:text-zinc-500 outline-none" />
                         <div v-if="loading" class="w-4 h-4 rounded-full border-2 border-zinc-700 border-t-blue-500 animate-spin shrink-0" />
-                        <button v-else-if="query" type="button" class="text-zinc-600 hover:text-zinc-400 shrink-0" @click="query = ''">
+                        <button v-else-if="query" type="button" :aria-label="t('navigation.search_clear')"
+                            class="text-zinc-400 hover:text-zinc-200 shrink-0" @click="query = ''">
                             <X :size="14" :stroke-width="2" />
                         </button>
                         <kbd v-else class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-600 text-[10px] font-mono border border-zinc-700 shrink-0">Esc</kbd>
@@ -107,7 +120,7 @@ useKeyboardShortcuts({
                                 class="flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-900/60 transition-colors group"
                                 @click="hide">
                                 <div class="w-7 h-7 rounded-lg overflow-hidden shrink-0 bg-zinc-800 border border-zinc-700 flex items-center justify-center">
-                                    <img v-if="u.avatar" :src="u.avatar" class="w-full h-full object-cover" />
+                                    <img v-if="u.avatar" :src="u.avatar" class="w-full h-full object-cover" alt="" loading="lazy" decoding="async" />
                                     <User v-else :size="12" :stroke-width="1.8" class="text-zinc-500" />
                                 </div>
                                 <div class="flex-1 min-w-0">
@@ -125,7 +138,7 @@ useKeyboardShortcuts({
                                 class="flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-900/60 transition-colors group"
                                 @click="hide">
                                 <div class="w-7 h-7 rounded-lg overflow-hidden shrink-0 bg-zinc-800 border border-zinc-700 flex items-center justify-center">
-                                    <img v-if="s.game_icon" :src="s.game_icon" class="w-full h-full object-cover" />
+                                    <img v-if="s.game_icon" :src="s.game_icon" class="w-full h-full object-cover" alt="" loading="lazy" decoding="async" />
                                     <Server v-else :size="12" :stroke-width="1.8" class="text-zinc-500" />
                                 </div>
                                 <div class="flex-1 min-w-0">

@@ -18,8 +18,14 @@
 /node_modules
 /docs
 /ROADMAP.md
+# Build output belongs to whichever machine produced it. The manifest used to
+# be committed while the hashed assets it names were not, so every deploy that
+# ran a build collided with the tracked copy — and a manifest pointing at files
+# that are not there fails quietly instead of loudly.
 /public/build/*
-!/public/build/manifest.json
+# The SSR bundle is build output too, produced by `npm run build` on whichever
+# machine serves it.
+/bootstrap/ssr
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
@@ -45,3 +51,4 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+.mcp.json

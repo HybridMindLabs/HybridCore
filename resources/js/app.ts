@@ -1,4 +1,4 @@
-import { createApp, h, type DefineComponent } from 'vue';
+import { createSSRApp, h, type DefineComponent } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from 'ziggy-js';
@@ -121,7 +121,10 @@ createInertiaApp({
     resolve: resolvePage,
 
     setup({ el, App, props, plugin }) {
-        const app = createApp({ render: () => h(App, props) })
+        // createSSRApp, not createApp: mounting onto server-rendered markup
+        // hydrates it in place. createApp would throw the server's HTML away
+        // and re-render from scratch, which is the cost SSR exists to avoid.
+        const app = createSSRApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue);
 

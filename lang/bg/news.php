@@ -87,4 +87,5 @@ return [
     'all_news' => 'Всички новини',
     'category_meta' => 'Статии в категория :name.',
     'tag_meta' => 'Статии с етикет :name.',
+    'comment_label' => 'Твоят коментар',
 ];

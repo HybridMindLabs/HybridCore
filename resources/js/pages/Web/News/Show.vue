@@ -445,7 +445,9 @@ const initials = computed(() => {
                         <!-- Write comment -->
                         <div v-if="authed" class="px-5 py-4 border-b" :class="dark ? 'border-zinc-800/50' : 'border-zinc-100'">
                             <form class="flex flex-col gap-2.5" @submit.prevent="submitComment">
+                                <label for="comment_body" class="sr-only">{{ t('news.comment_label') }}</label>
                                 <textarea
+                                    id="comment_body"
                                     v-model="commentForm.body"
                                     rows="3"
                                     maxlength="1000"
@@ -555,8 +557,8 @@ const initials = computed(() => {
                         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white'">
                         <div class="border-b px-4 py-3"
                             :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e]' : 'border-zinc-100 bg-zinc-50'">
-                            <h3 class="text-[12px] font-bold uppercase tracking-widest"
-                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ t('news.toc_title') }}</h3>
+                            <h2 class="text-[12px] font-bold uppercase tracking-widest"
+                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ t('news.toc_title') }}</h2>
                         </div>
                         <ol class="p-3 flex flex-col gap-0.5">
                             <li v-for="heading in parsedBody.headings" :key="heading.id">
@@ -577,13 +579,14 @@ const initials = computed(() => {
                         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white'">
                         <div class="border-b px-4 py-3"
                             :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e]' : 'border-zinc-100 bg-zinc-50'">
-                            <h3 class="text-[12px] font-bold uppercase tracking-widest"
-                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ t('news.sidebar_author') }}</h3>
+                            <h2 class="text-[12px] font-bold uppercase tracking-widest"
+                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ t('news.sidebar_author') }}</h2>
                         </div>
                         <div class="p-4 flex items-center gap-3">
                             <div class="w-10 h-10 rounded-full overflow-hidden border shrink-0 flex items-center justify-center font-bold text-[13px]"
                                 :class="dark ? 'border-zinc-700 bg-zinc-800 text-zinc-400' : 'border-zinc-200 bg-zinc-100 text-zinc-500'">
-                                <img v-if="article.author.avatar" :src="article.author.avatar" class="w-full h-full object-cover" />
+                                <img v-if="article.author.avatar" :src="article.author.avatar" class="w-full h-full object-cover"
+                                    :alt="t('news.author_avatar_alt', { name: article.author.name })" />
                                 <span v-else>{{ initials }}</span>
                             </div>
                             <div>
@@ -600,8 +603,8 @@ const initials = computed(() => {
                         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white'">
                         <div class="border-b px-4 py-3"
                             :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e]' : 'border-zinc-100 bg-zinc-50'">
-                            <h3 class="text-[12px] font-bold uppercase tracking-widest"
-                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ t('news.sidebar_share') }}</h3>
+                            <h2 class="text-[12px] font-bold uppercase tracking-widest"
+                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ t('news.sidebar_share') }}</h2>
                         </div>
                         <div class="p-3">
                             <button type="button" @click="copyLink"
@@ -620,8 +623,8 @@ const initials = computed(() => {
                         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white'">
                         <div class="border-b px-4 py-3"
                             :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e]' : 'border-zinc-100 bg-zinc-50'">
-                            <h3 class="text-[12px] font-bold uppercase tracking-widest"
-                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ t('news.sidebar_tags') }}</h3>
+                            <h2 class="text-[12px] font-bold uppercase tracking-widest"
+                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ t('news.sidebar_tags') }}</h2>
                         </div>
                         <div class="p-3 flex flex-wrap gap-1.5">
                             <Link v-for="t in article.tags" :key="t.slug"
@@ -640,8 +643,8 @@ const initials = computed(() => {
                         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white'">
                         <div class="border-b px-4 py-3"
                             :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e]' : 'border-zinc-100 bg-zinc-50'">
-                            <h3 class="text-[12px] font-bold uppercase tracking-widest"
-                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ t('news.sidebar_related') }}</h3>
+                            <h2 class="text-[12px] font-bold uppercase tracking-widest"
+                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ t('news.sidebar_related') }}</h2>
                         </div>
                         <div class="p-3 flex flex-col gap-1">
                             <Link v-for="a in related" :key="a.id"
@@ -650,7 +653,8 @@ const initials = computed(() => {
                                 :class="dark ? 'hover:bg-white/[0.03]' : 'hover:bg-zinc-50'">
                                 <div class="w-12 h-12 rounded-lg overflow-hidden border shrink-0"
                                     :class="dark ? 'border-zinc-800/70 bg-zinc-900' : 'border-zinc-200 bg-zinc-100'">
-                                    <img v-if="a.featured_image_url" :src="a.featured_image_url" class="w-full h-full object-cover" />
+                                    <img v-if="a.featured_image_url" :src="a.featured_image_url" class="w-full h-full object-cover"
+                                        :alt="t('news.article_image_alt', { title: a.title })" />
                                 </div>
                                 <div class="min-w-0">
                                     <p class="text-[12px] font-semibold line-clamp-2 transition-colors"

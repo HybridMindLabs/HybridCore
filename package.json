@@ -11,7 +11,7 @@
     },
     "scripts": {
         "dev": "vite",
-        "build": "vite build",
+        "build": "vite build && vite build --ssr",
         "type-check": "tsc --noEmit",
         "test:e2e": "playwright test"
     },

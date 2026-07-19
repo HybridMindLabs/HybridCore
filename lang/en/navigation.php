@@ -47,4 +47,9 @@ return [
     ],
     'breadcrumb' => 'Breadcrumb',
     'back_to_home' => 'Back to home',
+    'search' => 'Search',
+    'search_placeholder' => 'Search members and servers…',
+    'search_dialog' => 'Site search',
+    'search_clear' => 'Clear search',
+    'skip_to_content' => 'Skip to content',
 ];

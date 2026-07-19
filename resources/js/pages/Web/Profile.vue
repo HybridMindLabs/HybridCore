@@ -369,7 +369,7 @@ function toggleBlock() {
                                 <div class="w-14 h-8 rounded-lg overflow-hidden shrink-0 border" :class="dark ? 'border-zinc-800 bg-zinc-900' : 'border-zinc-200 bg-zinc-100'">
                                     <img v-if="s.map_image && !failedMapImages.has(s.id)" :src="s.map_image" :alt="s.map ?? ''" class="w-full h-full object-cover"
                                         @error="failedMapImages.add(s.id)" />
-                                    <img v-else-if="s.game_icon" :src="s.game_icon" class="w-full h-full object-contain p-1.5" />
+                                    <img v-else-if="s.game_icon" :src="s.game_icon" class="w-full h-full object-contain p-1.5" alt="" />
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-[13px] font-bold truncate transition-colors"

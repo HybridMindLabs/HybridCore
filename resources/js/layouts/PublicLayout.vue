@@ -251,6 +251,19 @@ const socialLinks = computed(() => {
             </button>
         </div>
 
+        <!--
+            First focusable element on the page. Without it a keyboard or
+            screen-reader user tabbed through the whole navigation again on
+            every single page — WCAG 2.4.1.
+        -->
+        <a
+            href="#main-content"
+            class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[200]
+                   focus:rounded-xl focus:px-4 focus:py-2.5 focus:text-[13px] focus:font-bold
+                   focus:outline-2 focus:outline-offset-2 focus:outline-blue-500"
+            :class="dark ? 'focus:bg-zinc-900 focus:text-zinc-100' : 'focus:bg-white focus:text-zinc-900 focus:shadow-lg'"
+        >{{ t('navigation.skip_to_content') }}</a>
+
         <!-- ── Navbar ── -->
         <header
             class="sticky top-0 z-50 border-b backdrop-blur-xl transition-colors duration-200"
@@ -662,7 +675,7 @@ const socialLinks = computed(() => {
             </div>
         </header>
 
-        <main class="flex-1">
+        <main id="main-content" tabindex="-1" class="flex-1">
             <slot />
         </main>
 

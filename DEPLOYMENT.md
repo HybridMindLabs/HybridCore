@@ -26,9 +26,9 @@ for updates.
 | **Database** | MySQL 8.0 / MariaDB 10.6+ | PostgreSQL works but is untested |
 | **Redis** | 6+ | queues (Horizon), cache, sessions |
 | **Web server** | nginx or Apache | nginx config provided below |
-| **Node.js** | 20+ | only to build assets — not needed if you deploy a pre-built release ZIP |
+| **Node.js** | 20+ | to build assets, and at runtime if you enable SSR — a pre-built release ZIP otherwise needs no Node |
 | **Composer** | 2.x | only if you don't ship `vendor/` in the release |
-| **Supervisor** | any | keeps the queue worker, websocket server and scheduler alive |
+| **Supervisor** | any | keeps the queue worker, websocket server and (if enabled) the SSR renderer alive |
 
 A modest VPS (2 vCPU / 2–4 GB RAM / 20 GB disk) comfortably runs a
 mid-sized community.
@@ -229,9 +229,10 @@ Get a free TLS certificate with `sudo certbot --nginx -d your-domain.com`.
 
 ## 6. Background services (Supervisor)
 
-Three long-running processes must always be up. **Do not run
-`queue:work` directly** — Horizon supervises the workers and powers the
-`/horizon` dashboard.
+Two long-running processes must always be up, plus the scheduler on cron and
+an optional third for server-side rendering. **Do not run `queue:work`
+directly** — Horizon supervises the workers and powers the `/horizon`
+dashboard.
 
 Create `/etc/supervisor/conf.d/hybridcore.conf`:
 
@@ -259,6 +260,62 @@ stdout_logfile=/var/www/hybridcore/storage/logs/reverb.log
 ```bash
 sudo supervisorctl reread && sudo supervisorctl update
 ```
+
+### Server-side rendering (optional)
+
+Without SSR the browser downloads and runs the JavaScript before anything
+appears on screen — measured on a throttled mobile connection, that is roughly
+1.8s of blank page. With SSR the server returns finished HTML and first paint
+lands near 1.1s.
+
+It is off unless you turn it on. Add to `.env`:
+
+```dotenv
+INERTIA_SSR_ENABLED=true
+```
+
+`npm run build` already produces the SSR bundle into `bootstrap/ssr` alongside
+the client build, so no extra build step is needed.
+
+Then add a third program to `/etc/supervisor/conf.d/hybridcore.conf`:
+
+```ini
+[program:hybridcore-ssr]
+command=php /var/www/hybridcore/artisan inertia:start-ssr
+directory=/var/www/hybridcore
+user=www-data
+autostart=true
+autorestart=true
+redirect_stderr=true
+stdout_logfile=/var/www/hybridcore/storage/logs/ssr.log
+```
+
+```bash
+sudo supervisorctl reread && sudo supervisorctl update
+```
+
+The command spawns `node bootstrap/ssr/ssr.js`. Supervisor starts it with a
+much barer PATH than your login shell, so if `node` was installed through nvm
+or similar it will not be found and the process will die on boot. Point at it
+directly in that case:
+
+```dotenv
+INERTIA_SSR_RUNTIME=/usr/bin/node
+```
+
+**Restart it on every deploy**, after the build. The SSR process holds the old
+bundle in memory, so a deploy that skips this serves yesterday's markup into
+today's page until something restarts it:
+
+```bash
+sudo supervisorctl restart hybridcore-ssr
+```
+
+If the process is down, Laravel falls back to client rendering rather than
+erroring — pages stay correct and simply get slower. That is forgiving, but it
+also means a dead SSR process is silent: nothing in the logs will tell you, and
+the only symptom is that `view-source:` shows an empty `<div id="app">`. Check
+it there after a deploy, or watch `storage/logs/ssr.log`.
 
 The **scheduler** runs from cron. Add for `www-data`:
 
@@ -331,7 +388,7 @@ sequence and always lift maintenance mode even if a step fails.
 After any upgrade, restart the workers so new code is loaded:
 
 ```bash
-sudo supervisorctl restart hybridcore-horizon hybridcore-reverb
+sudo supervisorctl restart hybridcore-horizon hybridcore-reverb hybridcore-ssr
 ```
 
 ---
@@ -356,6 +413,8 @@ upload needs.
 | Symptom | Fix |
 |---------|-----|
 | **Jobs not processing** (emails, server queries stuck) | Horizon isn't running — `sudo supervisorctl status`; check `storage/logs/horizon.log` |
+| **Pages feel slow and `view-source:` shows an empty `<div id="app">`** | SSR is off or its process died — check `INERTIA_SSR_ENABLED`, then `sudo supervisorctl status hybridcore-ssr` and `storage/logs/ssr.log`. Rendering still works, just client-side |
+| **A deploy changed the page but SSR serves the old markup** | `sudo supervisorctl restart hybridcore-ssr` — the bundle is held in memory |
 | **No live notifications / online counts** | Reverb down or `/app` not proxied — verify the nginx `location /app` block and `REVERB_*` env |
 | **500 after upgrade** | Stale caches — `php artisan optimize:clear` then re-cache |
 | **"Not a git installation"** on update | You're on a ZIP install — use `php artisan hybridcore:update --local` |

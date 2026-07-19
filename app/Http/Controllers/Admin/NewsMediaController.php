@@ -3,16 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\Media\NewsImageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class NewsMediaController extends Controller
 {
+    public function __construct(private readonly NewsImageService $images) {}
+
     public function index(): Response
     {
         $disk = Storage::disk('public');
@@ -38,9 +40,7 @@ class NewsMediaController extends Controller
             'file' => ['required', 'file', 'image', 'max:5120', 'mimes:jpg,jpeg,png,webp,gif'],
         ]);
 
-        $file = $request->file('file');
-        $name = Str::uuid().'.'.$file->getClientOriginalExtension();
-        $path = $file->storeAs('news/images', $name, 'public');
+        $path = $this->images->store($request->file('file'));
 
         return response()->json([
             'url' => Storage::disk('public')->url($path),
