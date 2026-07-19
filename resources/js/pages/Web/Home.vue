@@ -425,7 +425,7 @@ function toggleFavourite(server: HomeServer) {
 
         <!-- ── Network at a glance. Pulled out of the hero panel so neither block
              feels packed, and so the numbers get the full page width. ── -->
-        <section class="border-b" :aria-label="t('home.hero_region')"
+        <section class="border-b" :aria-label="t('home.stats_region')"
             :class="dark ? 'border-zinc-800/60 bg-[#0b0b0e]' : 'border-zinc-200 bg-white'">
             <dl class="max-w-[1600px] mx-auto px-4 sm:px-6 grid grid-cols-2 lg:grid-cols-4">
                 <!--
@@ -932,17 +932,29 @@ function toggleFavourite(server: HomeServer) {
                     </div>
 
                     <!-- Dot indicators -->
-                    <div v-if="featured.length > 1" class="flex items-center justify-center gap-1.5 pt-2.5">
+                    <!--
+                        The dot is 6px, which is far under the 24x24 minimum for
+                        a touch target. The button carries the full 24x24 and the
+                        dot is drawn inside it, so the target grows without the
+                        indicator getting heavier. That does space the dots out —
+                        24px apart rather than 12 — which is the cost of them
+                        being reliably tappable.
+                    -->
+                    <div v-if="featured.length > 1" class="flex items-center justify-center pt-1">
                         <button v-for="(s, i) in featured" :key="s.id" type="button"
-                            class="rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                            :class="i === slideIndex
-                                ? 'w-5 h-1.5 bg-blue-500'
-                                : dark ? 'w-1.5 h-1.5 bg-zinc-700 hover:bg-zinc-500' : 'w-1.5 h-1.5 bg-zinc-300 hover:bg-zinc-400'"
+                            class="group grid place-items-center w-6 h-6 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                             :aria-label="t('home.go_to_server', { name: s.name })"
                             :aria-current="i === slideIndex ? 'true' : undefined"
                             :title="s.name"
                             @click="goToSlide(i)"
-                        />
+                        >
+                            <span class="rounded-full transition-all duration-300"
+                                :class="i === slideIndex
+                                    ? 'w-5 h-1.5 bg-blue-500'
+                                    : dark ? 'w-1.5 h-1.5 bg-zinc-700 group-hover:bg-zinc-500' : 'w-1.5 h-1.5 bg-zinc-300 group-hover:bg-zinc-400'"
+                                aria-hidden="true"
+                            />
+                        </button>
                     </div>
 
                     <div v-if="!featured.length"

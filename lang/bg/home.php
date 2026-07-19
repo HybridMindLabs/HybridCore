@@ -44,6 +44,9 @@ return [
     'stat_members_hint' => 'Хора, присъединили се към общността',
     'stat_players_hint' => 'В игра на всички сървъри в момента',
     'hero_region' => 'Преглед на мрежата',
+    // A separate name from the hero above it: two landmarks sharing one label
+    // give a screen reader no way to tell them apart in a region list.
+    'stats_region' => 'Статистика на мрежата',
     'servers_live' => ':online от :total сървъра онлайн',
     'live_now' => 'На живо',
     'hero_description' => 'Всички сървъри на общността на едно място. Виж кой играе в момента, колко пълен е всеки сървър и се свържи с едно кликване.',
