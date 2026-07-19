@@ -50,6 +50,10 @@ const { t } = useLocale();
 const dark = computed(() => theme.value === 'dark');
 const page = usePage<{ app: { name: string }; auth: { user: any } | null; [key: string]: unknown }>();
 const pageTitle = computed(() => `${page.props.app.name} - Gaming Network`);
+const metaDescription = computed(() => t('home.meta_description', {
+    servers: String(props.stats.servers),
+    games: String(props.stats.games),
+}));
 const auth = computed(() => page.props.auth);
 
 const activeFilter = ref('all');
@@ -176,7 +180,7 @@ const presenceGroups = computed(() => [
         data: props.whoIsOnline,
         empty: t('home.no_registered_online'),
         live: true,
-        countClass: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+        countClass: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-400',
     },
     {
         key: 'today',
@@ -242,7 +246,7 @@ async function copyAddress(server: HomeServer) {
 onUnmounted(() => { if (copyTimer) clearTimeout(copyTimer); });
 
 function pingColor(ping: number) {
-    if (ping < 50)  return dark.value ? 'text-emerald-400' : 'text-emerald-700';
+    if (ping < 50)  return dark.value ? 'text-emerald-400' : 'text-emerald-800';
     if (ping < 100) return dark.value ? 'text-amber-400'   : 'text-amber-700';
     return 'text-red-400';
 }
@@ -259,7 +263,10 @@ function toggleFavourite(server: HomeServer) {
 </script>
 
 <template>
-    <Head :title="pageTitle" />
+    <Head>
+        <title>{{ pageTitle }}</title>
+        <meta name="description" :content="metaDescription" />
+    </Head>
 
     <PublicLayout>
 
@@ -288,7 +295,7 @@ function toggleFavourite(server: HomeServer) {
                         <!-- Live status. aria-live so screen readers hear it change. -->
                         <div
                             class="hc-hero-in inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-[11px] font-bold uppercase tracking-widest"
-                            :class="dark ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700'"
+                            :class="dark ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-800'"
                             aria-live="polite"
                         >
                             <span class="hc-live-dot" aria-hidden="true" />
@@ -304,7 +311,7 @@ function toggleFavourite(server: HomeServer) {
                         </h1>
 
                         <p class="hc-hero-in hc-hero-in--2 mt-5 text-[15px] sm:text-[17px] leading-relaxed max-w-lg"
-                           :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                           :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                             {{ t('home.hero_description') }}
                         </p>
 
@@ -318,7 +325,7 @@ function toggleFavourite(server: HomeServer) {
                             </Link>
                             <Link v-if="!auth" :href="route('register')"
                                 class="inline-flex items-center font-bold text-[14px] px-6 py-3 rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                                :class="dark ? 'border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600 hover:bg-white/[0.04]' : 'border-zinc-300 text-zinc-700 hover:border-zinc-400 hover:bg-white'">
+                                :class="dark ? 'border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600 hover:bg-white/[0.04]' : 'border-zinc-300 text-zinc-500 hover:border-zinc-400 hover:bg-white'">
                                 {{ t('home.create_account') }}
                             </Link>
                         </div>
@@ -347,11 +354,11 @@ function toggleFavourite(server: HomeServer) {
 
                         <div class="flex items-center justify-between mb-5">
                             <h2 class="text-[12px] font-bold uppercase tracking-widest"
-                                :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                                 {{ t('home.live_title') }}
                             </h2>
                             <span class="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest"
-                                :class="dark ? 'text-emerald-400' : 'text-emerald-700'">
+                                :class="dark ? 'text-emerald-400' : 'text-emerald-800'">
                                 <span class="hc-live-dot" aria-hidden="true" />{{ t('home.live_now') }}
                             </span>
                         </div>
@@ -366,12 +373,12 @@ function toggleFavourite(server: HomeServer) {
                                :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
                                 {{ animatedPlayers.toLocaleString() }}
                                 <span class="text-[15px] font-bold"
-                                      :class="dark ? 'text-zinc-600' : 'text-zinc-400'">
+                                      :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
                                     / {{ maxPlayers.toLocaleString() }}
                                 </span>
                             </p>
                             <p class="text-[13px] font-bold tabular-nums pb-1"
-                               :class="dark ? 'text-zinc-400' : 'text-zinc-600'">{{ capacityPercent }}%</p>
+                               :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ capacityPercent }}%</p>
                         </div>
                         <div class="h-2 rounded-full overflow-hidden"
                             :class="dark ? 'bg-zinc-800' : 'bg-zinc-200'"
@@ -412,7 +419,7 @@ function toggleFavourite(server: HomeServer) {
                                             <span class="block text-[14px] font-black tabular-nums leading-none"
                                                 :class="dark ? 'text-zinc-100' : 'text-zinc-900'">{{ g.players }}</span>
                                             <span class="block text-[9px] font-bold uppercase tracking-widest mt-1"
-                                                :class="dark ? 'text-zinc-600' : 'text-zinc-500'">{{ t('home.players_suffix') }}</span>
+                                                :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ t('home.players_suffix') }}</span>
                                         </span>
                                     </Link>
                                 </li>
@@ -425,11 +432,18 @@ function toggleFavourite(server: HomeServer) {
 
         <!-- ── Network at a glance. Pulled out of the hero panel so neither block
              feels packed, and so the numbers get the full page width. ── -->
-        <section class="border-b" :aria-label="t('home.hero_region')"
+        <section class="border-b" :aria-label="t('home.stats_region')"
             :class="dark ? 'border-zinc-800/60 bg-[#0b0b0e]' : 'border-zinc-200 bg-white'">
             <dl class="max-w-[1600px] mx-auto px-4 sm:px-6 grid grid-cols-2 lg:grid-cols-4">
+                <!--
+                    A <dl> may only group its children as <dt>/<dd> pairs, so the
+                    icon and the hint live inside the <dd> rather than beside it,
+                    and the term comes first in the DOM with `order` putting the
+                    figure back on top visually. pl-12 lines the text up under
+                    the value: w-9 (2.25rem) plus the gap-3 (0.75rem) beside it.
+                -->
                 <div v-for="(item, i) in networkStats" :key="item.label"
-                    class="hc-hero-in flex items-start gap-3 py-5 sm:py-6 lg:px-6 first:lg:pl-0 last:lg:pr-0"
+                    class="hc-hero-in flex flex-col py-5 sm:py-6 lg:px-6 first:lg:pl-0 last:lg:pr-0"
                     :style="{ animationDelay: 0.28 + i * 0.07 + 's' }"
                     :class="[
                         dark ? 'border-zinc-800/60' : 'border-zinc-200',
@@ -437,21 +451,21 @@ function toggleFavourite(server: HomeServer) {
                         i < 2 ? 'border-b lg:border-b-0' : '',
                         i > 0 ? 'lg:border-l' : '',
                     ]">
-                    <span class="mt-0.5 w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                        :class="dark ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-500/10 text-blue-600'"
-                        aria-hidden="true">
-                        <component :is="item.icon" :size="16" :stroke-width="1.9" />
-                    </span>
-                    <div class="min-w-0">
-                        <dd class="text-[22px] sm:text-[26px] font-black leading-none tabular-nums"
+                    <dt class="order-2 pl-12 text-[12px] font-bold mt-1.5"
+                        :class="dark ? 'text-zinc-300' : 'text-zinc-500'">{{ item.label }}</dt>
+                    <dd class="order-1 flex items-start gap-3 min-w-0">
+                        <span class="mt-0.5 w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                            :class="dark ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-500/10 text-blue-600'"
+                            aria-hidden="true">
+                            <component :is="item.icon" :size="16" :stroke-width="1.9" />
+                        </span>
+                        <span class="text-[22px] sm:text-[26px] font-black leading-none tabular-nums"
                             :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
                             {{ item.value.toLocaleString() }}
-                        </dd>
-                        <dt class="text-[12px] font-bold mt-1.5"
-                            :class="dark ? 'text-zinc-300' : 'text-zinc-700'">{{ item.label }}</dt>
-                        <p class="text-[11px] leading-snug mt-0.5"
-                           :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ item.hint }}</p>
-                    </div>
+                        </span>
+                    </dd>
+                    <dd class="order-3 pl-12 text-[11px] leading-snug mt-0.5"
+                        :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ item.hint }}</dd>
                 </div>
             </dl>
         </section>
@@ -509,7 +523,7 @@ function toggleFavourite(server: HomeServer) {
                                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
                                         <div v-else class="w-full h-full flex items-center justify-center">
                                             <Newspaper :size="28" :stroke-width="1.2"
-                                                :class="dark ? 'text-zinc-700' : 'text-zinc-300'" aria-hidden="true" />
+                                                :class="dark ? 'text-zinc-500' : 'text-zinc-300'" aria-hidden="true" />
                                         </div>
 
                                         <span v-if="lead.category"
@@ -525,7 +539,7 @@ function toggleFavourite(server: HomeServer) {
                                             {{ lead.title }}
                                         </h3>
                                         <p v-if="lead.excerpt" class="text-[13px] leading-relaxed line-clamp-2 mt-1.5"
-                                            :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                                            :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                                             {{ lead.excerpt }}
                                         </p>
                                         <div class="flex items-center gap-3 mt-4 pt-3 border-t text-[11px]"
@@ -558,7 +572,7 @@ function toggleFavourite(server: HomeServer) {
                                                 class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                                             <div v-else class="w-full h-full flex items-center justify-center">
                                                 <Newspaper :size="16" :stroke-width="1.3"
-                                                    :class="dark ? 'text-zinc-700' : 'text-zinc-300'" aria-hidden="true" />
+                                                    :class="dark ? 'text-zinc-500' : 'text-zinc-300'" aria-hidden="true" />
                                             </div>
                                             <div v-if="a.category" class="absolute bottom-0 left-0 right-0 h-0.5"
                                                 :style="{ background: a.category.color }" aria-hidden="true" />
@@ -574,7 +588,7 @@ function toggleFavourite(server: HomeServer) {
                                                 {{ a.title }}
                                             </h3>
                                             <div class="flex items-center gap-2.5 mt-auto pt-2 text-[10.5px]"
-                                                :class="dark ? 'text-zinc-600' : 'text-zinc-500'">
+                                                :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                                                 <span class="flex items-center gap-1">
                                                     <Clock :size="10" :stroke-width="1.8" aria-hidden="true" />
                                                     {{ t('news.read_time_short', { m: a.reading_time }) }}
@@ -634,8 +648,8 @@ function toggleFavourite(server: HomeServer) {
                                     {{ filter.label }}
                                     <span class="text-[10px] font-semibold tabular-nums"
                                         :class="filter.players > 0
-                                            ? 'text-emerald-500'
-                                            : dark ? 'text-zinc-700' : 'text-zinc-300'">
+                                            ? (dark ? 'text-emerald-400' : 'text-emerald-800')
+                                            : 'text-zinc-500'">
                                         {{ filter.players }}/{{ filter.max }}
                                     </span>
                                 </span>
@@ -708,12 +722,12 @@ function toggleFavourite(server: HomeServer) {
                                 <!-- Address + copy -->
                                 <div class="relative hidden lg:flex items-center gap-1.5 shrink-0">
                                     <span class="text-[12.5px] font-mono tabular-nums"
-                                          :class="dark ? 'text-zinc-400' : 'text-zinc-600'">{{ server.address }}</span>
+                                          :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ server.address }}</span>
                                     <button type="button"
                                         class="w-7 h-7 flex items-center justify-center rounded-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                                         :class="copiedId === server.id
-                                            ? 'text-emerald-500'
-                                            : dark ? 'text-zinc-600 hover:text-zinc-200 hover:bg-white/[0.06]' : 'text-zinc-500 hover:text-zinc-800 hover:bg-zinc-200/70'"
+                                            ? (dark ? 'text-emerald-400' : 'text-emerald-800')
+                                            : dark ? 'text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.06]' : 'text-zinc-500 hover:text-zinc-800 hover:bg-zinc-200/70'"
                                         :aria-label="t('home.copy_address', { address: server.address })"
                                         :title="copiedId === server.id ? t('home.copied') : t('home.copy_address', { address: server.address })"
                                         @click="copyAddress(server)">
@@ -729,7 +743,7 @@ function toggleFavourite(server: HomeServer) {
                                 <!-- Connect -->
                                 <a :href="server.connect_route"
                                     class="relative shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                                    :class="dark ? 'text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10' : 'text-zinc-500 hover:text-emerald-700 hover:bg-emerald-500/10'"
+                                    :class="dark ? 'text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10' : 'text-zinc-500 hover:text-emerald-800 hover:bg-emerald-500/10'"
                                     :aria-label="t('home.connect_to', { name: server.name })"
                                     :title="t('home.connect_to', { name: server.name })">
                                     <Play :size="15" :stroke-width="2" fill="currentColor" aria-hidden="true" />
@@ -751,7 +765,7 @@ function toggleFavourite(server: HomeServer) {
                                     class="relative shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                                     :class="server.is_favourited
                                         ? 'text-amber-400'
-                                        : dark ? 'text-zinc-600 hover:text-amber-400 hover:bg-white/[0.06]' : 'text-zinc-400 hover:text-amber-500 hover:bg-zinc-200/70'"
+                                        : dark ? 'text-zinc-500 hover:text-amber-400 hover:bg-white/[0.06]' : 'text-zinc-400 hover:text-amber-500 hover:bg-zinc-200/70'"
                                     :aria-pressed="server.is_favourited"
                                     :aria-label="t(server.is_favourited ? 'home.unfavourite_server' : 'home.favourite_server', { name: server.name })"
                                     :title="t(server.is_favourited ? 'home.unfavourite_server' : 'home.favourite_server', { name: server.name })"
@@ -762,10 +776,10 @@ function toggleFavourite(server: HomeServer) {
 
                             <div v-if="!filtered.length" class="flex flex-col items-center justify-center px-6 py-16 text-center">
                                 <span class="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
-                                    :class="dark ? 'bg-zinc-900 text-zinc-700' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
+                                    :class="dark ? 'bg-zinc-900 text-zinc-500' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
                                     <Activity :size="22" :stroke-width="1.5" />
                                 </span>
-                                <p class="text-[14px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-700'">
+                                <p class="text-[14px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-500'">
                                     {{ t('home.no_servers') }}
                                 </p>
                                 <p class="text-[12.5px] mt-1 max-w-xs" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
@@ -773,7 +787,7 @@ function toggleFavourite(server: HomeServer) {
                                 </p>
                                 <button v-if="activeFilter !== 'all'" type="button" @click="activeFilter = 'all'"
                                     class="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border text-[12.5px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                                    :class="dark ? 'border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:bg-white/[0.04]' : 'border-zinc-300 text-zinc-700 hover:border-zinc-400 hover:bg-white'">
+                                    :class="dark ? 'border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:bg-white/[0.04]' : 'border-zinc-300 text-zinc-500 hover:border-zinc-400 hover:bg-white'">
                                     {{ t('home.show_all_games') }}
                                 </button>
                             </div>
@@ -801,7 +815,7 @@ function toggleFavourite(server: HomeServer) {
                         <div class="flex items-center justify-between gap-2 mb-2.5">
                             <div class="min-w-0">
                                 <h3 class="text-[11px] font-black uppercase tracking-widest"
-                                    :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                                    :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                                     {{ t('home.featured_servers') }}
                                 </h3>
                                 <p class="text-[11px] mt-0.5 leading-snug" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
@@ -892,21 +906,21 @@ function toggleFavourite(server: HomeServer) {
 
                                         <div class="flex flex-col gap-2.5 mb-4">
                                             <div class="flex items-center justify-between">
-                                                <span class="text-[10px] font-bold uppercase tracking-widest" :class="dark ? 'text-zinc-700' : 'text-zinc-400'">{{ t('home.col_map') }}</span>
-                                                <span class="text-[12px] font-mono truncate max-w-[160px]" :class="dark ? 'text-zinc-300' : 'text-zinc-700'">{{ server.map }}</span>
+                                                <span class="text-[10px] font-bold uppercase tracking-widest" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">{{ t('home.col_map') }}</span>
+                                                <span class="text-[12px] font-mono truncate max-w-[160px]" :class="dark ? 'text-zinc-300' : 'text-zinc-500'">{{ server.map }}</span>
                                             </div>
                                             <div class="flex items-center justify-between gap-3">
-                                                <span class="text-[10px] font-bold uppercase tracking-widest shrink-0" :class="dark ? 'text-zinc-700' : 'text-zinc-400'">{{ t('home.col_players') }}</span>
+                                                <span class="text-[10px] font-bold uppercase tracking-widest shrink-0" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">{{ t('home.col_players') }}</span>
                                                 <div class="flex items-center gap-2 flex-1 justify-end">
                                                     <div class="h-1 flex-1 max-w-[80px] rounded-full overflow-hidden" :class="dark ? 'bg-zinc-800' : 'bg-zinc-200'">
                                                         <div class="h-full rounded-full"
                                                             :style="`width:${server.max_players > 0 ? Math.round((server.players / server.max_players) * 100) : 0}%; background:${gameColor(server.game_slug)}`" />
                                                     </div>
-                                                    <span class="text-[12px] font-mono shrink-0" :class="dark ? 'text-zinc-300' : 'text-zinc-700'">{{ server.players }}/{{ server.max_players }}</span>
+                                                    <span class="text-[12px] font-mono shrink-0" :class="dark ? 'text-zinc-300' : 'text-zinc-500'">{{ server.players }}/{{ server.max_players }}</span>
                                                 </div>
                                             </div>
                                             <div class="flex items-center justify-between">
-                                                <span class="text-[10px] font-bold uppercase tracking-widest" :class="dark ? 'text-zinc-700' : 'text-zinc-400'">{{ t('home.col_ping') }}</span>
+                                                <span class="text-[10px] font-bold uppercase tracking-widest" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">{{ t('home.col_ping') }}</span>
                                                 <span class="text-[12px] font-mono" :class="pingColor(server.ping)">{{ server.ping }}ms</span>
                                             </div>
                                         </div>
@@ -925,27 +939,39 @@ function toggleFavourite(server: HomeServer) {
                     </div>
 
                     <!-- Dot indicators -->
-                    <div v-if="featured.length > 1" class="flex items-center justify-center gap-1.5 pt-2.5">
+                    <!--
+                        The dot is 6px, which is far under the 24x24 minimum for
+                        a touch target. The button carries the full 24x24 and the
+                        dot is drawn inside it, so the target grows without the
+                        indicator getting heavier. That does space the dots out —
+                        24px apart rather than 12 — which is the cost of them
+                        being reliably tappable.
+                    -->
+                    <div v-if="featured.length > 1" class="flex items-center justify-center pt-1">
                         <button v-for="(s, i) in featured" :key="s.id" type="button"
-                            class="rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                            :class="i === slideIndex
-                                ? 'w-5 h-1.5 bg-blue-500'
-                                : dark ? 'w-1.5 h-1.5 bg-zinc-700 hover:bg-zinc-500' : 'w-1.5 h-1.5 bg-zinc-300 hover:bg-zinc-400'"
+                            class="group grid place-items-center w-6 h-6 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                             :aria-label="t('home.go_to_server', { name: s.name })"
                             :aria-current="i === slideIndex ? 'true' : undefined"
                             :title="s.name"
                             @click="goToSlide(i)"
-                        />
+                        >
+                            <span class="rounded-full transition-all duration-300"
+                                :class="i === slideIndex
+                                    ? 'w-5 h-1.5 bg-blue-500'
+                                    : dark ? 'w-1.5 h-1.5 bg-zinc-700 group-hover:bg-zinc-500' : 'w-1.5 h-1.5 bg-zinc-300 group-hover:bg-zinc-400'"
+                                aria-hidden="true"
+                            />
+                        </button>
                     </div>
 
                     <div v-if="!featured.length"
                         class="rounded-2xl border px-6 py-10 text-center"
                         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white'">
                         <span class="mx-auto mb-3 w-11 h-11 rounded-2xl flex items-center justify-center"
-                            :class="dark ? 'bg-zinc-900 text-zinc-700' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
+                            :class="dark ? 'bg-zinc-900 text-zinc-500' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
                             <Wifi :size="20" :stroke-width="1.5" />
                         </span>
-                        <p class="text-[13px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-700'">
+                        <p class="text-[13px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-500'">
                             {{ t('home.no_servers_online') }}
                         </p>
                         <p class="text-[11.5px] mt-1" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
@@ -968,7 +994,7 @@ function toggleFavourite(server: HomeServer) {
                                 <Clock v-else :size="11" :stroke-width="2.2"
                                     :class="dark ? 'text-zinc-500' : 'text-zinc-500'" aria-hidden="true" />
                                 <h3 class="text-[10.5px] font-black uppercase tracking-widest flex-1"
-                                    :class="dark ? 'text-zinc-400' : 'text-zinc-600'">{{ group.label }}</h3>
+                                    :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ group.label }}</h3>
                                 <span v-if="group.data?.users.length"
                                     class="px-2 py-0.5 rounded-full text-[11px] font-bold border tabular-nums"
                                     :class="group.countClass">
@@ -990,10 +1016,10 @@ function toggleFavourite(server: HomeServer) {
                                     <li v-for="u in group.data.users" :key="u.id">
                                         <Link :href="u.username ? route('profile.show', { username: u.username }) : '#'"
                                             class="group/user flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full border text-[11.5px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                                            :class="dark ? 'border-zinc-800 bg-zinc-900/60 text-zinc-300 hover:text-blue-400 hover:border-zinc-700' : 'border-zinc-200 bg-zinc-50 text-zinc-700 hover:text-blue-600 hover:border-zinc-300'"
+                                            :class="dark ? 'border-zinc-800 bg-zinc-900/60 text-zinc-300 hover:text-blue-400 hover:border-zinc-700' : 'border-zinc-200 bg-zinc-50 text-zinc-500 hover:text-blue-600 hover:border-zinc-300'"
                                             :title="u.username ? '@' + u.username : u.name">
                                             <span class="w-5 h-5 rounded-full overflow-hidden shrink-0 flex items-center justify-center text-[9px] font-black"
-                                                :class="dark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-200 text-zinc-600'">
+                                                :class="dark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-200 text-zinc-500'">
                                                 <!-- alt is empty on purpose: the name is right beside it,
                                                      so announcing the avatar too would just repeat it. -->
                                                 <img v-if="u.avatar" :src="u.avatar" alt="" loading="lazy" decoding="async"
@@ -1004,7 +1030,7 @@ function toggleFavourite(server: HomeServer) {
                                         </Link>
                                     </li>
                                 </ul>
-                                <p v-else class="text-[11.5px]" :class="dark ? 'text-zinc-600' : 'text-zinc-500'">
+                                <p v-else class="text-[11.5px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                                     {{ group.empty }}
                                 </p>
                             </div>

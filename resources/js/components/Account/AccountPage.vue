@@ -128,7 +128,7 @@ function selectMobileTab(tabId: string) {
                     {{ heading }}
                 </h1>
                 <p class="hc-hero-in hc-hero-in--1 text-[13.5px] leading-relaxed mt-1.5 max-w-xl"
-                   :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                   :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                     <slot name="subtitle">{{ sectionDescription }}</slot>
                 </p>
             </div>
@@ -144,7 +144,7 @@ function selectMobileTab(tabId: string) {
                     class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12.5px] font-semibold whitespace-nowrap transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                     :class="activeTab === tab.id
                         ? 'bg-blue-600 text-white'
-                        : dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05]' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'"
+                        : dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05]' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100'"
                     :aria-current="activeTab === tab.id ? 'page' : undefined"
                     @click="selectMobileTab(tab.id)">
                     {{ tab.label }}
@@ -185,13 +185,13 @@ function selectMobileTab(tabId: string) {
                                 :class="dark ? 'border-zinc-800/60 bg-[#17171a]' : 'border-zinc-200 bg-zinc-50'">
                                 <Lightbulb :size="13" :stroke-width="2" class="text-amber-500" aria-hidden="true" />
                                 <h2 class="text-[11px] font-black uppercase tracking-widest"
-                                    :class="dark ? 'text-zinc-400' : 'text-zinc-600'">{{ t('account.help_title') }}</h2>
+                                    :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ t('account.help_title') }}</h2>
                             </div>
                             <ul class="p-4 flex flex-col gap-3">
                                 <li v-for="(tip, i) in helpTips" :key="i"
                                     class="hc-reveal flex items-start gap-2.5 text-[12.5px] leading-relaxed"
                                     :style="{ animationDelay: 0.05 + i * 0.05 + 's' }"
-                                    :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                                    :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                                     <span class="mt-1.5 w-1 h-1 rounded-full shrink-0"
                                         :class="dark ? 'bg-zinc-600' : 'bg-zinc-400'" aria-hidden="true" />
                                     {{ tip }}

@@ -88,7 +88,7 @@ function recheck() {
                                 <code class="text-zinc-300 text-xs font-mono leading-relaxed flex-1 break-all">{{ check.fix }}</code>
                                 <button
                                     type="button"
-                                    class="shrink-0 text-zinc-600 hover:text-zinc-300 transition p-0.5"
+                                    class="shrink-0 text-zinc-500 hover:text-zinc-300 transition p-0.5"
                                     :aria-label="`Copy fix for ${check.label}`"
                                     @click="copy(check.fix)"
                                 >
@@ -129,7 +129,7 @@ function recheck() {
                             </div>
                             <span
                                 class="text-xs font-medium text-right shrink-0"
-                                :class="check.passed ? 'text-zinc-600' : check.critical ? 'text-red-400' : 'text-amber-400'"
+                                :class="check.passed ? 'text-zinc-500' : check.critical ? 'text-red-400' : 'text-amber-400'"
                             >{{ check.value }}</span>
                         </div>
                     </div>

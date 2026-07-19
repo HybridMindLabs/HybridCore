@@ -165,8 +165,8 @@ function playerBarColor(s: ServerStatus | null) {
 }
 /** Tailwind classes rather than a raw hex, so ping keeps its contrast in both themes. */
 function pingClass(s: ServerStatus | null): string {
-    if (s?.ping == null) return dark.value ? 'text-zinc-600' : 'text-zinc-500';
-    if (s.ping < 50) return dark.value ? 'text-emerald-400' : 'text-emerald-700';
+    if (s?.ping == null) return dark.value ? 'text-zinc-500' : 'text-zinc-500';
+    if (s.ping < 50) return dark.value ? 'text-emerald-400' : 'text-emerald-800';
     if (s.ping < 100) return dark.value ? 'text-amber-400' : 'text-amber-700';
     return dark.value ? 'text-red-400' : 'text-red-600';
 }
@@ -256,7 +256,14 @@ const activityTiles = computed(() => [
 </script>
 
 <template>
-    <Head :title="t('servers.game_servers_title', { game: game.name })" />
+    <Head>
+        <title>{{ t('servers.game_servers_title', { game: game.name }) }}</title>
+        <meta name="description" :content="t('servers.meta_game', {
+            game: game.name,
+            count: String(servers.length),
+            online: String(counts.online),
+        })" />
+    </Head>
 
     <PublicLayout>
 
@@ -306,8 +313,8 @@ const activityTiles = computed(() => [
                     <div class="max-w-xl">
                         <div class="hc-hero-in inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[10.5px] font-bold uppercase tracking-widest"
                             :class="stats.online > 0
-                                ? (dark ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700')
-                                : (dark ? 'border-zinc-700 bg-zinc-800/60 text-zinc-400' : 'border-zinc-300 bg-zinc-200/70 text-zinc-600')"
+                                ? (dark ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-800')
+                                : (dark ? 'border-zinc-700 bg-zinc-800/60 text-zinc-400' : 'border-zinc-300 bg-zinc-200/70 text-zinc-500')"
                             aria-live="polite">
                             <span v-if="stats.online > 0" class="hc-live-dot" aria-hidden="true" />
                             {{ t('servers.game_live_badge', { online: stats.online, total: stats.total }) }}
@@ -325,7 +332,7 @@ const activityTiles = computed(() => [
                         </div>
 
                         <p class="hc-hero-in hc-hero-in--2 mt-3 text-[14px] sm:text-[15px] leading-relaxed max-w-lg"
-                           :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                           :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                             {{ t('servers.game_hero_description', { game: game.name }) }}
                         </p>
                     </div>
@@ -334,22 +341,24 @@ const activityTiles = computed(() => [
                          guess what "online" is counting. -->
                     <dl class="hc-hero-in hc-hero-in--2 grid grid-cols-3 gap-2.5">
                         <div v-for="(item, i) in heroStats" :key="item.label"
-                            class="hc-reveal rounded-xl border px-3 py-2.5 backdrop-blur-md"
+                            class="hc-reveal flex flex-col rounded-xl border px-3 py-2.5 backdrop-blur-md"
                             :style="{ animationDelay: 0.18 + i * 0.06 + 's' }"
                             :class="dark
                                 ? 'border-zinc-700/70 bg-zinc-900/85 shadow-lg shadow-black/30'
                                 : 'border-zinc-300 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.10)]'"
                             :title="item.hint">
-                            <dd class="text-[20px] font-black leading-none tabular-nums"
+                            <!-- Term first, as a <dl> group requires; `order`
+                                 puts the figure back above its label. -->
+                            <dt class="order-2 text-[10px] font-bold uppercase tracking-widest mt-1.5"
+                                :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ item.label }}</dt>
+                            <dd class="order-1 text-[20px] font-black leading-none tabular-nums"
                                 :class="item.accent
-                                    ? (dark ? 'text-emerald-400' : 'text-emerald-700')
+                                    ? (dark ? 'text-emerald-400' : 'text-emerald-800')
                                     : (dark ? 'text-zinc-100' : 'text-zinc-900')">
                                 {{ item.value.toLocaleString() }}
                             </dd>
-                            <dt class="text-[10px] font-bold uppercase tracking-widest mt-1.5"
-                                :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ item.label }}</dt>
-                            <p class="text-[10.5px] leading-snug mt-1"
-                               :class="dark ? 'text-zinc-600' : 'text-zinc-500'">{{ item.hint }}</p>
+                            <dd class="order-3 text-[10.5px] leading-snug mt-1"
+                                :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ item.hint }}</dd>
                         </div>
                     </dl>
                 </div>
@@ -363,14 +372,14 @@ const activityTiles = computed(() => [
                         class="flex items-center gap-2 px-5 py-3 text-[13px] font-semibold border-b-2 -mb-px transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50"
                         :class="activeTab === tab.key
                             ? dark ? 'text-white border-white' : 'text-zinc-900 border-zinc-900'
-                            : dark ? 'text-white/45 border-transparent hover:text-white/75' : 'text-zinc-600 border-transparent hover:text-zinc-900'"
+                            : dark ? 'text-white/45 border-transparent hover:text-white/75' : 'text-zinc-500 border-transparent hover:text-zinc-900'"
                         :aria-pressed="activeTab === tab.key"
                         :title="tab.hint"
                         @click="activeTab = tab.key"
                     >
                         {{ tab.label }}
                         <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold tabular-nums"
-                            :class="dark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-200 text-zinc-600'">{{ tab.count }}</span>
+                            :class="dark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-200 text-zinc-500'">{{ tab.count }}</span>
                     </button>
                 </div>
             </div>
@@ -399,7 +408,7 @@ const activityTiles = computed(() => [
                         ? dark ? 'bg-blue-600 border-blue-600 text-white' : 'bg-blue-600 border-blue-600 text-white'
                         : dark
                             ? 'border-zinc-800/80 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 hover:bg-white/[0.04]'
-                            : 'border-zinc-300 bg-white text-zinc-600 hover:text-zinc-900 hover:border-zinc-400'"
+                            : 'border-zinc-300 bg-white text-zinc-500 hover:text-zinc-900 hover:border-zinc-400'"
                     :aria-pressed="activeFilter === key"
                     @click="activeFilter = key as any"
                 >
@@ -408,7 +417,7 @@ const activityTiles = computed(() => [
                         class="px-1.5 py-0.5 rounded-md text-[10px] font-bold tabular-nums"
                         :class="activeFilter === key
                             ? 'bg-black/25 text-white'
-                            : dark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-200 text-zinc-600'"
+                            : dark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-200 text-zinc-500'"
                     >{{ counts[key as keyof typeof counts] }}</span>
                 </button>
             </div>
@@ -429,7 +438,7 @@ const activityTiles = computed(() => [
                             :placeholder="t('servers.search')"
                             class="w-full pl-9 pr-9 py-2.5 rounded-lg border text-[13px] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                             :class="dark
-                                ? 'border-zinc-800/80 bg-[#111113] text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-700'
+                                ? 'border-zinc-800/80 bg-[#111113] text-zinc-100 placeholder:text-zinc-500 focus:border-zinc-700'
                                 : 'border-zinc-300 bg-white text-zinc-900 placeholder:text-zinc-500 focus:border-blue-500/60'"
                         />
                         <button v-if="search" type="button" @click="search = ''"
@@ -457,7 +466,7 @@ const activityTiles = computed(() => [
                             :class="[
                                 viewMode === mode
                                     ? dark ? 'bg-zinc-800 text-zinc-100' : 'bg-zinc-200 text-zinc-900'
-                                    : dark ? 'text-zinc-500 hover:text-zinc-200' : 'text-zinc-600 hover:text-zinc-900',
+                                    : dark ? 'text-zinc-500 hover:text-zinc-200' : 'text-zinc-500 hover:text-zinc-900',
                                 dark ? 'border-zinc-800/80' : 'border-zinc-300',
                             ]"
                             :aria-pressed="viewMode === mode"
@@ -473,7 +482,7 @@ const activityTiles = computed(() => [
                         class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border text-[12px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 disabled:opacity-60"
                         :class="dark
                             ? 'border-zinc-800/80 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700'
-                            : 'border-zinc-300 text-zinc-600 hover:text-zinc-900 hover:border-zinc-400'"
+                            : 'border-zinc-300 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400'"
                         :disabled="refreshing"
                         @click="refresh"
                     >
@@ -495,7 +504,7 @@ const activityTiles = computed(() => [
                     <!-- Header -->
                     <div
                         class="hidden lg:grid grid-cols-[minmax(0,1fr)_170px_110px_150px_80px_96px] border-b text-[11px] font-semibold uppercase tracking-wider"
-                        :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e] text-zinc-600' : 'border-zinc-100 bg-zinc-50 text-zinc-400'"
+                        :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e] text-zinc-500' : 'border-zinc-100 bg-zinc-50 text-zinc-400'"
                     >
                         <button
                             class="text-left px-5 py-3 flex items-center gap-1 hover:text-current transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50 transition"
@@ -594,7 +603,7 @@ const activityTiles = computed(() => [
                                     </span>
                                     <span v-if="server.country_code"
                                         class="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wide"
-                                        :class="dark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-200 text-zinc-600'"
+                                        :class="dark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-200 text-zinc-500'"
                                         :title="server.country_code.toUpperCase()">{{ server.country_code.toUpperCase() }}</span>
                                     <!-- Below lg the dedicated columns are gone, so the
                                          two numbers a player decides on move here. -->
@@ -607,13 +616,13 @@ const activityTiles = computed(() => [
                         <!-- Address + copy -->
                         <div class="relative hidden lg:flex px-4 items-center gap-1.5 min-w-0">
                             <span class="text-[12px] font-mono truncate flex-1"
-                                :class="dark ? 'text-zinc-400' : 'text-zinc-600'">{{ server.address }}</span>
+                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ server.address }}</span>
                             <button
                                 type="button"
                                 class="w-7 h-7 flex items-center justify-center rounded-md transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                                 :class="copiedId === server.id
                                     ? 'text-emerald-500'
-                                    : dark ? 'text-zinc-600 hover:text-zinc-200 hover:bg-white/[0.06]' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200/70'"
+                                    : dark ? 'text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.06]' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200/70'"
                                 :aria-label="t('home.copy_address', { address: server.address })"
                                 :title="copiedId === server.id ? t('home.copied') : t('home.copy_address', { address: server.address })"
                                 @click="copyIp(server)"
@@ -628,7 +637,7 @@ const activityTiles = computed(() => [
                                 class="text-[12.5px] font-mono tabular-nums" :class="pingClass(server.status)">
                                 {{ server.status.ping }}ms
                             </span>
-                            <span v-else class="text-[12px]" :class="dark ? 'text-zinc-700' : 'text-zinc-400'">—</span>
+                            <span v-else class="text-[12px]" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">—</span>
                         </div>
 
                         <!-- Tags -->
@@ -637,7 +646,7 @@ const activityTiles = computed(() => [
                                 v-for="tag in server.tags.slice(0, 2)"
                                 :key="tag"
                                 class="text-[10px] font-semibold px-1.5 py-0.5 rounded truncate"
-                                :class="dark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-200 text-zinc-600'"
+                                :class="dark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-200 text-zinc-500'"
                             >{{ tag }}</span>
                         </div>
 
@@ -646,7 +655,7 @@ const activityTiles = computed(() => [
                             <a
                                 :href="route('servers.connect', { game: game.slug, ip: server.ip, port: server.port })"
                                 class="w-8 h-8 flex items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                                :class="dark ? 'text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10' : 'text-zinc-500 hover:text-emerald-700 hover:bg-emerald-500/10'"
+                                :class="dark ? 'text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10' : 'text-zinc-500 hover:text-emerald-800 hover:bg-emerald-500/10'"
                                 :aria-label="t('home.connect_to', { name: server.name })"
                                 :title="t('home.connect_to', { name: server.name })"
                             >
@@ -667,7 +676,7 @@ const activityTiles = computed(() => [
                             </span>
                             <span v-else
                                 class="px-2.5 py-1 rounded-md text-[11px] font-bold min-w-[62px] text-center"
-                                :class="dark ? 'bg-zinc-800 text-zinc-500' : 'bg-zinc-200 text-zinc-600'">
+                                :class="dark ? 'bg-zinc-800 text-zinc-500' : 'bg-zinc-200 text-zinc-500'">
                                 {{ t('servers.offline') }}
                             </span>
 
@@ -676,7 +685,7 @@ const activityTiles = computed(() => [
                                 class="w-8 h-8 flex items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 disabled:opacity-50"
                                 :class="server.is_favourited
                                     ? 'text-amber-400'
-                                    : dark ? 'text-zinc-600 hover:text-amber-400 hover:bg-white/[0.06]' : 'text-zinc-400 hover:text-amber-500 hover:bg-zinc-200/70'"
+                                    : dark ? 'text-zinc-500 hover:text-amber-400 hover:bg-white/[0.06]' : 'text-zinc-400 hover:text-amber-500 hover:bg-zinc-200/70'"
                                 :aria-pressed="server.is_favourited"
                                 :aria-label="t(server.is_favourited ? 'home.unfavourite_server' : 'home.favourite_server', { name: server.name })"
                                 :title="t(server.is_favourited ? 'home.unfavourite_server' : 'home.favourite_server', { name: server.name })"
@@ -690,10 +699,10 @@ const activityTiles = computed(() => [
 
                     <div v-if="!filtered.length" class="flex flex-col items-center text-center px-6 py-16">
                         <span class="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
-                            :class="dark ? 'bg-zinc-900 text-zinc-700' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
+                            :class="dark ? 'bg-zinc-900 text-zinc-500' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
                             <Wifi :size="22" :stroke-width="1.5" />
                         </span>
-                        <p class="text-[14px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-700'">
+                        <p class="text-[14px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-500'">
                             {{ t('servers.no_servers') }}
                         </p>
                         <p class="text-[12.5px] mt-1 max-w-xs" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
@@ -738,7 +747,7 @@ const activityTiles = computed(() => [
                             </span>
                             <span v-else
                                 class="absolute top-3 right-3 px-2.5 py-1 rounded-md text-[10.5px] font-bold backdrop-blur-md"
-                                :class="dark ? 'bg-zinc-900/80 text-zinc-400' : 'bg-white/85 text-zinc-600'">
+                                :class="dark ? 'bg-zinc-900/80 text-zinc-400' : 'bg-white/85 text-zinc-500'">
                                 {{ t('servers.offline') }}
                             </span>
 
@@ -774,12 +783,12 @@ const activityTiles = computed(() => [
 
                             <div class="flex items-center gap-1.5 mt-3">
                                 <span class="flex-1 min-w-0 text-[11.5px] font-mono truncate"
-                                    :class="dark ? 'text-zinc-400' : 'text-zinc-600'">{{ server.address }}</span>
+                                    :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ server.address }}</span>
                                 <button type="button"
                                     class="w-7 h-7 flex items-center justify-center rounded-md transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                                     :class="copiedId === server.id
                                         ? 'text-emerald-500'
-                                        : dark ? 'text-zinc-600 hover:text-zinc-200 hover:bg-white/[0.06]' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200/70'"
+                                        : dark ? 'text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.06]' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200/70'"
                                     :aria-label="t('home.copy_address', { address: server.address })"
                                     :title="copiedId === server.id ? t('home.copied') : t('home.copy_address', { address: server.address })"
                                     @click="copyIp(server)">
@@ -789,7 +798,7 @@ const activityTiles = computed(() => [
                                     class="w-7 h-7 flex items-center justify-center rounded-md transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 disabled:opacity-50"
                                     :class="server.is_favourited
                                         ? 'text-amber-400'
-                                        : dark ? 'text-zinc-600 hover:text-amber-400 hover:bg-white/[0.06]' : 'text-zinc-400 hover:text-amber-500 hover:bg-zinc-200/70'"
+                                        : dark ? 'text-zinc-500 hover:text-amber-400 hover:bg-white/[0.06]' : 'text-zinc-400 hover:text-amber-500 hover:bg-zinc-200/70'"
                                     :aria-pressed="server.is_favourited"
                                     :aria-label="t(server.is_favourited ? 'home.unfavourite_server' : 'home.favourite_server', { name: server.name })"
                                     :disabled="favouriteLoading === server.id"
@@ -798,7 +807,7 @@ const activityTiles = computed(() => [
                                 </button>
                                 <a :href="route('servers.connect', { game: game.slug, ip: server.ip, port: server.port })"
                                     class="w-7 h-7 flex items-center justify-center rounded-md transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                                    :class="dark ? 'text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10' : 'text-zinc-500 hover:text-emerald-700 hover:bg-emerald-500/10'"
+                                    :class="dark ? 'text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10' : 'text-zinc-500 hover:text-emerald-800 hover:bg-emerald-500/10'"
                                     :aria-label="t('home.connect_to', { name: server.name })"
                                     :title="t('home.connect_to', { name: server.name })">
                                     <Play :size="14" :stroke-width="2" fill="currentColor" aria-hidden="true" />
@@ -809,10 +818,10 @@ const activityTiles = computed(() => [
 
                     <div v-if="!filtered.length" class="col-span-full flex flex-col items-center text-center px-6 py-16">
                         <span class="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
-                            :class="dark ? 'bg-zinc-900 text-zinc-700' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
+                            :class="dark ? 'bg-zinc-900 text-zinc-500' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
                             <Wifi :size="22" :stroke-width="1.5" />
                         </span>
-                        <p class="text-[14px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-700'">
+                        <p class="text-[14px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-500'">
                             {{ t('servers.no_servers') }}
                         </p>
                         <p class="text-[12.5px] mt-1 max-w-xs" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
@@ -848,7 +857,7 @@ const activityTiles = computed(() => [
                         class="px-4 py-2.5 text-[12.5px] font-semibold border-b-2 -mb-px whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50"
                         :class="activeStatTab === tab.key
                             ? 'text-blue-500 border-blue-500'
-                            : dark ? 'text-zinc-500 border-transparent hover:text-zinc-200' : 'text-zinc-600 border-transparent hover:text-zinc-900'"
+                            : dark ? 'text-zinc-500 border-transparent hover:text-zinc-200' : 'text-zinc-500 border-transparent hover:text-zinc-900'"
                         :aria-pressed="activeStatTab === tab.key"
                         @click="activeStatTab = tab.key">
                         {{ tab.label }}
@@ -860,21 +869,21 @@ const activityTiles = computed(() => [
                     <ul v-if="insights.maps.length" class="flex flex-col gap-2.5">
                         <li v-for="m in insights.maps" :key="m.map" class="flex items-center gap-3">
                             <span class="w-[150px] shrink-0 text-[12.5px] font-mono truncate"
-                                :class="dark ? 'text-zinc-300' : 'text-zinc-700'">{{ m.map }}</span>
+                                :class="dark ? 'text-zinc-300' : 'text-zinc-500'">{{ m.map }}</span>
                             <span class="flex-1 h-3.5 rounded-sm overflow-hidden"
                                 :class="dark ? 'bg-zinc-800/70' : 'bg-zinc-100'">
                                 <span class="hc-hero-bar block h-full rounded-r-[4px] bg-blue-500"
                                     :style="{ width: Math.max(2, m.share) + '%' }" />
                             </span>
                             <span class="w-10 shrink-0 text-right text-[12px] font-bold tabular-nums"
-                                :class="dark ? 'text-zinc-300' : 'text-zinc-700'">{{ m.share }}%</span>
+                                :class="dark ? 'text-zinc-300' : 'text-zinc-500'">{{ m.share }}%</span>
                         </li>
                     </ul>
-                    <p v-else class="text-[12.5px] py-6 text-center" :class="dark ? 'text-zinc-600' : 'text-zinc-500'">
+                    <p v-else class="text-[12.5px] py-6 text-center" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                         {{ t('servers.not_enough_data') }}
                     </p>
                     <p v-if="insights.maps.length" class="text-[11px] mt-3"
-                       :class="dark ? 'text-zinc-600' : 'text-zinc-500'">
+                       :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                         {{ t('servers.maps_hint') }}
                     </p>
                 </div>
@@ -898,7 +907,7 @@ const activityTiles = computed(() => [
                             class="px-5 py-4 text-center" :class="dark ? 'bg-[#111113]' : 'bg-white'"
                             :title="tile.hint">
                             <p class="text-[11.5px] font-semibold"
-                               :class="dark ? 'text-zinc-500' : 'text-zinc-600'">{{ tile.label }}</p>
+                               :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ tile.label }}</p>
                             <p class="text-[26px] font-black leading-none tabular-nums mt-1.5"
                                :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
                                 {{ tile.value }}<span v-if="tile.suffix" class="text-[15px] font-bold"

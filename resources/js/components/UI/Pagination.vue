@@ -38,7 +38,7 @@ function go(url: string | null) {
                     ? 'bg-blue-500 text-[#0a0f1a] font-semibold'
                     : link.url
                         ? 'text-zinc-400 hover:bg-zinc-900/60 hover:text-zinc-100'
-                        : 'text-zinc-700 cursor-not-allowed'"
+                        : 'text-zinc-500 cursor-not-allowed'"
                 @click="go(link.url)"
                 v-html="link.label"
             />

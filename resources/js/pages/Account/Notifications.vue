@@ -113,7 +113,7 @@ function notifLink(n: Notif): string | null {
                         {{ t('account.notif_unread_count', { count: unreadCount }) }}
                     </span>
                 </div>
-                <p class="text-[12px] mt-0.5" :class="dark ? 'text-zinc-500' : 'text-zinc-600'">
+                <p class="text-[12px] mt-0.5" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                     {{ t('account.notif_subtitle') }}
                 </p>
             </div>
@@ -135,10 +135,10 @@ function notifLink(n: Notif): string | null {
 
         <div v-if="notifications.data.length === 0" class="flex flex-col items-center text-center px-6 py-14">
             <span class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                :class="dark ? 'bg-zinc-900 text-zinc-700' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
+                :class="dark ? 'bg-zinc-900 text-zinc-500' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
                 <Bell :size="26" :stroke-width="1.4" />
             </span>
-            <p class="text-[15px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-700'">
+            <p class="text-[15px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-500'">
                 {{ t('account.notif_empty') }}
             </p>
             <p class="text-[13px] mt-1 max-w-sm" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">

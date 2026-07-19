@@ -39,7 +39,7 @@ const steps: Step[] = [
                     </div>
                     <div class="min-w-0">
                         <p class="text-zinc-100 text-sm font-bold leading-tight">HybridCore</p>
-                        <p class="text-zinc-600 text-[11px] leading-tight">Setup</p>
+                        <p class="text-zinc-500 text-[11px] leading-tight">Setup</p>
                     </div>
                 </div>
 
@@ -66,14 +66,14 @@ const steps: Step[] = [
                                     ? 'bg-blue-500/15 border-blue-500/40 text-blue-400'
                                     : step.number === currentStep
                                         ? 'bg-blue-500 border-blue-500 text-white shadow-md shadow-blue-500/30'
-                                        : 'bg-zinc-900 border-zinc-800 text-zinc-600'"
+                                        : 'bg-zinc-900 border-zinc-800 text-zinc-500'"
                             >
                                 <Check v-if="step.number < currentStep" :size="11" :stroke-width="3" />
                                 <span v-else>{{ step.number }}</span>
                             </div>
                             <span
                                 class="text-xs font-medium truncate transition-colors duration-300"
-                                :class="step.number === currentStep ? 'text-zinc-100' : step.number < currentStep ? 'text-blue-400/80' : 'text-zinc-600'"
+                                :class="step.number === currentStep ? 'text-zinc-100' : step.number < currentStep ? 'text-blue-400/80' : 'text-zinc-500'"
                             >{{ step.label }}</span>
                         </div>
                         <div
@@ -87,7 +87,7 @@ const steps: Step[] = [
                 <div class="sm:hidden">
                     <div class="flex items-baseline justify-between mb-2">
                         <span class="text-zinc-100 text-xs font-semibold">{{ steps[currentStep - 1]?.label }}</span>
-                        <span class="text-zinc-600 text-[11px] font-mono">{{ currentStep }} / {{ steps.length }}</span>
+                        <span class="text-zinc-500 text-[11px] font-mono">{{ currentStep }} / {{ steps.length }}</span>
                     </div>
                     <div class="h-1 bg-zinc-800/70 rounded-full overflow-hidden">
                         <div
@@ -107,16 +107,16 @@ const steps: Step[] = [
 
         <footer class="relative border-t border-zinc-800/60 px-6 py-4">
             <div class="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-                <p class="text-zinc-700 text-xs">
+                <p class="text-zinc-500 text-xs">
                     HybridCore<span v-if="version" class="font-mono"> v{{ version }}</span>
                     <span class="text-zinc-800"> · </span>
                     <span>Self-hosted community platform</span>
                 </p>
                 <div class="flex items-center gap-4">
                     <a href="https://github.com/HybridMindLabs/HybridCore/wiki" target="_blank" rel="noopener"
-                       class="text-zinc-600 hover:text-zinc-300 text-xs transition">Documentation</a>
+                       class="text-zinc-500 hover:text-zinc-300 text-xs transition">Documentation</a>
                     <a href="https://github.com/HybridMindLabs/HybridCore" target="_blank" rel="noopener"
-                       class="text-zinc-600 hover:text-zinc-300 text-xs transition">GitHub</a>
+                       class="text-zinc-500 hover:text-zinc-300 text-xs transition">GitHub</a>
                 </div>
             </div>
         </footer>

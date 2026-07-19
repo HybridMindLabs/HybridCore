@@ -1,6 +1,11 @@
 <?php
 
 return [
+    // Meta descriptions, addressed to a player reading a search result.
+    'meta_index' => 'Всички игри тук, с живи бройки, карти и пинг. Сървъри: :servers · Играчи в момента: :players.',
+    'meta_game' => 'Живи бройки играчи, карти и пинг за :game. В списъка: :count · Онлайн сега: :online.',
+    'meta_show' => ':name — сървър за :game. Виж кой играе, коя е картата и как да се свържеш.',
+
     'title' => 'Сървъри',
     'subtitle' => 'Намери и се присъедини към общностни сървъри',
     'all_games' => 'Всички игри',

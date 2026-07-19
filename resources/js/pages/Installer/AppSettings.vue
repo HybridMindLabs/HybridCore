@@ -60,7 +60,7 @@ const selectClasses =
                             <option v-for="(label, code) in props.locales" :key="code" :value="code">{{ label }}</option>
                         </select>
                         <p v-if="form.errors.app_locale" class="text-red-400 text-xs mt-1.5">{{ form.errors.app_locale }}</p>
-                        <p v-else class="text-zinc-600 text-xs mt-1.5 leading-relaxed">Players can pick their own.</p>
+                        <p v-else class="text-zinc-500 text-xs mt-1.5 leading-relaxed">Players can pick their own.</p>
                     </div>
                     <div>
                         <label class="block text-zinc-400 text-xs font-semibold mb-1.5">Timezone</label>
@@ -68,7 +68,7 @@ const selectClasses =
                             <option v-for="(label, tz) in props.timezones" :key="tz" :value="tz">{{ label }}</option>
                         </select>
                         <p v-if="form.errors.app_timezone" class="text-red-400 text-xs mt-1.5">{{ form.errors.app_timezone }}</p>
-                        <p v-else class="text-zinc-600 text-xs mt-1.5 leading-relaxed">Used for timestamps and scheduled jobs.</p>
+                        <p v-else class="text-zinc-500 text-xs mt-1.5 leading-relaxed">Used for timestamps and scheduled jobs.</p>
                     </div>
                 </div>
 

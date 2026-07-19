@@ -143,13 +143,13 @@ const nextRule = computed(() => ruleIndex.value < props.allRules.length - 1 ? pr
                         <p
                             v-if="rule.excerpt"
                             class="hc-hero-in hc-hero-in--2 mt-3 text-[15px] leading-relaxed max-w-lg"
-                            :class="dark ? 'text-zinc-400' : 'text-zinc-600'"
+                            :class="dark ? 'text-zinc-400' : 'text-zinc-500'"
                         >{{ rule.excerpt }}</p>
 
                         <div class="hc-hero-in hc-hero-in--3 flex items-center gap-2.5 mt-6 flex-wrap">
                             <Link :href="route('rules.index')"
                                 class="group inline-flex items-center gap-2 font-bold text-[13.5px] px-5 py-2.5 rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                                :class="dark ? 'border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600 hover:bg-white/[0.04]' : 'border-zinc-300 text-zinc-700 hover:border-zinc-400 hover:bg-white'">
+                                :class="dark ? 'border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600 hover:bg-white/[0.04]' : 'border-zinc-300 text-zinc-500 hover:border-zinc-400 hover:bg-white'">
                                 <ArrowLeft :size="14" :stroke-width="2.2" aria-hidden="true"
                                     class="transition-transform group-hover:-translate-x-0.5" />
                                 {{ t('rules.back_to_rules') }}
@@ -173,7 +173,7 @@ const nextRule = computed(() => ruleIndex.value < props.allRules.length - 1 ? pr
                             <span class="text-[10px] font-bold uppercase tracking-widest"
                                 :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ t('rules.progress') }}</span>
                             <span class="text-[11px] font-bold tabular-nums"
-                                :class="dark ? 'text-zinc-300' : 'text-zinc-700'">{{ ruleIndex + 1 }} / {{ allRules.length }}</span>
+                                :class="dark ? 'text-zinc-300' : 'text-zinc-500'">{{ ruleIndex + 1 }} / {{ allRules.length }}</span>
                         </div>
 
                         <!-- One segment per rule; the ones you have passed stay filled -->
@@ -235,13 +235,13 @@ const nextRule = computed(() => ruleIndex.value < props.allRules.length - 1 ? pr
                                 class="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                                 :class="r.slug === rule.slug
                                     ? (dark ? 'bg-blue-500/15 text-blue-400 font-semibold' : 'bg-blue-500/10 text-blue-700 font-semibold')
-                                    : (dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.04]' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100')"
+                                    : (dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.04]' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100')"
                                 :aria-current="r.slug === rule.slug ? 'page' : undefined"
                             >
                                 <span class="text-[10px] font-black tabular-nums w-5 shrink-0"
                                     :class="r.slug === rule.slug
                                         ? (dark ? 'text-blue-400' : 'text-blue-600')
-                                        : (dark ? 'text-zinc-600' : 'text-zinc-400')"
+                                        : (dark ? 'text-zinc-500' : 'text-zinc-400')"
                                     aria-hidden="true"
                                 >{{ i + 1 }}</span>
                                 <span class="leading-snug truncate">{{ r.title }}</span>
@@ -268,7 +268,7 @@ const nextRule = computed(() => ruleIndex.value < props.allRules.length - 1 ? pr
                                     entry.level === 3 ? 'pl-6 text-[12px]' : '',
                                     activeId === entry.id
                                         ? (dark ? 'border-blue-500 text-blue-400' : 'border-blue-500 text-blue-700')
-                                        : (dark ? 'border-transparent text-zinc-500 hover:text-zinc-200' : 'border-transparent text-zinc-600 hover:text-zinc-900'),
+                                        : (dark ? 'border-transparent text-zinc-500 hover:text-zinc-200' : 'border-transparent text-zinc-500 hover:text-zinc-900'),
                                 ]"
                                 :aria-current="activeId === entry.id ? 'location' : undefined"
                             >{{ entry.text }}</a>
@@ -334,7 +334,7 @@ const nextRule = computed(() => ruleIndex.value < props.allRules.length - 1 ? pr
                                 class="px-3 py-1.5 rounded-full text-[13px] border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                                 :class="r.slug === rule.slug
                                     ? (dark ? 'bg-blue-500/15 text-blue-400 border-blue-500/25 font-semibold' : 'bg-blue-500/10 text-blue-700 border-blue-500/25 font-semibold')
-                                    : (dark ? 'text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-zinc-100' : 'text-zinc-600 border-zinc-300 hover:border-zinc-400 hover:text-zinc-900')"
+                                    : (dark ? 'text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-zinc-100' : 'text-zinc-500 border-zinc-300 hover:border-zinc-400 hover:text-zinc-900')"
                                 :aria-current="r.slug === rule.slug ? 'page' : undefined"
                             >{{ r.title }}</Link>
                         </div>

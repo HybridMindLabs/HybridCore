@@ -35,7 +35,7 @@ const channels = computed(() => [
         icon: Mail,
         label: t('contact.channel_form'),
         hint: t('contact.channel_form_hint'),
-        tint: dark.value ? 'bg-emerald-500/15 text-emerald-400' : 'bg-emerald-500/10 text-emerald-700',
+        tint: dark.value ? 'bg-emerald-500/15 text-emerald-400' : 'bg-emerald-500/10 text-emerald-800',
     },
     {
         icon: Clock,
@@ -73,7 +73,7 @@ const inputClass = computed(() =>
 );
 
 const labelClass = computed(() =>
-    `text-[11px] font-bold uppercase tracking-wider ${dark.value ? 'text-zinc-400' : 'text-zinc-600'}`
+    `text-[11px] font-bold uppercase tracking-wider ${dark.value ? 'text-zinc-400' : 'text-zinc-500'}`
 );
 </script>
 
@@ -127,7 +127,7 @@ const labelClass = computed(() =>
                         </h1>
 
                         <p class="hc-hero-in hc-hero-in--2 mt-3 text-[15px] leading-relaxed max-w-lg"
-                           :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                           :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                             {{ t('contact.hero_description') }}
                         </p>
                     </div>
@@ -142,7 +142,7 @@ const labelClass = computed(() =>
                         <p class="text-[12.5px] font-black" :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
                             {{ t('contact.include_title') }}
                         </p>
-                        <p class="text-[11.5px] leading-snug mt-0.5" :class="dark ? 'text-zinc-500' : 'text-zinc-600'">
+                        <p class="text-[11.5px] leading-snug mt-0.5" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                             {{ t('contact.include_hint') }}
                         </p>
 
@@ -150,7 +150,7 @@ const labelClass = computed(() =>
                             <li v-for="(item, i) in includeItems" :key="item"
                                 class="hc-reveal flex items-start gap-2.5 text-[12.5px]"
                                 :style="{ animationDelay: 0.2 + i * 0.06 + 's' }"
-                                :class="dark ? 'text-zinc-300' : 'text-zinc-700'">
+                                :class="dark ? 'text-zinc-300' : 'text-zinc-500'">
                                 <CheckCircle :size="14" :stroke-width="2" aria-hidden="true"
                                     class="shrink-0 mt-px text-emerald-500" />
                                 {{ item }}
@@ -170,7 +170,7 @@ const labelClass = computed(() =>
                     :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-sm'">
                     <div class="px-6 py-4 border-b" :class="dark ? 'border-zinc-800/60 bg-[#17171a]' : 'border-zinc-200 bg-zinc-50'">
                         <h2 class="text-[14px] font-black" :class="dark ? 'text-zinc-100' : 'text-zinc-900'">{{ t('contact.form_title') }}</h2>
-                        <p class="text-[12px] mt-0.5" :class="dark ? 'text-zinc-500' : 'text-zinc-600'">{{ t('contact.form_required_note') }}</p>
+                        <p class="text-[12px] mt-0.5" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ t('contact.form_required_note') }}</p>
                     </div>
 
                     <div class="p-6">
@@ -299,24 +299,28 @@ const labelClass = computed(() =>
                     <div class="rounded-2xl border overflow-hidden"
                         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]'">
                         <h2 class="px-5 py-3.5 border-b text-[11px] font-black uppercase tracking-widest"
-                            :class="dark ? 'border-zinc-800/60 bg-[#17171a] text-zinc-400' : 'border-zinc-200 bg-zinc-50 text-zinc-600'"
+                            :class="dark ? 'border-zinc-800/60 bg-[#17171a] text-zinc-400' : 'border-zinc-200 bg-zinc-50 text-zinc-500'"
                         >{{ t('contact.channels_title') }}</h2>
 
                         <dl class="p-5 flex flex-col gap-5">
-                            <div v-for="channel in channels" :key="channel.label" class="flex items-start gap-3">
-                                <div
-                                    class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                                    :class="channel.tint"
-                                    aria-hidden="true"
-                                >
-                                    <component :is="channel.icon" :size="15" :stroke-width="1.9" />
-                                </div>
-                                <div class="min-w-0">
-                                    <dt class="text-[11px] font-bold uppercase tracking-widest"
-                                        :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ channel.label }}</dt>
-                                    <dd class="text-[13px] leading-relaxed mt-0.5"
-                                        :class="dark ? 'text-zinc-300' : 'text-zinc-700'">{{ channel.hint }}</dd>
-                                </div>
+                            <!--
+                                A <dl> group may only contain <dt>/<dd>, so the
+                                icon moved inside the term and the pair is laid
+                                out on a grid instead of nested wrappers. pl-12
+                                lines the description up under the label: w-9
+                                (2.25rem) plus the 0.75rem beside it.
+                            -->
+                            <div v-for="channel in channels" :key="channel.label">
+                                <dt class="flex items-center gap-3 text-[11px] font-bold uppercase tracking-widest"
+                                    :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
+                                    <span class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                                        :class="channel.tint" aria-hidden="true">
+                                        <component :is="channel.icon" :size="15" :stroke-width="1.9" />
+                                    </span>
+                                    {{ channel.label }}
+                                </dt>
+                                <dd class="pl-12 text-[13px] leading-relaxed mt-0.5"
+                                    :class="dark ? 'text-zinc-300' : 'text-zinc-500'">{{ channel.hint }}</dd>
                             </div>
                         </dl>
                     </div>
@@ -335,13 +339,13 @@ const labelClass = computed(() =>
                                 :class="dark ? 'text-zinc-200 group-hover:text-blue-400' : 'text-zinc-900 group-hover:text-blue-700'">
                                 {{ t('contact.rules_shortcut_title') }}
                             </p>
-                            <p class="text-[12px]" :class="dark ? 'text-zinc-500' : 'text-zinc-600'">
+                            <p class="text-[12px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                                 {{ t('contact.rules_shortcut_hint') }}
                             </p>
                         </div>
                         <ArrowRight :size="15" :stroke-width="2" aria-hidden="true"
                             class="shrink-0 transition-transform group-hover:translate-x-1"
-                            :class="dark ? 'text-zinc-600 group-hover:text-blue-400' : 'text-zinc-400 group-hover:text-blue-600'" />
+                            :class="dark ? 'text-zinc-500 group-hover:text-blue-400' : 'text-zinc-400 group-hover:text-blue-600'" />
                     </Link>
                 </aside>
             </div>

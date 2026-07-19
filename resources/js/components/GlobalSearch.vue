@@ -70,11 +70,11 @@ useKeyboardShortcuts({
 <template>
     <!-- Trigger hint shown in topbar -->
     <button type="button"
-        class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/60 text-zinc-600 text-[12px] hover:border-zinc-700 hover:text-zinc-400 transition-colors"
+        class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/60 text-zinc-500 text-[12px] hover:border-zinc-700 hover:text-zinc-400 transition-colors"
         @click="show">
         <Search :size="12" :stroke-width="1.8" />
         <span>{{ t('navigation.search') }}</span>
-        <kbd class="ml-1 px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-600 text-[10px] font-mono border border-zinc-700">/</kbd>
+        <kbd class="ml-1 px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-500 text-[10px] font-mono border border-zinc-700">/</kbd>
     </button>
 
     <!-- Overlay -->
@@ -107,7 +107,7 @@ useKeyboardShortcuts({
                             class="text-zinc-400 hover:text-zinc-200 shrink-0" @click="query = ''">
                             <X :size="14" :stroke-width="2" />
                         </button>
-                        <kbd v-else class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-600 text-[10px] font-mono border border-zinc-700 shrink-0">Esc</kbd>
+                        <kbd v-else class="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-500 text-[10px] font-mono border border-zinc-700 shrink-0">Esc</kbd>
                     </div>
 
                     <!-- Results -->
@@ -115,7 +115,7 @@ useKeyboardShortcuts({
 
                         <!-- Users -->
                         <div v-if="users.length">
-                            <p class="px-4 pt-3 pb-1.5 text-[10px] uppercase tracking-widest font-bold text-zinc-600">Users</p>
+                            <p class="px-4 pt-3 pb-1.5 text-[10px] uppercase tracking-widest font-bold text-zinc-500">Users</p>
                             <a v-for="u in users" :key="u.id" :href="u.url"
                                 class="flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-900/60 transition-colors group"
                                 @click="hide">
@@ -125,15 +125,15 @@ useKeyboardShortcuts({
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-zinc-200 text-[13px] font-semibold truncate">{{ u.display_name }}</p>
-                                    <p class="text-zinc-600 text-[11px] font-mono">@{{ u.username }}</p>
+                                    <p class="text-zinc-500 text-[11px] font-mono">@{{ u.username }}</p>
                                 </div>
-                                <ArrowRight :size="12" :stroke-width="2" class="text-zinc-700 group-hover:text-zinc-400 shrink-0 transition-colors" />
+                                <ArrowRight :size="12" :stroke-width="2" class="text-zinc-500 group-hover:text-zinc-400 shrink-0 transition-colors" />
                             </a>
                         </div>
 
                         <!-- Servers -->
                         <div v-if="servers.length">
-                            <p class="px-4 pt-3 pb-1.5 text-[10px] uppercase tracking-widest font-bold text-zinc-600">Servers</p>
+                            <p class="px-4 pt-3 pb-1.5 text-[10px] uppercase tracking-widest font-bold text-zinc-500">Servers</p>
                             <a v-for="s in servers" :key="s.id" :href="s.url"
                                 class="flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-900/60 transition-colors group"
                                 @click="hide">
@@ -143,15 +143,15 @@ useKeyboardShortcuts({
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-zinc-200 text-[13px] font-semibold truncate">{{ s.name }}</p>
-                                    <p class="text-zinc-600 text-[11px]">{{ s.game ?? 'Unknown game' }}</p>
+                                    <p class="text-zinc-500 text-[11px]">{{ s.game ?? 'Unknown game' }}</p>
                                 </div>
-                                <ArrowRight :size="12" :stroke-width="2" class="text-zinc-700 group-hover:text-zinc-400 shrink-0 transition-colors" />
+                                <ArrowRight :size="12" :stroke-width="2" class="text-zinc-500 group-hover:text-zinc-400 shrink-0 transition-colors" />
                             </a>
                         </div>
 
                         <!-- News -->
                         <div v-if="articles.length">
-                            <p class="px-4 pt-3 pb-1.5 text-[10px] uppercase tracking-widest font-bold text-zinc-600">News</p>
+                            <p class="px-4 pt-3 pb-1.5 text-[10px] uppercase tracking-widest font-bold text-zinc-500">News</p>
                             <a v-for="a in articles" :key="a.id" :href="a.url"
                                 class="flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-900/60 transition-colors group"
                                 @click="hide">
@@ -160,15 +160,15 @@ useKeyboardShortcuts({
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-zinc-200 text-[13px] font-semibold truncate">{{ a.title }}</p>
-                                    <p v-if="a.excerpt" class="text-zinc-600 text-[11px] truncate">{{ a.excerpt }}</p>
+                                    <p v-if="a.excerpt" class="text-zinc-500 text-[11px] truncate">{{ a.excerpt }}</p>
                                 </div>
-                                <ArrowRight :size="12" :stroke-width="2" class="text-zinc-700 group-hover:text-zinc-400 shrink-0 transition-colors" />
+                                <ArrowRight :size="12" :stroke-width="2" class="text-zinc-500 group-hover:text-zinc-400 shrink-0 transition-colors" />
                             </a>
                         </div>
 
                         <!-- Extension-registered result groups -->
                         <div v-for="group in extensions" :key="group.key">
-                            <p class="px-4 pt-3 pb-1.5 text-[10px] uppercase tracking-widest font-bold text-zinc-600">{{ group.label }}</p>
+                            <p class="px-4 pt-3 pb-1.5 text-[10px] uppercase tracking-widest font-bold text-zinc-500">{{ group.label }}</p>
                             <a v-for="(row, i) in group.results" :key="i" :href="row.url"
                                 class="flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-900/60 transition-colors group"
                                 @click="hide">
@@ -177,22 +177,22 @@ useKeyboardShortcuts({
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-zinc-200 text-[13px] font-semibold truncate">{{ row.title }}</p>
-                                    <p v-if="row.meta" class="text-zinc-600 text-[11px] truncate">{{ row.meta }}</p>
+                                    <p v-if="row.meta" class="text-zinc-500 text-[11px] truncate">{{ row.meta }}</p>
                                 </div>
-                                <ArrowRight :size="12" :stroke-width="2" class="text-zinc-700 group-hover:text-zinc-400 shrink-0 transition-colors" />
+                                <ArrowRight :size="12" :stroke-width="2" class="text-zinc-500 group-hover:text-zinc-400 shrink-0 transition-colors" />
                             </a>
                         </div>
                     </div>
 
                     <!-- Empty -->
                     <div v-else-if="query.length >= 2 && !loading" class="px-4 py-8 text-center">
-                        <p class="text-zinc-600 text-[13px] font-semibold">No results for "<span class="text-zinc-400">{{ query }}</span>"</p>
+                        <p class="text-zinc-500 text-[13px] font-semibold">No results for "<span class="text-zinc-400">{{ query }}</span>"</p>
                     </div>
 
                     <!-- Hint -->
-                    <div v-else-if="!query" class="px-4 py-4 flex items-center gap-4 text-[11px] text-zinc-700">
+                    <div v-else-if="!query" class="px-4 py-4 flex items-center gap-4 text-[11px] text-zinc-500">
                         <span>Users, servers…</span>
-                        <span class="ml-auto">Press <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-600 font-mono">↑↓</kbd> to navigate</span>
+                        <span class="ml-auto">Press <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-500 font-mono">↑↓</kbd> to navigate</span>
                     </div>
                 </div>
             </div>

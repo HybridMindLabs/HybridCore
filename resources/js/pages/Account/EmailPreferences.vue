@@ -107,7 +107,7 @@ function submit() {
             >
                 <ShieldCheck :size="14" :stroke-width="1.8" class="mt-0.5 shrink-0" :class="dark ? 'text-zinc-400' : 'text-zinc-500'" />
                 <div>
-                    <p class="text-[12px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-700'">
+                    <p class="text-[12px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-500'">
                         {{ t('account.email_note_title') }}
                     </p>
                     <p class="text-[12px] mt-0.5 leading-relaxed" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
@@ -136,7 +136,7 @@ function submit() {
                         v-if="form.recentlySuccessful"
                         role="status"
                         class="inline-flex items-center gap-1 text-[12px] font-semibold"
-                        :class="dark ? 'text-emerald-400' : 'text-emerald-700'"
+                        :class="dark ? 'text-emerald-400' : 'text-emerald-800'"
                     >
                         <Check :size="13" :stroke-width="2.4" />
                         {{ t('account.email_saved') }}

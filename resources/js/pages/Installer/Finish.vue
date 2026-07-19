@@ -57,11 +57,11 @@ function rows(key: keyof Summary) {
                             <component :is="group.icon" :size="13" :stroke-width="1.75" class="text-blue-400/70" />
                             <h3 class="text-zinc-300 text-xs font-bold">{{ group.title }}</h3>
                         </div>
-                        <Link :href="route(group.back)" class="text-zinc-600 hover:text-zinc-300 text-[11px] font-medium transition">Edit</Link>
+                        <Link :href="route(group.back)" class="text-zinc-500 hover:text-zinc-300 text-[11px] font-medium transition">Edit</Link>
                     </div>
                     <dl class="px-4 py-3 space-y-1.5">
                         <div v-for="[key, value] in rows(group.key)" :key="key" class="flex items-baseline justify-between gap-4">
-                            <dt class="text-zinc-600 text-xs shrink-0">{{ labels[key] ?? key }}</dt>
+                            <dt class="text-zinc-500 text-xs shrink-0">{{ labels[key] ?? key }}</dt>
                             <dd class="text-zinc-300 text-xs font-mono text-right truncate">{{ value }}</dd>
                         </div>
                     </dl>
@@ -87,7 +87,7 @@ function rows(key: keyof Summary) {
                         <span class="text-zinc-500 text-xs leading-relaxed">{{ action }}</span>
                     </li>
                 </ol>
-                <p class="text-zinc-600 text-xs mt-4 pt-3.5 border-t border-zinc-800/60 leading-relaxed">
+                <p class="text-zinc-500 text-xs mt-4 pt-3.5 border-t border-zinc-800/60 leading-relaxed">
                     This takes a few seconds. If anything fails, nothing is locked — you can correct it and try again.
                     To re-run setup later, delete
                     <code class="font-mono text-zinc-500 bg-zinc-900 border border-zinc-800 rounded px-1.5 py-0.5 text-[11px]">storage/installed.lock</code>.
@@ -136,7 +136,7 @@ function rows(key: keyof Summary) {
                         :href="route(group.back)"
                         class="text-blue-400 hover:text-blue-300 text-xs font-medium transition"
                     >Complete this step →</Link>
-                    <span v-else class="text-zinc-600 text-xs">Done</span>
+                    <span v-else class="text-zinc-500 text-xs">Done</span>
                 </div>
             </div>
 

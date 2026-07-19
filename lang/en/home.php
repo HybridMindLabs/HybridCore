@@ -1,6 +1,12 @@
 <?php
 
 return [
+    // Search engines show this under the link, so it addresses a player
+    // deciding whether to click — not the owner running the site.
+    // Label form rather than ":servers servers": t() has no pluralisation, so a
+    // count placed directly before a noun reads as "1 servers" on a small site.
+    'meta_description' => 'Live player counts, maps and ping, refreshed every minute. Servers: :servers · Games: :games. Find one with people on it and jump straight in.',
+
     /* ── Hero ── */
     'footer_games' => 'Games',
     'footer_account' => 'Your account',
@@ -44,6 +50,9 @@ return [
     'stat_members_hint' => 'People who have joined the community',
     'stat_players_hint' => 'In game across every server right now',
     'hero_region' => 'Network overview',
+    // A separate name from the hero above it: two landmarks sharing one label
+    // give a screen reader no way to tell them apart in a region list.
+    'stats_region' => 'Network statistics',
     'servers_live' => ':online of :total servers online',
     'live_now' => 'Live',
     'hero_description' => 'Every server in the community, in one place. See who is playing right now, how busy each server is, and connect in a single click.',

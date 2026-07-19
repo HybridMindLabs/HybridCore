@@ -14,12 +14,12 @@ defineProps<{
                 :is="icon"
                 :size="24"
                 :stroke-width="1.5"
-                class="text-zinc-600"
+                class="text-zinc-500"
             />
         </div>
         <p class="text-zinc-100 text-sm font-medium">{{ title ?? 'Nothing here yet' }}</p>
-        <p v-if="description" class="text-zinc-600 text-xs mt-1 max-w-xs">{{ description }}</p>
-        <p v-else-if="$slots.description" class="text-zinc-600 text-xs mt-1 max-w-xs"><slot name="description" /></p>
+        <p v-if="description" class="text-zinc-500 text-xs mt-1 max-w-xs">{{ description }}</p>
+        <p v-else-if="$slots.description" class="text-zinc-500 text-xs mt-1 max-w-xs"><slot name="description" /></p>
         <div v-if="$slots.action" class="mt-4">
             <slot name="action" />
         </div>

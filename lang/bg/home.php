@@ -1,6 +1,12 @@
 <?php
 
 return [
+    // Search engines show this under the link, so it addresses a player
+    // deciding whether to click — not the owner running the site.
+    // Label form rather than ":servers сървъра": t() has no pluralisation, so a
+    // count placed directly before a noun reads as "1 сървъра" on a small site.
+    'meta_description' => 'Живи бройки играчи, карти и пинг, обновявани всяка минута. Сървъри: :servers · Игри: :games. Намери такъв с хора и влизай направо.',
+
     /* ── Hero ── */
     'footer_games' => 'Игри',
     'footer_account' => 'Твоят акаунт',
@@ -44,6 +50,9 @@ return [
     'stat_members_hint' => 'Хора, присъединили се към общността',
     'stat_players_hint' => 'В игра на всички сървъри в момента',
     'hero_region' => 'Преглед на мрежата',
+    // A separate name from the hero above it: two landmarks sharing one label
+    // give a screen reader no way to tell them apart in a region list.
+    'stats_region' => 'Статистика на мрежата',
     'servers_live' => ':online от :total сървъра онлайн',
     'live_now' => 'На живо',
     'hero_description' => 'Всички сървъри на общността на едно място. Виж кой играе в момента, колко пълен е всеки сървър и се свържи с едно кликване.',

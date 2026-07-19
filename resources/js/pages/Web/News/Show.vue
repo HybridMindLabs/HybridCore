@@ -166,9 +166,9 @@ const parsedBody = computed(() => {
 const hasHeroImage = computed(() => !!props.article.featured_image_url);
 
 const heroTitle = computed(() => (hasHeroImage.value ? 'text-white' : dark.value ? 'text-zinc-100' : 'text-zinc-900'));
-const heroBody = computed(() => (hasHeroImage.value ? 'text-zinc-200' : dark.value ? 'text-zinc-400' : 'text-zinc-600'));
+const heroBody = computed(() => (hasHeroImage.value ? 'text-zinc-200' : dark.value ? 'text-zinc-400' : 'text-zinc-500'));
 const heroMuted = computed(() => (hasHeroImage.value ? 'text-zinc-300' : dark.value ? 'text-zinc-400' : 'text-zinc-500'));
-const heroDivider = computed(() => (hasHeroImage.value ? 'text-white/40' : dark.value ? 'text-zinc-700' : 'text-zinc-300'));
+const heroDivider = computed(() => (hasHeroImage.value ? 'text-white/40' : dark.value ? 'text-zinc-500' : 'text-zinc-300'));
 const heroLink = computed(() =>
     hasHeroImage.value
         ? 'text-blue-300 hover:text-blue-200'
@@ -403,11 +403,11 @@ const initials = computed(() => {
                                 ? 'border-zinc-800/70 bg-[#111113] hover:border-zinc-700/60'
                                 : 'border-zinc-200 bg-white hover:border-zinc-300 hover:shadow-sm'">
                             <span class="text-[11px] font-bold uppercase tracking-widest flex items-center gap-1"
-                                :class="dark ? 'text-zinc-700' : 'text-zinc-400'">
+                                :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
                                 <ChevronLeft :size="11" :stroke-width="2.2" aria-hidden="true" /> {{ t('news.prev_article') }}
                             </span>
                             <p class="text-[13px] font-semibold line-clamp-2 transition-colors"
-                                :class="dark ? 'text-zinc-300 group-hover:text-blue-300' : 'text-zinc-700 group-hover:text-blue-600'">
+                                :class="dark ? 'text-zinc-300 group-hover:text-blue-300' : 'text-zinc-500 group-hover:text-blue-600'">
                                 {{ prev.title }}
                             </p>
                         </Link>
@@ -418,11 +418,11 @@ const initials = computed(() => {
                                 !prev ? 'sm:col-start-2' : ''
                             ]">
                             <span class="text-[11px] font-bold uppercase tracking-widest flex items-center gap-1 justify-end"
-                                :class="dark ? 'text-zinc-700' : 'text-zinc-400'">
+                                :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
                                 {{ t('news.next_article') }} <ChevronRight :size="11" :stroke-width="2.2" aria-hidden="true" />
                             </span>
                             <p class="text-[13px] font-semibold line-clamp-2 transition-colors"
-                                :class="dark ? 'text-zinc-300 group-hover:text-blue-300' : 'text-zinc-700 group-hover:text-blue-600'">
+                                :class="dark ? 'text-zinc-300 group-hover:text-blue-300' : 'text-zinc-500 group-hover:text-blue-600'">
                                 {{ next.title }}
                             </p>
                         </Link>
@@ -437,7 +437,7 @@ const initials = computed(() => {
                         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-sm'">
                         <div class="px-5 py-3.5 border-b flex items-center gap-2"
                             :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e]' : 'border-zinc-100 bg-zinc-50'">
-                            <MessageSquare :size="13" :stroke-width="1.8" :class="dark ? 'text-zinc-600' : 'text-zinc-400'" />
+                            <MessageSquare :size="13" :stroke-width="1.8" :class="dark ? 'text-zinc-500' : 'text-zinc-400'" />
                             <p class="text-[13px] font-semibold" :class="dark ? 'text-zinc-100' : 'text-zinc-800'">{{ t('news.comments') }}</p>
                             <span class="text-[11px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">({{ comments.total }})</span>
                         </div>
@@ -454,7 +454,7 @@ const initials = computed(() => {
                                     :placeholder="t('news.comment_placeholder')"
                                     class="w-full rounded-xl border px-4 py-2.5 text-[13px] resize-none transition focus:outline-none"
                                     :class="dark
-                                        ? 'border-zinc-800 bg-zinc-900 text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500/50'
+                                        ? 'border-zinc-800 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500 focus:border-blue-500/50'
                                         : 'border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400 focus:border-blue-400'"
                                 />
                                 <p v-if="commentForm.errors.body" class="text-[12px] text-red-400">{{ commentForm.errors.body }}</p>
@@ -470,7 +470,7 @@ const initials = computed(() => {
                             </form>
                         </div>
                         <div v-else class="px-5 py-4 border-b" :class="dark ? 'border-zinc-800/50' : 'border-zinc-100'">
-                            <p class="text-[13px]" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">
+                            <p class="text-[13px]" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
                                 <Link :href="route('login')" class="font-semibold"
                                     :class="dark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'">{{ t('news.login') }}</Link>
                                 {{ t('news.comment_login_suffix') }}
@@ -509,7 +509,7 @@ const initials = computed(() => {
                                                 v-if="comment.can_delete"
                                                 type="button"
                                                 class="p-1 rounded transition"
-                                                :class="[dark ? 'text-zinc-600 hover:text-red-400' : 'text-zinc-300 hover:text-red-500', (authed && !comment.is_mine) ? '' : 'ml-auto']"
+                                                :class="[dark ? 'text-zinc-500 hover:text-red-400' : 'text-zinc-300 hover:text-red-500', (authed && !comment.is_mine) ? '' : 'ml-auto']"
                                                 :title="t('news.delete_comment')"
                                                 @click="deleteComment(comment.id)"
                                             >
@@ -517,13 +517,13 @@ const initials = computed(() => {
                                             </button>
                                         </div>
                                         <p class="text-[13px] leading-relaxed mt-1 whitespace-pre-line"
-                                            :class="dark ? 'text-zinc-400' : 'text-zinc-600'">{{ comment.body }}</p>
+                                            :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ comment.body }}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div v-else class="flex flex-col items-center justify-center px-5 py-10 text-center">
-                            <MessageSquare :size="22" :stroke-width="1.5" aria-hidden="true" class="mb-2" :class="dark ? 'text-zinc-700' : 'text-zinc-300'" />
+                            <MessageSquare :size="22" :stroke-width="1.5" aria-hidden="true" class="mb-2" :class="dark ? 'text-zinc-500' : 'text-zinc-300'" />
                             <p class="text-[13px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ t('news.no_comments') }}</p>
                         </div>
 
@@ -566,7 +566,7 @@ const initials = computed(() => {
                                     class="block py-1.5 px-2 rounded-lg text-[12px] leading-snug transition"
                                     :class="[
                                         heading.level === 3 ? 'pl-5' : '',
-                                        dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.04]' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50',
+                                        dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.04]' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50',
                                     ]">
                                     {{ heading.text }}
                                 </a>
@@ -593,7 +593,7 @@ const initials = computed(() => {
                                 <p class="text-[14px] font-bold"
                                     :class="dark ? 'text-zinc-100' : 'text-zinc-800'">{{ article.author.name }}</p>
                                 <p v-if="article.author.username" class="text-[12px]"
-                                    :class="dark ? 'text-zinc-600' : 'text-zinc-400'">@{{ article.author.username }}</p>
+                                    :class="dark ? 'text-zinc-500' : 'text-zinc-400'">@{{ article.author.username }}</p>
                             </div>
                         </div>
                     </div>
@@ -610,7 +610,7 @@ const initials = computed(() => {
                             <button type="button" @click="copyLink"
                                 class="w-full flex items-center justify-center gap-2 py-2 rounded-xl border text-[12px] font-semibold transition"
                                 :class="copied
-                                    ? dark ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400' : 'border-emerald-400/40 bg-emerald-50 text-emerald-700'
+                                    ? dark ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400' : 'border-emerald-400/40 bg-emerald-50 text-emerald-800'
                                     : dark ? 'border-zinc-800/70 text-zinc-400 hover:text-zinc-100 hover:border-zinc-600' : 'border-zinc-200 text-zinc-500 hover:text-zinc-800 hover:border-zinc-400'">
                                 <component :is="copied ? Check : Copy" :size="12" :stroke-width="2" />
                                 {{ copied ? t('news.copied') : t('news.copy_link') }}
@@ -658,11 +658,11 @@ const initials = computed(() => {
                                 </div>
                                 <div class="min-w-0">
                                     <p class="text-[12px] font-semibold line-clamp-2 transition-colors"
-                                        :class="dark ? 'text-zinc-300 group-hover:text-blue-300' : 'text-zinc-700 group-hover:text-blue-600'">
+                                        :class="dark ? 'text-zinc-300 group-hover:text-blue-300' : 'text-zinc-500 group-hover:text-blue-600'">
                                         {{ a.title }}
                                     </p>
                                     <p class="text-[11px] mt-0.5 flex items-center gap-1"
-                                        :class="dark ? 'text-zinc-700' : 'text-zinc-400'">
+                                        :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
                                         <Clock :size="9" />{{ a.reading_time }}m
                                     </p>
                                 </div>

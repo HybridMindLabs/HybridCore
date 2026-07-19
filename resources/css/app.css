@@ -53,10 +53,32 @@
 
     /* Muted text, computed against the page background above rather than
        against #fff. zinc-400's default #a1a1aa lands near 2.5:1 here, so the
-       muted steps move down until the smallest one clears 4.5:1. */
-    --color-zinc-400: #6a6a74;
+       muted steps move down until the smallest one clears 4.5:1.
+       The threshold is measured against the *darkest* of the three light
+       surfaces — the zinc-100 fill (#e1e4ea) that the footer and the news
+       sidebar sit on, not the card. Judged against the card alone, zinc-400
+       looks fine at 5.03 and still fails at 4.19 where it actually lands. */
+    --color-zinc-400: #65656f;
     --color-zinc-500: #5c5c66;
     --color-zinc-600: #4a4a54;
+}
+
+/* Dark mode muted text.
+ *
+ * Same problem as the light block above, mirrored: zinc-500's default #71717a
+ * lands at 3.7–4.1:1 on the dark surfaces, under the 4.5:1 AA needs for body
+ * text. It is the muted step the public pages lean on hardest — hints, meta
+ * lines, timestamps, footer links.
+ *
+ * Only 500 is moved. zinc-600 and zinc-700 are load-bearing as *border*
+ * colours in dark mode (54 and 129 uses), so lightening them here would
+ * repaint every card edge; their text uses were switched to zinc-500 instead.
+ *
+ * #94949d clears 5.77:1 against the lightest surface in use (#1a1a1e) and
+ * stays below zinc-400, so the hierarchy between the two survives.
+ */
+.dark {
+    --color-zinc-500: #94949d;
 }
 
 html, body {

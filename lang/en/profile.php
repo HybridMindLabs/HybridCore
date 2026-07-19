@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'meta_description' => ":name's profile — badges earned, servers played and recent activity in the community.",
+
     'edit' => 'Edit profile',
     'you' => 'You',
     'joined' => 'Joined',

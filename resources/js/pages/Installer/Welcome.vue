@@ -43,7 +43,7 @@ const isPreRelease = computed(() => version.value.startsWith('0.'));
                 </div>
                 <div class="min-w-0">
                     <p class="text-zinc-200 text-sm font-semibold">{{ item.label }}</p>
-                    <p class="text-zinc-600 text-xs mt-1 leading-relaxed">{{ item.desc }}</p>
+                    <p class="text-zinc-500 text-xs mt-1 leading-relaxed">{{ item.desc }}</p>
                 </div>
             </div>
         </div>
@@ -87,14 +87,14 @@ const isPreRelease = computed(() => version.value.startsWith('0.'));
                     <span class="text-zinc-500 text-xs leading-relaxed">{{ step }}</span>
                 </li>
             </ol>
-            <p class="text-zinc-600 text-xs mt-4 pt-3.5 border-t border-zinc-800/60 leading-relaxed">
+            <p class="text-zinc-500 text-xs mt-4 pt-3.5 border-t border-zinc-800/60 leading-relaxed">
                 Nothing is written to your server until the final step, and you can go back at any point.
                 Have your database name, user and password to hand — your host's control panel has them.
             </p>
         </div>
 
         <div class="flex items-center justify-between gap-4">
-            <p class="text-zinc-600 text-xs">Running PHP <span class="text-zinc-400 font-mono">{{ phpVersion }}</span></p>
+            <p class="text-zinc-500 text-xs">Running PHP <span class="text-zinc-400 font-mono">{{ phpVersion }}</span></p>
             <Link
                 :href="route('installer.requirements')"
                 class="inline-flex items-center gap-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition shadow-md shadow-blue-500/20"

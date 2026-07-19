@@ -1,9 +1,19 @@
 <script setup lang="ts">
 import { CheckCircle, XCircle, Info, AlertTriangle, X } from '@lucide/vue';
 import { useToast } from '@/composables/useToast';
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 const { toasts, dismiss } = useToast();
+
+// A Teleport has nowhere to go while rendering to a string, so the server
+// emits a placeholder comment where the client expects the container div —
+// a hydration mismatch on every single page. Mounting the teleport only after
+// hydration costs nothing: a toast is always a response to something the user
+// did, which cannot happen before the app is interactive.
+const mounted = ref(false);
+onMounted(() => {
+    mounted.value = true;
+});
 
 const icons = { success: CheckCircle, error: XCircle, info: Info, warning: AlertTriangle };
 const styles = {
@@ -21,7 +31,7 @@ const iconColors = {
 </script>
 
 <template>
-    <Teleport to="body">
+    <Teleport v-if="mounted" to="body">
         <div class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-2 pointer-events-none">
             <TransitionGroup name="toast">
                 <div v-for="t in toasts" :key="t.id"

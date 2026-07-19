@@ -147,7 +147,7 @@ function submit() {
             <p
                 v-if="preview"
                 class="text-[12px] rounded-xl border px-4 py-3"
-                :class="dark ? 'border-zinc-800/60 bg-zinc-900/40 text-zinc-400' : 'border-zinc-200 bg-zinc-50 text-zinc-600'"
+                :class="dark ? 'border-zinc-800/60 bg-zinc-900/40 text-zinc-400' : 'border-zinc-200 bg-zinc-50 text-zinc-500'"
             >
                 {{ t('account.pref_preview') }}
                 <span class="font-bold" :class="dark ? 'text-zinc-200' : 'text-zinc-900'">{{ preview }}</span>
@@ -164,7 +164,7 @@ function submit() {
                         v-if="form.recentlySuccessful"
                         role="status"
                         class="inline-flex items-center gap-1 text-[12px] font-semibold"
-                        :class="dark ? 'text-emerald-400' : 'text-emerald-700'"
+                        :class="dark ? 'text-emerald-400' : 'text-emerald-800'"
                     >
                         <Check :size="13" :stroke-width="2.4" />
                         {{ t('account.pref_saved') }}

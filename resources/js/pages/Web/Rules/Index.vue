@@ -115,7 +115,7 @@ const heroStats = computed(() => [
                         </h1>
 
                         <p class="hc-hero-in hc-hero-in--2 mt-3 text-[15px] leading-relaxed max-w-lg"
-                           :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                           :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                             {{ t('rules.hero_description', { app: page.props.app.name }) }}
                         </p>
 
@@ -128,7 +128,7 @@ const heroStats = computed(() => [
                             </Link>
                             <Link :href="route('contact.show')"
                                 class="inline-flex items-center font-bold text-[13.5px] px-5 py-2.5 rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                                :class="dark ? 'border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600 hover:bg-white/[0.04]' : 'border-zinc-300 text-zinc-700 hover:border-zinc-400 hover:bg-white'">
+                                :class="dark ? 'border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600 hover:bg-white/[0.04]' : 'border-zinc-300 text-zinc-500 hover:border-zinc-400 hover:bg-white'">
                                 {{ t('rules.contact_staff') }}
                             </Link>
                         </div>
@@ -138,20 +138,25 @@ const heroStats = computed(() => [
                          to read, and has anything changed recently. -->
                     <dl v-if="rules.length" class="hc-hero-in hc-hero-in--2 grid grid-cols-2 gap-2.5">
                         <div v-for="(item, i) in heroStats" :key="item.label"
-                            class="hc-reveal rounded-xl border px-3 py-2.5 backdrop-blur-md"
+                            class="hc-reveal flex flex-col rounded-xl border px-3 py-2.5 backdrop-blur-md"
                             :style="{ animationDelay: 0.18 + i * 0.06 + 's' }"
                             :class="dark
                                 ? 'border-zinc-700/70 bg-zinc-900/85 shadow-lg shadow-black/30'
                                 : 'border-zinc-300 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.10)]'"
                             :title="item.hint">
-                            <component :is="item.icon" :size="13" :stroke-width="1.9"
-                                class="text-blue-500 mb-1.5" aria-hidden="true" />
-                            <dd class="text-[17px] font-black leading-none tabular-nums"
-                                :class="dark ? 'text-zinc-100' : 'text-zinc-900'">{{ item.value }}</dd>
-                            <dt class="text-[10px] font-bold uppercase tracking-widest mt-1.5"
+                            <!-- A <dl> group may hold only <dt>/<dd>, so the icon
+                                 lives inside the value and `order` keeps the
+                                 visual stack unchanged. -->
+                            <dt class="order-2 text-[10px] font-bold uppercase tracking-widest mt-1.5"
                                 :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ item.label }}</dt>
-                            <p class="text-[10.5px] leading-snug mt-1"
-                               :class="dark ? 'text-zinc-600' : 'text-zinc-500'">{{ item.hint }}</p>
+                            <dd class="order-1">
+                                <component :is="item.icon" :size="13" :stroke-width="1.9"
+                                    class="block text-blue-500 mb-1.5" aria-hidden="true" />
+                                <span class="block text-[17px] font-black leading-none tabular-nums"
+                                    :class="dark ? 'text-zinc-100' : 'text-zinc-900'">{{ item.value }}</span>
+                            </dd>
+                            <dd class="order-3 text-[10.5px] leading-snug mt-1"
+                                :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ item.hint }}</dd>
                         </div>
                     </dl>
                 </div>
@@ -166,10 +171,10 @@ const heroStats = computed(() => [
                 class="flex flex-col items-center text-center rounded-2xl border px-6 py-16"
                 :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white'">
                 <span class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                    :class="dark ? 'bg-zinc-900 text-zinc-700' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
+                    :class="dark ? 'bg-zinc-900 text-zinc-500' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
                     <BookOpen :size="26" :stroke-width="1.4" />
                 </span>
-                <p class="text-[15px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-700'">
+                <p class="text-[15px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-500'">
                     {{ t('rules.empty_title') }}
                 </p>
                 <p class="text-[13px] mt-1 max-w-sm" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
@@ -230,16 +235,16 @@ const heroStats = computed(() => [
 
                                 <p v-if="rule.excerpt"
                                     class="relative text-[13px] leading-relaxed mt-2 line-clamp-3 flex-1"
-                                    :class="dark ? 'text-zinc-400' : 'text-zinc-600'"
+                                    :class="dark ? 'text-zinc-400' : 'text-zinc-500'"
                                 >{{ rule.excerpt }}</p>
 
                                 <span class="relative flex items-center justify-between gap-3 mt-4 pt-3 border-t"
                                     :class="dark ? 'border-zinc-800/60' : 'border-zinc-200'">
-                                    <span class="text-[11px]" :class="dark ? 'text-zinc-600' : 'text-zinc-500'">
+                                    <span class="text-[11px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                                         {{ t('rules.updated', { date: formatDate(rule.updated_at) }) }}
                                     </span>
                                     <span class="inline-flex items-center gap-1.5 text-[12px] font-bold transition-colors"
-                                        :class="dark ? 'text-zinc-500 group-hover:text-blue-400' : 'text-zinc-600 group-hover:text-blue-700'">
+                                        :class="dark ? 'text-zinc-500 group-hover:text-blue-400' : 'text-zinc-500 group-hover:text-blue-700'">
                                         {{ t('rules.read_more') }}
                                         <ArrowRight :size="13" :stroke-width="2.2" aria-hidden="true"
                                             class="transition-transform group-hover:translate-x-1" />
@@ -255,13 +260,13 @@ const heroStats = computed(() => [
                         :class="dark ? 'border-emerald-500/15 bg-emerald-500/[0.05]' : 'border-emerald-300/70 bg-emerald-500/[0.06]'">
                         <span class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                             :class="dark ? 'bg-emerald-500/15' : 'bg-emerald-500/15'" aria-hidden="true">
-                            <ShieldCheck :size="17" :stroke-width="1.9" class="text-emerald-700 dark:text-emerald-400" />
+                            <ShieldCheck :size="17" :stroke-width="1.9" class="text-emerald-800 dark:text-emerald-400" />
                         </span>
                         <div class="min-w-0">
                             <p class="text-[13px] font-bold" :class="dark ? 'text-zinc-200' : 'text-zinc-900'">
                                 {{ t('rules.enforcement_title') }}
                             </p>
-                            <p class="text-[12.5px] leading-relaxed mt-1" :class="dark ? 'text-zinc-400' : 'text-zinc-700'">
+                            <p class="text-[12.5px] leading-relaxed mt-1" :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                                 {{ t('rules.enforcement_body') }}
                                 {{ t('rules.enforcement_appeal') }}
                             </p>

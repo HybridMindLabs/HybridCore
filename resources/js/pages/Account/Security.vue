@@ -37,7 +37,7 @@ const strength = computed(() => {
         { min: 0, key: 'sec_pw_weak', bars: 1, bar: 'bg-red-500', text: dark.value ? 'text-red-400' : 'text-red-600' },
         { min: 3, key: 'sec_pw_fair', bars: 2, bar: 'bg-amber-500', text: dark.value ? 'text-amber-400' : 'text-amber-700' },
         { min: 4, key: 'sec_pw_good', bars: 3, bar: 'bg-lime-500', text: dark.value ? 'text-lime-400' : 'text-lime-700' },
-        { min: 5, key: 'sec_pw_strong', bars: 4, bar: 'bg-emerald-500', text: dark.value ? 'text-emerald-400' : 'text-emerald-700' },
+        { min: 5, key: 'sec_pw_strong', bars: 4, bar: 'bg-emerald-500', text: dark.value ? 'text-emerald-400' : 'text-emerald-800' },
     ];
 
     return levels.filter((l) => score >= l.min).pop() ?? levels[0];
@@ -49,7 +49,7 @@ const mismatch = computed(
 
 const input = computed(() =>
     dark.value
-        ? 'w-full rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-100 px-4 py-2.5 text-[14px] placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition'
+        ? 'w-full rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-100 px-4 py-2.5 text-[14px] placeholder:text-zinc-500 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition'
         : 'w-full rounded-xl border border-zinc-200 bg-white text-zinc-900 px-4 py-2.5 text-[14px] placeholder:text-zinc-400 focus:outline-none focus:border-blue-400/60 focus:ring-2 focus:ring-blue-500/10 transition',
 );
 const label = computed(() =>
@@ -125,7 +125,7 @@ function submit() {
                         :aria-pressed="reveal"
                         class="absolute right-1.5 top-1/2 -translate-y-1/2 p-2 rounded-lg transition
                                focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
-                        :class="dark ? 'text-zinc-500 hover:text-zinc-200' : 'text-zinc-400 hover:text-zinc-700'"
+                        :class="dark ? 'text-zinc-500 hover:text-zinc-200' : 'text-zinc-400 hover:text-zinc-500'"
                         @click="reveal = !reveal"
                     >
                         <component :is="reveal ? EyeOff : Eye" :size="15" :stroke-width="1.8" />

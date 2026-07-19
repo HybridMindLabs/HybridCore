@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'meta_description' => 'Player profiles from the community. Registered: :count · Online now: :online.',
+
     'title' => 'Members',
     'subtitle' => ':count registered members',
     'search_placeholder' => 'Search by name or username…',

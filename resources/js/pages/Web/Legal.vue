@@ -129,7 +129,7 @@ onBeforeUnmount(() => observer?.disconnect());
                         </h1>
 
                         <p v-if="subtitle" class="hc-hero-in hc-hero-in--2 mt-3 text-[15px] leading-relaxed max-w-lg"
-                            :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                            :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                             {{ subtitle }}
                         </p>
 
@@ -142,7 +142,7 @@ onBeforeUnmount(() => observer?.disconnect());
                             </a>
                             <Link :href="route('contact.show')"
                                 class="inline-flex items-center font-bold text-[13.5px] px-5 py-2.5 rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                                :class="dark ? 'border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600 hover:bg-white/[0.04]' : 'border-zinc-300 text-zinc-700 hover:border-zinc-400 hover:bg-white'">
+                                :class="dark ? 'border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600 hover:bg-white/[0.04]' : 'border-zinc-300 text-zinc-500 hover:border-zinc-400 hover:bg-white'">
                                 {{ t('legal.ask_us') }}
                             </Link>
                         </div>
@@ -173,7 +173,7 @@ onBeforeUnmount(() => observer?.disconnect());
                 <!-- What a reader wants before committing: how long, how many
                      parts, how fresh. -->
                 <dl class="hc-hero-in hc-hero-in--4 flex flex-wrap items-center gap-x-5 gap-y-2 mt-7 text-[12.5px]"
-                    :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                    :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                     <div class="flex items-center gap-1.5">
                         <Clock :size="12" :stroke-width="1.9" aria-hidden="true" />
                         <dt class="sr-only">{{ t('legal.reading_time', { m: reading_minutes }) }}</dt>
@@ -216,7 +216,7 @@ onBeforeUnmount(() => observer?.disconnect());
                                         entry.level === 3 ? 'pl-6 text-[12px]' : '',
                                         activeId === entry.id
                                             ? dark ? 'border-blue-500 text-blue-400' : 'border-blue-500 text-blue-700'
-                                            : dark ? 'border-transparent text-zinc-400 hover:text-zinc-200' : 'border-transparent text-zinc-600 hover:text-zinc-900',
+                                            : dark ? 'border-transparent text-zinc-400 hover:text-zinc-200' : 'border-transparent text-zinc-500 hover:text-zinc-900',
                                     ]"
                                 >{{ entry.text }}</a>
                             </li>
@@ -230,7 +230,7 @@ onBeforeUnmount(() => observer?.disconnect());
                     <details v-if="toc.length" class="lg:hidden mb-4 rounded-2xl border overflow-hidden"
                         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-sm'">
                         <summary class="px-4 py-3 text-[12px] font-bold uppercase tracking-widest cursor-pointer"
-                            :class="dark ? 'text-zinc-300' : 'text-zinc-700'">
+                            :class="dark ? 'text-zinc-300' : 'text-zinc-500'">
                             {{ t('legal.toc_toggle') }}
                         </summary>
                         <ol class="flex flex-col p-2 gap-0.5 border-t"
@@ -240,7 +240,7 @@ onBeforeUnmount(() => observer?.disconnect());
                                     class="block text-[13px] py-1.5 px-3 rounded transition-colors"
                                     :class="[
                                         entry.level === 3 ? 'pl-6 text-[12px]' : '',
-                                        dark ? 'text-zinc-400 hover:text-zinc-100' : 'text-zinc-600 hover:text-zinc-900',
+                                        dark ? 'text-zinc-400 hover:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900',
                                     ]"
                                 >{{ entry.text }}</a>
                             </li>

@@ -21,7 +21,7 @@ function submit() {
 <template>
     <Head :title="t('auth.forgot.title')" />
     <AuthCard :title="t('auth.forgot.title')" :subtitle="t('auth.forgot.subtitle')">
-        <div v-if="status" class="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-[13px] font-medium text-emerald-700 dark:text-emerald-400">
+        <div v-if="status" class="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-[13px] font-medium text-emerald-800 dark:text-emerald-400">
             {{ status }}
         </div>
         <form class="flex flex-col gap-4" @submit.prevent="submit">

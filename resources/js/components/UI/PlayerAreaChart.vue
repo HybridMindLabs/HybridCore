@@ -139,7 +139,7 @@ const xTicks = computed(() => {
 <template>
     <div v-if="!known.length" class="flex items-center justify-center text-[12.5px]"
         :style="{ height: H + 'px' }"
-        :class="dark ? 'text-zinc-600' : 'text-zinc-500'">
+        :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
         {{ emptyLabel }}
     </div>
 
@@ -183,14 +183,14 @@ const xTicks = computed(() => {
         <div class="absolute inset-y-0 left-0 pointer-events-none flex flex-col justify-between"
             :style="{ paddingTop: PAD_TOP - 7 + 'px', paddingBottom: PAD_BOTTOM - 7 + 'px' }">
             <span v-for="g in gridLines" :key="g.value" class="text-[10px] tabular-nums leading-none px-1 rounded"
-                :class="dark ? 'text-zinc-600 bg-[#111113]/80' : 'text-zinc-500 bg-white/80'">{{ g.value }}</span>
+                :class="dark ? 'text-zinc-500 bg-[#111113]/80' : 'text-zinc-500 bg-white/80'">{{ g.value }}</span>
         </div>
 
         <div class="relative h-4 mt-1">
             <span v-for="(tick, i) in xTicks" :key="i"
                 class="absolute text-[10px] whitespace-nowrap -translate-x-1/2 first:translate-x-0 last:-translate-x-full"
                 :style="{ left: tick.left + '%' }"
-                :class="dark ? 'text-zinc-600' : 'text-zinc-500'">{{ tick.label }}</span>
+                :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ tick.label }}</span>
         </div>
 
         <!-- Tooltip -->

@@ -36,6 +36,11 @@ return [
     'nav_rules' => 'Правила',
     'nav_contacts' => 'Контакти',
 
+    // The mobile header button is an icon on its own, so its name has to be
+    // supplied here — without it a screen reader announces only "button".
+    'open_menu' => 'Отвори менюто',
+    'close_menu' => 'Затвори менюто',
+
     'sections' => [
         'management' => 'Управление',
         'gaming' => 'Гейминг',

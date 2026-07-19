@@ -94,12 +94,12 @@ function avatarBg(name: string) {
                         <p class="text-[13px] font-bold truncate" :class="dark ? 'text-zinc-100' : 'text-zinc-800'">{{ user?.display_name || user?.username }}</p>
                         <BadgeCheck v-if="user?.verified" :size="12" :stroke-width="2.2" class="text-blue-400 shrink-0" />
                     </div>
-                    <p class="text-[11px] font-mono truncate" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">@{{ user?.username }}</p>
+                    <p class="text-[11px] font-mono truncate" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">@{{ user?.username }}</p>
                 </div>
             </div>
             <a v-if="user?.username" :href="route('profile.show', user.username)"
                 class="flex items-center justify-center gap-1.5 w-full py-1.5 rounded-lg border text-[11px] font-semibold transition"
-                :class="dark ? 'border-zinc-800/70 text-zinc-500 hover:text-zinc-200 hover:border-zinc-700' : 'border-zinc-200 text-zinc-400 hover:text-zinc-700 hover:border-zinc-300'">
+                :class="dark ? 'border-zinc-800/70 text-zinc-500 hover:text-zinc-200 hover:border-zinc-700' : 'border-zinc-200 text-zinc-400 hover:text-zinc-500 hover:border-zinc-300'">
                 <ExternalLink :size="11" :stroke-width="1.8" />
                 {{ t('account.view_public_profile') }}
             </a>
@@ -140,7 +140,7 @@ function avatarBg(name: string) {
             class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-semibold w-full transition border"
             :class="activeTab === 'danger'
                 ? 'bg-red-500/10 text-red-400 border-red-500/25'
-                : dark ? 'text-zinc-600 hover:text-red-400 hover:bg-red-500/8 hover:border-red-500/20 border-transparent' : 'text-zinc-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100 border-transparent'"
+                : dark ? 'text-zinc-500 hover:text-red-400 hover:bg-red-500/8 hover:border-red-500/20 border-transparent' : 'text-zinc-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100 border-transparent'"
             @click="selectTab('danger')">
             <component :is="dangerTab.icon" :size="14" :stroke-width="1.9" class="shrink-0" />
             {{ dangerTab.label }}
@@ -149,7 +149,7 @@ function avatarBg(name: string) {
         <!-- Logout -->
         <button type="button"
             class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-semibold w-full transition border border-transparent"
-            :class="dark ? 'text-zinc-600 hover:text-red-400 hover:bg-red-500/8 hover:border-red-500/20' : 'text-zinc-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100'"
+            :class="dark ? 'text-zinc-500 hover:text-red-400 hover:bg-red-500/8 hover:border-red-500/20' : 'text-zinc-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100'"
             @click="logout">
             <LogOut :size="14" :stroke-width="1.9" class="shrink-0" />
             {{ t('account.sign_out') }}

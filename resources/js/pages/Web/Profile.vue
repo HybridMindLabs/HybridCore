@@ -139,7 +139,12 @@ function toggleBlock() {
 </script>
 
 <template>
-    <Head :title="profile.display_name || profile.username" />
+    <Head>
+        <title>{{ profile.display_name || profile.username }}</title>
+        <meta name="description" :content="t('profile.meta_description', {
+            name: profile.display_name || profile.username,
+        })" />
+    </Head>
 
     <PublicLayout>
         <div class="max-w-[1100px] mx-auto px-4 sm:px-6 py-8">
@@ -169,15 +174,15 @@ function toggleBlock() {
                     <div class="absolute top-4 right-4 left-4 flex items-center justify-end gap-2 flex-wrap">
                         <Link v-if="profile.is_self" :href="route('account.index')"
                             class="flex items-center gap-1.5 text-[12px] font-semibold rounded-xl border px-3 py-2 transition backdrop-blur-sm"
-                            :class="dark ? 'border-zinc-700/60 bg-zinc-900/70 text-zinc-300 hover:text-white' : 'border-zinc-200/80 bg-white/80 text-zinc-600 hover:text-zinc-900'">
+                            :class="dark ? 'border-zinc-700/60 bg-zinc-900/70 text-zinc-300 hover:text-white' : 'border-zinc-200/80 bg-white/80 text-zinc-500 hover:text-zinc-900'">
                             <Pencil :size="12" :stroke-width="1.8" aria-hidden="true" /> {{ t('profile.edit_profile') }}
                         </Link>
                         <template v-if="!profile.is_self && profile.is_viewer_member">
                             <button type="button"
                                 class="flex items-center gap-1.5 text-[12px] font-bold rounded-xl border px-3 py-2 transition backdrop-blur-sm"
                                 :class="profile.is_following
-                                    ? (dark ? 'border-zinc-700/60 bg-zinc-900/70 text-zinc-300 hover:text-red-400 hover:border-red-500/40' : 'border-zinc-200/80 bg-white/80 text-zinc-600 hover:text-red-500')
-                                    : (dark ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100')"
+                                    ? (dark ? 'border-zinc-700/60 bg-zinc-900/70 text-zinc-300 hover:text-red-400 hover:border-red-500/40' : 'border-zinc-200/80 bg-white/80 text-zinc-500 hover:text-red-500')
+                                    : (dark ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100')"
                                 :disabled="followPending"
                                 @click="toggleFollow">
                                 <component :is="profile.is_following ? UserCheck : UserPlus" :size="12" :stroke-width="2" />
@@ -192,7 +197,7 @@ function toggleBlock() {
                             <button type="button"
                                 class="flex items-center gap-1.5 text-[12px] font-bold rounded-xl border px-3 py-2 transition backdrop-blur-sm"
                                 :class="profile.is_blocked
-                                    ? (dark ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'border-emerald-200 bg-emerald-50 text-emerald-700')
+                                    ? (dark ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'border-emerald-200 bg-emerald-50 text-emerald-800')
                                     : (dark ? 'border-zinc-700/60 bg-zinc-900/70 text-zinc-400 hover:text-red-400 hover:border-red-500/40' : 'border-zinc-200/80 bg-white/80 text-zinc-500 hover:text-red-500')"
                                 :disabled="blockPending"
                                 @click="toggleBlock">
@@ -233,7 +238,7 @@ function toggleBlock() {
                                     {{ t('profile.you') }}
                                 </span>
                                 <span class="inline-flex items-center gap-1.5 text-[12px] font-semibold"
-                                    :class="profile.is_online ? 'text-emerald-400' : (dark ? 'text-zinc-600' : 'text-zinc-400')">
+                                    :class="profile.is_online ? 'text-emerald-400' : (dark ? 'text-zinc-500' : 'text-zinc-400')">
                                     <span class="w-1.5 h-1.5 rounded-full" :class="profile.is_online ? 'bg-emerald-400' : 'bg-zinc-500'" />
                                     {{ profile.is_online ? t('profile.active_now') : (profile.last_seen_at ? t('profile.active_ago', { time: profile.last_seen_at }) : t('profile.offline')) }}
                                 </span>
@@ -267,19 +272,19 @@ function toggleBlock() {
                         </div>
                     </div>
 
-                    <p v-if="profile.bio" class="text-[14px] leading-relaxed mt-5 max-w-2xl" :class="dark ? 'text-zinc-400' : 'text-zinc-600'">{{ profile.bio }}</p>
+                    <p v-if="profile.bio" class="text-[14px] leading-relaxed mt-5 max-w-2xl" :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ profile.bio }}</p>
 
                     <div v-if="profile.location || profile.website || profile.joined_at"
                         class="flex flex-wrap items-center gap-5 mt-5 pt-5 border-t"
                         :class="dark ? 'border-zinc-800/60' : 'border-zinc-100'">
                         <span v-if="profile.location" class="flex items-center gap-2 text-[13px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
-                            <MapPin :size="14" :stroke-width="1.8" :class="dark ? 'text-zinc-600' : 'text-zinc-400'" /> {{ profile.location }}
+                            <MapPin :size="14" :stroke-width="1.8" :class="dark ? 'text-zinc-500' : 'text-zinc-400'" /> {{ profile.location }}
                         </span>
                         <a v-if="profile.website" :href="profile.website" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-[13px] text-blue-400 hover:text-blue-300 transition-colors">
                             <Globe :size="14" :stroke-width="1.8" /> {{ profile.website.replace(/^https?:\/\//, '') }}
                         </a>
                         <span class="flex items-center gap-2 text-[13px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
-                            <Calendar :size="14" :stroke-width="1.8" :class="dark ? 'text-zinc-600' : 'text-zinc-400'" /> {{ t('profile.joined') }} {{ profile.joined_at }}
+                            <Calendar :size="14" :stroke-width="1.8" :class="dark ? 'text-zinc-500' : 'text-zinc-400'" /> {{ t('profile.joined') }} {{ profile.joined_at }}
                         </span>
                     </div>
                 </div>
@@ -294,11 +299,11 @@ function toggleBlock() {
                         <p class="text-[13px] font-black" :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
                             {{ openFollowList === 'followers' ? t('profile.followers_title') : t('profile.following_title') }}
                         </p>
-                        <span class="text-[11px]" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">
+                        <span class="text-[11px]" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
                             ({{ openFollowList === 'followers' ? profile.followers_count : profile.following_count }})
                         </span>
                     </div>
-                    <button type="button" class="text-[12px] transition" :class="dark ? 'text-zinc-600 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-600'"
+                    <button type="button" class="text-[12px] transition" :class="dark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-500'"
                         @click="openFollowList = null">{{ t('profile.close') }}</button>
                 </div>
                 <div v-if="(openFollowList === 'followers' ? followers : following).length"
@@ -309,7 +314,7 @@ function toggleBlock() {
                         :key="mini.username ?? mini.name"
                         :href="mini.username ? route('profile.show', mini.username) : undefined"
                         class="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full border text-[12px] font-semibold transition"
-                        :class="dark ? 'border-zinc-800 bg-zinc-900/50 text-zinc-300 hover:border-zinc-600' : 'border-zinc-200 bg-zinc-50 text-zinc-700 hover:border-zinc-400'"
+                        :class="dark ? 'border-zinc-800 bg-zinc-900/50 text-zinc-300 hover:border-zinc-600' : 'border-zinc-200 bg-zinc-50 text-zinc-500 hover:border-zinc-400'"
                     >
                         <span class="w-6 h-6 rounded-full overflow-hidden shrink-0">
                             <img v-if="mini.avatar" :src="mini.avatar" class="w-full h-full object-cover" :alt="mini.name" />
@@ -319,7 +324,7 @@ function toggleBlock() {
                         {{ mini.username ?? mini.name }}
                     </component>
                 </div>
-                <div v-else class="px-5 py-8 text-center text-[13px]" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">
+                <div v-else class="px-5 py-8 text-center text-[13px]" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
                     {{ openFollowList === 'followers' ? t('profile.no_followers') : t('profile.not_following') }}
                 </div>
             </div>
@@ -338,7 +343,7 @@ function toggleBlock() {
                         <div v-for="ach in profile.achievements" :key="ach.slug"
                             :title="badgeTooltip(ach)"
                             class="flex items-center gap-2.5 pl-2.5 pr-3 py-2 rounded-xl border text-[12px] font-semibold transition cursor-help"
-                            :class="dark ? 'border-zinc-800 bg-zinc-900/50 text-zinc-300 hover:border-zinc-700' : 'border-zinc-200 bg-zinc-50 text-zinc-700 hover:border-zinc-300'">
+                            :class="dark ? 'border-zinc-800 bg-zinc-900/50 text-zinc-300 hover:border-zinc-700' : 'border-zinc-200 bg-zinc-50 text-zinc-500 hover:border-zinc-300'">
                             <span class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
                                 :style="{ backgroundColor: (achievementMeta[ach.slug]?.color ?? '#71717a') + '1c' }">
                                 <component :is="achievementMeta[ach.slug]?.icon ?? Trophy" :size="14" :stroke-width="2"
@@ -346,7 +351,7 @@ function toggleBlock() {
                             </span>
                             <span class="flex flex-col leading-tight">
                                 <span>{{ badgeLabel(ach.slug) }}</span>
-                                <span class="text-[10px] font-normal" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">
+                                <span class="text-[10px] font-normal" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
                                     {{ formatAwardedAt(ach.awarded_at) }}
                                 </span>
                             </span>
@@ -377,19 +382,19 @@ function toggleBlock() {
                                         {{ s.name }}
                                     </p>
                                     <div class="flex items-center gap-2 mt-0.5">
-                                        <span class="flex items-center gap-1 text-[11px]" :class="s.online ? 'text-emerald-400' : (dark ? 'text-zinc-600' : 'text-zinc-400')">
+                                        <span class="flex items-center gap-1 text-[11px]" :class="s.online ? 'text-emerald-400' : (dark ? 'text-zinc-500' : 'text-zinc-400')">
                                             <component :is="s.online ? Wifi : WifiOff" :size="9" :stroke-width="2" />
                                             {{ s.online ? t('servers.online') : t('servers.offline') }}
                                         </span>
-                                        <span v-if="s.players !== null" class="flex items-center gap-1 text-[11px]" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">
+                                        <span v-if="s.players !== null" class="flex items-center gap-1 text-[11px]" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
                                             <Users :size="9" :stroke-width="2" /> {{ s.players }}/{{ s.max_players }}
                                         </span>
-                                        <span v-if="s.map" class="text-[11px] font-mono truncate" :class="dark ? 'text-zinc-700' : 'text-zinc-400'">{{ s.map }}</span>
+                                        <span v-if="s.map" class="text-[11px] font-mono truncate" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">{{ s.map }}</span>
                                     </div>
                                 </div>
                             </component>
                             <a v-if="s.connect_url" :href="s.connect_url" class="shrink-0 text-[11px] font-bold px-2.5 py-1.5 rounded-lg border transition"
-                                :class="dark ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10' : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'">
+                                :class="dark ? 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10' : 'border-emerald-200 text-emerald-800 hover:bg-emerald-50'">
                                 {{ t('profile.connect') }}
                             </a>
                         </div>
@@ -429,10 +434,10 @@ function toggleBlock() {
                                 :class="item.type === 'badge' ? 'text-amber-400' : item.type === 'review' ? 'text-violet-400' : 'text-emerald-400'" />
                         </span>
                         <p class="flex-1 min-w-0 text-[13px] truncate transition-colors"
-                            :class="[dark ? 'text-zinc-300' : 'text-zinc-700', item.url ? (dark ? 'group-hover:text-blue-400' : 'group-hover:text-blue-600') : '']">
+                            :class="[dark ? 'text-zinc-300' : 'text-zinc-500', item.url ? (dark ? 'group-hover:text-blue-400' : 'group-hover:text-blue-600') : '']">
                             {{ activityLabel(item) }}
                         </p>
-                        <span class="text-[11px] shrink-0" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">{{ item.at }}</span>
+                        <span class="text-[11px] shrink-0" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">{{ item.at }}</span>
                     </component>
                 </div>
             </div>

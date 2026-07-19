@@ -42,7 +42,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick, true));
         <button
             type="button"
             class="p-1 rounded transition"
-            :class="dark ? 'text-zinc-700 hover:text-amber-400' : 'text-zinc-300 hover:text-amber-500'"
+            :class="dark ? 'text-zinc-500 hover:text-amber-400' : 'text-zinc-300 hover:text-amber-500'"
             :title="t('report.report')"
             @click.stop="open = !open"
         >
@@ -53,14 +53,14 @@ onUnmounted(() => document.removeEventListener('click', onDocClick, true));
             class="absolute right-0 top-full mt-1 w-44 rounded-xl border shadow-lg py-1 z-50"
             :class="dark ? 'bg-zinc-900 border-zinc-800 shadow-black/40' : 'bg-white border-zinc-200 shadow-zinc-200/60'">
             <p class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest"
-                :class="dark ? 'text-zinc-600' : 'text-zinc-400'">{{ t('report.pick_reason') }}</p>
+                :class="dark ? 'text-zinc-500' : 'text-zinc-400'">{{ t('report.pick_reason') }}</p>
             <button
                 v-for="reason in reasons"
                 :key="reason"
                 type="button"
                 :disabled="sending"
                 class="block w-full text-left px-3 py-1.5 text-[12px] transition disabled:opacity-50"
-                :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'"
+                :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50'"
                 @click.stop="submit(reason)"
             >{{ t('report.reason_' + reason) }}</button>
         </div>
