@@ -47,4 +47,8 @@ return [
     ],
     'breadcrumb' => 'Навигационен път',
     'back_to_home' => 'Обратно към началото',
+    'search' => 'Търсене',
+    'search_placeholder' => 'Търси потребители и сървъри…',
+    'search_dialog' => 'Търсене в сайта',
+    'search_clear' => 'Изчисти търсенето',
 ];

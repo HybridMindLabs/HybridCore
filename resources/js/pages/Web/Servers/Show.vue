@@ -598,7 +598,9 @@ const heroStats = computed(() => {
                                 </div>
                                 <p v-if="reviewForm.errors.rating" class="text-[12px] text-red-400">{{ reviewForm.errors.rating }}</p>
 
+                                <label for="review_body" class="sr-only">{{ t('servers.review_label') }}</label>
                                 <textarea
+                                    id="review_body"
                                     v-model="reviewForm.body"
                                     rows="3"
                                     maxlength="1000"

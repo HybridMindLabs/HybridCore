@@ -151,4 +151,5 @@ return [
     'hero_uptime_hint' => 'Share of checks answered in the last 24 hours',
     'current_map_hint' => 'The map running on the last check',
     'rating_hint' => 'Average of :count member reviews',
+    'review_label' => 'Your review',
 ];
