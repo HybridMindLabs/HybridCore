@@ -50,6 +50,10 @@ const { t } = useLocale();
 const dark = computed(() => theme.value === 'dark');
 const page = usePage<{ app: { name: string }; auth: { user: any } | null; [key: string]: unknown }>();
 const pageTitle = computed(() => `${page.props.app.name} - Gaming Network`);
+const metaDescription = computed(() => t('home.meta_description', {
+    servers: String(props.stats.servers),
+    games: String(props.stats.games),
+}));
 const auth = computed(() => page.props.auth);
 
 const activeFilter = ref('all');
@@ -259,7 +263,10 @@ function toggleFavourite(server: HomeServer) {
 </script>
 
 <template>
-    <Head :title="pageTitle" />
+    <Head>
+        <title>{{ pageTitle }}</title>
+        <meta name="description" :content="metaDescription" />
+    </Head>
 
     <PublicLayout>
 

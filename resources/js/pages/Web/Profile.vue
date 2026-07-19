@@ -139,7 +139,12 @@ function toggleBlock() {
 </script>
 
 <template>
-    <Head :title="profile.display_name || profile.username" />
+    <Head>
+        <title>{{ profile.display_name || profile.username }}</title>
+        <meta name="description" :content="t('profile.meta_description', {
+            name: profile.display_name || profile.username,
+        })" />
+    </Head>
 
     <PublicLayout>
         <div class="max-w-[1100px] mx-auto px-4 sm:px-6 py-8">

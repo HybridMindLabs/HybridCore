@@ -1,6 +1,12 @@
 <?php
 
 return [
+    // Search engines show this under the link, so it addresses a player
+    // deciding whether to click — not the owner running the site.
+    // Label form rather than ":servers servers": t() has no pluralisation, so a
+    // count placed directly before a noun reads as "1 servers" on a small site.
+    'meta_description' => 'Live player counts, maps and ping, refreshed every minute. Servers: :servers · Games: :games. Find one with people on it and jump straight in.',
+
     /* ── Hero ── */
     'footer_games' => 'Games',
     'footer_account' => 'Your account',

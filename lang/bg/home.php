@@ -1,6 +1,12 @@
 <?php
 
 return [
+    // Search engines show this under the link, so it addresses a player
+    // deciding whether to click — not the owner running the site.
+    // Label form rather than ":servers сървъра": t() has no pluralisation, so a
+    // count placed directly before a noun reads as "1 сървъра" on a small site.
+    'meta_description' => 'Живи бройки играчи, карти и пинг, обновявани всяка минута. Сървъри: :servers · Игри: :games. Намери такъв с хора и влизай направо.',
+
     /* ── Hero ── */
     'footer_games' => 'Игри',
     'footer_account' => 'Твоят акаунт',

@@ -256,7 +256,14 @@ const activityTiles = computed(() => [
 </script>
 
 <template>
-    <Head :title="t('servers.game_servers_title', { game: game.name })" />
+    <Head>
+        <title>{{ t('servers.game_servers_title', { game: game.name }) }}</title>
+        <meta name="description" :content="t('servers.meta_game', {
+            game: game.name,
+            count: String(servers.length),
+            online: String(counts.online),
+        })" />
+    </Head>
 
     <PublicLayout>
 

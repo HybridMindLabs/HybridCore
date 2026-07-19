@@ -288,7 +288,10 @@ const heroStats = computed(() => {
 </script>
 
 <template>
-    <Head :title="server.name" />
+    <Head>
+        <title>{{ server.name }}</title>
+        <meta name="description" :content="t('servers.meta_show', { name: server.name, game: game.name })" />
+    </Head>
 
     <PublicLayout>
 

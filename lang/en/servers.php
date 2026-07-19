@@ -1,6 +1,11 @@
 <?php
 
 return [
+    // Meta descriptions, addressed to a player reading a search result.
+    'meta_index' => 'Every game hosted here, with live counts, maps and ping. Servers: :servers · Players online now: :players.',
+    'meta_game' => 'Live player counts, maps and ping for :game. Listed: :count · Online now: :online.',
+    'meta_show' => ':name — a :game server. See who is playing, the current map and how to connect.',
+
     'title' => 'Server Browser',
     'subtitle' => 'Find and join community servers',
     'all_games' => 'All Games',

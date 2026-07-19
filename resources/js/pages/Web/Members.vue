@@ -175,7 +175,13 @@ function accentColor(member: Member): string {
 </script>
 
 <template>
-    <Head :title="t('members.title')" />
+    <Head>
+        <title>{{ t('members.title') }}</title>
+        <meta name="description" :content="t('members.meta_description', {
+            count: String(total),
+            online: String(liveOnlineCount),
+        })" />
+    </Head>
 
     <PublicLayout>
 

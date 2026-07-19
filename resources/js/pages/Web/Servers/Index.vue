@@ -59,7 +59,13 @@ const heroTotals = computed(() => [
 </script>
 
 <template>
-    <Head :title="t('servers.title')" />
+    <Head>
+        <title>{{ t('servers.title') }}</title>
+        <meta name="description" :content="t('servers.meta_index', {
+            servers: String(totals.servers),
+            players: String(totals.players),
+        })" />
+    </Head>
 
     <PublicLayout>
 
