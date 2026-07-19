@@ -1,14 +1,20 @@
 import { ref, watch, onUnmounted, type Ref } from 'vue';
 
 /**
- * Animates a number from 0 up to its target on mount, and between values when
- * the target changes later (live stats update without a page reload).
+ * Animates a number between values when the target changes, so live stats tick
+ * over instead of jumping.
+ *
+ * It deliberately does NOT animate up from zero on first render. Under SSR the
+ * server has no window, rendered the final figure, and the client then started
+ * its animation at 0 — every stat on the page was a hydration mismatch. Showing
+ * the real number immediately is also the more honest first paint: the value is
+ * already known by the time anything is on screen.
  *
  * Honours prefers-reduced-motion: users who ask for less motion get the final
  * value immediately rather than a ticking counter.
  */
 export function useCountUp(target: Ref<number>, duration = 900): Ref<number> {
-    const displayed = ref(0);
+    const displayed = ref(target.value);
     let frame: number | null = null;
 
     const reduced = typeof window !== 'undefined'
@@ -50,7 +56,9 @@ export function useCountUp(target: Ref<number>, duration = 900): Ref<number> {
         frame = requestAnimationFrame(step);
     }
 
-    watch(target, run, { immediate: true });
+    // No `immediate` — the first value is already in `displayed`, and animating
+    // it during setup is exactly what broke hydration.
+    watch(target, run);
     onUnmounted(stop);
 
     return displayed;

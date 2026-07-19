@@ -157,9 +157,13 @@ const navLinks = [
 const currentPath = computed(() => (page.url || '/').split('?')[0].replace(/\/+$/, '') || '/');
 
 function pathOf(href: string): string {
-    if (typeof window === 'undefined') return href;
     try {
-        return new URL(href, window.location.origin).pathname.replace(/\/+$/, '') || '/';
+        // The base only exists so relative hrefs parse; nothing is read from it
+        // but the pathname. Using window.location.origin here would make this
+        // return the whole URL under SSR, where there is no window — the nav
+        // then rendered as inactive on the server and active on the client,
+        // which is a hydration mismatch on every page.
+        return new URL(href, 'http://localhost').pathname.replace(/\/+$/, '') || '/';
     } catch {
         return href;
     }

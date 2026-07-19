@@ -49,7 +49,11 @@ class SecurityHeaders
             "style-src 'self' 'unsafe-inline'",
             "img-src 'self' data: blob: https:",
             "font-src 'self' data:",
-            "connect-src 'self' ws: wss: https://challenges.cloudflare.com",
+            // Every captcha provider that gets script-src also needs connect-src:
+            // each one phones home after loading, and reCAPTCHA in particular
+            // fails closed when its XHR to google.com is refused — the widget
+            // renders and the form then cannot be submitted.
+            "connect-src 'self' ws: wss: https://challenges.cloudflare.com https://js.hcaptcha.com https://hcaptcha.com https://www.google.com https://www.gstatic.com",
             'frame-src https://challenges.cloudflare.com https://newassets.hcaptcha.com https://js.hcaptcha.com https://www.google.com https://recaptcha.google.com',
             "object-src 'none'",
             "base-uri 'self'",
