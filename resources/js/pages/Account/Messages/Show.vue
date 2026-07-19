@@ -125,7 +125,7 @@ onUnmounted(() => {
                             <span v-if="msg.deleted" class="italic opacity-60">{{ t('account.msg_deleted') }}</span>
                             <span v-else>{{ msg.body }}</span>
                         </div>
-                        <p class="text-[10px] mt-0.5 opacity-0 group-hover:opacity-100 transition" :class="[msg.is_mine ? 'text-right' : 'text-left', dark ? 'text-zinc-600' : 'text-zinc-400']">
+                        <p class="text-[10px] mt-0.5 opacity-0 group-hover:opacity-100 transition" :class="[msg.is_mine ? 'text-right' : 'text-left', dark ? 'text-zinc-500' : 'text-zinc-400']">
                             {{ msg.at_human }}
                         </p>
                         <!-- Delete button for own messages -->
@@ -146,7 +146,7 @@ onUnmounted(() => {
 
         <!-- Typing indicator -->
         <p v-if="otherTyping" class="px-5 pb-1 text-[11.5px] italic" aria-live="polite"
-            :class="dark ? 'text-zinc-500' : 'text-zinc-600'">
+            :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
             {{ t('account.msg_typing', { name: otherName }) }}
         </p>
 
@@ -161,7 +161,7 @@ onUnmounted(() => {
                     :placeholder="t('account.msg_write_placeholder')"
                     class="flex-1 rounded-xl border px-4 py-2.5 text-[13px] resize-none transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                     :class="dark
-                        ? 'border-zinc-800 bg-zinc-900 text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500/50'
+                        ? 'border-zinc-800 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500 focus:border-blue-500/50'
                         : 'border-zinc-300 bg-white text-zinc-900 placeholder:text-zinc-500 focus:border-blue-500/60'"
                     :aria-invalid="sendForm.errors.body ? 'true' : undefined"
                     :aria-describedby="sendForm.errors.body ? 'message-error' : 'message-hint'"

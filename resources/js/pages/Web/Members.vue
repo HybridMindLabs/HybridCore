@@ -213,8 +213,8 @@ function accentColor(member: Member): string {
                         <div
                             class="hc-hero-in inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-[11px] font-bold uppercase tracking-widest"
                             :class="liveOnlineCount > 0
-                                ? (dark ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700')
-                                : (dark ? 'border-zinc-700 bg-zinc-800/60 text-zinc-400' : 'border-zinc-300 bg-zinc-200/70 text-zinc-600')"
+                                ? (dark ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-800')
+                                : (dark ? 'border-zinc-700 bg-zinc-800/60 text-zinc-400' : 'border-zinc-300 bg-zinc-200/70 text-zinc-500')"
                             aria-live="polite"
                         >
                             <span v-if="liveOnlineCount > 0" class="hc-live-dot" aria-hidden="true" />
@@ -228,7 +228,7 @@ function accentColor(member: Member): string {
                         </h1>
 
                         <p class="hc-hero-in hc-hero-in--2 mt-3 text-[15px] leading-relaxed max-w-lg"
-                           :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                           :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                             {{ t('members.hero_description') }}
                         </p>
 
@@ -247,7 +247,7 @@ function accentColor(member: Member): string {
                                     :placeholder="t('members.search_placeholder')"
                                     class="w-full rounded-xl border pl-10 pr-10 py-3 text-[14px] font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                                     :class="dark
-                                        ? 'border-zinc-800 bg-zinc-900/70 text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500/50'
+                                        ? 'border-zinc-800 bg-zinc-900/70 text-zinc-100 placeholder:text-zinc-500 focus:border-blue-500/50'
                                         : 'border-zinc-300 bg-white text-zinc-900 placeholder:text-zinc-500 focus:border-blue-500/60'"
                                 />
                                 <button v-if="search" type="button" @click="search = ''"
@@ -265,21 +265,26 @@ function accentColor(member: Member): string {
 
                     <dl class="hc-hero-in hc-hero-in--2 grid grid-cols-2 gap-2.5">
                         <div v-for="(item, i) in heroStats" :key="item.label"
-                            class="hc-reveal rounded-xl border px-3 py-2.5 backdrop-blur-md"
+                            class="hc-reveal flex flex-col rounded-xl border px-3 py-2.5 backdrop-blur-md"
                             :style="{ animationDelay: 0.18 + i * 0.06 + 's' }"
                             :class="dark
                                 ? 'border-zinc-700/70 bg-zinc-900/85 shadow-lg shadow-black/30'
                                 : 'border-zinc-300 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.10)]'"
                             :title="item.hint">
-                            <component :is="item.icon" :size="13" :stroke-width="1.9"
-                                class="mb-1.5" :class="item.accent ? 'text-emerald-500' : 'text-blue-500'"
-                                aria-hidden="true" />
-                            <dd class="text-[19px] font-black leading-none tabular-nums"
-                                :class="dark ? 'text-zinc-100' : 'text-zinc-900'">{{ item.value }}</dd>
-                            <dt class="text-[10px] font-bold uppercase tracking-widest mt-1.5"
+                            <!-- A <dl> group may hold only <dt>/<dd>, so the icon
+                                 and hint sit inside them and `order` restores the
+                                 visual stack: icon, figure, label, hint. -->
+                            <dt class="order-2 text-[10px] font-bold uppercase tracking-widest mt-1.5"
                                 :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ item.label }}</dt>
-                            <p class="text-[10.5px] leading-snug mt-1"
-                               :class="dark ? 'text-zinc-600' : 'text-zinc-500'">{{ item.hint }}</p>
+                            <dd class="order-1">
+                                <component :is="item.icon" :size="13" :stroke-width="1.9"
+                                    class="block mb-1.5" :class="item.accent ? 'text-emerald-500' : 'text-blue-500'"
+                                    aria-hidden="true" />
+                                <span class="block text-[19px] font-black leading-none tabular-nums"
+                                    :class="dark ? 'text-zinc-100' : 'text-zinc-900'">{{ item.value }}</span>
+                            </dd>
+                            <dd class="order-3 text-[10.5px] leading-snug mt-1"
+                                :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ item.hint }}</dd>
                         </div>
                     </dl>
                 </div>
@@ -293,7 +298,7 @@ function accentColor(member: Member): string {
             <div v-if="allMembers.length === 0 && !loadingMore"
                 class="flex flex-col items-center justify-center rounded-xl border py-20"
                 :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]'">
-                <Users :size="32" :stroke-width="1.4" class="mb-3" :class="dark ? 'text-zinc-700' : 'text-zinc-300'" />
+                <Users :size="32" :stroke-width="1.4" class="mb-3" :class="dark ? 'text-zinc-500' : 'text-zinc-300'" />
                 <p class="text-[14px] font-semibold" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
                     {{ filters.search ? t('members.no_results').replace(':query', filters.search) : t('members.empty') }}
                 </p>
@@ -340,7 +345,7 @@ function accentColor(member: Member): string {
                                     </p>
                                     <BadgeCheck v-if="member.verified" :size="13" :stroke-width="2.2" class="text-blue-400 shrink-0" />
                                 </div>
-                                <p v-if="member.username" class="text-[12px] font-mono truncate" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">@{{ member.username }}</p>
+                                <p v-if="member.username" class="text-[12px] font-mono truncate" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">@{{ member.username }}</p>
                             </div>
                         </div>
 
@@ -363,7 +368,7 @@ function accentColor(member: Member): string {
                         <ul v-if="member.achievements.length" class="flex flex-wrap items-center gap-1.5">
                             <li v-for="badge in visibleBadges(member)" :key="badge.slug">
                                 <span class="inline-flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-lg text-[11px] font-semibold"
-                                    :class="dark ? 'bg-zinc-800/80 text-zinc-300' : 'bg-zinc-100 text-zinc-700'"
+                                    :class="dark ? 'bg-zinc-800/80 text-zinc-300' : 'bg-zinc-100 text-zinc-500'"
                                     :title="badge.description">
                                     <component :is="badge.icon" :size="12" :stroke-width="2"
                                         class="shrink-0 text-amber-500" aria-hidden="true" />
@@ -372,7 +377,7 @@ function accentColor(member: Member): string {
                             </li>
                             <li v-if="member.achievements.length > 2">
                                 <span class="inline-flex items-center px-2 py-1 rounded-lg text-[11px] font-bold"
-                                    :class="dark ? 'bg-zinc-800/60 text-zinc-400' : 'bg-zinc-100 text-zinc-600'"
+                                    :class="dark ? 'bg-zinc-800/60 text-zinc-400' : 'bg-zinc-100 text-zinc-500'"
                                     :title="remainingBadgeNames(member)">
                                     +{{ member.achievements.length - 2 }}
                                 </span>
@@ -418,7 +423,7 @@ function accentColor(member: Member): string {
 
             <!-- End of list -->
             <p v-if="!hasMore && allMembers.length > 0" class="text-center text-[12px] mt-2"
-                :class="dark ? 'text-zinc-700' : 'text-zinc-400'">
+                :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
                 All {{ total.toLocaleString() }} members loaded
             </p>
 

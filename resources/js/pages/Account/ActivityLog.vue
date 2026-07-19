@@ -68,17 +68,17 @@ function deviceLabel(entry: LoginEntry): string {
                 <h2 class="text-[14px] font-black" :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
                     {{ t('account.act_title') }}
                 </h2>
-                <p class="text-[12px] mt-0.5" :class="dark ? 'text-zinc-500' : 'text-zinc-600'">
+                <p class="text-[12px] mt-0.5" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                     {{ t('account.act_subtitle') }}
                 </p>
             </div>
 
             <div v-if="history.data.length === 0" class="flex flex-col items-center text-center px-6 py-14">
                 <span class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                    :class="dark ? 'bg-zinc-900 text-zinc-700' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
+                    :class="dark ? 'bg-zinc-900 text-zinc-500' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
                     <Monitor :size="26" :stroke-width="1.4" />
                 </span>
-                <p class="text-[15px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-700'">
+                <p class="text-[15px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-500'">
                     {{ t('account.act_empty') }}
                 </p>
                 <p class="text-[13px] mt-1 max-w-sm" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
@@ -95,7 +95,7 @@ function deviceLabel(entry: LoginEntry): string {
                         :class="dark ? 'border-zinc-800 bg-zinc-900' : 'border-zinc-200 bg-zinc-100'"
                         aria-hidden="true">
                         <component :is="isMobile(entry.user_agent) ? Smartphone : Monitor"
-                            :size="14" :stroke-width="1.9" :class="dark ? 'text-zinc-400' : 'text-zinc-600'" />
+                            :size="14" :stroke-width="1.9" :class="dark ? 'text-zinc-400' : 'text-zinc-500'" />
                     </div>
 
                     <div class="flex-1 min-w-0">
@@ -105,25 +105,25 @@ function deviceLabel(entry: LoginEntry): string {
                             </p>
                             <span v-if="i === 0"
                                 class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide"
-                                :class="dark ? 'bg-emerald-500/15 text-emerald-400' : 'bg-emerald-500/10 text-emerald-700'">
+                                :class="dark ? 'bg-emerald-500/15 text-emerald-400' : 'bg-emerald-500/10 text-emerald-800'">
                                 {{ t('account.act_latest') }}
                             </span>
                         </div>
 
                         <div class="flex items-center gap-4 mt-1 flex-wrap">
                             <span v-if="entry.ip" class="text-[11.5px] font-mono"
-                                :class="dark ? 'text-zinc-500' : 'text-zinc-600'"
+                                :class="dark ? 'text-zinc-500' : 'text-zinc-500'"
                                 :title="t('account.act_ip_hint')">
                                 {{ entry.ip }}
                             </span>
                             <span v-if="entry.city || entry.country" class="flex items-center gap-1 text-[11.5px]"
-                                :class="dark ? 'text-zinc-500' : 'text-zinc-600'"
+                                :class="dark ? 'text-zinc-500' : 'text-zinc-500'"
                                 :title="t('account.act_location_hint')">
                                 <MapPin :size="11" :stroke-width="2" aria-hidden="true" />
                                 {{ [entry.city, entry.country].filter(Boolean).join(', ') }}
                             </span>
                             <span class="flex items-center gap-1 text-[11.5px]"
-                                :class="dark ? 'text-zinc-500' : 'text-zinc-600'" :title="entry.at_full">
+                                :class="dark ? 'text-zinc-500' : 'text-zinc-500'" :title="entry.at_full">
                                 <Clock :size="11" :stroke-width="2" aria-hidden="true" /> {{ entry.at }}
                             </span>
                         </div>
@@ -144,7 +144,7 @@ function deviceLabel(entry: LoginEntry): string {
                 <p class="text-[13px] font-bold" :class="dark ? 'text-zinc-200' : 'text-zinc-900'">
                     {{ t('account.act_security_title') }}
                 </p>
-                <p class="text-[12.5px] leading-relaxed mt-1" :class="dark ? 'text-zinc-400' : 'text-zinc-700'">
+                <p class="text-[12.5px] leading-relaxed mt-1" :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                     {{ t('account.act_security_body') }}
                 </p>
                 <Link :href="route('account.index')"

@@ -96,7 +96,7 @@ const dotGrid = computed(() => {
                                     class="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] font-semibold"
                                     :class="dark
                                         ? 'border-zinc-800/70 bg-zinc-800/40 text-zinc-300'
-                                        : 'border-zinc-200 bg-zinc-50 text-zinc-600'"
+                                        : 'border-zinc-200 bg-zinc-50 text-zinc-500'"
                                 >
                                     <GameIcon :slug="game.slug" :alt="game.name" img-class="h-4 w-4 rounded object-cover" />
                                     {{ game.name }}
@@ -112,7 +112,7 @@ const dotGrid = computed(() => {
                             >
                                 <div class="mb-4 flex items-center justify-between">
                                     <div>
-                                        <p class="text-[11px] font-semibold uppercase tracking-wider" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">
+                                        <p class="text-[11px] font-semibold uppercase tracking-wider" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
                                             {{ t('auth.shell.preview_title') }}
                                         </p>
                                         <p class="mt-0.5 text-[13px] font-bold" :class="dark ? 'text-zinc-100' : 'text-zinc-800'">
@@ -121,7 +121,7 @@ const dotGrid = computed(() => {
                                     </div>
                                     <div
                                         class="flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold"
-                                        :class="dark ? 'border-zinc-800/70 bg-zinc-800/50 text-zinc-300' : 'border-zinc-200 bg-white text-zinc-700'"
+                                        :class="dark ? 'border-zinc-800/70 bg-zinc-800/50 text-zinc-300' : 'border-zinc-200 bg-white text-zinc-500'"
                                     >
                                         <span class="hc-live-dot w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                         {{ shell.players_online }}
@@ -148,7 +148,7 @@ const dotGrid = computed(() => {
                                             </p>
                                         </div>
                                         <div class="text-right shrink-0">
-                                            <p class="text-[12px] font-semibold" :class="dark ? 'text-zinc-200' : 'text-zinc-700'">{{ server.players }}</p>
+                                            <p class="text-[12px] font-semibold" :class="dark ? 'text-zinc-200' : 'text-zinc-500'">{{ server.players }}</p>
                                             <p class="mt-0.5 text-[11px] font-semibold text-blue-500">{{ server.ping }}</p>
                                         </div>
                                     </div>

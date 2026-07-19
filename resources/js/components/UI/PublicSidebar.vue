@@ -50,7 +50,7 @@ const divider   = computed(() => dark.value ? 'divide-zinc-800/60'              
 const rowHover  = computed(() => dark.value ? 'hover:bg-white/[0.04]'            : 'hover:bg-zinc-50');
 const textPri   = computed(() => dark.value ? 'text-zinc-100'                    : 'text-zinc-800');
 const textSec   = computed(() => dark.value ? 'text-zinc-400'                    : 'text-zinc-500');
-const textMute  = computed(() => dark.value ? 'text-zinc-600'                    : 'text-zinc-400');
+const textMute  = computed(() => dark.value ? 'text-zinc-500'                    : 'text-zinc-400');
 const iconBg    = computed(() => dark.value ? 'bg-zinc-800/80'                   : 'bg-zinc-100');
 const btnBorder = computed(() => dark.value
     ? 'border-zinc-700/70 text-zinc-400 hover:border-zinc-600 hover:text-zinc-100 hover:bg-white/[0.05]'
@@ -146,7 +146,7 @@ const quickLinks = computed(() => {
                             :style="{ backgroundColor: viewer.role.color + '18', color: viewer.role.color, borderColor: viewer.role.color + '38' }">
                             {{ viewer.role.name }}
                         </span>
-                        <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-500">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 dark:text-emerald-400">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                             {{ t('home.sidebar_online') }}
                         </span>

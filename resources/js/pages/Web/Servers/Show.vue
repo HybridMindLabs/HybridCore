@@ -80,7 +80,7 @@ const card     = computed(() => dark.value ? 'border-zinc-800/70 bg-[#111113]' :
 const cardHead = computed(() => dark.value ? 'border-zinc-800/60 bg-[#1a1a1e]' : 'border-zinc-100 bg-zinc-50');
 const textPri  = computed(() => dark.value ? 'text-zinc-100' : 'text-zinc-800');
 const textSec  = computed(() => dark.value ? 'text-zinc-400' : 'text-zinc-500');
-const textMute = computed(() => dark.value ? 'text-zinc-600' : 'text-zinc-400');
+const textMute = computed(() => dark.value ? 'text-zinc-500' : 'text-zinc-400');
 const divider  = computed(() => dark.value ? 'divide-zinc-800/50' : 'divide-zinc-100');
 const rowHover = computed(() => dark.value ? 'hover:bg-white/[0.03]' : 'hover:bg-zinc-50/80');
 const infoRow  = computed(() => dark.value ? 'border-zinc-800/50' : 'border-zinc-100');
@@ -199,7 +199,7 @@ function pingLabel(ms: number | null) {
  */
 function pingColor(ms: number | null) {
     if (ms === null) return dark.value ? 'text-zinc-400' : 'text-zinc-500';
-    if (ms < 50) return dark.value ? 'text-emerald-500' : 'text-emerald-700';
+    if (ms < 50) return dark.value ? 'text-emerald-500' : 'text-emerald-800';
     if (ms < 100) return dark.value ? 'text-amber-500' : 'text-amber-700';
 
     return dark.value ? 'text-red-400' : 'text-red-600';
@@ -335,8 +335,8 @@ const heroStats = computed(() => {
                         <!-- Status. aria-live so a screen reader hears it change. -->
                         <div class="hc-hero-in inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[10.5px] font-bold uppercase tracking-widest"
                             :class="server.status?.is_online
-                                ? (dark ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700')
-                                : (dark ? 'border-zinc-700 bg-zinc-800/60 text-zinc-400' : 'border-zinc-300 bg-zinc-200/70 text-zinc-600')"
+                                ? (dark ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-800')
+                                : (dark ? 'border-zinc-700 bg-zinc-800/60 text-zinc-400' : 'border-zinc-300 bg-zinc-200/70 text-zinc-500')"
                             aria-live="polite">
                             <span v-if="server.status?.is_online" class="hc-live-dot" aria-hidden="true" />
                             {{ server.status?.is_online ? t('servers.online') : t('servers.offline') }}
@@ -357,7 +357,7 @@ const heroStats = computed(() => {
                                 <div class="flex items-center gap-2 flex-wrap mt-2">
                                     <Link :href="route('servers.game', game.slug)"
                                         class="text-[12.5px] font-semibold transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                                        :class="dark ? 'text-zinc-400 hover:text-zinc-100' : 'text-zinc-600 hover:text-zinc-900'">
+                                        :class="dark ? 'text-zinc-400 hover:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900'">
                                         {{ game.name }}
                                     </Link>
                                     <span v-if="average_rating"
@@ -369,7 +369,7 @@ const heroStats = computed(() => {
                                     </span>
                                     <span v-if="server.country_code"
                                         class="px-2 py-0.5 rounded-full border text-[10px] font-bold tracking-wide"
-                                        :class="dark ? 'border-zinc-700 bg-zinc-800/70 text-zinc-300' : 'border-zinc-300 bg-zinc-200/70 text-zinc-700'"
+                                        :class="dark ? 'border-zinc-700 bg-zinc-800/70 text-zinc-300' : 'border-zinc-300 bg-zinc-200/70 text-zinc-500'"
                                         :title="server.country_code.toUpperCase()">{{ server.country_code.toUpperCase() }}</span>
                                     <span v-if="server.status?.is_password_protected"
                                         class="inline-flex items-center gap-1 text-[10.5px] font-bold px-2 py-0.5 rounded-full border border-amber-500/30 bg-amber-500/10"
@@ -380,7 +380,7 @@ const heroStats = computed(() => {
                                     </span>
                                     <span v-if="server.status?.vac_secured"
                                         class="inline-flex items-center gap-1 text-[10.5px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/10"
-                                        :class="dark ? 'text-emerald-400' : 'text-emerald-700'"
+                                        :class="dark ? 'text-emerald-400' : 'text-emerald-800'"
                                         :title="t('servers.vac_secured')">
                                         <Shield :size="9" :stroke-width="2.4" aria-hidden="true" />VAC
                                     </span>
@@ -408,7 +408,7 @@ const heroStats = computed(() => {
 
                             <span v-if="server.status?.map"
                                 class="inline-flex items-center gap-1.5 text-[12.5px] font-mono px-2.5 py-1.5 rounded-xl border"
-                                :class="dark ? 'border-zinc-800 bg-zinc-900/60 text-zinc-300' : 'border-zinc-300 bg-white/80 text-zinc-700'"
+                                :class="dark ? 'border-zinc-800 bg-zinc-900/60 text-zinc-300' : 'border-zinc-300 bg-white/80 text-zinc-500'"
                                 :title="t('servers.current_map_hint')">
                                 <Map :size="12" :stroke-width="1.8" aria-hidden="true" />{{ server.status.map }}
                             </span>
@@ -417,7 +417,7 @@ const heroStats = computed(() => {
                         <div v-if="server.tags.length" class="hc-hero-in hc-hero-in--3 flex items-center gap-1.5 flex-wrap mt-2.5">
                             <span v-for="tag in server.tags" :key="tag"
                                 class="text-[10px] font-semibold px-2 py-0.5 rounded"
-                                :class="dark ? 'bg-zinc-800/80 text-zinc-400' : 'bg-zinc-200/80 text-zinc-600'"
+                                :class="dark ? 'bg-zinc-800/80 text-zinc-400' : 'bg-zinc-200/80 text-zinc-500'"
                             >{{ tag }}</span>
                         </div>
                     </div>
@@ -426,27 +426,31 @@ const heroStats = computed(() => {
                          its capacity bar. -->
                     <dl class="hc-hero-in hc-hero-in--2 grid grid-cols-3 gap-2.5">
                         <div v-for="(item, i) in heroStats" :key="item.label"
-                            class="hc-reveal rounded-xl border px-3 py-2.5 backdrop-blur-md"
+                            class="hc-reveal flex flex-col rounded-xl border px-3 py-2.5 backdrop-blur-md"
                             :style="{ animationDelay: 0.18 + i * 0.06 + 's' }"
                             :class="dark
                                 ? 'border-zinc-700/70 bg-zinc-900/85 shadow-lg shadow-black/30'
                                 : 'border-zinc-300 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.10)]'"
                             :title="item.hint">
-                            <dd class="text-[19px] font-black leading-none tabular-nums"
+                            <!-- Term first, as a <dl> group requires; `order`
+                                 puts the figure back above its label. The bar and
+                                 the hint are descriptions too, so they stay <dd>
+                                 rather than becoming stray elements in the group. -->
+                            <dt class="order-2 text-[10px] font-bold uppercase tracking-widest mt-1.5"
+                                :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ item.label }}</dt>
+                            <dd class="order-1 text-[19px] font-black leading-none tabular-nums"
                                 :class="item.class ?? (dark ? 'text-zinc-100' : 'text-zinc-900')">
                                 {{ item.value }}<span v-if="item.suffix" class="text-[12px] font-bold"
                                     :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ item.suffix }}</span>
                             </dd>
-                            <dt class="text-[10px] font-bold uppercase tracking-widest mt-1.5"
-                                :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ item.label }}</dt>
 
-                            <span v-if="item.bar !== undefined" class="mt-2 block h-1 rounded-full overflow-hidden"
+                            <dd v-if="item.bar !== undefined" class="order-3 mt-2 h-1 rounded-full overflow-hidden"
                                 :class="dark ? 'bg-zinc-800' : 'bg-zinc-200'" aria-hidden="true">
                                 <span class="hc-hero-bar block h-full rounded-full"
                                     :style="{ width: item.bar + '%', backgroundColor: item.barColor }" />
-                            </span>
-                            <p v-else class="text-[10.5px] leading-snug mt-1"
-                               :class="dark ? 'text-zinc-600' : 'text-zinc-500'">{{ item.hint }}</p>
+                            </dd>
+                            <dd v-else class="order-3 text-[10.5px] leading-snug mt-1"
+                                :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ item.hint }}</dd>
                         </div>
                     </dl>
                 </div>
@@ -474,7 +478,7 @@ const heroStats = computed(() => {
                                 class="px-4 py-2.5 text-[12.5px] font-semibold border-b-2 -mb-px whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50"
                                 :class="historyRange === tab.key
                                     ? 'text-blue-500 border-blue-500'
-                                    : dark ? 'text-zinc-500 border-transparent hover:text-zinc-200' : 'text-zinc-600 border-transparent hover:text-zinc-900'"
+                                    : dark ? 'text-zinc-500 border-transparent hover:text-zinc-200' : 'text-zinc-500 border-transparent hover:text-zinc-900'"
                                 :aria-pressed="historyRange === tab.key"
                                 @click="historyRange = tab.key">
                                 {{ tab.label }}
@@ -565,7 +569,7 @@ const heroStats = computed(() => {
                                 <div class="flex items-center gap-0.5">
                                     <Star v-for="i in 5" :key="i" :size="13" :stroke-width="1.8"
                                         :fill="i <= Math.round(average_rating) ? '#f59e0b' : 'none'"
-                                        :class="i <= Math.round(average_rating) ? 'text-amber-500' : (dark ? 'text-zinc-700' : 'text-zinc-300')" />
+                                        :class="i <= Math.round(average_rating) ? 'text-amber-500' : (dark ? 'text-zinc-500' : 'text-zinc-300')" />
                                 </div>
                                 <span class="text-[13px] font-bold tabular-nums" :class="textPri">{{ Number(average_rating).toFixed(1) }}</span>
                             </div>
@@ -595,7 +599,7 @@ const heroStats = computed(() => {
                                     >
                                         <Star :size="20" :stroke-width="1.8"
                                             :fill="i <= (hoverRating || reviewForm.rating) ? '#f59e0b' : 'none'"
-                                            :class="i <= (hoverRating || reviewForm.rating) ? 'text-amber-500' : (dark ? 'text-zinc-700' : 'text-zinc-300')" />
+                                            :class="i <= (hoverRating || reviewForm.rating) ? 'text-amber-500' : (dark ? 'text-zinc-500' : 'text-zinc-300')" />
                                     </button>
                                     <span v-if="reviewForm.rating" class="ml-1.5 text-[12px] font-semibold" :class="textSec">{{ reviewForm.rating }}/5</span>
                                 </div>
@@ -610,7 +614,7 @@ const heroStats = computed(() => {
                                     :placeholder="t('servers.review_placeholder')"
                                     class="w-full rounded-xl border px-4 py-2.5 text-[13px] resize-none transition focus:outline-none"
                                     :class="dark
-                                        ? 'border-zinc-800 bg-zinc-900 text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500/50'
+                                        ? 'border-zinc-800 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500 focus:border-blue-500/50'
                                         : 'border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400 focus:border-blue-400'"
                                 />
                                 <p v-if="reviewForm.errors.body" class="text-[12px] text-red-400">{{ reviewForm.errors.body }}</p>
@@ -663,7 +667,7 @@ const heroStats = computed(() => {
                                             <div class="flex items-center gap-0.5">
                                                 <Star v-for="i in 5" :key="i" :size="11" :stroke-width="1.8"
                                                     :fill="i <= review.rating ? '#f59e0b' : 'none'"
-                                                    :class="i <= review.rating ? 'text-amber-500' : (dark ? 'text-zinc-700' : 'text-zinc-300')" />
+                                                    :class="i <= review.rating ? 'text-amber-500' : (dark ? 'text-zinc-500' : 'text-zinc-300')" />
                                             </div>
                                             <span class="text-[11px]" :class="textMute">{{ review.created_at }}</span>
                                             <ReportButton v-if="authed && !review.is_mine" type="review" :id="review.id" class="ml-auto" />
@@ -671,7 +675,7 @@ const heroStats = computed(() => {
                                                 v-if="review.is_mine"
                                                 type="button"
                                                 class="p-1 rounded transition"
-                                                :class="[dark ? 'text-zinc-600 hover:text-red-400' : 'text-zinc-300 hover:text-red-500', (authed && !review.is_mine) ? '' : 'ml-auto']"
+                                                :class="[dark ? 'text-zinc-500 hover:text-red-400' : 'text-zinc-300 hover:text-red-500', (authed && !review.is_mine) ? '' : 'ml-auto']"
                                                 :title="t('servers.delete_review')"
                                                 @click="deleteReview(review.id)"
                                             >
@@ -785,7 +789,7 @@ const heroStats = computed(() => {
                                     <Globe2 :size="12" :stroke-width="1.8" />Country
                                 </span>
                                 <span class="px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide"
-                                    :class="dark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-200 text-zinc-700'">{{ server.country_code.toUpperCase() }}</span>
+                                    :class="dark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-200 text-zinc-500'">{{ server.country_code.toUpperCase() }}</span>
                             </div>
                             <div v-if="server.status?.ping != null" class="flex items-center justify-between px-5 py-3">
                                 <span class="text-[12px] flex items-center gap-1.5" :class="textMute">
@@ -801,7 +805,7 @@ const heroStats = computed(() => {
                                 </span>
                                 <span
                                     class="flex items-center gap-1 text-[12px] font-medium"
-                                    :class="server.status?.vac_secured ? 'text-emerald-500' : dark ? 'text-zinc-600' : 'text-zinc-400'"
+                                    :class="server.status?.vac_secured ? 'text-emerald-500' : dark ? 'text-zinc-500' : 'text-zinc-400'"
                                 >
                                     <component :is="server.status?.vac_secured ? CircleCheck : CircleX" :size="13" :stroke-width="1.8" />
                                     {{ server.status?.vac_secured ? 'Secured' : 'Disabled' }}
@@ -813,7 +817,7 @@ const heroStats = computed(() => {
                                 </span>
                                 <span
                                     class="flex items-center gap-1 text-[12px] font-medium"
-                                    :class="server.status?.is_password_protected ? 'text-amber-500' : dark ? 'text-zinc-600' : 'text-zinc-400'"
+                                    :class="server.status?.is_password_protected ? 'text-amber-500' : dark ? 'text-zinc-500' : 'text-zinc-400'"
                                 >
                                     <component :is="server.status?.is_password_protected ? Lock : CircleCheck" :size="13" :stroke-width="1.8" />
                                     {{ server.status?.is_password_protected ? 'Required' : 'None' }}

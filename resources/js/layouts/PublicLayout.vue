@@ -368,7 +368,7 @@ const socialLinks = computed(() => {
                                     :href="child.url"
                                     :target="child.target"
                                     class="block px-3.5 py-2 text-[13px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50"
-                                    :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'"
+                                    :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50'"
                                 >{{ child.label }}</a>
                             </div>
                         </div>
@@ -394,7 +394,7 @@ const socialLinks = computed(() => {
                             :aria-label="s.label"
                             target="_blank" rel="noopener noreferrer"
                             class="transition-colors"
-                            :class="dark ? 'text-zinc-700 hover:text-zinc-400' : 'text-zinc-300 hover:text-zinc-600'"
+                            :class="dark ? 'text-zinc-500 hover:text-zinc-400' : 'text-zinc-500 hover:text-zinc-600'"
                         >
                             <svg :viewBox="s.viewBox" class="w-[14px] h-[14px]" fill="currentColor"><g v-html="s.svg" /></svg>
                         </a>
@@ -415,7 +415,7 @@ const socialLinks = computed(() => {
                             class="flex items-center gap-2 px-2.5 h-9 text-[12px] rounded-lg border outline-none transition-all duration-200 uppercase tracking-wide font-semibold focus-visible:ring-2 focus-visible:ring-blue-500/50"
                             :class="dark
                                 ? 'border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800/60 hover:border-zinc-700'
-                                : 'border-zinc-200 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 hover:border-zinc-300'"
+                                : 'border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 hover:border-zinc-300'"
                             @click.stop="langOpen = !langOpen"
                             @keydown.escape="langOpen = false"
                         >
@@ -452,7 +452,7 @@ const socialLinks = computed(() => {
                                     class="flex items-center gap-2.5 w-full px-3 py-2 text-[13px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50"
                                     :class="isCurrentLocale(locale.code)
                                         ? (dark ? 'text-blue-400 bg-blue-500/10' : 'text-blue-600 bg-blue-50')
-                                        : dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'"
+                                        : dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50'"
                                     @click.stop="selectLocale(locale.code)"
                                 >
                                     <FlagIcon :code="locale.code" />
@@ -467,7 +467,7 @@ const socialLinks = computed(() => {
                     <button
                         type="button"
                         class="w-8 h-8 flex items-center justify-center rounded-md border transition-colors"
-                        :class="dark ? 'border-zinc-800 text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800/60' : 'border-zinc-200 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100'"
+                        :class="dark ? 'border-zinc-800 text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800/60' : 'border-zinc-200 text-zinc-400 hover:text-zinc-500 hover:bg-zinc-100'"
                         :aria-label="dark ? 'Switch to light mode' : 'Switch to dark mode'"
                         @click="toggleTheme"
                     >
@@ -480,7 +480,7 @@ const socialLinks = computed(() => {
                         <button
                             type="button"
                             class="relative w-8 h-8 flex items-center justify-center rounded-md border transition-colors"
-                            :class="dark ? 'border-zinc-800 text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800/60' : 'border-zinc-200 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100'"
+                            :class="dark ? 'border-zinc-800 text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800/60' : 'border-zinc-200 text-zinc-400 hover:text-zinc-500 hover:bg-zinc-100'"
                             aria-label="Notifications"
                             @click.stop="toggleNotifDropdown"
                         >
@@ -496,7 +496,7 @@ const socialLinks = computed(() => {
                             class="absolute right-0 top-full mt-1 w-80 rounded-lg border shadow-lg z-50 overflow-hidden"
                             :class="dark ? 'bg-zinc-900 border-zinc-800 shadow-black/40' : 'bg-white border-zinc-200 shadow-zinc-200/60'">
                             <div class="flex items-center justify-between px-3 py-2.5 border-b" :class="dark ? 'border-zinc-800' : 'border-zinc-100'">
-                                <span class="text-[12px] font-semibold" :class="dark ? 'text-zinc-300' : 'text-zinc-700'">Notifications</span>
+                                <span class="text-[12px] font-semibold" :class="dark ? 'text-zinc-300' : 'text-zinc-500'">Notifications</span>
                                 <button type="button"
                                     class="text-[11px] font-semibold transition-colors disabled:opacity-40"
                                     :class="dark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'"
@@ -508,13 +508,13 @@ const socialLinks = computed(() => {
                             </div>
 
                             <div class="max-h-80 overflow-y-auto">
-                                <p v-if="notifLoading" class="px-3 py-6 text-center text-[12px]" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">Loading…</p>
-                                <p v-else-if="recentNotifications.length === 0" class="px-3 py-6 text-center text-[12px]" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">No notifications yet.</p>
+                                <p v-if="notifLoading" class="px-3 py-6 text-center text-[12px]" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">Loading…</p>
+                                <p v-else-if="recentNotifications.length === 0" class="px-3 py-6 text-center text-[12px]" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">No notifications yet.</p>
                                 <div v-for="n in recentNotifications" :key="n.id"
                                     class="px-3 py-2.5 border-b last:border-0 text-[12px]"
                                     :class="[dark ? 'border-zinc-800/60' : 'border-zinc-100', !n.read ? (dark ? 'bg-blue-500/5' : 'bg-blue-50/50') : '']">
-                                    <p :class="dark ? 'text-zinc-300' : 'text-zinc-700'">{{ notifLabel(n) }}</p>
-                                    <p class="text-[11px] mt-0.5" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">{{ n.created_at }}</p>
+                                    <p :class="dark ? 'text-zinc-300' : 'text-zinc-500'">{{ notifLabel(n) }}</p>
+                                    <p class="text-[11px] mt-0.5" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">{{ n.created_at }}</p>
                                 </div>
                             </div>
 
@@ -540,8 +540,8 @@ const socialLinks = computed(() => {
                                     <img v-if="page.props.auth.user.avatar" :src="page.props.auth.user.avatar" class="w-full h-full object-cover" />
                                     <span v-else class="text-[10px] font-bold" :class="dark ? 'text-blue-400' : 'text-blue-500'">{{ page.props.auth.user.name.charAt(0) }}</span>
                                 </div>
-                                <span class="hidden sm:block text-[13px] truncate max-w-[90px]" :class="dark ? 'text-zinc-300' : 'text-zinc-700'">{{ page.props.auth.user.name }}</span>
-                                <ChevronDown :size="11" :stroke-width="2.5" class="transition-transform hidden sm:block" :class="[userOpen ? 'rotate-180' : '', dark ? 'text-zinc-600' : 'text-zinc-400']" />
+                                <span class="hidden sm:block text-[13px] truncate max-w-[90px]" :class="dark ? 'text-zinc-300' : 'text-zinc-500'">{{ page.props.auth.user.name }}</span>
+                                <ChevronDown :size="11" :stroke-width="2.5" class="transition-transform hidden sm:block" :class="[userOpen ? 'rotate-180' : '', dark ? 'text-zinc-500' : 'text-zinc-400']" />
                             </button>
 
                             <div
@@ -572,24 +572,24 @@ const socialLinks = computed(() => {
                                 </div>
 
                                 <div class="py-1.5">
-                                    <Link :href="route('account.index')" class="flex items-center gap-2.5 px-4 py-2 text-[13px] transition-colors w-full" :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'" @click="userOpen = false">
+                                    <Link :href="route('account.index')" class="flex items-center gap-2.5 px-4 py-2 text-[13px] transition-colors w-full" :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50'" @click="userOpen = false">
                                         <User :size="14" :stroke-width="1.8" />
                                         {{ t('account.my_account') }}
                                     </Link>
-                                    <Link v-if="page.props.auth.user.username" :href="route('profile.show', page.props.auth.user.username)" class="flex items-center gap-2.5 px-4 py-2 text-[13px] transition-colors w-full" :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'" @click="userOpen = false">
+                                    <Link v-if="page.props.auth.user.username" :href="route('profile.show', page.props.auth.user.username)" class="flex items-center gap-2.5 px-4 py-2 text-[13px] transition-colors w-full" :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50'" @click="userOpen = false">
                                         <UserCircle :size="14" :stroke-width="1.8" />
                                         {{ t('account.view_public_profile') }}
                                     </Link>
-                                    <Link :href="route('account.favorites')" class="flex items-center gap-2.5 px-4 py-2 text-[13px] transition-colors w-full" :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'" @click="userOpen = false">
+                                    <Link :href="route('account.favorites')" class="flex items-center gap-2.5 px-4 py-2 text-[13px] transition-colors w-full" :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50'" @click="userOpen = false">
                                         <Star :size="14" :stroke-width="1.8" />
                                         {{ t('home.my_servers') }}
                                     </Link>
-                                    <Link :href="route('members.index')" class="flex items-center gap-2.5 px-4 py-2 text-[13px] transition-colors w-full" :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'" @click="userOpen = false">
+                                    <Link :href="route('members.index')" class="flex items-center gap-2.5 px-4 py-2 text-[13px] transition-colors w-full" :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50'" @click="userOpen = false">
                                         <Users :size="14" :stroke-width="1.8" />
                                         {{ t('members.title') }}
                                     </Link>
                                     <!-- Extension-registered user-menu links -->
-                                    <a v-for="item in userMenu" :key="item.url" :href="item.url" class="flex items-center gap-2.5 px-4 py-2 text-[13px] transition-colors w-full" :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'" @click="userOpen = false">
+                                    <a v-for="item in userMenu" :key="item.url" :href="item.url" class="flex items-center gap-2.5 px-4 py-2 text-[13px] transition-colors w-full" :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50'" @click="userOpen = false">
                                         <component :is="publicNavIcon(item.icon)" :size="14" :stroke-width="1.8" />
                                         {{ item.label }}
                                     </a>
@@ -665,10 +665,10 @@ const socialLinks = computed(() => {
                 <div class="flex items-center gap-3 pt-3 mt-1 border-t" :class="dark ? 'border-zinc-800' : 'border-zinc-200'">
                     <template v-if="!page.props.auth?.user">
                         <Link :href="route('login')" class="px-4 py-1.5 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-500 transition-colors">{{ t('home.login') }}</Link>
-                        <Link :href="route('register')" class="text-sm font-medium transition-colors" :class="dark ? 'text-zinc-400 hover:text-zinc-100' : 'text-zinc-600 hover:text-zinc-900'">{{ t('home.create_account') }}</Link>
+                        <Link :href="route('register')" class="text-sm font-medium transition-colors" :class="dark ? 'text-zinc-400 hover:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900'">{{ t('home.create_account') }}</Link>
                     </template>
                     <template v-else>
-                        <Link :href="route('account.index')" class="flex items-center gap-2 text-sm" :class="dark ? 'text-zinc-400' : 'text-zinc-600'" @click="mobileOpen = false">
+                        <Link :href="route('account.index')" class="flex items-center gap-2 text-sm" :class="dark ? 'text-zinc-400' : 'text-zinc-500'" @click="mobileOpen = false">
                             <User :size="14" :stroke-width="1.8" />
                             {{ t('account.my_account') }}
                         </Link>
@@ -692,11 +692,11 @@ const socialLinks = computed(() => {
             <div v-if="footerData" class="border-b" :class="dark ? 'border-zinc-800/60' : 'border-zinc-200'">
                 <div class="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex items-center gap-x-5 gap-y-1.5 flex-wrap text-[12px]">
                     <span class="inline-flex items-center gap-2 font-bold"
-                        :class="dark ? 'text-emerald-400' : 'text-emerald-700'">
+                        :class="dark ? 'text-emerald-400' : 'text-emerald-800'">
                         <span class="hc-live-dot" aria-hidden="true" />
                         {{ t('home.servers_live', { online: footerData.servers_online, total: footerData.servers_total }) }}
                     </span>
-                    <span :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                    <span :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                         <strong class="font-bold tabular-nums" :class="dark ? 'text-zinc-200' : 'text-zinc-900'">
                             {{ footerData.players_online.toLocaleString() }}
                         </strong>
@@ -704,7 +704,7 @@ const socialLinks = computed(() => {
                     </span>
                     <Link :href="route('servers.index')"
                         class="group ml-auto inline-flex items-center gap-1.5 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded px-1"
-                        :class="dark ? 'text-zinc-400 hover:text-zinc-100' : 'text-zinc-600 hover:text-zinc-900'">
+                        :class="dark ? 'text-zinc-400 hover:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900'">
                         {{ t('home.browse_all') }}
                         <ArrowRight :size="12" :stroke-width="2"
                             class="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
@@ -721,7 +721,7 @@ const socialLinks = computed(() => {
                             class="inline-block mb-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded">
                             <span class="text-[15px] font-bold tracking-tight" :class="dark ? 'text-zinc-100' : 'text-zinc-900'">{{ page.props.app.name }}</span>
                         </Link>
-                        <p class="text-[12.5px] leading-relaxed mb-4 max-w-[280px]" :class="dark ? 'text-zinc-500' : 'text-zinc-600'">
+                        <p class="text-[12.5px] leading-relaxed mb-4 max-w-[280px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                             {{ t('home.footer_tagline') }}
                         </p>
                         <div v-if="socialLinks.length" class="flex items-center gap-2">
@@ -737,20 +737,20 @@ const socialLinks = computed(() => {
                     <!-- Games actually hosted here — the one thing a player wants
                          from a footer, and it was not linked anywhere. -->
                     <div v-if="footerData?.games.length">
-                        <h2 class="text-[11px] uppercase tracking-widest font-bold mb-3.5" :class="dark ? 'text-zinc-400' : 'text-zinc-700'">
+                        <h2 class="text-[11px] uppercase tracking-widest font-bold mb-3.5" :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                             {{ t('home.footer_games') }}
                         </h2>
                         <ul class="flex flex-col gap-2">
                             <li v-for="g in footerData.games" :key="g.slug">
                                 <Link :href="route('servers.game', g.slug)"
                                     class="group flex items-center gap-2 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded"
-                                    :class="dark ? 'text-zinc-500 hover:text-zinc-100' : 'text-zinc-600 hover:text-zinc-900'"
+                                    :class="dark ? 'text-zinc-500 hover:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900'"
                                     :title="t('home.footer_game_hint', { servers: g.servers, players: g.players })">
                                     <span class="truncate">{{ g.name }}</span>
                                     <span class="text-[11px] font-semibold tabular-nums shrink-0"
                                         :class="g.players > 0
-                                            ? 'text-emerald-500'
-                                            : dark ? 'text-zinc-700' : 'text-zinc-400'">{{ g.players }}</span>
+                                            ? (dark ? 'text-emerald-400' : 'text-emerald-800')
+                                            : (dark ? 'text-zinc-500' : 'text-zinc-500')">{{ g.players }}</span>
                                 </Link>
                             </li>
                         </ul>
@@ -758,7 +758,7 @@ const socialLinks = computed(() => {
 
                     <!-- Community -->
                     <div>
-                        <h2 class="text-[11px] uppercase tracking-widest font-bold mb-3.5" :class="dark ? 'text-zinc-400' : 'text-zinc-700'">
+                        <h2 class="text-[11px] uppercase tracking-widest font-bold mb-3.5" :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                             {{ t('home.footer_community') }}
                         </h2>
                         <ul class="flex flex-col gap-2">
@@ -766,35 +766,35 @@ const socialLinks = computed(() => {
                                 <li v-for="item in footerNavItems" :key="item.label">
                                     <a :href="item.url" :target="item.target"
                                         class="text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded"
-                                        :class="dark ? 'text-zinc-500 hover:text-zinc-100' : 'text-zinc-600 hover:text-zinc-900'">{{ item.label }}</a>
+                                        :class="dark ? 'text-zinc-500 hover:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900'">{{ item.label }}</a>
                                 </li>
                             </template>
                             <template v-else>
                                 <li v-for="link in communityLinks" :key="link.href">
                                     <Link :href="link.href"
                                         class="text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded"
-                                        :class="dark ? 'text-zinc-500 hover:text-zinc-100' : 'text-zinc-600 hover:text-zinc-900'">{{ link.label }}</Link>
+                                        :class="dark ? 'text-zinc-500 hover:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900'">{{ link.label }}</Link>
                                 </li>
                             </template>
                             <!-- Extension-registered footer links -->
                             <li v-for="item in footerNav" :key="item.url">
                                 <a :href="item.url"
                                     class="text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded"
-                                    :class="dark ? 'text-zinc-500 hover:text-zinc-100' : 'text-zinc-600 hover:text-zinc-900'">{{ item.label }}</a>
+                                    :class="dark ? 'text-zinc-500 hover:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900'">{{ item.label }}</a>
                             </li>
                         </ul>
                     </div>
 
                     <!-- Account -->
                     <div>
-                        <h2 class="text-[11px] uppercase tracking-widest font-bold mb-3.5" :class="dark ? 'text-zinc-400' : 'text-zinc-700'">
+                        <h2 class="text-[11px] uppercase tracking-widest font-bold mb-3.5" :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                             {{ t('home.footer_account') }}
                         </h2>
                         <ul class="flex flex-col gap-2">
                             <li v-for="link in accountLinks" :key="link.href">
                                 <Link :href="link.href"
                                     class="text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded"
-                                    :class="dark ? 'text-zinc-500 hover:text-zinc-100' : 'text-zinc-600 hover:text-zinc-900'">{{ link.label }}</Link>
+                                    :class="dark ? 'text-zinc-500 hover:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900'">{{ link.label }}</Link>
                             </li>
                         </ul>
                     </div>
@@ -804,7 +804,7 @@ const socialLinks = computed(() => {
             <!-- Bottom bar -->
             <div class="border-t px-4 sm:px-6 py-4" :class="dark ? 'border-zinc-800/70' : 'border-zinc-200'">
                 <div class="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-                    <p class="text-[12px]" :class="dark ? 'text-zinc-700' : 'text-zinc-400'">
+                    <p class="text-[12px]" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
                         {{ t('home.footer_copyright').replace(':year', new Date().getFullYear().toString()) }}
                     </p>
                     <nav class="flex items-center flex-wrap gap-4">
@@ -816,7 +816,7 @@ const socialLinks = computed(() => {
                                 :href="item.url"
                                 :target="item.target"
                                 class="text-[12px] transition-colors"
-                                :class="dark ? 'text-zinc-700 hover:text-zinc-400' : 'text-zinc-400 hover:text-zinc-600'"
+                                :class="dark ? 'text-zinc-500 hover:text-zinc-400' : 'text-zinc-400 hover:text-zinc-500'"
                             >{{ item.label }}</Link>
                         </template>
                         <!-- Auto-filled from legal_pages table (max 5) -->
@@ -826,7 +826,7 @@ const socialLinks = computed(() => {
                                 :key="p.slug"
                                 :href="`/legal/${p.slug}`"
                                 class="text-[12px] transition-colors"
-                                :class="dark ? 'text-zinc-700 hover:text-zinc-400' : 'text-zinc-400 hover:text-zinc-600'"
+                                :class="dark ? 'text-zinc-500 hover:text-zinc-400' : 'text-zinc-400 hover:text-zinc-500'"
                             >{{ p.title }}</Link>
                         </template>
                     </nav>

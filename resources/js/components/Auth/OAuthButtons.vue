@@ -19,7 +19,7 @@ function signInWith(providerId: string) {
     <div v-if="enabledProviders.length > 0" class="flex flex-col gap-3">
         <div class="flex items-center gap-3">
             <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-800/80" />
-            <span class="text-[11px] font-medium text-zinc-400 dark:text-zinc-600">{{ t('auth.or_continue_with') }}</span>
+            <span class="text-[11px] font-medium text-zinc-400 dark:text-zinc-500">{{ t('auth.or_continue_with') }}</span>
             <div class="h-px flex-1 bg-zinc-200 dark:bg-zinc-800/80" />
         </div>
 
@@ -29,7 +29,7 @@ function signInWith(providerId: string) {
                 :key="provider.id"
                 type="button"
                 class="flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] font-semibold transition-colors
-                       border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300
+                       border-zinc-200 bg-white text-zinc-500 hover:bg-zinc-50 hover:border-zinc-300
                        dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-300 dark:hover:bg-zinc-800/60 dark:hover:border-zinc-700"
                 @click="signInWith(provider.id)"
             >

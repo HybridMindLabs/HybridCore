@@ -67,7 +67,7 @@ function startConversation() {
                             {{ t('account.msg_unread_badge', { count: totalUnread }) }}
                         </span>
                     </div>
-                    <p class="text-[12px] mt-0.5" :class="dark ? 'text-zinc-500' : 'text-zinc-600'">
+                    <p class="text-[12px] mt-0.5" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                         {{ t('account.msg_subtitle') }}
                     </p>
                 </div>
@@ -75,7 +75,7 @@ function startConversation() {
                 <button type="button"
                     class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-bold transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                     :class="showNewDm
-                        ? (dark ? 'border border-zinc-700 text-zinc-300 hover:text-white' : 'border border-zinc-300 text-zinc-700 hover:text-zinc-900')
+                        ? (dark ? 'border border-zinc-700 text-zinc-300 hover:text-white' : 'border border-zinc-300 text-zinc-500 hover:text-zinc-900')
                         : 'bg-blue-600 text-white hover:bg-blue-500'"
                     :aria-expanded="showNewDm"
                     aria-controls="new-dm-form"
@@ -89,11 +89,11 @@ function startConversation() {
             <div v-if="showNewDm" id="new-dm-form" class="px-5 sm:px-6 py-4 border-b"
                 :class="dark ? 'border-zinc-800/60 bg-zinc-900/40' : 'border-zinc-200 bg-zinc-50'">
                 <label for="dm-username" class="block text-[11px] font-bold uppercase tracking-wider"
-                    :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                    :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                     {{ t('account.msg_username_label') }}
                 </label>
                 <p id="dm-username-hint" class="text-[11.5px] mt-0.5 mb-2"
-                   :class="dark ? 'text-zinc-500' : 'text-zinc-600'">
+                   :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                     {{ t('account.msg_new_hint') }}
                 </p>
 
@@ -110,7 +110,7 @@ function startConversation() {
                             :placeholder="t('account.msg_username_placeholder')"
                             class="w-full pl-7 pr-4 py-2.5 rounded-xl border text-[13px] font-mono transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                             :class="dark
-                                ? 'border-zinc-800 bg-zinc-900 text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500/50'
+                                ? 'border-zinc-800 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500 focus:border-blue-500/50'
                                 : 'border-zinc-300 bg-white text-zinc-900 placeholder:text-zinc-500 focus:border-blue-500/60'"
                             :aria-invalid="newDmForm.errors.username ? 'true' : undefined"
                             :aria-describedby="newDmForm.errors.username ? 'dm-username-error' : 'dm-username-hint'"
@@ -129,10 +129,10 @@ function startConversation() {
             <!-- Empty state -->
             <div v-if="conversations.length === 0" class="flex flex-col items-center text-center px-6 py-14">
                 <span class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                    :class="dark ? 'bg-zinc-900 text-zinc-700' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
+                    :class="dark ? 'bg-zinc-900 text-zinc-500' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
                     <MessageSquare :size="26" :stroke-width="1.4" />
                 </span>
-                <p class="text-[15px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-700'">
+                <p class="text-[15px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-500'">
                     {{ t('account.msg_empty') }}
                 </p>
                 <p class="text-[13px] mt-1 max-w-sm" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
@@ -170,7 +170,7 @@ function startConversation() {
                             <p v-if="conv.last_message" class="text-[12.5px] truncate mt-0.5"
                                 :class="conv.unread > 0
                                     ? (dark ? 'text-zinc-200 font-semibold' : 'text-zinc-900 font-semibold')
-                                    : (dark ? 'text-zinc-500' : 'text-zinc-600')">
+                                    : (dark ? 'text-zinc-500' : 'text-zinc-500')">
                                 <span v-if="conv.last_message.is_mine" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                                     {{ t('account.msg_you_prefix') }}
                                 </span>

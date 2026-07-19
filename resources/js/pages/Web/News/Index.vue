@@ -133,12 +133,12 @@ function pageLink(page: number) {
                             <input id="news_search" v-model="q" type="search" :placeholder="t('news.search')"
                                 class="w-full rounded-xl border pl-10 pr-10 py-3 text-[14px] font-medium transition focus:outline-none focus:ring-2"
                                 :class="dark
-                                    ? 'border-zinc-800 bg-zinc-900/60 text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500/50 focus:ring-blue-500/10'
+                                    ? 'border-zinc-800 bg-zinc-900/60 text-zinc-100 placeholder:text-zinc-500 focus:border-blue-500/50 focus:ring-blue-500/10'
                                     : 'border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400 focus:border-blue-400/60 focus:ring-blue-500/10'"
                                 @keydown.enter="doSearch" />
                             <button v-if="search" type="button" :aria-label="t('news.clear_search')" :title="t('news.clear_search')"
                                 class="absolute right-3 top-1/2 -translate-y-1/2 transition"
-                                :class="dark ? 'text-zinc-600 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-700'"
+                                :class="dark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-500'"
                                 @click="clearSearch">
                                 <X :size="14" :stroke-width="2" />
                             </button>
@@ -147,7 +147,7 @@ function pageLink(page: number) {
 
                     <a :href="route('news.feed')"
                         class="inline-flex items-center gap-1.5 text-[12px] font-semibold transition self-start lg:self-end"
-                        :class="dark ? 'text-zinc-600 hover:text-amber-400' : 'text-zinc-400 hover:text-amber-500'">
+                        :class="dark ? 'text-zinc-500 hover:text-amber-400' : 'text-zinc-400 hover:text-amber-500'">
                         <Rss :size="13" :stroke-width="2" /> {{ t('news.rss_feed') }}
                     </a>
                 </div>
@@ -165,7 +165,7 @@ function pageLink(page: number) {
                         <Star :size="14" :stroke-width="2" class="text-amber-400" />
                         {{ t('news.featured') }}
                     </h2>
-                    <p class="text-[12px]" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">{{ t('news.featured_hint') }}</p>
+                    <p class="text-[12px]" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">{{ t('news.featured_hint') }}</p>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-4">
@@ -211,7 +211,7 @@ function pageLink(page: number) {
                                 <p class="text-[13px] font-semibold line-clamp-2 transition"
                                     :class="dark ? 'text-zinc-100 group-hover:text-blue-100' : 'text-zinc-900 group-hover:text-blue-700'">{{ a.title }}</p>
                                 <p class="text-[11px] mt-0.5 flex items-center gap-1"
-                                    :class="dark ? 'text-zinc-600' : 'text-zinc-400'">
+                                    :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
                                     <Clock :size="9" />{{ t('news.read_time_short', { m: a.reading_time }) }}
                                 </p>
                             </div>
@@ -223,7 +223,7 @@ function pageLink(page: number) {
             <!-- Categories — labelled so the pills read as a filter, not decoration -->
             <section v-if="categories.length" class="mb-6">
                 <h2 class="text-[12px] font-semibold uppercase tracking-wider mb-2.5"
-                    :class="dark ? 'text-zinc-600' : 'text-zinc-400'">{{ t('news.browse_categories') }}</h2>
+                    :class="dark ? 'text-zinc-500' : 'text-zinc-400'">{{ t('news.browse_categories') }}</h2>
                 <div class="flex flex-wrap gap-2">
                     <Link :href="route('news.index')"
                         class="px-3 py-1.5 rounded-full border text-[12px] font-semibold transition"
@@ -259,9 +259,9 @@ function pageLink(page: number) {
                 <!-- Empty state that offers a way out instead of a dead end -->
                 <div v-else class="rounded-2xl border p-16 text-center"
                     :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white'">
-                    <Newspaper :size="26" :stroke-width="1.5" class="mx-auto mb-3" :class="dark ? 'text-zinc-700' : 'text-zinc-300'" />
-                    <p class="text-[13px] font-semibold" :class="dark ? 'text-zinc-400' : 'text-zinc-600'">{{ t('news.no_articles') }}</p>
-                    <p class="text-[12px] mt-1" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">{{ t('news.no_articles_hint') }}</p>
+                    <Newspaper :size="26" :stroke-width="1.5" class="mx-auto mb-3" :class="dark ? 'text-zinc-500' : 'text-zinc-300'" />
+                    <p class="text-[13px] font-semibold" :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ t('news.no_articles') }}</p>
+                    <p class="text-[12px] mt-1" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">{{ t('news.no_articles_hint') }}</p>
                     <button v-if="search" type="button"
                         class="mt-4 inline-flex items-center gap-1.5 text-[12px] font-semibold transition"
                         :class="dark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'"

@@ -47,7 +47,7 @@ function submit() {
 
         <template #footer>
             {{ t('auth.no_account') }}
-            <Link :href="route('register')" class="font-bold text-blue-500 transition-colors hover:text-blue-400">{{ t('auth.login.create_account') }}</Link>
+            <Link :href="route('register')" class="font-bold text-blue-700 transition-colors hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">{{ t('auth.login.create_account') }}</Link>
         </template>
     </AuthCard>
 </template>

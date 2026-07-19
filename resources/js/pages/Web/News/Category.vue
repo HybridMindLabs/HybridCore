@@ -89,7 +89,7 @@ function pageLink(page: number) {
                     </h1>
 
                     <p v-if="category.description" class="mt-4 text-[15px] leading-relaxed max-w-lg"
-                        :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                        :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                         {{ category.description }}
                     </p>
 
@@ -98,7 +98,7 @@ function pageLink(page: number) {
                                focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                         :class="dark
                             ? 'border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600 hover:bg-white/[0.04]'
-                            : 'border-zinc-300 text-zinc-700 hover:border-zinc-400 hover:bg-white'">
+                            : 'border-zinc-300 text-zinc-500 hover:border-zinc-400 hover:bg-white'">
                         <ArrowLeft :size="13" :stroke-width="2.2" aria-hidden="true" />
                         {{ t('news.all_news') }}
                     </Link>
@@ -116,8 +116,8 @@ function pageLink(page: number) {
             <div v-else class="rounded-2xl border p-16 text-center"
                 :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white'">
                 <Newspaper :size="26" :stroke-width="1.5" aria-hidden="true" class="mx-auto mb-3"
-                    :class="dark ? 'text-zinc-700' : 'text-zinc-300'" />
-                <p class="text-[13px] font-semibold" :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                    :class="dark ? 'text-zinc-500' : 'text-zinc-300'" />
+                <p class="text-[13px] font-semibold" :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                     {{ t('news.category_empty') }}
                 </p>
                 <p class="text-[12px] mt-1" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">

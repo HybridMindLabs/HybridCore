@@ -50,7 +50,7 @@ onUnmounted(() => document.removeEventListener('click', onDocumentClick, true));
             >
                 <span>
                     {{ locale.native_name }}
-                    <span class="ml-1 text-gray-400 dark:text-zinc-600">{{ locale.flag }}</span>
+                    <span class="ml-1 text-gray-400 dark:text-zinc-500">{{ locale.flag }}</span>
                 </span>
                 <Check v-if="isCurrentLocale(locale.code)" :size="12" :stroke-width="2" />
             </button>

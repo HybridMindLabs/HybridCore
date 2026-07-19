@@ -121,7 +121,7 @@ function downloadCodes() {
 
 const input = computed(() =>
     dark.value
-        ? 'w-full rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-100 px-4 py-2.5 text-[14px] placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition'
+        ? 'w-full rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-100 px-4 py-2.5 text-[14px] placeholder:text-zinc-500 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition'
         : 'w-full rounded-xl border border-zinc-200 bg-white text-zinc-900 px-4 py-2.5 text-[14px] placeholder:text-zinc-400 focus:outline-none focus:border-blue-400/60 focus:ring-2 focus:ring-blue-500/10 transition',
 );
 const ghostBtn = computed(() =>
@@ -149,7 +149,7 @@ const ghostBtn = computed(() =>
                     <span
                         class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border"
                         :class="enabled
-                            ? dark ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-emerald-600/30 bg-emerald-50 text-emerald-700'
+                            ? dark ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-emerald-600/30 bg-emerald-50 text-emerald-800'
                             : dark ? 'border-zinc-800/70 bg-zinc-900/50 text-zinc-400' : 'border-zinc-200 bg-zinc-50 text-zinc-500'"
                     >
                         <component :is="enabled ? ShieldCheck : ShieldOff" :size="10" :stroke-width="2.4" />
@@ -166,7 +166,7 @@ const ghostBtn = computed(() =>
                 :stroke-width="1.6"
                 aria-hidden="true"
                 class="shrink-0"
-                :class="enabled ? 'text-emerald-500' : dark ? 'text-zinc-700' : 'text-zinc-300'"
+                :class="enabled ? 'text-emerald-500' : dark ? 'text-zinc-500' : 'text-zinc-300'"
             />
         </div>
 
@@ -314,12 +314,12 @@ const ghostBtn = computed(() =>
                                     class="flex items-center justify-between gap-2 rounded-lg border px-3 py-2"
                                     :class="dark ? 'border-zinc-800/60 bg-zinc-900/40' : 'border-zinc-200 bg-zinc-50'"
                                 >
-                                    <code class="font-mono text-[12px] break-all" :class="dark ? 'text-zinc-200' : 'text-zinc-700'">{{ rc }}</code>
+                                    <code class="font-mono text-[12px] break-all" :class="dark ? 'text-zinc-200' : 'text-zinc-500'">{{ rc }}</code>
                                     <button
                                         type="button"
                                         :aria-label="t('account.2fa_copied')"
                                         class="transition shrink-0"
-                                        :class="dark ? 'text-zinc-500 hover:text-zinc-200' : 'text-zinc-400 hover:text-zinc-700'"
+                                        :class="dark ? 'text-zinc-500 hover:text-zinc-200' : 'text-zinc-400 hover:text-zinc-500'"
                                         @click="copyText(rc, rc)"
                                     >
                                         <component :is="copied === rc ? Check : Copy" :size="12" :stroke-width="1.8" />

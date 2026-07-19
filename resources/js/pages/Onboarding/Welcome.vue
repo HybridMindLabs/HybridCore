@@ -113,7 +113,7 @@ const steps = computed(() => [
                     </div>
                     <div>
                         <p class="text-[14px] font-black" :class="dark ? 'text-zinc-100' : 'text-zinc-900'">{{ steps[step-1].title }}</p>
-                        <p class="text-[11px]" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">{{ t('onboarding.step_of', { current: step, total: totalSteps }) }}</p>
+                        <p class="text-[11px]" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">{{ t('onboarding.step_of', { current: step, total: totalSteps }) }}</p>
                     </div>
                 </div>
 
@@ -122,25 +122,25 @@ const steps = computed(() => [
                     <div>
                         <label class="text-[12px] font-semibold uppercase tracking-wide mb-1.5 block"
                             :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
-                            {{ t('onboarding.display_name') }} <span class="text-zinc-700 normal-case tracking-normal font-normal">{{ t('onboarding.optional') }}</span>
+                            {{ t('onboarding.display_name') }} <span class="text-zinc-500 normal-case tracking-normal font-normal">{{ t('onboarding.optional') }}</span>
                         </label>
                         <input v-model="form.display_name" type="text" :placeholder="t('onboarding.display_name_placeholder')" maxlength="50"
                             class="w-full rounded-xl border px-4 py-2.5 text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                            :class="dark ? 'border-zinc-800 bg-zinc-900 text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500' : 'border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400 focus:border-blue-400'" />
-                        <p class="text-[11px] mt-1.5" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">
+                            :class="dark ? 'border-zinc-800 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500 focus:border-blue-500' : 'border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400 focus:border-blue-400'" />
+                        <p class="text-[11px] mt-1.5" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
                             {{ t('onboarding.display_name_hint') }}
                         </p>
                     </div>
                     <div>
                         <label class="text-[12px] font-semibold uppercase tracking-wide mb-1.5 block"
                             :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
-                            {{ t('onboarding.location') }} <span class="text-zinc-700 normal-case tracking-normal font-normal">{{ t('onboarding.optional') }}</span>
+                            {{ t('onboarding.location') }} <span class="text-zinc-500 normal-case tracking-normal font-normal">{{ t('onboarding.optional') }}</span>
                         </label>
                         <div class="relative">
-                            <MapPin :size="14" :stroke-width="1.8" class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" />
+                            <MapPin :size="14" :stroke-width="1.8" class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                             <input v-model="form.location" type="text" :placeholder="t('onboarding.location_placeholder')" maxlength="100"
                                 class="w-full rounded-xl border pl-9 pr-4 py-2.5 text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                                :class="dark ? 'border-zinc-800 bg-zinc-900 text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500' : 'border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400 focus:border-blue-400'" />
+                                :class="dark ? 'border-zinc-800 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500 focus:border-blue-500' : 'border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400 focus:border-blue-400'" />
                         </div>
                     </div>
                 </div>
@@ -153,7 +153,7 @@ const steps = computed(() => [
                             class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-all"
                             :class="form.favourite_games.includes(g.id)
                                 ? 'border-blue-500/60 bg-blue-500/10 text-blue-300'
-                                : (dark ? 'border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700' : 'border-zinc-200 bg-zinc-50 text-zinc-600 hover:border-zinc-300')"
+                                : (dark ? 'border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700' : 'border-zinc-200 bg-zinc-50 text-zinc-500 hover:border-zinc-300')"
                             @click="toggleGame(g.id)">
                             <img v-if="g.icon" :src="g.icon" class="w-5 h-5 rounded object-cover shrink-0" />
                             <span class="text-[13px] font-semibold flex-1 truncate">{{ g.name }}</span>
@@ -166,12 +166,12 @@ const steps = computed(() => [
                 <div v-else-if="step === 3" class="p-6">
                     <label class="text-[12px] font-semibold uppercase tracking-wide mb-1.5 block"
                         :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
-                        {{ t('onboarding.bio') }} <span class="text-zinc-700 normal-case tracking-normal font-normal">{{ t('onboarding.optional') }}</span>
+                        {{ t('onboarding.bio') }} <span class="text-zinc-500 normal-case tracking-normal font-normal">{{ t('onboarding.optional') }}</span>
                     </label>
                     <textarea v-model="form.bio" rows="5" maxlength="500" :placeholder="t('onboarding.bio_placeholder')"
                         class="w-full rounded-xl border px-4 py-3 text-sm resize-none transition focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                        :class="dark ? 'border-zinc-800 bg-zinc-900 text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500' : 'border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400 focus:border-blue-400'" />
-                    <p class="text-[11px] mt-1 text-right" :class="dark ? 'text-zinc-700' : 'text-zinc-400'">
+                        :class="dark ? 'border-zinc-800 bg-zinc-900 text-zinc-100 placeholder:text-zinc-500 focus:border-blue-500' : 'border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400 focus:border-blue-400'" />
+                    <p class="text-[11px] mt-1 text-right" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
                         {{ form.bio.length }}/500
                     </p>
                 </div>
@@ -186,7 +186,7 @@ const steps = computed(() => [
                             class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-all"
                             :class="form.follow_users.includes(m.id)
                                 ? 'border-blue-500/60 bg-blue-500/10 text-blue-300'
-                                : (dark ? 'border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700' : 'border-zinc-200 bg-zinc-50 text-zinc-600 hover:border-zinc-300')"
+                                : (dark ? 'border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700' : 'border-zinc-200 bg-zinc-50 text-zinc-500 hover:border-zinc-300')"
                             @click="toggleFollow(m.id)">
                             <span class="relative w-6 h-6 rounded-lg overflow-hidden shrink-0">
                                 <img v-if="m.avatar" :src="m.avatar" class="w-full h-full object-cover" :alt="m.username" />
@@ -198,7 +198,7 @@ const steps = computed(() => [
                             <Check v-if="form.follow_users.includes(m.id)" :size="13" :stroke-width="2.5" class="shrink-0 text-blue-400" />
                         </button>
                     </div>
-                    <p v-if="suggestedMembers.length" class="text-[11px] mt-3" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">
+                    <p v-if="suggestedMembers.length" class="text-[11px] mt-3" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
                         {{ t('onboarding.follow_hint') }}
                     </p>
                 </div>
@@ -213,13 +213,13 @@ const steps = computed(() => [
                     :class="dark ? 'border-zinc-800/60' : 'border-zinc-100'">
                     <button v-if="step > 1" type="button"
                         class="flex items-center gap-1.5 text-[13px] font-semibold px-4 py-2.5 rounded-xl border transition"
-                        :class="dark ? 'border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700' : 'border-zinc-200 text-zinc-500 hover:text-zinc-700'"
+                        :class="dark ? 'border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700' : 'border-zinc-200 text-zinc-500 hover:text-zinc-500'"
                         @click="prev">
                         <ChevronLeft :size="14" :stroke-width="2" /> {{ t('onboarding.back') }}
                     </button>
                     <button type="button"
                         class="ml-auto text-[12px] font-medium px-3 py-2 rounded-lg transition"
-                        :class="dark ? 'text-zinc-600 hover:text-zinc-400' : 'text-zinc-400 hover:text-zinc-600'"
+                        :class="dark ? 'text-zinc-500 hover:text-zinc-400' : 'text-zinc-400 hover:text-zinc-500'"
                         @click="skip">
                         {{ t('onboarding.skip_all') }}
                     </button>

@@ -67,7 +67,7 @@ function confirm() {
                         :stroke-width="1.5"
                         aria-hidden="true"
                         :class="done
-                            ? dark ? 'text-emerald-400' : 'text-emerald-700'
+                            ? dark ? 'text-emerald-400' : 'text-emerald-800'
                             : dark ? 'text-cyan-400' : 'text-cyan-600'"
                     />
                 </div>
@@ -76,10 +76,10 @@ function confirm() {
                     <h1 class="text-2xl font-black mb-2" :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
                         {{ t('account.unsub_title') }}
                     </h1>
-                    <p class="mb-1" :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                    <p class="mb-1" :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                         {{ t('account.unsub_greeting', { name: username }) }}
                     </p>
-                    <p class="mb-6 leading-relaxed" :class="dark ? 'text-zinc-500' : 'text-zinc-600'">
+                    <p class="mb-6 leading-relaxed" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                         {{ t('account.unsub_body', { category: categoryLabel }) }}
                     </p>
 
@@ -101,7 +101,7 @@ function confirm() {
                     <h1 class="text-2xl font-black mb-2" :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
                         {{ t('account.unsub_done_title') }}
                     </h1>
-                    <p class="mb-6" :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                    <p class="mb-6" :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                         {{ t('account.unsub_done_body', { category: categoryLabel }) }}
                     </p>
 

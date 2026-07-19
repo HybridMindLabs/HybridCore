@@ -132,7 +132,7 @@ function connect(providerId: string) {
                                 :stroke-width="1.75"
                                 aria-hidden="true"
                                 :class="connectionFor(provider.id)
-                                    ? dark ? 'text-emerald-400' : 'text-emerald-700'
+                                    ? dark ? 'text-emerald-400' : 'text-emerald-800'
                                     : dark ? 'text-zinc-400' : 'text-zinc-500'"
                             />
                         </div>
@@ -158,7 +158,7 @@ function connect(providerId: string) {
                                 class="text-[11px] mt-0.5"
                                 :class="dark ? 'text-zinc-500' : 'text-zinc-500'"
                             >
-                                <span class="font-semibold" :class="dark ? 'text-emerald-400' : 'text-emerald-700'">
+                                <span class="font-semibold" :class="dark ? 'text-emerald-400' : 'text-emerald-800'">
                                     {{ t('account.connected') }}</span
                                 ><template v-if="connectionFor(provider.id)?.username">
                                     — @{{ connectionFor(provider.id)?.username }}</template
@@ -214,7 +214,7 @@ function connect(providerId: string) {
                         {{ t('account.connect') }}
                     </button>
 
-                    <span v-else class="text-[12px] font-semibold shrink-0" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">
+                    <span v-else class="text-[12px] font-semibold shrink-0" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
                         {{ t('account.unavailable') }}
                     </span>
                 </div>

@@ -43,12 +43,12 @@ function submitExport() {
 
 const input = computed(() =>
     dark.value
-        ? 'w-full rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-100 px-4 py-2.5 text-[14px] placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition'
+        ? 'w-full rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-100 px-4 py-2.5 text-[14px] placeholder:text-zinc-500 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition'
         : 'w-full rounded-xl border border-zinc-200 bg-white text-zinc-900 px-4 py-2.5 text-[14px] placeholder:text-zinc-400 focus:outline-none focus:border-blue-400/60 focus:ring-2 focus:ring-blue-500/10 transition',
 );
 const dangerInput = computed(() =>
     dark.value
-        ? 'w-full rounded-xl border border-red-500/30 bg-zinc-900/60 text-zinc-100 px-4 py-2.5 text-[14px] placeholder:text-zinc-600 focus:outline-none focus:border-red-500/60 focus:ring-2 focus:ring-red-500/10 transition'
+        ? 'w-full rounded-xl border border-red-500/30 bg-zinc-900/60 text-zinc-100 px-4 py-2.5 text-[14px] placeholder:text-zinc-500 focus:outline-none focus:border-red-500/60 focus:ring-2 focus:ring-red-500/10 transition'
         : 'w-full rounded-xl border border-red-300 bg-white text-zinc-900 px-4 py-2.5 text-[14px] placeholder:text-zinc-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/10 transition',
 );
 const label = computed(() =>
@@ -128,7 +128,7 @@ const label = computed(() =>
                             v-if="exportForm.recentlySuccessful"
                             role="status"
                             class="inline-flex items-center gap-1 text-[12px] font-semibold"
-                            :class="dark ? 'text-emerald-400' : 'text-emerald-700'"
+                            :class="dark ? 'text-emerald-400' : 'text-emerald-800'"
                         >
                             <Check :size="13" :stroke-width="2.4" />
                             {{ t('account.export_queued') }}
@@ -165,7 +165,7 @@ const label = computed(() =>
                     <h2 class="text-[15px] font-black tracking-tight" :class="dark ? 'text-red-400' : 'text-red-700'">
                         {{ t('account.dz_delete_title') }}
                     </h2>
-                    <p class="text-[12px] mt-0.5" :class="dark ? 'text-zinc-500' : 'text-zinc-600'">
+                    <p class="text-[12px] mt-0.5" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                         {{ t('account.dz_delete_subtitle') }}
                     </p>
                 </div>
@@ -202,7 +202,7 @@ const label = computed(() =>
                                 <X :size="12" :stroke-width="2.4" />
                                 {{ t('account.dz_delete_removed_title') }}
                             </p>
-                            <ul class="flex flex-col gap-1.5 text-[12px] leading-relaxed" :class="dark ? 'text-zinc-400' : 'text-zinc-700'">
+                            <ul class="flex flex-col gap-1.5 text-[12px] leading-relaxed" :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                                 <li>{{ t('account.dz_delete_removed_1') }}</li>
                                 <li>{{ t('account.dz_delete_removed_2') }}</li>
                                 <li>{{ t('account.dz_delete_removed_3') }}</li>
@@ -212,11 +212,11 @@ const label = computed(() =>
                             class="rounded-xl border p-4"
                             :class="dark ? 'border-zinc-800/60 bg-zinc-900/40' : 'border-zinc-200 bg-zinc-50'"
                         >
-                            <p class="text-[12px] font-bold mb-2 inline-flex items-center gap-1.5" :class="dark ? 'text-zinc-300' : 'text-zinc-700'">
+                            <p class="text-[12px] font-bold mb-2 inline-flex items-center gap-1.5" :class="dark ? 'text-zinc-300' : 'text-zinc-500'">
                                 <Info :size="12" :stroke-width="2.4" />
                                 {{ t('account.dz_delete_kept_title') }}
                             </p>
-                            <ul class="flex flex-col gap-1.5 text-[12px] leading-relaxed" :class="dark ? 'text-zinc-400' : 'text-zinc-700'">
+                            <ul class="flex flex-col gap-1.5 text-[12px] leading-relaxed" :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                                 <li>{{ t('account.dz_delete_kept_1') }}</li>
                                 <li>{{ t('account.dz_delete_kept_2') }}</li>
                             </ul>

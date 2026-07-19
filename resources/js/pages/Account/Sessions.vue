@@ -87,7 +87,7 @@ async function revokeAll() {
 
 const input = computed(() =>
     dark.value
-        ? 'w-full rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-100 px-4 py-2.5 text-[14px] placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition'
+        ? 'w-full rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-100 px-4 py-2.5 text-[14px] placeholder:text-zinc-500 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition'
         : 'w-full rounded-xl border border-zinc-200 bg-white text-zinc-900 px-4 py-2.5 text-[14px] placeholder:text-zinc-400 focus:outline-none focus:border-blue-400/60 focus:ring-2 focus:ring-blue-500/10 transition',
 );
 </script>
@@ -158,7 +158,7 @@ const input = computed(() =>
                             class="text-[10px] font-bold px-2 py-0.5 rounded-full border"
                             :class="dark
                                 ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                                : 'border-emerald-600/30 bg-emerald-50 text-emerald-700'"
+                                : 'border-emerald-600/30 bg-emerald-50 text-emerald-800'"
                         >
                             {{ t('account.sessions_this_device') }}
                         </span>
@@ -194,7 +194,7 @@ const input = computed(() =>
                     :class="dark ? 'border-zinc-800/60 bg-zinc-900/40' : 'border-zinc-200 bg-zinc-50'"
                 >
                     <Info :size="14" :stroke-width="1.8" class="mt-0.5 shrink-0" :class="dark ? 'text-zinc-400' : 'text-zinc-500'" />
-                    <p class="text-[12px] leading-relaxed" :class="dark ? 'text-zinc-500' : 'text-zinc-600'">
+                    <p class="text-[12px] leading-relaxed" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                         {{ t('account.sessions_remember_note') }}
                     </p>
                 </div>

@@ -73,7 +73,7 @@ function submit() {
                            placeholder:tracking-normal transition focus:outline-none focus:ring-2 focus:ring-blue-500/10"
                     :class="[
                         dark
-                            ? 'border-zinc-800 bg-zinc-900/60 text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500/50'
+                            ? 'border-zinc-800 bg-zinc-900/60 text-zinc-100 placeholder:text-zinc-500 focus:border-blue-500/50'
                             : 'border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400 focus:border-blue-400',
                         form.errors.code ? '!border-red-500/60' : '',
                     ]"

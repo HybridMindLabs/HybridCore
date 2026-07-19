@@ -153,7 +153,7 @@ const card = computed(() =>
 const cardHead = computed(() => (dark.value ? 'border-zinc-800/60 bg-[#1a1a1e]' : 'border-zinc-100 bg-zinc-50'));
 const input = computed(() =>
     dark.value
-        ? 'w-full rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-100 px-4 py-2.5 text-[14px] placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition'
+        ? 'w-full rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-100 px-4 py-2.5 text-[14px] placeholder:text-zinc-500 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition'
         : 'w-full rounded-xl border border-zinc-200 bg-white text-zinc-900 px-4 py-2.5 text-[14px] placeholder:text-zinc-400 focus:outline-none focus:border-blue-400/60 focus:ring-2 focus:ring-blue-500/10 transition',
 );
 const label = computed(() =>
@@ -165,7 +165,7 @@ const hint = computed(() => (dark.value ? 'text-zinc-500 text-[11px]' : 'text-zi
 const ghostBtn = computed(() =>
     dark.value
         ? 'border-zinc-800 text-zinc-300 hover:text-zinc-100 hover:border-zinc-600'
-        : 'border-zinc-300 text-zinc-700 hover:border-zinc-400 hover:bg-zinc-50',
+        : 'border-zinc-300 text-zinc-500 hover:border-zinc-400 hover:bg-zinc-50',
 );
 const dangerBtn = computed(() =>
     dark.value ? 'border-red-500/30 text-red-400 hover:bg-red-500/10' : 'border-red-300 text-red-700 hover:bg-red-50',
@@ -492,7 +492,7 @@ const dangerBtn = computed(() =>
                                 v-if="form.recentlySuccessful"
                                 role="status"
                                 class="inline-flex items-center gap-1 text-[12px] font-semibold"
-                                :class="dark ? 'text-emerald-400' : 'text-emerald-700'"
+                                :class="dark ? 'text-emerald-400' : 'text-emerald-800'"
                             >
                                 <Check :size="13" :stroke-width="2.4" />
                                 {{ t('account.pf_saved') }}

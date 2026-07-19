@@ -51,7 +51,7 @@ const withCategory = computed(() => props.showCategory !== false && !!props.arti
                 :class="dark ? 'opacity-80 group-hover:opacity-100' : ''"
             />
             <div v-else class="w-full h-full flex items-center justify-center">
-                <Newspaper :size="24" :stroke-width="1.2" aria-hidden="true" :class="dark ? 'text-zinc-700' : 'text-zinc-300'" />
+                <Newspaper :size="24" :stroke-width="1.2" aria-hidden="true" :class="dark ? 'text-zinc-500' : 'text-zinc-300'" />
             </div>
 
             <div v-if="withCategory" class="absolute top-2 left-2">

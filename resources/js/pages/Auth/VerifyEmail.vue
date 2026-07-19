@@ -30,12 +30,12 @@ function resend() {
         <p
             v-if="status"
             role="status"
-            class="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-[13px] font-medium text-emerald-700 dark:text-emerald-400"
+            class="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-[13px] font-medium text-emerald-800 dark:text-emerald-400"
         >
             {{ status }}
         </p>
 
-        <p class="mb-5 text-center text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-400">{{ t('auth.verify_hint') }}</p>
+        <p class="mb-5 text-center text-[13px] leading-relaxed text-zinc-500 dark:text-zinc-400">{{ t('auth.verify_hint') }}</p>
 
         <Button type="button" size="lg" :disabled="form.processing" class="w-full justify-center" @click="resend">
             {{ t('auth.resend_verification') }}

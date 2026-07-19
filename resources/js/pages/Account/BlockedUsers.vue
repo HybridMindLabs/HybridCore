@@ -46,21 +46,21 @@ function avatarBg(name: string) {
                     </h2>
                     <span v-if="blocks.length"
                         class="px-2 py-0.5 rounded-full text-[10.5px] font-bold tabular-nums"
-                        :class="dark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-200 text-zinc-700'">
+                        :class="dark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-200 text-zinc-500'">
                         {{ t('account.blk_count', { count: blocks.length }) }}
                     </span>
                 </div>
-                <p class="text-[12px] mt-0.5" :class="dark ? 'text-zinc-500' : 'text-zinc-600'">
+                <p class="text-[12px] mt-0.5" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                     {{ t('account.blk_subtitle') }}
                 </p>
             </div>
 
             <div v-if="blocks.length === 0" class="flex flex-col items-center text-center px-6 py-14">
                 <span class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                    :class="dark ? 'bg-zinc-900 text-zinc-700' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
+                    :class="dark ? 'bg-zinc-900 text-zinc-500' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
                     <Ban :size="26" :stroke-width="1.4" />
                 </span>
-                <p class="text-[15px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-700'">
+                <p class="text-[15px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-500'">
                     {{ t('account.blk_empty') }}
                 </p>
                 <p class="text-[13px] mt-1 max-w-sm" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
@@ -93,7 +93,7 @@ function avatarBg(name: string) {
                             {{ b.user.display_name || b.user.username }}
                         </Link>
                         <p class="flex items-center gap-2 text-[11.5px] mt-0.5 flex-wrap"
-                           :class="dark ? 'text-zinc-500' : 'text-zinc-600'">
+                           :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                             <span class="font-mono">@{{ b.user.username }}</span>
                             <span aria-hidden="true">·</span>
                             <span>{{ t('account.blk_blocked_on', { date: b.blocked_at }) }}</span>
@@ -102,7 +102,7 @@ function avatarBg(name: string) {
 
                     <button type="button"
                         class="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-[12px] font-bold transition disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                        :class="dark ? 'border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600' : 'border-zinc-300 text-zinc-700 hover:text-zinc-900 hover:border-zinc-400'"
+                        :class="dark ? 'border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600' : 'border-zinc-300 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400'"
                         :disabled="pending === b.user.id"
                         :aria-label="t('account.blk_unblock_user', { name: b.user.display_name || b.user.username })"
                         @click="unblock(b.user.id)">
@@ -124,7 +124,7 @@ function avatarBg(name: string) {
                 <p class="text-[13px] font-bold" :class="dark ? 'text-zinc-200' : 'text-zinc-900'">
                     {{ t('account.blk_note_title') }}
                 </p>
-                <p class="text-[12.5px] leading-relaxed mt-1" :class="dark ? 'text-zinc-400' : 'text-zinc-700'">
+                <p class="text-[12.5px] leading-relaxed mt-1" :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                     {{ t('account.blk_note_body') }}
                 </p>
             </div>

@@ -45,7 +45,7 @@ const strength = computed(() => {
         { min: 0, key: 'auth.password_field.weak', bars: 1, bar: 'bg-red-500', text: 'text-red-600 dark:text-red-400' },
         { min: 3, key: 'auth.password_field.fair', bars: 2, bar: 'bg-amber-500', text: 'text-amber-700 dark:text-amber-400' },
         { min: 4, key: 'auth.password_field.good', bars: 3, bar: 'bg-lime-500', text: 'text-lime-700 dark:text-lime-400' },
-        { min: 5, key: 'auth.password_field.strong', bars: 4, bar: 'bg-emerald-500', text: 'text-emerald-700 dark:text-emerald-400' },
+        { min: 5, key: 'auth.password_field.strong', bars: 4, bar: 'bg-emerald-500', text: 'text-emerald-800 dark:text-emerald-400' },
     ];
 
     return levels.filter((l) => score >= l.min).pop() ?? levels[0];
@@ -94,7 +94,7 @@ const describedBy = computed(() => {
                 :aria-label="revealed ? t('auth.password_field.hide') : t('auth.password_field.show')"
                 :aria-pressed="revealed"
                 class="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg p-2 transition
-                       text-zinc-400 hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-200
+                       text-zinc-400 hover:text-zinc-500 dark:text-zinc-500 dark:hover:text-zinc-200
                        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                 @click="revealed = !revealed"
             >

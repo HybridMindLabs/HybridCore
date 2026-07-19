@@ -77,18 +77,18 @@ async function removeFavourite(server: Server) {
                         </h2>
                         <span v-if="visibleServers.length"
                             class="px-2 py-0.5 rounded-full text-[10.5px] font-bold tabular-nums"
-                            :class="dark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-200 text-zinc-700'">
+                            :class="dark ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-200 text-zinc-500'">
                             {{ t('account.fav_count', { count: visibleServers.length }) }}
                         </span>
                     </div>
-                    <p class="text-[12px] mt-0.5" :class="dark ? 'text-zinc-500' : 'text-zinc-600'">
+                    <p class="text-[12px] mt-0.5" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                         {{ t('account.fav_subtitle') }}
                     </p>
                 </div>
 
                 <Link :href="route('servers.index')"
                     class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-[12px] font-bold transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                    :class="dark ? 'border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600' : 'border-zinc-300 text-zinc-700 hover:text-zinc-900 hover:border-zinc-400'">
+                    :class="dark ? 'border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600' : 'border-zinc-300 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400'">
                     {{ t('account.fav_browse') }}
                 </Link>
             </div>
@@ -96,10 +96,10 @@ async function removeFavourite(server: Server) {
             <!-- Empty -->
             <div v-if="visibleServers.length === 0" class="flex flex-col items-center text-center px-6 py-14">
                 <span class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                    :class="dark ? 'bg-zinc-900 text-zinc-700' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
+                    :class="dark ? 'bg-zinc-900 text-zinc-500' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
                     <Star :size="26" :stroke-width="1.4" />
                 </span>
-                <p class="text-[15px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-700'">
+                <p class="text-[15px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-500'">
                     {{ t('account.fav_empty') }}
                 </p>
                 <p class="text-[13px] mt-1 max-w-sm" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
@@ -143,18 +143,18 @@ async function removeFavourite(server: Server) {
                         <div class="flex items-center gap-3 mt-1 flex-wrap">
                             <span class="flex items-center gap-1 text-[11.5px] font-semibold"
                                 :class="s.online
-                                    ? (dark ? 'text-emerald-400' : 'text-emerald-700')
+                                    ? (dark ? 'text-emerald-400' : 'text-emerald-800')
                                     : (dark ? 'text-zinc-500' : 'text-zinc-500')"
                                 :title="s.online ? undefined : t('account.fav_offline_hint')">
                                 <component :is="s.online ? Wifi : WifiOff" :size="11" :stroke-width="2" aria-hidden="true" />
                                 {{ s.online ? t('account.fav_online') : t('account.fav_offline') }}
                             </span>
                             <span v-if="s.players !== null" class="flex items-center gap-1 text-[11.5px] tabular-nums"
-                                :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                                 <Users :size="11" :stroke-width="2" aria-hidden="true" />
                                 {{ s.players }}/{{ s.max_players }}
                             </span>
-                            <span v-if="s.game" class="text-[11.5px]" :class="dark ? 'text-zinc-500' : 'text-zinc-600'">{{ s.game }}</span>
+                            <span v-if="s.game" class="text-[11.5px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ s.game }}</span>
                             <span v-if="s.map" class="flex items-center gap-1 text-[11.5px] font-mono truncate"
                                 :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                                 <Map :size="10" :stroke-width="1.9" aria-hidden="true" />{{ s.map }}
@@ -166,7 +166,7 @@ async function removeFavourite(server: Server) {
                     <div class="flex items-center gap-1.5 shrink-0">
                         <a v-if="s.connect_url" :href="s.connect_url"
                             class="w-9 h-9 flex items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                            :class="dark ? 'text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10' : 'text-zinc-500 hover:text-emerald-700 hover:bg-emerald-500/10'"
+                            :class="dark ? 'text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10' : 'text-zinc-500 hover:text-emerald-800 hover:bg-emerald-500/10'"
                             :aria-label="t('account.fav_connect_to', { name: s.name })"
                             :title="t('account.fav_connect_to', { name: s.name })">
                             <Play :size="15" :stroke-width="2" fill="currentColor" aria-hidden="true" />

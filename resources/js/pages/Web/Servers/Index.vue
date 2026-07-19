@@ -120,7 +120,7 @@ const heroTotals = computed(() => [
 
                     <div class="max-w-xl">
                         <div class="hc-hero-in inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-[11px] font-bold uppercase tracking-widest"
-                            :class="dark ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700'"
+                            :class="dark ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-400' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-800'"
                             aria-live="polite">
                             <span class="hc-live-dot" aria-hidden="true" />
                             {{ t('servers.hero_badge') }}
@@ -133,7 +133,7 @@ const heroTotals = computed(() => [
                         </h1>
 
                         <p class="hc-hero-in hc-hero-in--2 mt-3 text-[15px] leading-relaxed max-w-lg"
-                           :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                           :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                             {{ t('servers.hero_subtitle', { count: totals.games }) }}
                         </p>
 
@@ -153,7 +153,7 @@ const heroTotals = computed(() => [
                                     :placeholder="t('servers.search_game')"
                                     class="w-full pl-10 pr-10 py-3 rounded-xl border text-[14px] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
                                     :class="dark
-                                        ? 'bg-zinc-900/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500/50'
+                                        ? 'bg-zinc-900/70 border-zinc-800 text-zinc-100 placeholder:text-zinc-500 focus:border-blue-500/50'
                                         : 'bg-white border-zinc-300 text-zinc-900 placeholder:text-zinc-500 focus:border-blue-500/60'"
                                 />
                                 <button v-if="search" type="button" @click="search = ''"
@@ -172,20 +172,25 @@ const heroTotals = computed(() => [
                     <!-- Totals -->
                     <dl class="hc-hero-in hc-hero-in--2 grid grid-cols-2 gap-2.5">
                         <div v-for="(item, i) in heroTotals" :key="item.label"
-                            class="hc-reveal rounded-xl border px-3.5 py-3 backdrop-blur-md"
+                            class="hc-reveal flex flex-col rounded-xl border px-3.5 py-3 backdrop-blur-md"
                             :style="{ animationDelay: 0.2 + i * 0.06 + 's' }"
                             :class="dark
                                 ? 'border-zinc-700/70 bg-zinc-900/85 shadow-lg shadow-black/30'
                                 : 'border-zinc-300 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.10)]'"
                             :title="item.hint">
-                            <component :is="item.icon" :size="14" :stroke-width="1.9"
-                                class="text-blue-500 mb-1.5" aria-hidden="true" />
-                            <dd class="text-[20px] font-black leading-none tabular-nums"
-                                :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
-                                {{ item.value.toLocaleString() }}
-                            </dd>
-                            <dt class="text-[10px] font-bold uppercase tracking-widest mt-1.5"
+                            <!-- A <dl> group may hold only <dt>/<dd>, so the icon
+                                 lives inside the value and `order` keeps the
+                                 visual stack unchanged. -->
+                            <dt class="order-2 text-[10px] font-bold uppercase tracking-widest mt-1.5"
                                 :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ item.label }}</dt>
+                            <dd class="order-1">
+                                <component :is="item.icon" :size="14" :stroke-width="1.9"
+                                    class="block text-blue-500 mb-1.5" aria-hidden="true" />
+                                <span class="block text-[20px] font-black leading-none tabular-nums"
+                                    :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
+                                    {{ item.value.toLocaleString() }}
+                                </span>
+                            </dd>
                         </div>
                     </dl>
                 </div>
@@ -281,16 +286,16 @@ const heroTotals = computed(() => [
 
                         <template v-if="game.servers_count">
                             <div class="flex items-baseline gap-4 mt-2.5">
-                                <p class="text-[13px]" :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                                <p class="text-[13px]" :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                                     <span class="text-[17px] font-black tabular-nums align-baseline"
                                         :class="dark ? 'text-zinc-100' : 'text-zinc-900'">{{ game.servers_count }}</span>
                                     <span class="ml-1.5">{{ t('servers.servers_label').toLowerCase() }}</span>
                                 </p>
-                                <p class="text-[13px]" :class="dark ? 'text-zinc-400' : 'text-zinc-600'">
+                                <p class="text-[13px]" :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
                                     <span class="text-[17px] font-black tabular-nums align-baseline"
                                         :class="game.players_online > 0
-                                            ? 'text-emerald-500'
-                                            : dark ? 'text-zinc-600' : 'text-zinc-400'">{{ game.players_online }}</span>
+                                            ? (dark ? 'text-emerald-400' : 'text-emerald-800')
+                                            : dark ? 'text-zinc-500' : 'text-zinc-400'">{{ game.players_online }}</span>
                                     <span class="ml-1.5">{{ t('servers.players_label').toLowerCase() }}</span>
                                 </p>
                             </div>
@@ -314,7 +319,7 @@ const heroTotals = computed(() => [
                             </div>
                         </template>
 
-                        <p v-else class="text-[12.5px] mt-2.5" :class="dark ? 'text-zinc-600' : 'text-zinc-500'">
+                        <p v-else class="text-[12.5px] mt-2.5" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                             {{ t('servers.no_servers_yet') }}
                         </p>
                     </div>
@@ -327,7 +332,7 @@ const heroTotals = computed(() => [
             <div v-if="emptyGames.length" class="mt-8">
                 <button type="button" @click="showEmptyGames = !showEmptyGames"
                     class="group flex items-center gap-2 text-[12.5px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded px-1 -mx-1"
-                    :class="dark ? 'text-zinc-500 hover:text-zinc-200' : 'text-zinc-600 hover:text-zinc-900'"
+                    :class="dark ? 'text-zinc-500 hover:text-zinc-200' : 'text-zinc-500 hover:text-zinc-900'"
                     :aria-expanded="showEmptyGames" aria-controls="empty-games">
                     <ChevronRight :size="13" :stroke-width="2.4" aria-hidden="true"
                         class="transition-transform" :class="showEmptyGames ? 'rotate-90' : ''" />
@@ -341,7 +346,7 @@ const heroTotals = computed(() => [
                         class="group flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-xl border text-[12.5px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                         :class="dark
                             ? 'border-zinc-800 bg-[#111113] text-zinc-400 hover:text-zinc-100 hover:border-zinc-700'
-                            : 'border-zinc-200 bg-white text-zinc-600 hover:text-zinc-900 hover:border-zinc-300'"
+                            : 'border-zinc-200 bg-white text-zinc-500 hover:text-zinc-900 hover:border-zinc-300'"
                         :title="t('servers.no_servers_yet')">
                         <span class="w-6 h-6 rounded-lg overflow-hidden shrink-0 opacity-70 transition-opacity group-hover:opacity-100">
                             <GameIcon :slug="game.slug" :alt="game.name" />
@@ -354,10 +359,10 @@ const heroTotals = computed(() => [
             <!-- Empty state -->
             <div v-if="!filtered.length" class="flex flex-col items-center text-center px-6 py-20">
                 <span class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                    :class="dark ? 'bg-zinc-900 text-zinc-700' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
+                    :class="dark ? 'bg-zinc-900 text-zinc-500' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
                     <Gamepad2 :size="26" :stroke-width="1.4" />
                 </span>
-                <p class="text-[15px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-700'">
+                <p class="text-[15px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-500'">
                     {{ t('servers.no_games') }}
                 </p>
                 <p class="text-[13px] mt-1 max-w-sm" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
@@ -365,7 +370,7 @@ const heroTotals = computed(() => [
                 </p>
                 <button v-if="search" type="button" @click="search = ''"
                     class="mt-5 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border text-[13px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                    :class="dark ? 'border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:bg-white/[0.04]' : 'border-zinc-300 text-zinc-700 hover:border-zinc-400 hover:bg-white'">
+                    :class="dark ? 'border-zinc-800 text-zinc-300 hover:border-zinc-600 hover:bg-white/[0.04]' : 'border-zinc-300 text-zinc-500 hover:border-zinc-400 hover:bg-white'">
                     {{ t('servers.clear_search') }}
                 </button>
             </div>

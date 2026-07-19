@@ -59,7 +59,7 @@ const edge = computed(() =>
                        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                 :class="edge"
             >1</Link>
-            <span v-if="pageWindow[0] > 2" aria-hidden="true" class="px-1" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">…</span>
+            <span v-if="pageWindow[0] > 2" aria-hidden="true" class="px-1" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">…</span>
 
             <Link
                 v-for="p in pageWindow"
@@ -78,7 +78,7 @@ const edge = computed(() =>
                 v-if="pageWindow[pageWindow.length - 1] < lastPage - 1"
                 aria-hidden="true"
                 class="px-1"
-                :class="dark ? 'text-zinc-600' : 'text-zinc-400'"
+                :class="dark ? 'text-zinc-500' : 'text-zinc-400'"
             >…</span>
             <Link
                 v-if="pageWindow[pageWindow.length - 1] < lastPage"
