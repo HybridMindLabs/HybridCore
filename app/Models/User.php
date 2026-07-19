@@ -87,11 +87,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->password_set_at !== null;
     }
 
-    public function hasCompletedOnboarding(): bool
-    {
-        return $this->onboarding_completed_at !== null;
-    }
-
     // ── Display ──────────────────────────────────────────────────────────────
 
     /** The visible name: display_name if set, otherwise username. */
@@ -148,7 +143,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(Server::class, 'server_favourites');
     }
 
-    /** Games the user marked as favourites during onboarding. */
+    /** Games the user picked in Account → Preferences. */
     public function preferredGames(): BelongsToMany
     {
         return $this->belongsToMany(Game::class, 'user_game_preferences')->withTimestamps();

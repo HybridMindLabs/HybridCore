@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Auth flows', () => {
-    test('register → redirects to onboarding/account', async ({ page }) => {
+    test('register lands straight on the site, with no wizard in between', async ({ page }) => {
         const ts = Date.now();
         await page.goto('/register');
         await page.fill('input[name="name"]', `E2E User ${ts}`);
@@ -9,7 +9,11 @@ test.describe('Auth flows', () => {
         await page.fill('input[name="password"]', 'password123');
         await page.fill('input[name="password_confirmation"]', 'password123');
         await page.click('button[type="submit"]');
-        await expect(page).toHaveURL(/\/(welcome|account)/);
+
+        // Home, or the verify-email notice when the owner requires it. What it
+        // must never be again is a multi-step form standing between signing up
+        // and seeing the site.
+        await expect(page).toHaveURL(/\/(|email\/verify)$/);
     });
 
     test('login with invalid credentials shows error', async ({ page }) => {

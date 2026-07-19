@@ -306,7 +306,6 @@ class HandleInertiaRequests extends Middleware
                 'contact' => trans('contact'),
                 'legal' => trans('legal'),
                 'achievements' => trans('achievements'),
-                'onboarding' => trans('onboarding'),
                 'report' => trans('report'),
                 // Enabled extensions' messages.php, keyed "ext.{namespace}" —
                 // reachable in Vue via t('ext.store.some_key').

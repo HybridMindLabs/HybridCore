@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
-import { Check, Globe, LocateFixed } from '@lucide/vue';
+import { Check, Globe, LocateFixed, Gamepad2 } from '@lucide/vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
+import GameIcon from '@/components/UI/GameIcon.vue';
 import { computed } from 'vue';
 
+interface Game { id: number; name: string; slug: string }
+
 const props = defineProps<{
-    account: { timezone: string | null; locale: string | null };
+    account: { timezone: string | null; locale: string | null; favourite_games: number[] };
+    games?: Game[];
 }>();
 
 const { t, supportedLocales } = useLocale();
@@ -16,7 +20,16 @@ const dark = computed(() => theme.value === 'dark');
 const form = useForm({
     locale: props.account.locale ?? '',
     timezone: props.account.timezone ?? '',
+    favourite_games: [...(props.account.favourite_games ?? [])],
 });
+
+const games = computed(() => props.games ?? []);
+
+function toggleGame(id: number) {
+    form.favourite_games = form.favourite_games.includes(id)
+        ? form.favourite_games.filter((g) => g !== id)
+        : [...form.favourite_games, id];
+}
 
 const browserZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -141,6 +154,37 @@ function submit() {
                     <p v-else id="pref_timezone_hint" class="text-[12px] leading-relaxed" :class="hint">
                         {{ t('account.pref_timezone_hint') }}
                     </p>
+                </div>
+            </div>
+
+            <div v-if="games.length" class="flex flex-col gap-2.5 pt-1">
+                <div class="flex items-center gap-2">
+                    <Gamepad2 :size="13" :stroke-width="1.9" :class="dark ? 'text-blue-400' : 'text-blue-600'" aria-hidden="true" />
+                    <span :class="label">{{ t('account.pref_games') }}</span>
+                </div>
+                <p class="text-[12px] leading-relaxed" :class="hint">{{ t('account.pref_games_hint') }}</p>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" role="group" :aria-label="t('account.pref_games')">
+                    <button
+                        v-for="g in games"
+                        :key="g.id"
+                        type="button"
+                        :aria-pressed="form.favourite_games.includes(g.id)"
+                        class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition
+                               focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                        :class="form.favourite_games.includes(g.id)
+                            ? (dark ? 'border-blue-500/60 bg-blue-500/10 text-blue-300' : 'border-blue-500/60 bg-blue-500/10 text-blue-800')
+                            : (dark ? 'border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700' : 'border-zinc-200 bg-zinc-50 text-zinc-500 hover:border-zinc-300')"
+                        @click="toggleGame(g.id)"
+                    >
+                        <!-- img-class, not class: GameIcon defaults imgClass to
+                             "w-full h-full object-cover", and a fallthrough class
+                             merges with it rather than replacing it, so the icon
+                             stretches to fill the button. -->
+                        <GameIcon :slug="g.slug" :size="32" img-class="w-5 h-5 rounded object-cover shrink-0" />
+                        <span class="text-[13px] font-semibold flex-1 truncate">{{ g.name }}</span>
+                        <Check v-if="form.favourite_games.includes(g.id)" :size="13" :stroke-width="2.5" class="shrink-0" />
+                    </button>
                 </div>
             </div>
 

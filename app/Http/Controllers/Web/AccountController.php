@@ -57,6 +57,7 @@ class AccountController extends Controller
                 'notification_preferences' => $user->notification_preferences ?? [],
                 'timezone' => $user->timezone,
                 'locale' => $user->locale,
+                'favourite_games' => $user->preferredGames()->pluck('games.id')->all(),
                 'verified' => $user->hasVerifiedEmail(),
                 'created_at' => $user->created_at->toFormattedDateString(),
                 'last_login_at' => $user->last_login_at?->diffForHumans(),
@@ -71,6 +72,9 @@ class AccountController extends Controller
                     )->toFormattedDateString()
                     : null,
             ],
+            // Picking games used to happen in the post-registration wizard and
+            // nowhere else, so anyone who skipped it could never set them.
+            'games' => Game::orderBy('name')->get(['id', 'name', 'slug']),
             'sessions' => $sessionCtrl->index($request),
             'connectedAccounts' => $user->connectedAccounts->map(fn ($acc) => [
                 'provider' => $acc->provider,
@@ -165,6 +169,8 @@ class AccountController extends Controller
         $data = $request->validate([
             'locale' => ['nullable', 'string', 'max:10'],
             'timezone' => ['nullable', 'string', 'timezone'],
+            'favourite_games' => ['nullable', 'array'],
+            'favourite_games.*' => ['integer', 'exists:games,id'],
         ]);
 
         if (! empty($data['locale']) && ! app(LocaleService::class)->isSupported($data['locale'])) {
@@ -187,6 +193,13 @@ class AccountController extends Controller
 
         if (! empty($data['locale'])) {
             $request->session()->put('locale', $data['locale']);
+        }
+
+        // sync, not syncWithoutDetaching: clearing every box has to mean the
+        // user wants no game filter, not that the save was ignored. The key is
+        // only present when the form sent it, so an unrelated save is safe.
+        if (array_key_exists('favourite_games', $data)) {
+            $request->user()->preferredGames()->sync($data['favourite_games'] ?? []);
         }
 
         return back()->with('success', __('account.preferences_updated'));

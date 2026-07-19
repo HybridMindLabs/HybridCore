@@ -19,6 +19,9 @@ return [
         'create_account' => 'Create account',
     ],
     'register' => [
+        // Shown as a toast on the home page right after signing up, which is
+        // where a new account now lands.
+        'welcome' => 'Welcome aboard. Pick your games in Account → Preferences and the home page will follow them.',
         'title' => 'Create your account',
         'subtitle' => 'Join HybridCore and find your next server faster.',
         'name' => 'Display name',

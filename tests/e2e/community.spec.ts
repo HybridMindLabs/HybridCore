@@ -1,10 +1,9 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { loginAs, createTestUser } from './helpers/auth';
 
 /**
- * Registration is throttled at 5/min, so the comment/follow tests share a
- * single account created once per run; only the onboarding tests register
- * fresh users (they need an incomplete onboarding state).
+ * Registration is throttled at 5/min, so these tests share a single account
+ * created once per run.
  */
 let shared: { email: string; password: string };
 
@@ -12,56 +11,9 @@ test.beforeAll(async ({ }, testInfo) => {
     shared = await createTestUser(testInfo.project.use.baseURL as string);
 });
 
-/** Register a fresh user through the UI and land on onboarding. */
-async function registerFresh(page: Page): Promise<string> {
-    const ts = Date.now() + Math.floor(Math.random() * 1000);
-    const name = `E2E Community ${ts}`;
-    await page.goto('/register');
-    await page.fill('#name', name);
-    await page.fill('#email', `community${ts}@example.com`);
-    await page.fill('#password', 'password123');
-    await page.fill('#password_confirmation', 'password123');
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(welcome|account)/);
-    return name;
-}
-
-/** Complete onboarding if the login landed on the wizard. */
-async function skipOnboardingIfPresent(page: Page) {
-    if (page.url().includes('/welcome')) {
-        await page.getByRole('button', { name: /skip all|пропусни всичко/i }).click();
-        await page.waitForURL((url) => !url.pathname.includes('/welcome'));
-    }
-}
-
-test.describe('Onboarding wizard', () => {
-    test('walks all 4 steps and completes', async ({ page }) => {
-        await registerFresh(page);
-        if (!page.url().includes('/welcome')) test.skip();
-
-        for (let i = 0; i < 3; i++) {
-            await page.getByRole('button', { name: /next|напред/i }).click();
-        }
-
-        await expect(page.locator('body')).toContainText(/step 4 of 4|стъпка 4 от 4/i);
-
-        await page.getByRole('button', { name: /let's go|да започваме/i }).click();
-        await page.waitForURL((url) => !url.pathname.includes('/welcome'));
-    });
-
-    test('skip all completes onboarding immediately', async ({ page }) => {
-        await registerFresh(page);
-        if (!page.url().includes('/welcome')) test.skip();
-
-        await page.getByRole('button', { name: /skip all|пропусни всичко/i }).click();
-        await page.waitForURL((url) => !url.pathname.includes('/welcome'));
-    });
-});
-
 test.describe('News comments', () => {
     test('logged-in user can post and delete a comment', async ({ page }) => {
         await loginAs(page, shared.email, shared.password);
-        await skipOnboardingIfPresent(page);
 
         // Open the first published article from the news index.
         await page.goto('/news');
@@ -98,7 +50,6 @@ test.describe('News comments', () => {
 test.describe('Follow system', () => {
     test('user can follow and unfollow another member', async ({ page }) => {
         await loginAs(page, shared.email, shared.password);
-        await skipOnboardingIfPresent(page);
 
         // Find someone to follow via the members page.
         await page.goto('/members');
