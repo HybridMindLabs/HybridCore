@@ -120,7 +120,7 @@ useKeyboardShortcuts({
                                 class="flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-900/60 transition-colors group"
                                 @click="hide">
                                 <div class="w-7 h-7 rounded-lg overflow-hidden shrink-0 bg-zinc-800 border border-zinc-700 flex items-center justify-center">
-                                    <img v-if="u.avatar" :src="u.avatar" class="w-full h-full object-cover" alt="" />
+                                    <img v-if="u.avatar" :src="u.avatar" class="w-full h-full object-cover" alt="" loading="lazy" decoding="async" />
                                     <User v-else :size="12" :stroke-width="1.8" class="text-zinc-500" />
                                 </div>
                                 <div class="flex-1 min-w-0">
@@ -138,7 +138,7 @@ useKeyboardShortcuts({
                                 class="flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-900/60 transition-colors group"
                                 @click="hide">
                                 <div class="w-7 h-7 rounded-lg overflow-hidden shrink-0 bg-zinc-800 border border-zinc-700 flex items-center justify-center">
-                                    <img v-if="s.game_icon" :src="s.game_icon" class="w-full h-full object-cover" alt="" />
+                                    <img v-if="s.game_icon" :src="s.game_icon" class="w-full h-full object-cover" alt="" loading="lazy" decoding="async" />
                                     <Server v-else :size="12" :stroke-width="1.8" class="text-zinc-500" />
                                 </div>
                                 <div class="flex-1 min-w-0">

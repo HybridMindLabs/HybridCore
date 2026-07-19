@@ -51,4 +51,5 @@ return [
     'search_placeholder' => 'Search members and servers…',
     'search_dialog' => 'Site search',
     'search_clear' => 'Clear search',
+    'skip_to_content' => 'Skip to content',
 ];

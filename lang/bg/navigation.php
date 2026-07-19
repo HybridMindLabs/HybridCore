@@ -51,4 +51,5 @@ return [
     'search_placeholder' => 'Търси потребители и сървъри…',
     'search_dialog' => 'Търсене в сайта',
     'search_clear' => 'Изчисти търсенето',
+    'skip_to_content' => 'Към съдържанието',
 ];
