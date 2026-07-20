@@ -13,7 +13,10 @@
     <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
 
-    <title inertia>{{ app(\App\Services\SettingsService::class)->appName() }}</title>
+    {{-- Fallback title only when the SSR head lacks one — some crawlers read the first <title> tag they find. --}}
+    @if (! str_contains((string) app(\Inertia\Ssr\SsrState::class)->setPage($page)->dispatch()?->head, '<title'))
+        <title inertia>{{ app(\App\Services\SettingsService::class)->appName() }}</title>
+    @endif
 
     <script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">
         window.__APP_NAME__ = @json(app(\App\Services\SettingsService::class)->appName());
