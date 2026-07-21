@@ -4,6 +4,13 @@
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+/* Extensions live under a gitignored path, so Tailwind skips them in automatic
+   detection AND filters any wildcarded @source glob by .gitignore. Only a
+   concrete directory path followed by a file glob bypasses that, so each
+   installed extension's Vue tree is registered explicitly — without this, its
+   unique utility classes (arbitrary values, one-off combos) never build.
+   Add a line per installed extension. */
+@source '../../extensions/hybridcore/stats/resources/js/**/*.vue';
 
 @theme {
     --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
