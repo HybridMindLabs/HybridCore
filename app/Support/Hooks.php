@@ -28,6 +28,13 @@ final class Hooks
     /** Fired after a user follows another. Args: (User $follower, User $followed) */
     public const USER_FOLLOWED = 'user.followed';
 
+    /**
+     * Fired after a user anonymizes/deletes their own account, once the core
+     * row has been scrubbed. Extensions must anonymize any personal data they
+     * hold for this user (names, links, IPs). Args: (User $user)
+     */
+    public const USER_ANONYMIZED = 'user.anonymized';
+
     // ── Content ──────────────────────────────────────────────────────────────
     /** Fired after a news comment is posted. Args: (NewsComment $comment) */
     public const COMMENT_CREATED = 'comment.created';

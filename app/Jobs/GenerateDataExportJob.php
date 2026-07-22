@@ -6,6 +6,8 @@ use App\Models\NewsComment;
 use App\Models\ServerReview;
 use App\Models\User;
 use App\Notifications\SystemNotification;
+use App\Services\Extensions\Registries\FilterRegistry;
+use App\Support\Filters;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Storage;
@@ -45,6 +47,9 @@ class GenerateDataExportJob implements ShouldQueue
             'comments' => NewsComment::where('user_id', $user->id)->get()
                 ->map(fn ($c) => ['body' => $c->body, 'at' => $c->created_at->toIso8601String()]),
         ];
+
+        // Extensions append their own sections (keyed by slug) — stats, etc.
+        $export = app(FilterRegistry::class)->apply(Filters::DATA_EXPORT, $export, $user);
 
         $filename = 'user_'.$user->id.'_'.now()->format('Ymd_His').'.json';
         Storage::disk('local')->put('exports/'.$filename, json_encode($export, JSON_PRETTY_PRINT));
