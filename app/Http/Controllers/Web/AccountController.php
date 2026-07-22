@@ -13,10 +13,12 @@ use App\Services\AchievementService;
 use App\Services\Auth\LoginSecurityService;
 use App\Services\Auth\OAuthProviderRegistry;
 use App\Services\Auth\SessionSecurityService;
+use App\Services\Extensions\Registries\HookRegistry;
 use App\Services\Localization\LocaleService;
 use App\Services\Media\AvatarService;
 use App\Services\Media\BannerService;
 use App\Services\SettingsService;
+use App\Support\Hooks;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -338,6 +340,11 @@ class AccountController extends Controller
 
         app(AvatarService::class)->delete($user);
         app(BannerService::class)->delete($user);
+
+        // Extensions scrub the personal data they hold for this user (stats
+        // unlink + name anonymise, etc.). Best-effort: a throwing listener is
+        // logged and skipped, it never blocks the deletion.
+        app(HookRegistry::class)->fire(Hooks::USER_ANONYMIZED, $user);
 
         auth()->logout();
         $request->session()->invalidate();

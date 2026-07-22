@@ -24,5 +24,12 @@ final class Filters
     /** Props for the public profile page. Value: array. Args: (User $user) */
     public const PROFILE_SHOW_PROPS = 'profile.show.props';
 
+    /**
+     * The GDPR data-export payload. Extensions add their own top-level section
+     * (keyed by the extension slug) with everything they hold on the user.
+     * Value: array. Args: (User $user)
+     */
+    public const DATA_EXPORT = 'account.data_export';
+
     private function __construct() {}
 }
