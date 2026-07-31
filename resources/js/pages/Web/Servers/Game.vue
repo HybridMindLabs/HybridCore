@@ -560,13 +560,10 @@ const activityTiles = computed(() => [
                         <div v-if="server.row_image && !failedRowImages.has(server.id)"
                             class="absolute inset-y-0 right-0 w-[45%] pointer-events-none hidden sm:block"
                             aria-hidden="true">
-                            <!-- Opacity is transitioned alongside the scale; animating only the
-                                 transform left the brightness to snap, which read as a jolt. -->
+                            <!-- Timing lives with .hc-server-map in app.css — see the note there. -->
                             <img :src="server.row_image" alt="" loading="lazy" decoding="async"
-                                class="hc-server-map w-full h-full object-cover origin-right transform-gpu
-                                       transition-[transform,opacity] duration-[900ms] ease-out
-                                       group-hover:scale-[1.06]
-                                       motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                                class="hc-server-map w-full h-full object-cover transform-gpu
+                                       group-hover:scale-[1.06] motion-reduce:group-hover:scale-100"
                                 :class="dark ? 'opacity-[0.4] group-hover:opacity-[0.55]' : 'opacity-[0.2] group-hover:opacity-[0.3]'"
                                 @error="failedRowImages.add(server.id)" />
                         </div>

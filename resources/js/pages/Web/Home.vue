@@ -693,16 +693,12 @@ function toggleFavourite(server: HomeServer) {
                                 <div v-if="server.row_image && !failedMapImages.has(server.id)"
                                     class="absolute inset-y-0 right-0 w-[55%] pointer-events-none hidden sm:block"
                                     aria-hidden="true">
-                                    <!-- Transform *and* opacity are transitioned together: animating
-                                         only the scale left the brightness to snap, which is what made
-                                         the hover feel abrupt. The curve is a long ease-out so the
-                                         image drifts to rest instead of arriving all at once, and it
-                                         grows from the right edge it bleeds in from. -->
+                                    <!-- Timing lives with .hc-server-map in app.css, which also owns the
+                                         mask; a `transition` shorthand there outranks utilities, so
+                                         keeping both in sync from here would silently lose. -->
                                     <img :src="server.row_image" alt="" loading="lazy" decoding="async"
-                                        class="hc-server-map w-full h-full object-cover origin-right transform-gpu
-                                               transition-[transform,opacity] duration-[900ms] ease-out
-                                               group-hover:scale-[1.06]
-                                               motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                                        class="hc-server-map w-full h-full object-cover transform-gpu
+                                               group-hover:scale-[1.06] motion-reduce:group-hover:scale-100"
                                         :class="dark ? 'opacity-[0.45] group-hover:opacity-[0.6]' : 'opacity-[0.22] group-hover:opacity-[0.32]'"
                                         @error="failedMapImages.add(server.id)" />
                                 </div>

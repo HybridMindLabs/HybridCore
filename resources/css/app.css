@@ -239,7 +239,22 @@ html:not(.dark), html:not(.dark) body {
 .hc-server-map {
     -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.35) 40%, rgba(0, 0, 0, 0.85) 75%, #000 100%);
     mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.35) 40%, rgba(0, 0, 0, 0.85) 75%, #000 100%);
-    transition: opacity 0.4s ease, transform 0.7s ease;
+
+    /* Opacity and transform must share one duration and curve. Giving them
+       0.4s and 0.7s made the image brighten well before it settled, which is
+       what read as a jolt. Deliberately no `transition` shorthand here: it
+       outranks the utility classes on the element and silently wins. */
+    transition-property: opacity, transform;
+    transition-duration: 900ms;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    transform-origin: right center;
+    will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hc-server-map {
+        transition: none;
+    }
 }
 
 /* Rule cards: an accent line wipes across the top edge on hover. Drawn with a
