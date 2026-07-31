@@ -6,6 +6,7 @@ use App\Models\Extension;
 use App\Services\Extensions\ExtensionUpdateService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -175,6 +176,153 @@ class ExtensionUpdateServiceTest extends TestCase
 
         $staged = glob(storage_path('app/extension-imports/*.zip')) ?: [];
         $this->assertSame([], $staged);
+    }
+
+    /**
+     * @param  array<int, array<string, string>>  $assets
+     * @return array<string, mixed>
+     */
+    private function githubRelease(array $assets, string $tag = 'v2.0.0'): array
+    {
+        return [
+            'tag_name' => $tag,
+            'body' => 'Fixes things.',
+            'html_url' => 'https://github.test/vendor/demo/releases/tag/'.$tag,
+            'assets' => $assets,
+        ];
+    }
+
+    public function test_a_github_release_is_understood_without_a_feed_of_its_own(): void
+    {
+        Http::fake([
+            'api.github.com/*' => Http::response($this->githubRelease([[
+                'name' => 'demo-2.0.0.zip',
+                'url' => 'https://api.github.com/repos/vendor/demo/releases/assets/9',
+                'browser_download_url' => 'https://github.test/vendor/demo/releases/download/v2.0.0/demo-2.0.0.zip',
+            ]])),
+        ]);
+        $ext = $this->extension(['update_url' => 'https://api.github.com/repos/vendor/demo/releases/latest']);
+
+        $release = $this->service()->check($ext);
+
+        // The tag is a version, not a name: the leading "v" must come off or
+        // version_compare would read it as older than the installed 1.0.0.
+        $this->assertSame('2.0.0', $release['version']);
+        $this->assertSame('https://github.test/vendor/demo/releases/tag/v2.0.0', $release['url']);
+    }
+
+    public function test_a_public_release_is_taken_from_the_browser_download_url(): void
+    {
+        Http::fake([
+            'api.github.com/*' => Http::response($this->githubRelease([[
+                'name' => 'demo-2.0.0.zip',
+                'url' => 'https://api.github.com/repos/vendor/demo/releases/assets/9',
+                'browser_download_url' => 'https://github.test/vendor/demo/releases/download/v2.0.0/demo-2.0.0.zip',
+            ]])),
+        ]);
+        $ext = $this->extension(['update_url' => 'https://api.github.com/repos/vendor/demo/releases/latest']);
+
+        $release = $this->service()->check($ext);
+
+        $this->assertSame(
+            'https://github.test/vendor/demo/releases/download/v2.0.0/demo-2.0.0.zip',
+            $release['download_url'],
+        );
+    }
+
+    public function test_a_licensed_release_is_taken_from_the_asset_api_url(): void
+    {
+        Http::fake([
+            'api.github.com/*' => Http::response($this->githubRelease([[
+                'name' => 'demo-2.0.0.zip',
+                'url' => 'https://api.github.com/repos/vendor/demo/releases/assets/9',
+                'browser_download_url' => 'https://github.test/vendor/demo/releases/download/v2.0.0/demo-2.0.0.zip',
+            ]])),
+        ]);
+        $ext = $this->extension(['update_url' => 'https://api.github.com/repos/vendor/demo/releases/latest']);
+        $ext->license_key = 'ghp_secret';
+        $ext->save();
+
+        $release = $this->service()->check($ext);
+
+        // On a private repository the browser URL redirects to a signed CDN
+        // address that ignores the token and answers 404.
+        $this->assertSame(
+            'https://api.github.com/repos/vendor/demo/releases/assets/9',
+            $release['download_url'],
+        );
+    }
+
+    public function test_the_repository_zipball_is_not_mistaken_for_a_package(): void
+    {
+        Http::fake([
+            'api.github.com/*' => Http::response($this->githubRelease([[
+                'name' => 'checksums.txt',
+                'browser_download_url' => 'https://github.test/checksums.txt',
+            ]])),
+        ]);
+        $ext = $this->extension(['update_url' => 'https://api.github.com/repos/vendor/demo/releases/latest']);
+
+        // A release with no .zip asset offers nothing installable, and the
+        // source zipball is not a built extension.
+        $this->assertNull($this->service()->check($ext));
+    }
+
+    public function test_the_license_key_is_sent_to_the_feed(): void
+    {
+        Http::fake(['feed.test/*' => Http::response($this->feed())]);
+        $ext = $this->extension(['update_url' => 'https://feed.test/demo.json']);
+        $ext->license_key = 'lic_abc123';
+        $ext->save();
+
+        $this->service()->check($ext);
+
+        Http::assertSent(fn ($request) => $request->hasHeader('Authorization', 'Bearer lic_abc123'));
+    }
+
+    public function test_no_credential_is_sent_for_a_free_extension(): void
+    {
+        Http::fake(['feed.test/*' => Http::response($this->feed())]);
+        $ext = $this->extension(['update_url' => 'https://feed.test/demo.json']);
+
+        $this->service()->check($ext);
+
+        Http::assertSent(fn ($request) => ! $request->hasHeader('Authorization'));
+    }
+
+    public function test_the_license_key_travels_with_the_download_too(): void
+    {
+        Http::fake([
+            'feed.test/*' => Http::response($this->feed()),
+            'example.test/*' => Http::response('nope', 404),
+        ]);
+        $ext = $this->extension(['update_url' => 'https://feed.test/demo.json']);
+        $ext->license_key = 'lic_abc123';
+        $ext->save();
+
+        try {
+            $this->service()->apply($ext);
+        } catch (\RuntimeException) {
+            // The download is meant to fail here; only the request matters.
+        }
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'example.test')
+            && $request->hasHeader('Authorization', 'Bearer lic_abc123')
+            && $request->hasHeader('Accept', 'application/octet-stream'));
+    }
+
+    public function test_the_license_key_is_encrypted_at_rest(): void
+    {
+        $ext = $this->extension(['update_url' => 'https://feed.test/demo.json']);
+        $ext->license_key = 'lic_abc123';
+        $ext->save();
+
+        $stored = (string) DB::table('extensions')->where('id', $ext->id)->value('license_key');
+
+        // A database dump must not hand out access to the author's repository.
+        $this->assertNotSame('lic_abc123', $stored);
+        $this->assertStringNotContainsString('lic_abc123', $stored);
+        $this->assertSame('lic_abc123', $ext->fresh()->license_key);
     }
 
     protected function tearDown(): void

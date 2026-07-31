@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $enabled_at
  * @property Carbon|null $disabled_at
  * @property array<array-key, mixed>|null $metadata
+ * @property string|null $license_key
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, ExtensionSetting> $settings
@@ -66,6 +67,10 @@ class Extension extends Model
             'enabled_at' => 'datetime',
             'disabled_at' => 'datetime',
             'metadata' => 'array',
+            // A purchased extension's credential. Encrypted at rest so a
+            // database dump or a read-only replica does not hand out access to
+            // the author's private repository.
+            'license_key' => 'encrypted',
         ];
     }
 

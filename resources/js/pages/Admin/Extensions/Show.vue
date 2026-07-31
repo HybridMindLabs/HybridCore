@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
-import { Puzzle, ToggleRight, ToggleLeft, Tag, User, Calendar, FolderOpen, Info, ChevronLeft, Trash2 } from '@lucide/vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Puzzle, ToggleRight, ToggleLeft, Tag, User, Calendar, FolderOpen, Info, ChevronLeft, Trash2, KeyRound, CheckCircle2 } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
 
@@ -15,6 +15,9 @@ interface ExtensionDetail {
     path: string;
     enabled: boolean;
     metadata: Record<string, unknown> | null;
+    has_license: boolean;
+    requires_license: boolean;
+    update_url: string | null;
     installed_at: string | null;
     enabled_at: string | null;
     disabled_at: string | null;
@@ -33,6 +36,24 @@ function typeConf(type: string) {
 
 function toggle() {
     router.post(route(props.extension.enabled ? 'admin.extensions.disable' : 'admin.extensions.enable', props.extension.id));
+}
+
+// A paid extension is fetched from a private repository, so it needs the key
+// that came with the purchase. The stored value is never sent to the browser —
+// the field starts empty even when one is saved.
+const licenseForm = useForm({ license_key: '' });
+
+function saveLicense() {
+    licenseForm.post(route('admin.extensions.license', props.extension.id), {
+        preserveScroll: true,
+        onSuccess: () => licenseForm.reset(),
+    });
+}
+
+function removeLicense() {
+    if (!confirm('Remove the stored license key? Updates will stop until a new one is entered.')) return;
+    licenseForm.license_key = '';
+    saveLicense();
 }
 
 function uninstall() {
@@ -111,6 +132,62 @@ function uninstall() {
 
                     <p class="text-zinc-400 text-sm leading-relaxed">
                         {{ extension.description || 'No description provided.' }}
+                    </p>
+                </div>
+
+                <!-- License — only for extensions that have an update channel -->
+                <div
+                    v-if="extension.requires_license || extension.has_license || extension.update_url"
+                    class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5"
+                >
+                    <div class="flex items-center gap-2 mb-1">
+                        <KeyRound :size="14" :stroke-width="1.75" class="text-zinc-600" />
+                        <h3 class="text-zinc-100 text-sm font-semibold">License</h3>
+                        <span
+                            v-if="extension.has_license"
+                            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                        >
+                            <CheckCircle2 :size="10" :stroke-width="2" />
+                            Active
+                        </span>
+                        <span
+                            v-else-if="extension.requires_license"
+                            class="inline-flex items-center px-1.5 py-0.5 rounded border text-[10px] font-semibold bg-amber-500/10 text-amber-400 border-amber-500/20"
+                        >Required</span>
+                    </div>
+
+                    <p class="text-zinc-500 text-xs leading-relaxed mb-3">
+                        {{ extension.requires_license
+                            ? 'This is a paid extension. Enter the key you received with your purchase to receive updates.'
+                            : 'Optional. Only needed if this extension is distributed from a private repository.' }}
+                    </p>
+
+                    <form class="flex flex-col sm:flex-row gap-2" @submit.prevent="saveLicense">
+                        <input
+                            v-model="licenseForm.license_key"
+                            type="password"
+                            autocomplete="off"
+                            :placeholder="extension.has_license ? 'A key is stored — enter a new one to replace it' : 'Paste your license key'"
+                            class="flex-1 min-w-0 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 font-mono placeholder:font-sans placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50"
+                        />
+                        <div class="flex gap-2">
+                            <button
+                                type="submit"
+                                :disabled="licenseForm.processing || !licenseForm.license_key"
+                                class="px-3 py-2 rounded-lg text-xs font-semibold bg-blue-500 text-white hover:bg-blue-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >Save</button>
+                            <button
+                                v-if="extension.has_license"
+                                type="button"
+                                :disabled="licenseForm.processing"
+                                class="px-3 py-2 rounded-lg text-xs font-semibold border border-red-500/30 text-red-400 hover:bg-red-500/10 disabled:opacity-40 transition-colors"
+                                @click="removeLicense"
+                            >Remove</button>
+                        </div>
+                    </form>
+
+                    <p v-if="licenseForm.errors.license_key" class="text-red-400 text-xs mt-2">
+                        {{ licenseForm.errors.license_key }}
                     </p>
                 </div>
 
