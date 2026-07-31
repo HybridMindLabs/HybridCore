@@ -7,7 +7,7 @@ import {
     ThumbsUp, Trophy, Gift, Package, Link as LinkIcon, ArrowRight,
 } from '@lucide/vue';
 import type { Component } from 'vue';
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watchEffect } from 'vue';
 import { useLocale } from '@/composables/useLocale';
 import { useTheme } from '@/composables/useTheme';
 import { useDesktopNotifications } from '@/composables/useDesktopNotifications';
@@ -16,7 +16,7 @@ import FlagIcon from '@/components/UI/FlagIcon.vue';
 import SocialLinks from '@/components/UI/SocialLinks.vue';
 import { useFlashToast } from '@/composables/useFlashToast';
 
-const { t, currentLocale, supportedLocales, switcherEnabled, isCurrentLocale, switchLocale } = useLocale();
+const { t, currentLocale, supportedLocales, localeDirection, switcherEnabled, isCurrentLocale, switchLocale } = useLocale();
 const { theme, toggle: toggleTheme, init: initTheme } = useTheme();
 const { ensurePermission, notifyFromData } = useDesktopNotifications();
 
@@ -106,6 +106,15 @@ async function markAllRead() {
 }
 
 const dark = computed(() => theme.value === 'dark');
+
+// Inertia swaps the page body/head without replacing the root <html> element.
+// Keep its language contract in sync after an in-app locale switch so screen
+// readers immediately use the correct pronunciation and reading direction.
+watchEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.lang = currentLocale.value.replace('_', '-');
+    document.documentElement.dir = localeDirection.value;
+});
 
 onMounted(() => {
     initTheme();
