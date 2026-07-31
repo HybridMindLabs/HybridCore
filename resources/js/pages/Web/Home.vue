@@ -684,7 +684,8 @@ function toggleFavourite(server: HomeServer) {
                             :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]'">
 
                             <div v-for="server in filtered" :key="server.id"
-                                class="hc-server-row group relative flex items-center gap-3 px-3 sm:px-4 py-2.5 border-b last:border-0 overflow-hidden transition-colors"
+                                class="hc-server-row group relative flex items-center gap-3 px-3 sm:px-4 py-2.5 border-b last:border-0 overflow-hidden
+                                       transition-colors duration-300 ease-out"
                                 :class="dark ? 'border-zinc-800/50 hover:bg-white/[0.03]' : 'border-zinc-100 hover:bg-zinc-100/70'">
 
                                 <!-- Current map, bleeding in from the right and faded out so it
@@ -692,8 +693,16 @@ function toggleFavourite(server: HomeServer) {
                                 <div v-if="server.row_image && !failedMapImages.has(server.id)"
                                     class="absolute inset-y-0 right-0 w-[55%] pointer-events-none hidden sm:block"
                                     aria-hidden="true">
+                                    <!-- Transform *and* opacity are transitioned together: animating
+                                         only the scale left the brightness to snap, which is what made
+                                         the hover feel abrupt. The curve is a long ease-out so the
+                                         image drifts to rest instead of arriving all at once, and it
+                                         grows from the right edge it bleeds in from. -->
                                     <img :src="server.row_image" alt="" loading="lazy" decoding="async"
-                                        class="hc-server-map w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                        class="hc-server-map w-full h-full object-cover origin-right transform-gpu
+                                               transition-[transform,opacity] duration-[900ms] ease-out
+                                               group-hover:scale-[1.06]
+                                               motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                                         :class="dark ? 'opacity-[0.45] group-hover:opacity-[0.6]' : 'opacity-[0.22] group-hover:opacity-[0.32]'"
                                         @error="failedMapImages.add(server.id)" />
                                 </div>
