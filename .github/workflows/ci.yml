@@ -87,6 +87,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Fails on errors only; unused-variable findings stay warnings for now.
+      - name: Lint (ESLint)
+        run: npm run lint
+
       - name: TypeScript check
         run: npm run type-check
 
