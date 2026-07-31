@@ -45,6 +45,13 @@ Schedule::command('hybridcore:update:check --notify')
     ->name('check-for-updates')
     ->withoutOverlapping();
 
+// Same for installed extensions that declare an update feed. Offset from the
+// core check so the two do not go out over the network at the same minute.
+Schedule::command('hybridcore:extensions:check-updates --notify')
+    ->dailyAt('04:45')
+    ->name('check-extension-updates')
+    ->withoutOverlapping();
+
 // Weekly digest email for users with unread notifications
 Schedule::command('hybridcore:email:digest')->weeklyOn(1, '09:00')->name('email-digest');
 
