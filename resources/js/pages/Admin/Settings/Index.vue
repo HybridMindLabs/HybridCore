@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { Settings, Globe, Search, Users, ShieldCheck, Puzzle, WrenchIcon, ExternalLink, Scale, ArrowRight, Mail, Shield, Send, CheckCircle2, AlertCircle } from '@lucide/vue';
+import { Settings, Globe, Search, Users, ShieldCheck, Puzzle, WrenchIcon, ExternalLink, Scale, ArrowRight, Mail, Shield, Send } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
 import { Link } from '@inertiajs/vue3';

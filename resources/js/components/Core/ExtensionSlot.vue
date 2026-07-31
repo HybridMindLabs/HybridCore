@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, resolveComponent, h } from 'vue';
+import { computed, resolveComponent } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 
 /**

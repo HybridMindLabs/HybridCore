@@ -1,73 +1,25 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
 			count: 1
 			path: app/Console/Commands/EmailDigestCommand.php
 
 		-
-			message: '#^Offset ''email_digest'' on array\{\}\|string on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Console/Commands/EmailDigestCommand.php
-
-		-
-			message: '#^Strict comparison using \=\=\= between true and false will always evaluate to false\.$#'
-			identifier: identical.alwaysFalse
-			count: 1
-			path: app/Console/Commands/EmailDigestCommand.php
-
-		-
-			message: '#^Call to function is_string\(\) with ''database/migrations'' will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 1
-			path: app/Console/Commands/ExtensionsMigrateCommand.php
-
-		-
-			message: '#^Offset ''migrations'' on string\|null on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Console/Commands/ExtensionsMigrateCommand.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
 			count: 2
 			path: app/Console/Commands/QueryServersCommand.php
 
 		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Console/Commands/QueryServersCommand.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Console/Commands/QueryTestCommand.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$query_driver\.$#'
-			identifier: property.notFound
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
 			count: 2
 			path: app/Console/Commands/QueryTestCommand.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Server\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Console/Commands/QueryTestCommand.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Console/Commands/QueryTestCommand.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>query_driver" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Game\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Console/Commands/QueryTestCommand.php
@@ -97,45 +49,27 @@ parameters:
 			path: app/Games/GameDriverRegistry.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$game\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/ContentReportController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ip\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/ContentReportController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$port\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/ContentReportController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/ContentReportController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$username\.$#'
-			identifier: property.notFound
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
 			count: 3
 			path: app/Http/Controllers/Admin/ContentReportController.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\ContentReport\>\:\:through\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
 			count: 1
 			path: app/Http/Controllers/Admin/ContentReportController.php
 
 		-
-			message: '#^Using nullsafe property access "\?\-\>username" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Database\\Eloquent\\Model\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
-			count: 3
+			count: 1
+			path: app/Http/Controllers/Admin/ContentReportController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Server\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
 			path: app/Http/Controllers/Admin/ContentReportController.php
 
 		-
@@ -157,8 +91,8 @@ parameters:
 			path: app/Http/Controllers/Admin/DashboardController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
 			count: 1
 			path: app/Http/Controllers/Admin/DashboardController.php
 
@@ -175,136 +109,28 @@ parameters:
 			path: app/Http/Controllers/Admin/DashboardController.php
 
 		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Admin/DashboardController.php
-
-		-
-			message: '#^Cannot call method toDateString\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Http/Controllers/Admin/ExtensionController.php
-
-		-
-			message: '#^Cannot call method toDateTimeString\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 4
-			path: app/Http/Controllers/Admin/ExtensionController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Extension\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Admin/ExtensionController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/IpBanController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/IpBanController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\IpBan\>\:\:through\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Admin/IpBanController.php
-
-		-
 			message: '#^Parameter \#1 \$item of method App\\Http\\Controllers\\Admin\\MenuController\:\:formatItem\(\) expects App\\Models\\MenuItem, Illuminate\\Database\\Eloquent\\Model given\.$#'
 			identifier: argument.type
-			count: 2
+			count: 1
 			path: app/Http/Controllers/Admin/MenuController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$game\.$#'
-			identifier: property.notFound
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 7
+			path: app/Http/Controllers/Admin/ModerationController.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
 			count: 2
 			path: app/Http/Controllers/Admin/ModerationController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ip\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/Admin/ModerationController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Server\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
 			count: 3
 			path: app/Http/Controllers/Admin/ModerationController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$port\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/Admin/ModerationController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/Admin/ModerationController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/ModerationController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$username\.$#'
-			identifier: property.notFound
-			count: 5
-			path: app/Http/Controllers/Admin/ModerationController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\ContentReport\>\:\:through\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Admin/ModerationController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\NewsComment\>\:\:through\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Admin/ModerationController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\ServerReview\>\:\:through\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Admin/ModerationController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Http/Controllers/Admin/ModerationController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>username" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 5
-			path: app/Http/Controllers/Admin/ModerationController.php
-
-		-
-			message: '#^Cannot call method format\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: app/Http/Controllers/Admin/NewsArticleController.php
-
-		-
-			message: '#^Cannot call method isFuture\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Http/Controllers/Admin/NewsArticleController.php
 
 		-
 			message: '#^Match expression does not handle remaining value\: mixed$#'
@@ -313,112 +139,22 @@ parameters:
 			path: app/Http/Controllers/Admin/NewsArticleController.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\NewsArticle\>\:\:through\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
+			message: '#^Using nullsafe method call on non\-nullable type App\\Models\\User\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Http/Controllers/Admin/NewsArticleController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/NewsCommentController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/NewsCommentController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/NewsCommentController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$username\.$#'
-			identifier: property.notFound
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
 			count: 2
 			path: app/Http/Controllers/Admin/NewsCommentController.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\NewsComment\>\:\:through\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Admin/NewsCommentController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\User\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Http/Controllers/Admin/NewsCommentController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>username" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Admin/NewsCommentController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$color\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/ServerController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$failure_reason\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/ServerController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$icon\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/ServerController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/ServerController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_online\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/ServerController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$map\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/ServerController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/ServerController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$players_max\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/ServerController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$players_online\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/ServerController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/ServerController.php
 
 		-
 			message: '#^Left side of && is always true\.$#'
@@ -433,100 +169,34 @@ parameters:
 			path: app/Http/Controllers/Admin/ServerController.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\Server\>\:\:through\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Admin/ServerController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$game\.$#'
-			identifier: property.notFound
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
 			count: 1
 			path: app/Http/Controllers/Admin/ServerReviewController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
+			message: '#^Using nullsafe method call on non\-nullable type App\\Models\\Game\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Http/Controllers/Admin/ServerReviewController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ip\.$#'
-			identifier: property.notFound
+			message: '#^Using nullsafe method call on non\-nullable type App\\Models\\User\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Http/Controllers/Admin/ServerReviewController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$port\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/ServerReviewController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\ServerReview\>\:\:through\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Admin/ServerReviewController.php
-
-		-
-			message: '#^Cannot call method toDateString\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Http/Controllers/Admin/ThemeController.php
-
-		-
-			message: '#^Cannot call method toDateTimeString\(\) on string\.$#'
-			identifier: method.nonObject
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
 			count: 3
-			path: app/Http/Controllers/Admin/ThemeController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Theme\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Admin/ThemeController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 2
 			path: app/Http/Controllers/Admin/TrashController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			message: '#^Access to an undefined property App\\Models\\UserAchievement\:\:\$created_at\.$#'
 			identifier: property.notFound
 			count: 1
-			path: app/Http/Controllers/Admin/TrashController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$username\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/TrashController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\NewsArticle\>\:\:through\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Admin/TrashController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\NewsComment\>\:\:through\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Admin/TrashController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Http/Controllers/Admin/TrashController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>username" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Admin/TrashController.php
+			path: app/Http/Controllers/Admin/UserController.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$city\.$#'
@@ -543,35 +213,11 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
 			identifier: property.notFound
-			count: 3
+			count: 1
 			path: app/Http/Controllers/Admin/UserController.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ip_address\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/UserController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/Admin/UserController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$provider\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/UserController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/Admin/UserController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
 			identifier: property.notFound
 			count: 1
 			path: app/Http/Controllers/Admin/UserController.php
@@ -583,49 +229,13 @@ parameters:
 			path: app/Http/Controllers/Admin/UserController.php
 
 		-
-			message: '#^Cannot call method diffForHumans\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 3
-			path: app/Http/Controllers/Admin/UserController.php
-
-		-
 			message: '#^Match expression does not handle remaining value\: mixed$#'
 			identifier: match.unhandled
 			count: 1
 			path: app/Http/Controllers/Admin/UserController.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\NewsComment\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Admin/UserController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\ServerReview\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Admin/UserController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\UserAdminNote\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Admin/UserController.php
-
-		-
 			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 3
-			path: app/Http/Controllers/Admin/UserController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{name\: string, slug\: string, color\: string, icon\: string\}, Closure\(App\\Models\\Role\)\: array\{name\: string, slug\: string, color\: string, icon\: string\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/Admin/UserController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\User\>\:\:through\(\) contains unresolvable type\.$#'
 			identifier: argument.unresolvableType
 			count: 1
 			path: app/Http/Controllers/Admin/UserController.php
@@ -637,27 +247,15 @@ parameters:
 			path: app/Http/Controllers/Admin/UserController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$icon\.$#'
-			identifier: property.notFound
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Server\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
 			count: 1
-			path: app/Http/Controllers/Api/SearchController.php
+			path: app/Http/Controllers/Admin/UserController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Api/SearchController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Api/SearchController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Server\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Game\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 3
 			path: app/Http/Controllers/Api/SearchController.php
 
 		-
@@ -665,18 +263,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Http/Controllers/Api/V1/ServerController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$avatar_url\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/AccountController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$awarded_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/AccountController.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$blocked\.$#'
@@ -697,15 +283,9 @@ parameters:
 			path: app/Http/Controllers/Web/AccountController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$cover_url\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/AccountController.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
 			identifier: property.notFound
-			count: 6
+			count: 5
 			path: app/Http/Controllers/Web/AccountController.php
 
 		-
@@ -721,73 +301,19 @@ parameters:
 			path: app/Http/Controllers/Web/AccountController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$map\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/Web/AccountController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/Web/AccountController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$players_max\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/AccountController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$players_online\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/AccountController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$provider\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/AccountController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$provider_username\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/AccountController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 5
-			path: app/Http/Controllers/Web/AccountController.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user_agent\.$#'
 			identifier: property.notFound
 			count: 2
 			path: app/Http/Controllers/Web/AccountController.php
 
 		-
-			message: '#^Cannot call method addDays\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Http/Controllers/Web/AccountController.php
-
-		-
-			message: '#^Cannot call method diffForHumans\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Http/Controllers/Web/AccountController.php
-
-		-
 			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
 			identifier: argument.unresolvableType
-			count: 5
+			count: 2
 			path: app/Http/Controllers/Web/AccountController.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{id\: int, name\: mixed, game\: mixed, game_slug\: mixed, game_icon\: mixed, address\: string, map\: mixed, map_image\: string\|null, players\: mixed, max_players\: mixed, online\: bool, show_url\: string\|null, connect_url\: string\|null\}, Closure\(App\\Models\\Server\)\: array\{id\: int, name\: mixed, game\: mixed, game_slug\: mixed, game_icon\: mixed, address\: string, map\: mixed, map_image\: string\|null, players\: mixed, max_players\: mixed, online\: bool, show_url\: string\|null, connect_url\: string\|null\} given\.$#'
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{id\: int, name\: string, game\: string, game_slug\: string, game_icon\: string\|null, address\: string, map\: string\|null, map_image\: string\|null, players\: int\|null, max_players\: int\|null, online\: bool, show_url\: string, connect_url\: string\}, Closure\(App\\Models\\Server\)\: array\{id\: int, name\: string, game\: string, game_slug\: string, game_icon\: string\|null, address\: string, map\: string\|null, map_image\: string\|null, players\: int\|null, max_players\: int\|null, online\: bool, show_url\: string, connect_url\: string\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Http/Controllers/Web/AccountController.php
@@ -799,9 +325,21 @@ parameters:
 			path: app/Http/Controllers/Web/AccountController.php
 
 		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 3
+			path: app/Http/Controllers/Web/AccountController.php
+
+		-
 			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
+			path: app/Http/Controllers/Web/AccountController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Game\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 3
 			path: app/Http/Controllers/Web/AccountController.php
 
 		-
@@ -815,42 +353,6 @@ parameters:
 			identifier: return.type
 			count: 1
 			path: app/Http/Controllers/Web/Auth/SocialAuthController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$avatar\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/BlockController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$display_name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/BlockController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/BlockController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$username\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/Web/BlockController.php
-
-		-
-			message: '#^Cannot call method toFormattedDateString\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Http/Controllers/Web/BlockController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\UserBlock\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Web/BlockController.php
 
 		-
 			message: '#^Access to an undefined property App\\Models\\ServerSnapshot\:\:\$online\.$#'
@@ -871,31 +373,13 @@ parameters:
 			path: app/Http/Controllers/Web/GameServerController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$avatar\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/GameServerController.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$body\.$#'
 			identifier: property.notFound
 			count: 1
 			path: app/Http/Controllers/Web/GameServerController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$latestSnapshot\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/Web/GameServerController.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$map\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/GameServerController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
 			count: 1
 			path: app/Http/Controllers/Web/GameServerController.php
@@ -907,25 +391,13 @@ parameters:
 			path: app/Http/Controllers/Web/GameServerController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
 			count: 1
 			path: app/Http/Controllers/Web/GameServerController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$username\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/GameServerController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:through\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Web/GameServerController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:through\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{id\: int, rating\: int, body\: string\|null, created_at\: string, is_mine\: bool, user\: array\{username\: mixed, name\: mixed, avatar\: mixed\}\}, Closure\(App\\Models\\ServerReview\)\: array\{id\: int, rating\: int, body\: string\|null, created_at\: string, is_mine\: bool, user\: array\{username\: mixed, name\: mixed, avatar\: mixed\}\} given\.$#'
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:through\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{id\: int, rating\: int, body\: string\|null, created_at\: string, is_mine\: bool, user\: array\{username\: string, name\: string, avatar\: string\|null\}\}, Closure\(App\\Models\\ServerReview\)\: array\{id\: int, rating\: int, body\: string\|null, created_at\: string, is_mine\: bool, user\: array\{username\: string, name\: string, avatar\: string\|null\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Http/Controllers/Web/GameServerController.php
@@ -933,98 +405,14 @@ parameters:
 		-
 			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
-			count: 2
+			count: 1
 			path: app/Http/Controllers/Web/GameServerController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$avatar\.$#'
-			identifier: property.notFound
-			count: 3
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$color\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$game\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ip\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_online\.$#'
-			identifier: property.notFound
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\User\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
 			count: 2
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$map\.$#'
-			identifier: property.notFound
-			count: 3
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 4
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ping\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$players_max\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$players_online\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$port\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 6
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$username\.$#'
-			identifier: property.notFound
-			count: 4
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Cannot call method diffForHumans\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
+			path: app/Http/Controllers/Web/GameServerController.php
 
 		-
 			message: '#^Method App\\Http\\Controllers\\Web\\HomeController\:\:viewerSummary\(\) never returns array\{banner\: string\|null, role\: array\|null, achievements\: array\<int, string\>\} so it can be removed from the return type\.$#'
@@ -1033,38 +421,20 @@ parameters:
 			path: app/Http/Controllers/Web/HomeController.php
 
 		-
-			message: '#^Method App\\Http\\Controllers\\Web\\HomeController\:\:viewerSummary\(\) should return array\{banner\: string\|null, role\: array\|null, achievements\: array\<int, string\>\}\|null but returns array\{banner\: string\|null, role\: array\{name\: mixed, color\: mixed\}\|null, achievements\: Illuminate\\Support\\Collection\<\(int\|string\), mixed\>\}\.$#'
+			message: '#^Method App\\Http\\Controllers\\Web\\HomeController\:\:viewerSummary\(\) should return array\{banner\: string\|null, role\: array\|null, achievements\: array\<int, string\>\}\|null but returns array\{banner\: string\|null, role\: array\{name\: string, color\: string\}\|null, achievements\: Illuminate\\Support\\Collection\<\(int\|string\), mixed\>\}\.$#'
 			identifier: return.type
 			count: 1
 			path: app/Http/Controllers/Web/HomeController.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\NewsArticle\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
 			count: 1
 			path: app/Http/Controllers/Web/HomeController.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Server\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,array\<string, mixed\>\>\:\:filter\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Parameter \#1 \$value of function collect contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Parameter \#3 \$callback of static method Illuminate\\Cache\\Repository\:\:remember\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
+			message: '#^Using nullsafe method call on non\-nullable type App\\Models\\User\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Http/Controllers/Web/HomeController.php
 
@@ -1111,28 +481,16 @@ parameters:
 			path: app/Http/Controllers/Web/HomeController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$color\.$#'
-			identifier: property.notFound
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Server\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
 			count: 1
-			path: app/Http/Controllers/Web/MembersController.php
+			path: app/Http/Controllers/Web/HomeController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$icon\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/MembersController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/MembersController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,App\\Models\\User\>\:\:through\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Controllers/Web/MembersController.php
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\User\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 7
+			path: app/Http/Controllers/Web/HomeController.php
 
 		-
 			message: '#^Access to an undefined property App\\Models\\Conversation\:\:\$unread_count\.$#'
@@ -1141,32 +499,8 @@ parameters:
 			path: app/Http/Controllers/Web/MessageController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$body\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/MessageController.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
 			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/Web/MessageController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$deleted_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/MessageController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$sender_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/MessageController.php
-
-		-
-			message: '#^Cannot call method lt\(\) on string\.$#'
-			identifier: method.nonObject
 			count: 1
 			path: app/Http/Controllers/Web/MessageController.php
 
@@ -1189,14 +523,8 @@ parameters:
 			path: app/Http/Controllers/Web/MessageController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/NewsCommentController.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:notify\(\)\.$#'
-			identifier: method.notFound
+			message: '#^Left side of && is always true\.$#'
+			identifier: booleanAnd.leftAlwaysTrue
 			count: 1
 			path: app/Http/Controllers/Web/NewsCommentController.php
 
@@ -1207,147 +535,39 @@ parameters:
 			path: app/Http/Controllers/Web/NewsCommentController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$avatar\.$#'
-			identifier: property.notFound
-			count: 3
-			path: app/Http/Controllers/Web/NewsController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/Web/NewsController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 4
-			path: app/Http/Controllers/Web/NewsController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$username\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/Web/NewsController.php
-
-		-
-			message: '#^Cannot call method format\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 4
-			path: app/Http/Controllers/Web/NewsController.php
-
-		-
-			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: app/Http/Controllers/Web/NewsController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:through\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
 			count: 1
 			path: app/Http/Controllers/Web/NewsController.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:through\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{id\: int, body\: string, created_at_iso\: string, is_mine\: bool, can_delete\: bool, user\: array\{username\: mixed, name\: mixed, avatar\: mixed\}\}, Closure\(App\\Models\\NewsComment\)\: array\{id\: int, body\: string, created_at_iso\: string, is_mine\: bool, can_delete\: bool, user\: array\{username\: mixed, name\: mixed, avatar\: mixed\}\} given\.$#'
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Pagination\\AbstractPaginator\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:through\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{id\: int, body\: string, created_at_iso\: string, is_mine\: bool, can_delete\: bool, user\: array\{username\: string, name\: string, avatar\: string\|null\}\}, Closure\(App\\Models\\NewsComment\)\: array\{id\: int, body\: string, created_at_iso\: string, is_mine\: bool, can_delete\: bool, user\: array\{username\: string, name\: string, avatar\: string\|null\}\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Http/Controllers/Web/NewsController.php
 
 		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 2
 			path: app/Http/Controllers/Web/NewsController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$address\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/ProfileController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$awarded_at\.$#'
-			identifier: property.notFound
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\User\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
 			count: 2
+			path: app/Http/Controllers/Web/NewsController.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 4
 			path: app/Http/Controllers/Web/ProfileController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$color\.$#'
-			identifier: property.notFound
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
 			count: 1
-			path: app/Http/Controllers/Web/ProfileController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$game\.$#'
-			identifier: property.notFound
-			count: 5
-			path: app/Http/Controllers/Web/ProfileController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$icon\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/ProfileController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/ProfileController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ip\.$#'
-			identifier: property.notFound
-			count: 3
-			path: app/Http/Controllers/Web/ProfileController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_online\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/ProfileController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$latestSnapshot\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/Web/ProfileController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/Web/ProfileController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$port\.$#'
-			identifier: property.notFound
-			count: 3
-			path: app/Http/Controllers/Web/ProfileController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 3
-			path: app/Http/Controllers/Web/ProfileController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Web/ProfileController.php
-
-		-
-			message: '#^Cannot call method diffForHumans\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Http/Controllers/Web/ProfileController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 2
 			path: app/Http/Controllers/Web/ProfileController.php
 
 		-
@@ -1375,122 +595,44 @@ parameters:
 			path: app/Http/Controllers/Web/ProfileController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Game\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 3
+			path: app/Http/Controllers/Web/ProfileController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Server\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Web/ProfileController.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
 			count: 1
 			path: app/Http/Controllers/Web/SeoController.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$children\.$#'
-			identifier: property.notFound
+			message: '#^Anonymous function should return array\{players_online\: int, games\: Illuminate\\Support\\Collection\<int, array\{name\: string, slug\: string\}\>, servers\: Illuminate\\Support\\Collection\<int, array\{name\: string\|null, map\: string, players\: lowercase\-string&non\-falsy\-string&uppercase\-string, ping\: lowercase\-string&non\-falsy\-string, slug\: string\}\>\} but returns array\{players_online\: int, games\: Illuminate\\Support\\Collection\<int, array\{name\: string, slug\: string\}\>, servers\: Illuminate\\Support\\Collection\<int, array\{name\: string\|null, map\: string, players\: lowercase\-string&non\-falsy\-string&uppercase\-string, ping\: lowercase\-string&non\-falsy\-string, slug\: string\}\>\}\.$#'
+			identifier: return.type
 			count: 1
 			path: app/Http/Middleware/HandleInertiaRequests.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_online\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$label\.$#'
-			identifier: property.notFound
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
 			count: 1
 			path: app/Http/Middleware/HandleInertiaRequests.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$map\.$#'
-			identifier: property.notFound
+			message: '#^Parameter \#3 \$callback of static method Illuminate\\Cache\\Repository\:\:remember\(\) expects Closure\(\)\: array\{players_online\: int, games\: Illuminate\\Support\\Collection\<int, array\{name\: string, slug\: string\}\>, servers\: Illuminate\\Support\\Collection\<int, array\{name\: string\|null, map\: string, players\: lowercase\-string&non\-falsy\-string&uppercase\-string, ping\: lowercase\-string&non\-falsy\-string, slug\: string\}\>\}, Closure\(\)\: array\{players_online\: int, games\: Illuminate\\Support\\Collection\<int, array\{name\: string, slug\: string\}\>, servers\: Illuminate\\Support\\Collection\<int, array\{name\: string\|null, map\: string, players\: lowercase\-string&non\-falsy\-string&uppercase\-string, ping\: lowercase\-string&non\-falsy\-string, slug\: string\}\>\} given\.$#'
+			identifier: argument.type
 			count: 1
 			path: app/Http/Middleware/HandleInertiaRequests.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ping\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$players_max\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$players_online\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 3
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$target\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$url\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Call to function is_string\(\) with null will always evaluate to false\.$#'
-			identifier: function.impossibleType
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Offset ''lang_namespace'' on array\{\}\|string on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Offset ''settings'' on string\|null on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Offset ''slug'' on array\{\}\|string on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\),Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Server\>\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Server\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Parameter \#3 \$callback of static method Illuminate\\Cache\\Repository\:\:remember\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
+			message: '#^Strict comparison using \!\=\= between App\\Models\\Game and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
 			count: 1
 			path: app/Http/Middleware/HandleInertiaRequests.php
 
@@ -1527,7 +669,7 @@ parameters:
 		-
 			message: '#^Using nullsafe property access "\?\-\>slug" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
-			count: 2
+			count: 1
 			path: app/Http/Middleware/HandleInertiaRequests.php
 
 		-
@@ -1535,18 +677,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Http/Middleware/SetLocale.php
-
-		-
-			message: '#^Cannot call method lt\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: app/Http/Middleware/TrackLastSeen.php
-
-		-
-			message: '#^Cannot call method addDays\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Http/Requests/Account/UpdateProfileRequest.php
 
 		-
 			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\NotificationResource\:\:\$created_at\.$#'
@@ -1699,30 +829,6 @@ parameters:
 			path: app/Http/Resources/Api/UserResource.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Jobs/GenerateDataExportJob.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$provider\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Jobs/GenerateDataExportJob.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$provider_username\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Jobs/GenerateDataExportJob.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: app/Jobs/GenerateDataExportJob.php
-
-		-
 			message: '#^Offset ''data'' on array\{type\: string, data\: array\<string, mixed\>, at\: int\|null\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
@@ -1741,8 +847,8 @@ parameters:
 			path: app/Jobs/ProcessBridgeEvents.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$query_driver\.$#'
-			identifier: property.notFound
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Game\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Jobs/QueryServersJob.php
 
@@ -1753,46 +859,10 @@ parameters:
 			path: app/Mail/ContactMessageMail.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$display_name\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Mail/NewMessageMail.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$username\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Mail/NewMessageMail.php
-
-		-
-			message: '#^Method App\\Models\\Conversation\:\:otherParticipant\(\) should return App\\Models\\User but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Models/Conversation.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>players_online" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Models/Game.php
-
-		-
-			message: '#^Cannot call method isPast\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Models/NewsArticle.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_online\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/Server.php
-
-		-
-			message: '#^Method App\\Models\\Server\:\:getCachedSnapshotAttribute\(\) should return App\\Models\\ServerSnapshot\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Models/Server.php
 
 		-
 			message: '#^Using nullsafe property access "\?\-\>is_online" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
@@ -1807,36 +877,6 @@ parameters:
 			path: app/Models/User.php
 
 		-
-			message: '#^Cannot call method addDays\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Cannot call method gt\(\) on string\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Method App\\Models\\User\:\:primaryRole\(\) should return App\\Models\\Role\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:first\(\) expects \(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: bool\)\|null, Closure\(App\\Models\\Role\)\: bool given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:flatMap\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: \(array\<int, string\>\|Illuminate\\Support\\Collection\<int, string\>\), Closure\(App\\Models\\Role\)\: Illuminate\\Support\\Collection\<int, string\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Models/User.php
-
-		-
 			message: '#^Strict comparison using \!\=\= between string and null will always evaluate to true\.$#'
 			identifier: notIdentical.alwaysTrue
 			count: 1
@@ -1847,18 +887,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Providers/AppServiceProvider.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$awarded_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/AchievementService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 3
-			path: app/Services/AchievementService.php
 
 		-
 			message: '#^Access to an undefined property App\\Models\\PageView\:\:\$bots\.$#'
@@ -1897,58 +925,10 @@ parameters:
 			path: app/Services/AnalyticsService.php
 
 		-
-			message: '#^Method App\\Services\\Auth\\ConnectedAccountService\:\:findUser\(\) should return App\\Models\\User\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Services/Auth/ConnectedAccountService.php
-
-		-
 			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
 			path: app/Services/Bridge/BridgeService.php
-
-		-
-			message: '#^Call to function is_string\(\) with null will always evaluate to false\.$#'
-			identifier: function.impossibleType
-			count: 4
-			path: app/Services/Extensions/ExtensionManager.php
-
-		-
-			message: '#^Offset ''assets'' on array\{\}\|string on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Services/Extensions/ExtensionManager.php
-
-		-
-			message: '#^Offset ''migrations'' on array\{\}\|string on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 2
-			path: app/Services/Extensions/ExtensionManager.php
-
-		-
-			message: '#^Offset ''seeder'' on array\{\}\|string on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Services/Extensions/ExtensionManager.php
-
-		-
-			message: '#^Result of \|\| is always true\.$#'
-			identifier: booleanOr.alwaysTrue
-			count: 4
-			path: app/Services/Extensions/ExtensionManager.php
-
-		-
-			message: '#^Strict comparison using \=\=\= between \*NEVER\* and '''' will always evaluate to false\.$#'
-			identifier: identical.alwaysFalse
-			count: 4
-			path: app/Services/Extensions/ExtensionManager.php
-
-		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
-			count: 4
-			path: app/Services/Extensions/ExtensionManager.php
 
 		-
 			message: '#^Parameter \#1 \$array \(list\<array\<string, mixed\>\>\) of array_values is already a list, call has no effect\.$#'
@@ -2005,16 +985,10 @@ parameters:
 			path: app/Services/Mail/MailConfigService.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$query_driver\.$#'
-			identifier: property.notFound
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Game\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Services/ServerQueryService.php
-
-		-
-			message: '#^Called ''pluck'' on Laravel collection, but could have been retrieved as a query\.$#'
-			identifier: larastan.noUnnecessaryCollectionCall
-			count: 1
-			path: app/Services/SettingsService.php
 
 		-
 			message: '#^Using nullsafe property access "\?\-\>slug" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
@@ -2491,84 +1465,6 @@ parameters:
 			path: extensions/hybridcore/hybridguard/config/hybridguard.php
 
 		-
-			message: '#^Access to an undefined property Hybridcore\\HybridGuard\\Models\\Appeal\:\:\$admin_name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/hybridguard/src/Http/Controllers/Api/AppealController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\HybridGuard\\Models\\Appeal\:\:\$created_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/hybridguard/src/Http/Controllers/Api/AppealController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\HybridGuard\\Models\\Appeal\:\:\$decided_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/hybridguard/src/Http/Controllers/Api/AppealController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\HybridGuard\\Models\\Appeal\:\:\$happened_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/hybridguard/src/Http/Controllers/Api/AppealController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\HybridGuard\\Models\\Appeal\:\:\$ingame_name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/hybridguard/src/Http/Controllers/Api/AppealController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\HybridGuard\\Models\\AppealDemo\:\:\$disk\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/hybridguard/src/Http/Controllers/Api/AppealController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\HybridGuard\\Models\\AppealDemo\:\:\$original_name\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/hybridguard/src/Http/Controllers/Api/AppealController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\HybridGuard\\Models\\AppealDemo\:\:\$path\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/hybridguard/src/Http/Controllers/Api/AppealController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\HybridGuard\\Models\\AppealDemo\:\:\$sha256\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/hybridguard/src/Http/Controllers/Api/AppealController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\HybridGuard\\Models\\AppealDemo\:\:\$size_bytes\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/hybridguard/src/Http/Controllers/Api/AppealController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\HybridGuard\\Models\\AppealDemo\:\:\$status\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/hybridguard/src/Http/Controllers/Api/AppealController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: extensions/hybridcore/hybridguard/src/Http/Controllers/Api/AppealController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{id\: int, name\: mixed, size_bytes\: int, sha256\: mixed, status\: mixed, download_url\: string\}, Closure\(Hybridcore\\HybridGuard\\Models\\AppealDemo\)\: array\{id\: int, name\: mixed, size_bytes\: int, sha256\: mixed, status\: mixed, download_url\: string\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: extensions/hybridcore/hybridguard/src/Http/Controllers/Api/AppealController.php
-
-		-
 			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\User\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
@@ -2725,37 +1621,7 @@ parameters:
 			path: extensions/hybridcore/hybridguard/src/Services/AdminMutationService.php
 
 		-
-			message: '#^Access to an undefined property Hybridcore\\HybridGuard\\Models\\HgPlayer\:\:\$connections\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/hybridguard/src/Services/PunishmentService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\HybridGuard\\Models\\HgPlayer\:\:\$first_seen_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/hybridguard/src/Services/PunishmentService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\HybridGuard\\Models\\HgPlayer\:\:\$last_seen_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/hybridguard/src/Services/PunishmentService.php
-
-		-
 			message: '#^Access to an undefined property Hybridcore\\HybridGuard\\Models\\HgPunishment\:\:\$c\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/hybridguard/src/Services/PunishmentService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\HybridGuard\\Models\\HgPunishment\:\:\$revoked_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/hybridguard/src/Services/PunishmentService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$country_code\.$#'
 			identifier: property.notFound
 			count: 2
 			path: extensions/hybridcore/hybridguard/src/Services/PunishmentService.php
@@ -2764,6 +1630,12 @@ parameters:
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\:\:active\(\)\.$#'
 			identifier: method.notFound
 			count: 1
+			path: extensions/hybridcore/hybridguard/src/Services/PunishmentService.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
 			path: extensions/hybridcore/hybridguard/src/Services/PunishmentService.php
 
 		-
@@ -2847,18 +1719,6 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/servercast/src/Http/Controllers/Admin/BroadcastController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/servercast/src/Http/Controllers/Admin/BroadcastController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Server\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
 			count: 1
 			path: extensions/hybridcore/servercast/src/Http/Controllers/Admin/BroadcastController.php
 
@@ -2866,6 +1726,12 @@ parameters:
 			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Hybridcore\\ServerCast\\Models\\Broadcast\>\:\:map\(\) contains unresolvable type\.$#'
 			identifier: argument.unresolvableType
 			count: 1
+			path: extensions/hybridcore/servercast/src/Http/Controllers/Admin/BroadcastController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Game\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
 			path: extensions/hybridcore/servercast/src/Http/Controllers/Admin/BroadcastController.php
 
 		-
@@ -3091,208 +1957,10 @@ parameters:
 			path: extensions/hybridcore/staff/src/StaffServiceProvider.php
 
 		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Console/PurgeCommand.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$steam_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Console/PurgeCommand.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$steam_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Console/Top10CheckCommand.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user_id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Console/Top10CheckCommand.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$flag_reason\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Admin/StatsAdminController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$flagged_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Admin/StatsAdminController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$game_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Admin/StatsAdminController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$hidden_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Admin/StatsAdminController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Admin/StatsAdminController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 12
-			path: extensions/hybridcore/stats/src/Http/Controllers/Admin/StatsAdminController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$steam_id\.$#'
-			identifier: property.notFound
-			count: 8
-			path: extensions/hybridcore/stats/src/Http/Controllers/Admin/StatsAdminController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Http/Controllers/Admin/StatsAdminController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Hybridcore\\Stats\\Models\\StatsPlayer\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 2
-			path: extensions/hybridcore/stats/src/Http/Controllers/Admin/StatsAdminController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsSeason\:\:\$board\.$#'
-			identifier: property.notFound
-			count: 4
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/ArchiveController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsSeason\:\:\$closed_at\.$#'
-			identifier: property.notFound
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
 			count: 1
 			path: extensions/hybridcore/stats/src/Http/Controllers/Web/ArchiveController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsSeason\:\:\$month\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/ArchiveController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 3
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/ArchiveController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 4
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/ArchiveController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Hybridcore\\Stats\\Models\\StatsSeason\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 2
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/ArchiveController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$points\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/CompareController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$assists\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/CompareController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$avatar_url\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/CompareController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$bomb_defuses\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/CompareController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$bomb_plants\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/CompareController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$deaths\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/CompareController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$headshots\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/CompareController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/CompareController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/CompareController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$playtime_seconds\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/CompareController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$points\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/CompareController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$rounds\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/CompareController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$steam_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/CompareController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$user_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/CompareController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$wins\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/CompareController.php
 
 		-
 			message: '#^Using nullsafe property access "\?\-\>points" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
@@ -3301,61 +1969,7 @@ parameters:
 			path: extensions/hybridcore/stats/src/Http/Controllers/Web/CompareController.php
 
 		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/HallOfFameController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$steam_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/HallOfFameController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsServerAward\:\:\$month\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/HallOfFameController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_online\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/HallOfFameController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$map\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/HallOfFameController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/HallOfFameController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$players_max\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/HallOfFameController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$players_online\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/HallOfFameController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/HallOfFameController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{address\: non\-falsy\-string, name\: mixed, map\: mixed, online\: bool, players_online\: int, players_max\: int, board_players\: mixed, leader_name\: mixed\}, Closure\(App\\Models\\Server\)\: array\{address\: non\-falsy\-string, name\: mixed, map\: mixed, online\: bool, players_online\: int, players_max\: int, board_players\: mixed, leader_name\: mixed\} given\.$#'
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{address\: non\-falsy\-string, name\: string\|null, map\: string\|null, online\: bool, players_online\: int, players_max\: int, board_players\: mixed, leader_name\: mixed\}, Closure\(App\\Models\\Server\)\: array\{address\: non\-falsy\-string, name\: string\|null, map\: string\|null, online\: bool, players_online\: int, players_max\: int, board_players\: mixed, leader_name\: mixed\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: extensions/hybridcore/stats/src/Http/Controllers/Web/HallOfFameController.php
@@ -3379,270 +1993,6 @@ parameters:
 			path: extensions/hybridcore/stats/src/Http/Controllers/Web/HallOfFameController.php
 
 		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$avatar_url\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/PlayerController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$private_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/PlayerController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$user_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/PlayerController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$game_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/PrivacyController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$private_at\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/PrivacyController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$avatar_url\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/SearchController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$deaths\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/SearchController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 3
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/SearchController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/SearchController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$steam_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/SearchController.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Hybridcore\\Stats\\Models\\StatsPlayer\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/SearchController.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$avatar_url\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Jobs/FetchSteamAvatar.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$steam_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Jobs/FetchSteamAvatar.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsAward\:\:\$game_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsAward\:\:\$month\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsAward\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPair\:\:\$game_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPair\:\:\$headshots\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPair\:\:\$killer_steam_id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPair\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPair\:\:\$month\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPair\:\:\$victim_steam_id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$assists\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$deaths\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$first_seen_at\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$game_id\.$#'
-			identifier: property.notFound
-			count: 5
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$headshots\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$hidden_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$last_seen_at\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$losses\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$playtime_seconds\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$points\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$rounds\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$steam_id\.$#'
-			identifier: property.notFound
-			count: 11
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$user_id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$wins\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsAdminService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$deaths\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsBoardService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$headshots\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsBoardService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsBoardService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$playtime_seconds\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsBoardService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$points\.$#'
-			identifier: property.notFound
-			count: 6
-			path: extensions/hybridcore/stats/src/Services/StatsBoardService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsServerMonthly\:\:\$points\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsBoardService.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$deaths\.$#'
 			identifier: property.notFound
 			count: 1
@@ -3658,12 +2008,6 @@ parameters:
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$kills\.$#'
 			identifier: property.notFound
 			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsBoardService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 3
 			path: extensions/hybridcore/stats/src/Services/StatsBoardService.php
 
 		-
@@ -3685,12 +2029,6 @@ parameters:
 			path: extensions/hybridcore/stats/src/Services/StatsBoardService.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$steam_id\.$#'
-			identifier: property.notFound
-			count: 3
-			path: extensions/hybridcore/stats/src/Services/StatsBoardService.php
-
-		-
 			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array, Closure\(Hybridcore\\Stats\\Models\\StatsMonthly, int\)\: array given\.$#'
 			identifier: argument.type
 			count: 1
@@ -3709,218 +2047,20 @@ parameters:
 			path: extensions/hybridcore/stats/src/Services/StatsBoardService.php
 
 		-
-			message: '#^Parameter \#3 \$callback of static method Illuminate\\Cache\\Repository\:\:remember\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsBoardService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$avatar_url\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsCardService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$deaths\.$#'
-			identifier: property.notFound
-			count: 3
-			path: extensions/hybridcore/stats/src/Services/StatsCardService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$headshots\.$#'
-			identifier: property.notFound
-			count: 3
-			path: extensions/hybridcore/stats/src/Services/StatsCardService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 3
-			path: extensions/hybridcore/stats/src/Services/StatsCardService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 4
-			path: extensions/hybridcore/stats/src/Services/StatsCardService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$playtime_seconds\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsCardService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$points\.$#'
-			identifier: property.notFound
-			count: 3
-			path: extensions/hybridcore/stats/src/Services/StatsCardService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$deaths\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsGdprService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$headshots\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsGdprService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsGdprService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsGdprService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$playtime_seconds\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsGdprService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$points\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsGdprService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$private_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsGdprService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$steam_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsGdprService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsServerMonthly\:\:\$deaths\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsGdprService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsServerMonthly\:\:\$headshots\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsGdprService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsServerMonthly\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsGdprService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsServerMonthly\:\:\$playtime_seconds\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsGdprService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsServerMonthly\:\:\$points\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsGdprService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsServerMonthly\:\:\$server_id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsGdprService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsGdprService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Hybridcore\\Stats\\Models\\StatsPlayer\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsGdprService.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
 			path: extensions/hybridcore/stats/src/Services/StatsGdprService.php
 
 		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$game_id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsIngestService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsIngestService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$last_seen_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsIngestService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsIngestService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$steam_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsIngestService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$user_id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsIngestService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsSession\:\:\$connected_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsIngestService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsSession\:\:\$map\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsIngestService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsIngestService.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:notify\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsIngestService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>slug" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Game\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
+			count: 1
+			path: extensions/hybridcore/stats/src/Services/StatsGdprService.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
 			count: 1
 			path: extensions/hybridcore/stats/src/Services/StatsIngestService.php
 
@@ -3943,27 +2083,9 @@ parameters:
 			path: extensions/hybridcore/stats/src/Services/StatsInsightsService.php
 
 		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsAward\:\:\$month\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsInsightsService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsAward\:\:\$steam_id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsInsightsService.php
-
-		-
 			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsDaily\:\:\$avatar_url\.$#'
 			identifier: property.notFound
 			count: 3
-			path: extensions/hybridcore/stats/src/Services/StatsInsightsService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsDaily\:\:\$day\.$#'
-			identifier: property.notFound
-			count: 2
 			path: extensions/hybridcore/stats/src/Services/StatsInsightsService.php
 
 		-
@@ -3973,21 +2095,9 @@ parameters:
 			path: extensions/hybridcore/stats/src/Services/StatsInsightsService.php
 
 		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsDaily\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsInsightsService.php
-
-		-
 			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsDaily\:\:\$name\.$#'
 			identifier: property.notFound
 			count: 3
-			path: extensions/hybridcore/stats/src/Services/StatsInsightsService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsDaily\:\:\$playtime_seconds\.$#'
-			identifier: property.notFound
-			count: 1
 			path: extensions/hybridcore/stats/src/Services/StatsInsightsService.php
 
 		-
@@ -4009,33 +2119,15 @@ parameters:
 			path: extensions/hybridcore/stats/src/Services/StatsInsightsService.php
 
 		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$month\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsInsightsService.php
-
-		-
 			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$name\.$#'
 			identifier: property.notFound
 			count: 1
 			path: extensions/hybridcore/stats/src/Services/StatsInsightsService.php
 
 		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$points\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsInsightsService.php
-
-		-
 			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$steam_id\.$#'
 			identifier: property.notFound
 			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsInsightsService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$game_id\.$#'
-			identifier: property.notFound
-			count: 2
 			path: extensions/hybridcore/stats/src/Services/StatsInsightsService.php
 
 		-
@@ -4051,66 +2143,6 @@ parameters:
 			path: extensions/hybridcore/stats/src/Services/StatsInsightsService.php
 
 		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$flag_reason\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsIntegrityService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$flagged_at\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsIntegrityService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$headshots\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsIntegrityService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsIntegrityService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$rounds\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsIntegrityService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$deaths\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$headshots\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$playtime_seconds\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$points\.$#'
-			identifier: property.notFound
-			count: 3
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
 			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPair\:\:\$steam_id\.$#'
 			identifier: property.notFound
 			count: 2
@@ -4120,168 +2152,6 @@ parameters:
 			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPair\:\:\$total\.$#'
 			identifier: property.notFound
 			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$assists\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$avatar_url\.$#'
-			identifier: property.notFound
-			count: 3
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$best_clutch\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$bomb_defuses\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$bomb_plants\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$clutches\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$damage\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$deaths\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$entry_kills\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$first_seen_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$game_id\.$#'
-			identifier: property.notFound
-			count: 6
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$headshots\.$#'
-			identifier: property.notFound
-			count: 3
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$hidden_at\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$hits\.$#'
-			identifier: property.notFound
-			count: 3
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$last_seen_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$losses\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 4
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$playtime_seconds\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$points\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$private_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$rounds\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$shots\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$steam_id\.$#'
-			identifier: property.notFound
-			count: 8
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$teamkills\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$user_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$wins\.$#'
-			identifier: property.notFound
-			count: 1
 			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
 
 		-
@@ -4369,12 +2239,6 @@ parameters:
 			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
 
 		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsServerMonthly\:\:\$server_id\.$#'
-			identifier: property.notFound
-			count: 4
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
 			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsServerMonthly\:\:\$sh\.$#'
 			identifier: property.notFound
 			count: 1
@@ -4393,32 +2257,8 @@ parameters:
 			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$username\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
 			message: '#^Comparison operation "\>" between int\<100, max\> and 0 is always true\.$#'
 			identifier: greater.alwaysTrue
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Hybridcore\\Stats\\Models\\StatsPair\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Parameter \#1 \$game of method Hybridcore\\Stats\\Services\\StatsInsightsService\:\:mapKings\(\) expects App\\Models\\Game, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Parameter \#3 \$callback of static method Illuminate\\Cache\\Repository\:\:remember\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
 			count: 1
 			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
 
@@ -4459,108 +2299,6 @@ parameters:
 			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
 
 		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsAward\:\:\$user_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsSeasonService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$deaths\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsSeasonService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$headshots\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsSeasonService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsSeasonService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$playtime_seconds\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsSeasonService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$points\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsSeasonService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsServerMonthly\:\:\$deaths\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsSeasonService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsServerMonthly\:\:\$headshots\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsSeasonService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsServerMonthly\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsSeasonService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsServerMonthly\:\:\$playtime_seconds\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsSeasonService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsServerMonthly\:\:\$points\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsSeasonService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$avatar_url\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsSeasonService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsSeasonService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$steam_id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsSeasonService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user_id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsSeasonService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Hybridcore\\Stats\\Models\\StatsMonthly\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsSeasonService.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Hybridcore\\Stats\\Models\\StatsServerMonthly\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsSeasonService.php
-
-		-
 			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsDaily\:\:\$avatar_url\.$#'
 			identifier: property.notFound
 			count: 1
@@ -4597,80 +2335,8 @@ parameters:
 			path: extensions/hybridcore/stats/src/Services/StatsWeeklyService.php
 
 		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsWeekly\:\:\$headshots\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsWeeklyService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsWeekly\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsWeeklyService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsWeekly\:\:\$steam_id\.$#'
-			identifier: property.notFound
-			count: 3
-			path: extensions/hybridcore/stats/src/Services/StatsWeeklyService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsWeekly\:\:\$week_start\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsWeeklyService.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$deaths\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/StatsServiceProvider.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 3
-			path: extensions/hybridcore/stats/src/StatsServiceProvider.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$playtime_seconds\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/StatsServiceProvider.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$private_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/StatsServiceProvider.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$steam_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/StatsServiceProvider.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/StatsServiceProvider.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$points\.$#'
 			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/StatsServiceProvider.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/StatsServiceProvider.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Hybridcore\\Stats\\Models\\StatsPlayer\>\:\:map\(\) contains unresolvable type\.$#'
-			identifier: argument.unresolvableType
 			count: 1
 			path: extensions/hybridcore/stats/src/StatsServiceProvider.php
 
@@ -4679,90 +2345,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: extensions/hybridcore/stats/src/StatsServiceProvider.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$clutches\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsAccuracyTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$damage\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsAccuracyTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$shots\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsAccuracyTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$best_clutch\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsAccuracyTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$clutches\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsAccuracyTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$damage\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/tests/Feature/StatsAccuracyTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$entry_kills\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsAccuracyTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$hits\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsAccuracyTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/tests/Feature/StatsAccuracyTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$shots\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/tests/Feature/StatsAccuracyTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsWeapon\:\:\$damage\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsAccuracyTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsWeapon\:\:\$hits\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsAccuracyTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsWeapon\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsAccuracyTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsWeapon\:\:\$shots\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsAccuracyTest.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
@@ -4775,36 +2357,6 @@ parameters:
 			identifier: assign.propertyType
 			count: 1
 			path: extensions/hybridcore/stats/tests/Feature/StatsAccuracyTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsAward\:\:\$steam_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsAdminTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$points\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsAdminTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsAdminTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$points\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsAdminTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$steam_id\.$#'
-			identifier: property.notFound
-			count: 3
-			path: extensions/hybridcore/stats/tests/Feature/StatsAdminTest.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
@@ -4849,18 +2401,6 @@ parameters:
 			path: extensions/hybridcore/stats/tests/Feature/StatsCardTest.php
 
 		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsGdprTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$user_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsGdprTest.php
-
-		-
 			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertTrue\(\) with true will always evaluate to true\.$#'
 			identifier: method.alreadyNarrowedType
 			count: 1
@@ -4871,84 +2411,6 @@ parameters:
 			identifier: assign.propertyType
 			count: 1
 			path: extensions/hybridcore/stats/tests/Feature/StatsGdprTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$assists\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsIngestTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$bomb_defuses\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsIngestTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$bomb_plants\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsIngestTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$deaths\.$#'
-			identifier: property.notFound
-			count: 3
-			path: extensions/hybridcore/stats/tests/Feature/StatsIngestTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$headshots\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/tests/Feature/StatsIngestTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 4
-			path: extensions/hybridcore/stats/tests/Feature/StatsIngestTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$losses\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsIngestTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$playtime_seconds\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/tests/Feature/StatsIngestTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$points\.$#'
-			identifier: property.notFound
-			count: 8
-			path: extensions/hybridcore/stats/tests/Feature/StatsIngestTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$rounds\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/tests/Feature/StatsIngestTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$teamkills\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsIngestTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$user_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsIngestTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$wins\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsIngestTest.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$bomb_plants\.$#'
@@ -4999,46 +2461,10 @@ parameters:
 			path: extensions/hybridcore/stats/tests/Feature/StatsInsightsTest.php
 
 		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$flag_reason\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsIntegrityTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$flagged_at\.$#'
-			identifier: property.notFound
-			count: 3
-			path: extensions/hybridcore/stats/tests/Feature/StatsIntegrityTest.php
-
-		-
 			message: '#^Property Hybridcore\\Stats\\Tests\\Feature\\StatsIntegrityTest\:\:\$game \(App\\Models\\Game\) does not accept Illuminate\\Database\\Eloquent\\Model\.$#'
 			identifier: assign.propertyType
 			count: 1
 			path: extensions/hybridcore/stats/tests/Feature/StatsIntegrityTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsMonthly\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/tests/Feature/StatsPerServerTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsServerMonthly\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 3
-			path: extensions/hybridcore/stats/tests/Feature/StatsPerServerTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsServerMonthly\:\:\$shots\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsPerServerTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsServerSeason\:\:\$board\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsPerServerTest.php
 
 		-
 			message: '#^Property Hybridcore\\Stats\\Tests\\Feature\\StatsPerServerTest\:\:\$game \(App\\Models\\Game\) does not accept Illuminate\\Database\\Eloquent\\Model\.$#'
@@ -5059,12 +2485,6 @@ parameters:
 			path: extensions/hybridcore/stats/tests/Feature/StatsPerServerTest.php
 
 		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPlayer\:\:\$avatar_url\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/tests/Feature/StatsPlayerTest.php
-
-		-
 			message: '#^Property Hybridcore\\Stats\\Tests\\Feature\\StatsPlayerTest\:\:\$game \(App\\Models\\Game\) does not accept Illuminate\\Database\\Eloquent\\Model\.$#'
 			identifier: assign.propertyType
 			count: 1
@@ -5077,36 +2497,6 @@ parameters:
 			path: extensions/hybridcore/stats/tests/Feature/StatsPrivacyTest.php
 
 		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPair\:\:\$killer_steam_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsRivalryTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPair\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsRivalryTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsPair\:\:\$victim_steam_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsRivalryTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsWeekly\:\:\$kills\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsRivalryTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsWeekly\:\:\$steam_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsRivalryTest.php
-
-		-
 			message: '#^Property Hybridcore\\Stats\\Tests\\Feature\\StatsRivalryTest\:\:\$game \(App\\Models\\Game\) does not accept Illuminate\\Database\\Eloquent\\Model\.$#'
 			identifier: assign.propertyType
 			count: 1
@@ -5117,24 +2507,6 @@ parameters:
 			identifier: assign.propertyType
 			count: 1
 			path: extensions/hybridcore/stats/tests/Feature/StatsRivalryTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsAward\:\:\$meta\.$#'
-			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/tests/Feature/StatsSeasonTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsAward\:\:\$user_id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: extensions/hybridcore/stats/tests/Feature/StatsSeasonTest.php
-
-		-
-			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsSeason\:\:\$board\.$#'
-			identifier: property.notFound
-			count: 3
-			path: extensions/hybridcore/stats/tests/Feature/StatsSeasonTest.php
 
 		-
 			message: '#^Parameter \#1 \$server of method Hybridcore\\Stats\\Services\\StatsIngestService\:\:kill\(\) expects App\\Models\\Server, Illuminate\\Database\\Eloquent\\Model given\.$#'

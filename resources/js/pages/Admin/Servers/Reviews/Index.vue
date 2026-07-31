@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Star, Trash2, MessageSquare, ExternalLink } from '@lucide/vue';
+import { Star, Trash2, MessageSquare } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
 

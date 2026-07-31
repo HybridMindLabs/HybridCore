@@ -1,5 +1,5 @@
 ﻿<script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch, shallowRef } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { EditorState } from '@codemirror/state';
 import { EditorView, keymap, placeholder as placeholderExt } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';

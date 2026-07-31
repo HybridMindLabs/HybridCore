@@ -84,6 +84,12 @@ class AppServiceProvider extends ServiceProvider
                 : Limit::perMinute(5)->by($request->ip());
         });
 
+        // Login limiter. Same strict default as before (5/min per IP), but
+        // configurable so shared-IP deployments and E2E runs can raise it.
+        RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinute((int) config('hybridcore.login_rate_limit', 5))->by($request->ip());
+        });
+
         // Same split for the public contact form (real submits: 5 per 10 min).
         RateLimiter::for('contact', function (Request $request) {
             return $request->isPrecognitive()

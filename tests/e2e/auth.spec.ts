@@ -4,10 +4,10 @@ test.describe('Auth flows', () => {
     test('register lands straight on the site, with no wizard in between', async ({ page }) => {
         const ts = Date.now();
         await page.goto('/register');
-        await page.fill('input[name="name"]', `E2E User ${ts}`);
-        await page.fill('input[name="email"]', `e2e${ts}@example.com`);
-        await page.fill('input[name="password"]', 'password123');
-        await page.fill('input[name="password_confirmation"]', 'password123');
+        await page.fill('#name', `E2E User ${ts}`);
+        await page.fill('#email', `e2e${ts}@example.com`);
+        await page.fill('#password', 'password123');
+        await page.fill('#password_confirmation', 'password123');
         await page.click('button[type="submit"]');
 
         // Home, or the verify-email notice when the owner requires it. What it
@@ -18,8 +18,8 @@ test.describe('Auth flows', () => {
 
     test('login with invalid credentials shows error', async ({ page }) => {
         await page.goto('/login');
-        await page.fill('input[name="email"]', 'notexist@example.com');
-        await page.fill('input[name="password"]', 'wrongpassword');
+        await page.fill('#email', 'notexist@example.com');
+        await page.fill('#password', 'wrongpassword');
         await page.click('button[type="submit"]');
         await expect(page.locator('form')).toContainText(/invalid|credentials|These credentials/i);
     });
@@ -28,12 +28,14 @@ test.describe('Auth flows', () => {
         const ts = Date.now();
         // register first
         await page.goto('/register');
-        await page.fill('input[name="name"]', `Logout Test ${ts}`);
-        await page.fill('input[name="email"]', `logout${ts}@example.com`);
-        await page.fill('input[name="password"]', 'password123');
-        await page.fill('input[name="password_confirmation"]', 'password123');
+        await page.fill('#name', `Logout Test ${ts}`);
+        await page.fill('#email', `logout${ts}@example.com`);
+        await page.fill('#password', 'password123');
+        await page.fill('#password_confirmation', 'password123');
         await page.click('button[type="submit"]');
-        await page.waitForURL(/\/(welcome|account)/);
+        // Registration lands on home (or the verify notice) — same contract the
+        // first test in this file pins down.
+        await page.waitForURL(/\/(|email\/verify)$/);
 
         // logout via form post
         await page.evaluate(() => {

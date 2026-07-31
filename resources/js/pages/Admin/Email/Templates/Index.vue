@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import Breadcrumb from '@/components/UI/Breadcrumb.vue';
 import EmailTabs from '@/components/Admin/Email/EmailTabs.vue';

@@ -32,4 +32,15 @@ return [
     */
 
     'mysqldump_path' => env('MYSQLDUMP_PATH'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Login attempts per minute, per IP
+    |--------------------------------------------------------------------------
+    | Kept at the strict default. Raise it when many legitimate users share one
+    | address (office NAT, CGNAT) or for end-to-end runs, which sign in far more
+    | often in a minute than any real person does.
+    */
+
+    'login_rate_limit' => (int) env('LOGIN_RATE_LIMIT', 5),
 ];

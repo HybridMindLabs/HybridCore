@@ -3,9 +3,39 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
+/**
+ * @property int $id
+ * @property string $slug
+ * @property string $title
+ * @property string|null $excerpt
+ * @property string|null $content
+ * @property bool $is_system
+ * @property bool $published
+ * @property int $sort_order
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Rule newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Rule newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Rule published()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Rule query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Rule whereContent($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Rule whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Rule whereExcerpt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Rule whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Rule whereIsSystem($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Rule wherePublished($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Rule whereSlug($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Rule whereSortOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Rule whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Rule whereUpdatedAt($value)
+ *
+ * @mixin \Eloquent
+ */
 class Rule extends Model
 {
     public const LIST_CACHE_KEY = 'rules.published_list';
