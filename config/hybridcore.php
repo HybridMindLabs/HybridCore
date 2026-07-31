@@ -21,4 +21,26 @@ return [
     */
 
     'panel_updates' => env('HYBRIDCORE_PANEL_UPDATES', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | mysqldump binary
+    |--------------------------------------------------------------------------
+    | Explicit path used by the admin backup tool when mysqldump is not on one
+    | of the standard paths. Must be read through config so the value survives
+    | `php artisan config:cache` — env() returns null once the config is cached.
+    */
+
+    'mysqldump_path' => env('MYSQLDUMP_PATH'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Login attempts per minute, per IP
+    |--------------------------------------------------------------------------
+    | Kept at the strict default. Raise it when many legitimate users share one
+    | address (office NAT, CGNAT) or for end-to-end runs, which sign in far more
+    | often in a minute than any real person does.
+    */
+
+    'login_rate_limit' => (int) env('LOGIN_RATE_LIMIT', 5),
 ];

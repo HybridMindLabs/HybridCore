@@ -91,6 +91,14 @@ class UpdateController extends Controller
             Artisan::call('migrate', ['--force' => true]);
             $log[] = ['step' => 'php artisan migrate', 'output' => trim(Artisan::output())];
 
+            // public/build is gitignored, so the pull brings new frontend
+            // source but leaves the compiled bundle from the old version in
+            // place. Without this the panel comes back up serving stale assets
+            // against new server code. Synchronous on purpose: the update is
+            // not finished until the UI it hands back actually matches.
+            Artisan::call('hybridcore:build', ['--sync' => true]);
+            $log[] = ['step' => 'rebuild assets', 'output' => trim(Artisan::output())];
+
             Artisan::call('optimize:clear');
             $log[] = ['step' => 'optimize:clear', 'output' => trim(Artisan::output())];
 

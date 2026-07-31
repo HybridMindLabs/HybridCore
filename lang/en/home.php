@@ -145,6 +145,7 @@ return [
     'active_last_24h' => 'Active last 24 hours',
     'users_count' => ':count users',
     'no_active_users' => 'No active users.',
+    'presence_more' => '+:count more',
 
     /* ── Sidebar ── */
     'sidebar_online' => 'Online',

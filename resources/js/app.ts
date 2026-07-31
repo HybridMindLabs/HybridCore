@@ -17,14 +17,26 @@ import ExtensionSlot from '@/components/Core/ExtensionSlot.vue';
 const reverbKey = import.meta.env.VITE_REVERB_APP_KEY;
 
 if (reverbKey) {
+    const reverbScheme = import.meta.env.VITE_REVERB_SCHEME ?? window.location.protocol.replace(':', '');
+    const reverbHost = import.meta.env.VITE_REVERB_HOST || window.location.hostname;
+    const forceTLS = reverbScheme === 'https';
+    const sameOrigin = reverbHost === window.location.hostname;
+    const defaultPort = forceTLS ? 443 : 80;
+    // DDEV may expose its TLS router on a non-standard host port (for example
+    // 33001). When Reverb is proxied through the app host, follow the page's
+    // actual origin instead of forcing the env's production-default port 443.
+    const reverbPort = sameOrigin
+        ? Number(window.location.port || defaultPort)
+        : Number(import.meta.env.VITE_REVERB_PORT || defaultPort);
+
     (window as unknown as Record<string, unknown>).Pusher = Pusher;
     (window as unknown as Record<string, unknown>).Echo = new Echo({
         broadcaster: 'reverb',
         key: reverbKey,
-        wsHost: import.meta.env.VITE_REVERB_HOST,
-        wsPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
-        wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
-        forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
+        wsHost: reverbHost,
+        wsPort: reverbPort,
+        wssPort: reverbPort,
+        forceTLS,
         enabledTransports: ['ws', 'wss'],
         disableStats: true,
     });

@@ -3,9 +3,9 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 import {
     LayoutDashboard, Users, ShieldCheck, Settings, Activity, FileText,
     Puzzle, Paintbrush, Server, UserCircle, LogOut, HeartPulse, Download,
-    ScrollText, List, Circle, Package, Globe, Newspaper, BarChart3, DatabaseBackup, BookOpen, Mail, TrendingUp,
+    ScrollText, List, Circle, Package, Globe, Newspaper, BarChart3, DatabaseBackup, BookOpen, Mail, TrendingUp, X,
 } from '@lucide/vue';
-import { onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, watch } from 'vue';
 import { useAdminSidebar } from '@/composables/useAdminSidebar';
 
 interface NavItem {
@@ -44,10 +44,29 @@ const page = usePage<SharedProps>();
 const { mobileOpen, close } = useAdminSidebar();
 
 let stopListening: (() => void) | null = null;
+let stopOpenWatch: (() => void) | null = null;
+let previousBodyOverflow = '';
+
+function handleEscape(event: KeyboardEvent) {
+    if (event.key === 'Escape' && mobileOpen.value) {
+        close();
+    }
+}
+
 onMounted(() => {
     stopListening = router.on('navigate', close);
+    previousBodyOverflow = document.body.style.overflow;
+    stopOpenWatch = watch(mobileOpen, (open) => {
+        document.body.style.overflow = open ? 'hidden' : previousBodyOverflow;
+    }, { immediate: true });
+    window.addEventListener('keydown', handleEscape);
 });
-onUnmounted(() => stopListening?.());
+onUnmounted(() => {
+    stopListening?.();
+    stopOpenWatch?.();
+    document.body.style.overflow = previousBodyOverflow;
+    window.removeEventListener('keydown', handleEscape);
+});
 
 function resolveIcon(name: string): unknown {
     return iconMap[name] ?? Circle;
@@ -72,18 +91,21 @@ function logout() {
     <!-- Mobile backdrop -->
     <div
         v-if="mobileOpen"
-        class="fixed inset-0 bg-black/60 z-40 lg:hidden"
+        class="fixed inset-0 z-40 bg-black/70 backdrop-blur-[2px] lg:hidden"
+        aria-hidden="true"
         @click="close"
     />
 
     <aside
-        class="fixed top-0 left-0 h-full w-[220px] bg-[#0d0d0f] border-r border-zinc-800/60 flex flex-col z-50
-               transition-transform duration-200 lg:translate-x-0"
+        id="admin-navigation"
+        aria-label="Administration navigation"
+        class="fixed inset-y-0 left-0 z-50 flex h-dvh w-[min(19rem,88vw)] flex-col border-r border-zinc-800/60 bg-[#0d0d0f]
+               shadow-2xl shadow-black/50 transition-transform duration-200 ease-out lg:w-[220px] lg:translate-x-0 lg:shadow-none"
         :class="mobileOpen ? 'translate-x-0' : '-translate-x-full'"
     >
 
         <!-- Logo -->
-        <div class="px-5 py-4 border-b border-zinc-800/60">
+        <div class="flex items-center gap-3 border-b border-zinc-800/60 px-4 py-4 lg:px-5">
             <Link :href="route('admin.dashboard')" class="flex items-center gap-2.5">
                 <div class="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0">
                     <span class="text-blue-400 text-xs font-bold leading-none">HC</span>
@@ -93,6 +115,14 @@ function logout() {
                     <span class="text-zinc-600 text-[10px] mt-0.5 block">Admin Panel</span>
                 </div>
             </Link>
+            <button
+                type="button"
+                class="ml-auto grid h-10 w-10 place-items-center rounded-xl text-zinc-500 transition-colors hover:bg-zinc-900 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70 lg:hidden"
+                aria-label="Close administration navigation"
+                @click="close"
+            >
+                <X :size="19" aria-hidden="true" />
+            </button>
         </div>
 
         <!-- Navigation (composed from core + extension registrations) -->

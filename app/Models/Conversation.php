@@ -2,11 +2,38 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $participant_1_id
+ * @property int $participant_2_id
+ * @property Carbon|null $last_message_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Message|null $latestMessage
+ * @property-read Collection<int, Message> $messages
+ * @property-read int|null $messages_count
+ * @property-read User $participant1
+ * @property-read User $participant2
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Conversation newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Conversation newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Conversation query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Conversation whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Conversation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Conversation whereLastMessageAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Conversation whereParticipant1Id($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Conversation whereParticipant2Id($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Conversation whereUpdatedAt($value)
+ *
+ * @mixin \Eloquent
+ */
 class Conversation extends Model
 {
     protected $fillable = ['participant_1_id', 'participant_2_id', 'last_message_at'];

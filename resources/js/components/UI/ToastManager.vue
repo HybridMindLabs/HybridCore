@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { CheckCircle, XCircle, Info, AlertTriangle, X } from '@lucide/vue';
 import { useToast } from '@/composables/useToast';
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 
 const { toasts, dismiss } = useToast();
 

@@ -84,7 +84,50 @@ class ExtensionServiceProvider extends ServiceProvider
         CoreNavigation::register($registry->navigation());
         CoreWidgets::register($registry->widgets());
 
+        // A test run shares one process and RefreshDatabase migrates only once,
+        // so every extension's schema has to be registered up front. Otherwise
+        // whichever suite runs first is the only one whose tables get created
+        // and the rest fail on missing tables. The `extensions` table that
+        // drives enablement does not exist this early either, so discover from
+        // disk — JSON only, exactly like the enabled path below.
+        if ($this->app->runningUnitTests()) {
+            $this->registerDiscoveredExtensionSchemas();
+        }
+
         $this->bootEnabledExtensions($registry);
+    }
+
+    /**
+     * Register the autoloader and migration path of every extension present on
+     * disk, regardless of enablement.
+     *
+     * Test-only: at runtime extensions still load strictly when enabled. This
+     * registers schema and autoloading — not routes or providers, which stay
+     * opt-in per test so suites keep control over what they boot.
+     */
+    private function registerDiscoveredExtensionSchemas(): void
+    {
+        foreach (glob(base_path('extensions/*/*/extension.json')) ?: [] as $manifestPath) {
+            // The manifest can disappear between the glob and the read — an
+            // extension being uninstalled, or a parallel test tearing down its
+            // fixture directory. Never let that abort the boot.
+            $json = @file_get_contents($manifestPath);
+
+            if ($json === false) {
+                continue;
+            }
+
+            $manifest = json_decode($json, true);
+
+            if (! is_array($manifest)) {
+                continue;
+            }
+
+            $base = dirname($manifestPath);
+
+            ExtensionAutoloader::register($base, $manifest);
+            $this->loadExtensionMigrations($base, $manifest);
+        }
     }
 
     private function bootEnabledExtensions(ExtensionRegistry $registry): void

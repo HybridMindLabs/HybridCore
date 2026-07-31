@@ -1,0 +1,32 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - phpstan-baseline.neon
+
+parameters:
+    level: 5
+
+    # Core only. Extensions live in their own repositories and are gitignored
+    # here, so a developer with them checked out would analyse — and baseline —
+    # files that do not exist for anyone else, which is exactly how a green
+    # local run turned into a red CI one. Each extension analyses itself.
+    paths:
+        - app
+
+    # Generated code carries no useful type information.
+    excludePaths:
+        analyseAndScan:
+            - app/Console/Commands/MakeExtensionCommand.php
+
+    # Migrations run against a schema PHPStan cannot see; models resolve their
+    # columns at runtime, so column-level property access stays unverifiable.
+    checkModelProperties: false
+
+    ignoreErrors:
+        # Larastan types a relation from its HasOne/BelongsTo return type and
+        # ignores the "|null" the model's own docblock carries, so it calls
+        # every `$model->relation?->x` an unnecessary nullsafe. It is not:
+        # hasOne()->latestOfMany() returns null for a server with no snapshot
+        # yet, and belongsTo returns null when the parent row is gone. Acting
+        # on this rule would turn working defensive code into null crashes, so
+        # it is off rather than baselined — a baseline entry invites the fix.
+        - identifier: nullsafe.neverNull

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Extension;
 use App\Services\Extensions\ExtensionManager;
+use App\Services\Extensions\ExtensionUpdateService;
 use App\Services\Extensions\Registries\SettingsRegistry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -18,16 +19,45 @@ class ExtensionController extends Controller
     public function __construct(
         private readonly ExtensionManager $manager,
         private readonly SettingsRegistry $settingsRegistry,
+        private readonly ExtensionUpdateService $updates,
     ) {}
+
+    /**
+     * Re-poll every extension's declared update feed and report what is newer.
+     * Returned as JSON so the page can refresh its badges without a full visit.
+     */
+    public function checkUpdates(): JsonResponse
+    {
+        return response()->json(['updates' => $this->updates->checkAll(fresh: true)]);
+    }
+
+    /**
+     * Download and install the available update. The archive goes through the
+     * same import pipeline as a hand-uploaded one, so it gets identical
+     * manifest, zip-slip and downgrade checks.
+     */
+    public function update(Extension $extension): RedirectResponse
+    {
+        try {
+            $updated = $this->updates->apply($extension);
+        } catch (RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', "{$updated->name} updated to {$updated->version}.");
+    }
 
     public function index(): Response
     {
         $settingsMap = collect($this->settingsRegistry->compose())->keyBy('slug');
 
+        // Cached (hourly) — the page must not wait on every author's server.
+        $available = $this->updates->checkAll();
+
         $extensions = Extension::orderBy('name')
             ->get()
             ->filter(fn (Extension $ext) => is_dir(base_path('extensions/'.$ext->path)))
-            ->map(function (Extension $ext) use ($settingsMap) {
+            ->map(function (Extension $ext) use ($settingsMap, $available) {
                 $settingsSlug = str($ext->path)->afterLast('/')->toString();
                 $settingsPage = $settingsMap->get($settingsSlug);
 
@@ -43,6 +73,7 @@ class ExtensionController extends Controller
                     'settings_url' => $settingsPage ? $settingsPage['url'] : null,
                     'installed_at' => $ext->installed_at?->toDateString(),
                     'enabled_at' => $ext->enabled_at?->toDateTimeString(),
+                    'update' => $available[$ext->slug] ?? null,
                 ];
             })
             ->values();

@@ -71,6 +71,48 @@ const flag = computed(() => props.code.toLowerCase());
                 <path d="M17.5,10 l3.6,-1.2 -2.2,3.1 0,-3.8 2.2,3.1 z" fill="#fff" />
             </template>
 
+            <!-- Romania -->
+            <template v-else-if="flag === 'ro'">
+                <rect width="30" height="20" fill="#fff" />
+                <rect width="10" height="20" fill="#002B7F" />
+                <rect x="10" width="10" height="20" fill="#FCD116" />
+                <rect x="20" width="10" height="20" fill="#CE1126" />
+            </template>
+
+            <!-- Ukraine -->
+            <template v-else-if="flag === 'ua'">
+                <rect width="30" height="20" fill="#FFD500" />
+                <rect width="30" height="10" fill="#005BBB" />
+            </template>
+
+            <!-- Serbia -->
+            <template v-else-if="flag === 'rs'">
+                <rect width="30" height="20" fill="#fff" />
+                <rect width="30" height="6.67" fill="#C6363C" />
+                <rect y="6.67" width="30" height="6.67" fill="#0C4076" />
+            </template>
+
+            <!-- Greece -->
+            <template v-else-if="flag === 'gr'">
+                <rect width="30" height="20" fill="#0D5EAF" />
+                <rect y="2.22" width="30" height="2.22" fill="#fff" />
+                <rect y="6.67" width="30" height="2.22" fill="#fff" />
+                <rect y="11.11" width="30" height="2.22" fill="#fff" />
+                <rect y="15.55" width="30" height="2.22" fill="#fff" />
+                <rect width="11.1" height="11.1" fill="#0D5EAF" />
+                <rect x="4.44" width="2.22" height="11.1" fill="#fff" />
+                <rect y="4.44" width="11.1" height="2.22" fill="#fff" />
+            </template>
+
+            <!-- North Macedonia -->
+            <template v-else-if="flag === 'mk'">
+                <rect width="30" height="20" fill="#D20000" />
+                <circle cx="15" cy="10" r="3.2" fill="#FFE600" />
+                <g stroke="#FFE600" stroke-width="1.6">
+                    <path d="M15,10 L0,0 M15,10 L30,0 M15,10 L0,20 M15,10 L30,20 M15,10 L0,10 M15,10 L30,10 M15,10 L15,0 M15,10 L15,20" />
+                </g>
+            </template>
+
             <!-- No sensible flag (a language spoken across many countries) -->
             <template v-else>
                 <rect width="30" height="20" fill="currentColor" opacity="0.12" />

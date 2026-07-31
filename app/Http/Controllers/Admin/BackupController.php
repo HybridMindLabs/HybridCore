@@ -267,8 +267,10 @@ class BackupController extends Controller
 
     private function findMysqldump(): ?string
     {
-        // Honour explicit env override
-        if ($override = env('MYSQLDUMP_PATH')) {
+        // Honour explicit override. Read via config, not env(): env() returns
+        // null once `config:cache` has run, silently ignoring the operator's
+        // setting on exactly the production hosts that need it.
+        if ($override = config('hybridcore.mysqldump_path')) {
             return is_executable($override) ? $override : null;
         }
 

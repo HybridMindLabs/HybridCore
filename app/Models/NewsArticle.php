@@ -3,15 +3,81 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Scout\Searchable;
 
+/**
+ * @property int $id
+ * @property int|null $category_id
+ * @property int $author_id
+ * @property string $title
+ * @property string $slug
+ * @property string|null $excerpt
+ * @property string $body
+ * @property string $format
+ * @property string|null $featured_image
+ * @property string $status
+ * @property bool $is_pinned
+ * @property bool $is_featured
+ * @property Carbon|null $published_at
+ * @property string|null $meta_title
+ * @property string|null $meta_description
+ * @property string|null $og_image
+ * @property int $reading_time
+ * @property int $views
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ * @property-read Collection<int, NewsArticleView> $articleViews
+ * @property-read int|null $article_views_count
+ * @property-read User $author
+ * @property-read NewsCategory|null $category
+ * @property-read Collection<int, NewsComment> $comments
+ * @property-read int|null $comments_count
+ * @property-read string|null $featured_image_url
+ * @property-read string|null $og_image_url
+ * @property-read Collection<int, NewsTag> $tags
+ * @property-read int|null $tags_count
+ *
+ * @method static Builder<static>|NewsArticle newModelQuery()
+ * @method static Builder<static>|NewsArticle newQuery()
+ * @method static Builder<static>|NewsArticle onlyTrashed()
+ * @method static Builder<static>|NewsArticle published()
+ * @method static Builder<static>|NewsArticle query()
+ * @method static Builder<static>|NewsArticle whereAuthorId($value)
+ * @method static Builder<static>|NewsArticle whereBody($value)
+ * @method static Builder<static>|NewsArticle whereCategoryId($value)
+ * @method static Builder<static>|NewsArticle whereCreatedAt($value)
+ * @method static Builder<static>|NewsArticle whereDeletedAt($value)
+ * @method static Builder<static>|NewsArticle whereExcerpt($value)
+ * @method static Builder<static>|NewsArticle whereFeaturedImage($value)
+ * @method static Builder<static>|NewsArticle whereFormat($value)
+ * @method static Builder<static>|NewsArticle whereId($value)
+ * @method static Builder<static>|NewsArticle whereIsFeatured($value)
+ * @method static Builder<static>|NewsArticle whereIsPinned($value)
+ * @method static Builder<static>|NewsArticle whereMetaDescription($value)
+ * @method static Builder<static>|NewsArticle whereMetaTitle($value)
+ * @method static Builder<static>|NewsArticle whereOgImage($value)
+ * @method static Builder<static>|NewsArticle wherePublishedAt($value)
+ * @method static Builder<static>|NewsArticle whereReadingTime($value)
+ * @method static Builder<static>|NewsArticle whereSlug($value)
+ * @method static Builder<static>|NewsArticle whereStatus($value)
+ * @method static Builder<static>|NewsArticle whereTitle($value)
+ * @method static Builder<static>|NewsArticle whereUpdatedAt($value)
+ * @method static Builder<static>|NewsArticle whereViews($value)
+ * @method static Builder<static>|NewsArticle withTrashed(bool $withTrashed = true)
+ * @method static Builder<static>|NewsArticle withoutTrashed()
+ *
+ * @mixin \Eloquent
+ */
 class NewsArticle extends Model
 {
     use Prunable;

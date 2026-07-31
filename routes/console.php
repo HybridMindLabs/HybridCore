@@ -37,6 +37,14 @@ Schedule::call(function () {
     }
 })->daily()->name('prune-page-views');
 
+// Look for a newer core release once a day and tell the administrators the
+// first time a given version shows up. Without this an update — including a
+// security one — is only noticed if somebody opens the updates page.
+Schedule::command('hybridcore:update:check --notify')
+    ->dailyAt('04:30')
+    ->name('check-for-updates')
+    ->withoutOverlapping();
+
 // Weekly digest email for users with unread notifications
 Schedule::command('hybridcore:email:digest')->weeklyOn(1, '09:00')->name('email-digest');
 

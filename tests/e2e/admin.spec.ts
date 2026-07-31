@@ -8,8 +8,8 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'password';
 test.describe('Admin dashboard', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto('/login');
-        await page.fill('input[name="email"]', ADMIN_EMAIL);
-        await page.fill('input[name="password"]', ADMIN_PASSWORD);
+        await page.fill('#email', ADMIN_EMAIL);
+        await page.fill('#password', ADMIN_PASSWORD);
         await page.click('button[type="submit"]');
         await page.waitForURL(/\/(admin|account|welcome)/);
     });
@@ -19,7 +19,9 @@ test.describe('Admin dashboard', () => {
         // Non-admin redirected away; admin sees the panel
         const url = page.url();
         if (url.includes('/admin')) {
-            await expect(page.locator('h1, [data-page-title]')).toBeVisible();
+            // The admin shell renders a compact heading in the header and the
+            // page heading in main, so scope to the first match.
+            await expect(page.locator('h1, [data-page-title]').first()).toBeVisible();
         }
     });
 

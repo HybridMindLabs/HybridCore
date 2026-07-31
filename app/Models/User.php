@@ -11,12 +11,109 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Notifications\DatabaseNotificationCollection;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
+use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Scout\Searchable;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $username
+ * @property string $display_name
+ * @property Carbon|null $username_changed_at
+ * @property string $email
+ * @property Carbon|null $email_verified_at
+ * @property string $password
+ * @property Carbon|null $password_set_at
+ * @property string|null $two_factor_secret
+ * @property array<array-key, mixed>|null $two_factor_recovery_codes
+ * @property Carbon|null $two_factor_confirmed_at
+ * @property string|null $remember_token
+ * @property Carbon|null $last_seen_at
+ * @property Carbon|null $onboarding_completed_at
+ * @property Carbon|null $banned_at
+ * @property Carbon|null $last_login_at
+ * @property string|null $last_login_ip
+ * @property string|null $timezone
+ * @property string|null $locale
+ * @property string|null $avatar
+ * @property string|null $banner
+ * @property string|null $bio
+ * @property string|null $location
+ * @property string|null $website
+ * @property string $profile_privacy
+ * @property array<array-key, mixed>|null $notification_preferences
+ * @property bool $is_admin
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, UserAchievement> $achievements
+ * @property-read int|null $achievements_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, UserBlock> $blocks
+ * @property-read int|null $blocks_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, ConnectedAccount> $connectedAccounts
+ * @property-read int|null $connected_accounts_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Conversation> $conversations
+ * @property-read int|null $conversations_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Server> $favouriteServers
+ * @property-read int|null $favourite_servers_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $followers
+ * @property-read int|null $followers_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $following
+ * @property-read int|null $following_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, LoginHistory> $loginHistories
+ * @property-read int|null $login_histories_count
+ * @property-read DatabaseNotificationCollection<int, DatabaseNotification> $notifications
+ * @property-read int|null $notifications_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Game> $preferredGames
+ * @property-read int|null $preferred_games_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Role> $roles
+ * @property-read int|null $roles_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, PersonalAccessToken> $tokens
+ * @property-read int|null $tokens_count
+ *
+ * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereAvatar($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereBannedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereBanner($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereBio($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereDisplayName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmailVerifiedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereIsAdmin($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastLoginAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastLoginIp($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastSeenAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLocale($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLocation($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereNotificationPreferences($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereOnboardingCompletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePassword($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePasswordSetAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereProfilePrivacy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRememberToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereTimezone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereTwoFactorConfirmedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereTwoFactorRecoveryCodes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereTwoFactorSecret($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUsername($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUsernameChangedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereWebsite($value)
+ *
+ * @mixin \Eloquent
+ */
 #[Fillable([
     'name', 'username', 'display_name', 'email', 'password', 'password_set_at',
     'is_admin', 'banned_at', 'last_login_at', 'last_login_ip',

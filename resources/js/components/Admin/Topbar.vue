@@ -17,7 +17,7 @@ interface SharedProps {
 const page = usePage<SharedProps>();
 const menuOpen = ref(false);
 const unreadContact = computed(() => page.props.adminBadges?.unread_contact ?? 0);
-const { toggle: toggleSidebar } = useAdminSidebar();
+const { mobileOpen, toggle: toggleSidebar } = useAdminSidebar();
 
 function logout() {
     router.post(route('admin.logout'));
@@ -29,10 +29,13 @@ function logout() {
         <div class="flex items-center gap-3 min-w-0">
             <button
                 type="button"
-                class="lg:hidden w-8 h-8 -ml-1 shrink-0 rounded-lg flex items-center justify-center text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 transition-colors"
-                @click="toggleSidebar"
+                class="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-zinc-400 transition-colors hover:bg-zinc-900/60 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70 lg:hidden"
+                :aria-expanded="mobileOpen"
+                aria-controls="admin-navigation"
+                :aria-label="mobileOpen ? 'Close administration navigation' : 'Open administration navigation'"
+                @click.stop="toggleSidebar"
             >
-                <Menu :size="18" :stroke-width="1.75" />
+                <Menu :size="20" :stroke-width="1.8" aria-hidden="true" />
             </button>
             <h1 class="text-zinc-500 text-xs font-medium tracking-wide uppercase truncate">{{ title }}</h1>
         </div>

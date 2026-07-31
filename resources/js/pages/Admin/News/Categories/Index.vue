@@ -1,6 +1,6 @@
 ﻿<script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Plus, Pencil, Trash2, Tag, Newspaper } from '@lucide/vue';
+import { Plus, Pencil, Trash2, Tag } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 
 interface Category {

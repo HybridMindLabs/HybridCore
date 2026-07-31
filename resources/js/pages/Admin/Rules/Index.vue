@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { BookOpen, Plus, Pencil, Trash2, ExternalLink, Lock, Eye, EyeOff } from '@lucide/vue';
+import { BookOpen, Plus, Pencil, Trash2, ExternalLink, Lock } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { router, usePage } from '@inertiajs/vue3';
-import { Bell, Check, Trash2, Mail, MessageSquare, AlertCircle, ThumbsUp, Gift, Trophy, Award } from '@lucide/vue';
+import { Bell, Check, Trash2, MessageSquare, AlertCircle, ThumbsUp, Gift, Trophy, Award } from '@lucide/vue';
 import type { Component } from 'vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';

@@ -2,10 +2,53 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string $version
+ * @property string $author
+ * @property string|null $description
+ * @property string $type
+ * @property string $path
+ * @property bool $active
+ * @property string|null $preview_image
+ * @property Carbon|null $installed_at
+ * @property Carbon|null $activated_at
+ * @property array<array-key, mixed>|null $metadata
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, ThemeSetting> $settings
+ * @property-read int|null $settings_count
+ *
+ * @method static \Database\Factories\ThemeFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereActivatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereAuthor($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereInstalledAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereMetadata($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme wherePath($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme wherePreviewImage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereSlug($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereVersion($value)
+ *
+ * @mixin \Eloquent
+ */
 class Theme extends Model
 {
     use HasFactory;

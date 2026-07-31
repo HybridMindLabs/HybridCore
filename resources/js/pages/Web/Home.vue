@@ -172,6 +172,12 @@ onUnmounted(() => { if (timer) clearInterval(timer); });
 // ── Presence ─────────────────────────────────────────────────────
 // The two blocks were ~55 lines of duplicated markup; they only differ by
 // source, accent and empty text.
+
+// A busy community pushes dozens of names into a ~250px column, which turns
+// the widget into an endless list and buries everything under it. Show a
+// readable handful and send the rest to the members page.
+const PRESENCE_VISIBLE = 12;
+
 const presenceGroups = computed(() => [
     {
         key: 'online',
@@ -191,7 +197,15 @@ const presenceGroups = computed(() => [
         live: false,
         countClass: 'border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400',
     },
-]);
+].map((group) => {
+    const users = group.data?.users ?? [];
+
+    return {
+        ...group,
+        visibleUsers: users.slice(0, PRESENCE_VISIBLE),
+        overflowCount: Math.max(0, users.length - PRESENCE_VISIBLE),
+    };
+}));
 
 /** Guards against an empty display name, which would throw on [0]. */
 function initial(name: string): string {
@@ -670,7 +684,8 @@ function toggleFavourite(server: HomeServer) {
                             :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]'">
 
                             <div v-for="server in filtered" :key="server.id"
-                                class="hc-server-row group relative flex items-center gap-3 px-3 sm:px-4 py-2.5 border-b last:border-0 overflow-hidden transition-colors"
+                                class="hc-server-row group relative flex items-center gap-3 px-3 sm:px-4 py-2.5 border-b last:border-0 overflow-hidden
+                                       transition-colors duration-300 ease-out"
                                 :class="dark ? 'border-zinc-800/50 hover:bg-white/[0.03]' : 'border-zinc-100 hover:bg-zinc-100/70'">
 
                                 <!-- Current map, bleeding in from the right and faded out so it
@@ -678,8 +693,12 @@ function toggleFavourite(server: HomeServer) {
                                 <div v-if="server.row_image && !failedMapImages.has(server.id)"
                                     class="absolute inset-y-0 right-0 w-[55%] pointer-events-none hidden sm:block"
                                     aria-hidden="true">
+                                    <!-- Timing lives with .hc-server-map in app.css, which also owns the
+                                         mask; a `transition` shorthand there outranks utilities, so
+                                         keeping both in sync from here would silently lose. -->
                                     <img :src="server.row_image" alt="" loading="lazy" decoding="async"
-                                        class="hc-server-map w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                        class="hc-server-map w-full h-full object-cover transform-gpu
+                                               group-hover:scale-[1.06] motion-reduce:group-hover:scale-100"
                                         :class="dark ? 'opacity-[0.45] group-hover:opacity-[0.6]' : 'opacity-[0.22] group-hover:opacity-[0.32]'"
                                         @error="failedMapImages.add(server.id)" />
                                 </div>
@@ -1012,13 +1031,13 @@ function toggleFavourite(server: HomeServer) {
                                     <span v-if="group.hint" class="ml-auto">{{ group.hint }}</span>
                                 </div>
 
-                                <ul v-if="group.data?.users.length" class="flex flex-wrap gap-1.5">
-                                    <li v-for="u in group.data.users" :key="u.id">
+                                <ul v-if="group.visibleUsers.length" class="flex flex-wrap gap-1.5">
+                                    <li v-for="u in group.visibleUsers" :key="u.id">
                                         <Link :href="u.username ? route('profile.show', { username: u.username }) : '#'"
-                                            class="group/user flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full border text-[11.5px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                                            class="group/user flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-full border text-[11.5px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                                             :class="dark ? 'border-zinc-800 bg-zinc-900/60 text-zinc-300 hover:text-blue-400 hover:border-zinc-700' : 'border-zinc-200 bg-zinc-50 text-zinc-500 hover:text-blue-600 hover:border-zinc-300'"
                                             :title="u.username ? '@' + u.username : u.name">
-                                            <span class="w-5 h-5 rounded-full overflow-hidden shrink-0 flex items-center justify-center text-[9px] font-black"
+                                            <span class="w-[18px] h-[18px] rounded-full overflow-hidden shrink-0 flex items-center justify-center text-[9px] font-black"
                                                 :class="dark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-200 text-zinc-500'">
                                                 <!-- alt is empty on purpose: the name is right beside it,
                                                      so announcing the avatar too would just repeat it. -->
@@ -1026,7 +1045,17 @@ function toggleFavourite(server: HomeServer) {
                                                     class="w-full h-full object-cover" />
                                                 <span v-else aria-hidden="true">{{ initial(u.name) }}</span>
                                             </span>
-                                            <span class="truncate max-w-[110px]">{{ u.name }}</span>
+                                            <!-- Narrow enough that two chips share a row in the sidebar
+                                                 instead of each name claiming its own line. -->
+                                            <span class="truncate max-w-[68px]">{{ u.name }}</span>
+                                        </Link>
+                                    </li>
+
+                                    <li v-if="group.overflowCount">
+                                        <Link :href="route('members.index')"
+                                            class="flex items-center px-2.5 py-1 rounded-full border border-dashed text-[11.5px] font-bold tabular-nums transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                                            :class="dark ? 'border-zinc-700 text-zinc-400 hover:text-blue-400 hover:border-blue-500/40' : 'border-zinc-300 text-zinc-500 hover:text-blue-600 hover:border-blue-400/50'">
+                                            {{ t('home.presence_more', { count: group.overflowCount }) }}
                                         </Link>
                                     </li>
                                 </ul>

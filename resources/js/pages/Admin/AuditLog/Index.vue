@@ -3,7 +3,7 @@ import { Head, router } from '@inertiajs/vue3';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import Breadcrumb from '@/components/UI/Breadcrumb.vue';
 import Pagination from '@/components/UI/Pagination.vue';
-import { Shield, Search, X, User, Trash2, Pencil, ShieldBan, RefreshCw } from '@lucide/vue';
+import { Shield, Search, User, Trash2, Pencil, ShieldBan, RefreshCw } from '@lucide/vue';
 import { ref, watch } from 'vue';
 
 interface Actor { id: number; name: string; email: string }

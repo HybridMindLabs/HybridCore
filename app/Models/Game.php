@@ -2,11 +2,56 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string $icon
+ * @property string $color
+ * @property string $query_driver
+ * @property int $default_port
+ * @property int|null $default_query_port
+ * @property bool $is_active
+ * @property int $sort_order
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, Server> $activeServers
+ * @property-read int|null $active_servers_count
+ * @property-read string|null $cover_url
+ * @property-read int $online_servers_count
+ * @property-read int $total_players_online
+ * @property-read Collection<int, Server> $servers
+ * @property-read int|null $servers_count
+ * @property-read Collection<int, ServerSnapshot> $snapshots
+ * @property-read int|null $snapshots_count
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Game active()
+ * @method static \Database\Factories\GameFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Game newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Game newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Game query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Game whereColor($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Game whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Game whereDefaultPort($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Game whereDefaultQueryPort($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Game whereIcon($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Game whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Game whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Game whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Game whereQueryDriver($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Game whereSlug($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Game whereSortOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Game whereUpdatedAt($value)
+ *
+ * @mixin \Eloquent
+ */
 class Game extends Model
 {
     use HasFactory;
