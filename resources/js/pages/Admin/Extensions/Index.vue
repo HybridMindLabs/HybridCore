@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { Puzzle, RefreshCw, ToggleRight, ToggleLeft, Settings, CheckCircle2, XCircle, User, Tag, Calendar, Loader2, AlertTriangle, Hammer, Upload, ChevronDown } from '@lucide/vue';
+import { Puzzle, RefreshCw, ToggleRight, ToggleLeft, Settings, CheckCircle2, XCircle, User, Tag, Calendar, Loader2, AlertTriangle, Hammer, Upload, ChevronDown, ArrowUpCircle } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
 import { computed, ref } from 'vue';
@@ -17,6 +17,8 @@ interface Extension {
     settings_url: string | null;
     installed_at: string | null;
     enabled_at: string | null;
+    /** Present only when the extension's declared feed offers a newer release. */
+    update: { version: string; url: string; notes: string } | null;
 }
 
 interface RebuildInfo {
@@ -48,6 +50,21 @@ function sync() {
     syncing.value = true;
     router.post(route('admin.extensions.sync'), {}, {
         onFinish: () => { syncing.value = false; },
+    });
+}
+
+// Which extension is mid-update, so only its own button shows the busy state.
+const updating = ref<string | null>(null);
+
+function applyUpdate(ext: Extension) {
+    if (!ext.update) return;
+
+    // Downloads and installs through the same validated import path an
+    // uploaded archive takes, so migrations and assets are handled too.
+    updating.value = ext.slug;
+    router.post(route('admin.extensions.update', { extension: ext.id }), {}, {
+        preserveScroll: true,
+        onFinish: () => { updating.value = null; },
     });
 }
 
@@ -388,6 +405,16 @@ function typeConf(type: string) {
                             <Tag :size="11" :stroke-width="1.75" />
                             v{{ ext.version }}
                         </span>
+
+                        <!-- Only rendered when the author's feed advertises something newer. -->
+                        <button v-if="ext.update" type="button"
+                            class="flex items-center gap-1.5 rounded-full border border-blue-500/40 bg-blue-500/10 px-2 py-0.5 text-[11px] font-bold text-blue-400 transition hover:bg-blue-500/20 disabled:opacity-50"
+                            :disabled="updating === ext.slug"
+                            :title="ext.update.notes || `Update to v${ext.update.version}`"
+                            @click="applyUpdate(ext)">
+                            <ArrowUpCircle :size="11" :stroke-width="2" />
+                            {{ updating === ext.slug ? 'Updating…' : `Update to v${ext.update.version}` }}
+                        </button>
                         <span class="flex items-center gap-1.5 text-[11px] text-zinc-600">
                             <User :size="11" :stroke-width="1.75" />
                             {{ ext.author }}
