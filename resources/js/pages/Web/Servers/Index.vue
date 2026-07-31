@@ -243,7 +243,9 @@ const heroTotals = computed(() => [
                     <div class="relative h-[132px] overflow-hidden">
                         <div
                             v-if="game.cover_url"
-                            class="absolute inset-[-4px] bg-cover bg-center transition-transform duration-500 group-hover:scale-[1.06]"
+                            class="absolute inset-[-4px] bg-cover bg-center transform-gpu
+                                   transition-transform duration-[900ms] ease-out group-hover:scale-[1.06]
+                                   motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                             :style="{
                                 backgroundImage: `url(${game.cover_url})`,
                                 filter: dark ? 'blur(1px) brightness(0.78)' : 'blur(1px) brightness(1.02)',

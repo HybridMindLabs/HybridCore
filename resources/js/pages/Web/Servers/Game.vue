@@ -560,8 +560,13 @@ const activityTiles = computed(() => [
                         <div v-if="server.row_image && !failedRowImages.has(server.id)"
                             class="absolute inset-y-0 right-0 w-[45%] pointer-events-none hidden sm:block"
                             aria-hidden="true">
+                            <!-- Opacity is transitioned alongside the scale; animating only the
+                                 transform left the brightness to snap, which read as a jolt. -->
                             <img :src="server.row_image" alt="" loading="lazy" decoding="async"
-                                class="hc-server-map w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                class="hc-server-map w-full h-full object-cover origin-right transform-gpu
+                                       transition-[transform,opacity] duration-[900ms] ease-out
+                                       group-hover:scale-[1.06]
+                                       motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                                 :class="dark ? 'opacity-[0.4] group-hover:opacity-[0.55]' : 'opacity-[0.2] group-hover:opacity-[0.3]'"
                                 @error="failedRowImages.add(server.id)" />
                         </div>
@@ -728,7 +733,9 @@ const activityTiles = computed(() => [
                         <div class="relative h-[104px] overflow-hidden">
                             <img v-if="server.row_image && !failedRowImages.has(server.id)"
                                 :src="server.row_image" alt="" loading="lazy" decoding="async"
-                                class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+                                class="absolute inset-0 w-full h-full object-cover transform-gpu
+                                       transition-transform duration-[900ms] ease-out group-hover:scale-[1.06]
+                                       motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                                 :class="dark ? 'opacity-70' : 'opacity-85'"
                                 @error="failedRowImages.add(server.id)" />
                             <div v-else class="absolute inset-0"
