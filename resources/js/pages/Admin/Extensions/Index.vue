@@ -53,6 +53,17 @@ function sync() {
     });
 }
 
+const checkingUpdates = ref(false);
+
+function checkUpdates() {
+    checkingUpdates.value = true;
+    // Bypasses the hourly cache server-side and re-renders with fresh badges.
+    router.post(route('admin.extensions.check-updates'), {}, {
+        preserveScroll: true,
+        onFinish: () => { checkingUpdates.value = false; },
+    });
+}
+
 // Which extension is mid-update, so only its own button shows the busy state.
 const updating = ref<string | null>(null);
 
@@ -225,6 +236,17 @@ function typeConf(type: string) {
                 >
                     <RefreshCw :size="12" :stroke-width="2" :class="syncing ? 'animate-spin' : ''" />
                     {{ syncing ? 'Syncing…' : 'Sync from disk' }}
+                </button>
+                <!-- Results are cached for an hour, so this is the way to see a
+                     release the moment an author publishes it. -->
+                <button
+                    type="button"
+                    :disabled="checkingUpdates"
+                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-zinc-700 text-zinc-400 hover:text-zinc-100 hover:border-zinc-600 transition-colors disabled:opacity-50"
+                    @click="checkUpdates"
+                >
+                    <ArrowUpCircle :size="12" :stroke-width="2" :class="checkingUpdates ? 'animate-pulse' : ''" />
+                    {{ checkingUpdates ? 'Checking…' : 'Check for updates' }}
                 </button>
             </template>
         </PageHeader>

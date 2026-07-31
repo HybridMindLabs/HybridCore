@@ -23,12 +23,20 @@ class ExtensionController extends Controller
     ) {}
 
     /**
-     * Re-poll every extension's declared update feed and report what is newer.
-     * Returned as JSON so the page can refresh its badges without a full visit.
+     * Re-poll every extension's declared update feed, bypassing the hourly
+     * cache, then fall back into index() so the badges re-render from the
+     * fresh result — same round-trip shape as the sync button.
      */
-    public function checkUpdates(): JsonResponse
+    public function checkUpdates(): RedirectResponse
     {
-        return response()->json(['updates' => $this->updates->checkAll(fresh: true)]);
+        $found = count($this->updates->checkAll(fresh: true));
+
+        return back()->with(
+            'success',
+            $found === 0
+                ? 'All extensions are up to date.'
+                : "{$found} extension(s) have an update available.",
+        );
     }
 
     /**
