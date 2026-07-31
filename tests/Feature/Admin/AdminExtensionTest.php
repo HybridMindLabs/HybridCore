@@ -33,6 +33,53 @@ class AdminExtensionTest extends TestCase
         parent::tearDown();
     }
 
+    public function test_a_license_key_can_be_stored_and_removed(): void
+    {
+        $ext = Extension::factory()->create(['path' => 'hybridcore/demo']);
+
+        $this->actingAs($this->admin)
+            ->post("/admin/extensions/{$ext->id}/license", ['license_key' => ' lic_abc123 '])
+            ->assertRedirect();
+
+        // Surrounding whitespace from a copy-paste must not become part of the
+        // bearer token.
+        $this->assertSame('lic_abc123', $ext->fresh()->license_key);
+
+        $this->actingAs($this->admin)
+            ->post("/admin/extensions/{$ext->id}/license", ['license_key' => ''])
+            ->assertRedirect();
+
+        $this->assertNull($ext->fresh()->license_key);
+    }
+
+    public function test_the_stored_license_key_is_never_sent_to_the_browser(): void
+    {
+        $ext = Extension::factory()->create(['path' => 'hybridcore/demo']);
+        $ext->license_key = 'lic_abc123';
+        $ext->save();
+
+        $response = $this->actingAs($this->admin)->get("/admin/extensions/{$ext->id}");
+
+        $response->assertStatus(200)
+            ->assertInertia(fn ($page) => $page
+                ->where('extension.has_license', true)
+                ->missing('extension.license_key'));
+
+        $response->assertDontSee('lic_abc123', false);
+    }
+
+    public function test_storing_a_license_requires_the_manage_permission(): void
+    {
+        $ext = Extension::factory()->create(['path' => 'hybridcore/demo']);
+        $guest = User::factory()->create(['is_admin' => false]);
+
+        $this->actingAs($guest)
+            ->post("/admin/extensions/{$ext->id}/license", ['license_key' => 'lic_abc123'])
+            ->assertRedirect('/admin/login');
+
+        $this->assertNull($ext->fresh()->license_key);
+    }
+
     public function test_extension_index_requires_admin(): void
     {
         $guest = User::factory()->create(['is_admin' => false]);

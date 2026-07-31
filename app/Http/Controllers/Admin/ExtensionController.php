@@ -55,6 +55,32 @@ class ExtensionController extends Controller
         return back()->with('success', "{$updated->name} updated to {$updated->version}.");
     }
 
+    /**
+     * Store (or clear) the license key of a paid extension.
+     *
+     * The key is never sent back to the browser — the page only ever learns
+     * whether one is present. Saving invalidates the cached release for this
+     * extension, since a feed that answered 401 a minute ago may answer with a
+     * release now.
+     */
+    public function license(Request $request, Extension $extension): RedirectResponse
+    {
+        $data = $request->validate([
+            'license_key' => ['nullable', 'string', 'max:512'],
+        ]);
+
+        $key = trim((string) ($data['license_key'] ?? ''));
+
+        $extension->license_key = $key === '' ? null : $key;
+        $extension->save();
+
+        $this->updates->forget($extension);
+
+        return back()->with('success', $key === ''
+            ? "License removed from {$extension->name}."
+            : "License saved for {$extension->name}.");
+    }
+
     public function index(): Response
     {
         $settingsMap = collect($this->settingsRegistry->compose())->keyBy('slug');
@@ -109,6 +135,10 @@ class ExtensionController extends Controller
                 'path' => $extension->path,
                 'enabled' => $extension->enabled,
                 'metadata' => $extension->metadata,
+                // Presence only — the key itself never leaves the server.
+                'has_license' => filled($extension->license_key),
+                'requires_license' => (bool) ($extension->metadata['requires_license'] ?? false),
+                'update_url' => $extension->metadata['update_url'] ?? null,
                 'installed_at' => $extension->installed_at?->toDateTimeString(),
                 'enabled_at' => $extension->enabled_at?->toDateTimeString(),
                 'disabled_at' => $extension->disabled_at?->toDateTimeString(),

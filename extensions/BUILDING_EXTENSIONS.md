@@ -84,6 +84,7 @@ The `src/` namespace is PascalCase: `Hybridcore\Announcements\...`
     "schedule":       "routes/schedule.php",
     "lang":           "resources/lang",
     "lang_namespace": "announcements",
+    "update_url":     "https://api.github.com/repos/hybridcore/announcements/releases/latest",
     "requires": {
         "core": ">=0.1.0",
         "php":  ">=8.3"
@@ -113,6 +114,52 @@ The `src/` namespace is PascalCase: `Hybridcore\Announcements\...`
 | `views`           |          | Blade views dir (default `resources/views`) → `view('{namespace}::mail.receipt')` — mainly for mail templates |
 | `commands`        |          | Array of Artisan command FQCNs, registered in console |
 | `assets`          |          | Static files dir, published to `public/extensions/{vendor-name}/` on enable, removed on uninstall |
+| `update_url`      |          | HTTPS release feed — see *Publishing updates* below |
+| `requires_license`|          | `true` for a paid extension, so the panel asks for a key instead of silently finding no update |
+
+---
+
+## Publishing updates
+
+An extension is checked for new releases only if it declares an `update_url`.
+Nightly (`hybridcore:extensions:check-updates`) and on demand from the admin
+panel; an available release becomes an Update button that runs the ordinary
+import pipeline — same manifest validation, zip-slip check and downgrade guard
+as an archive uploaded by hand.
+
+**GitHub Releases** is the expected home, and needs no feed of your own:
+
+```json
+"update_url": "https://api.github.com/repos/{vendor}/{repo}/releases/latest"
+```
+
+Attach the packaged extension as a **`.zip` release asset** — GitHub's automatic
+source zipball is a snapshot of the repository, not a built extension, and is
+ignored. The tag is read as the version (`v1.2.0` and `1.2.0` are equivalent),
+the release body becomes the changelog shown in the panel.
+
+Or serve your own JSON, for anyone running their own licensing server:
+
+```json
+{ "version": "1.2.0",
+  "download_url": "https://…/my-ext-1.2.0.zip",
+  "notes": "optional changelog",
+  "url": "optional human-readable release page" }
+```
+
+### Paid extensions
+
+Set `"requires_license": true` and publish from a **private** repository. The
+buyer pastes the key they received into the extension's page in the admin panel,
+where it is stored encrypted and never sent back to the browser. It then travels
+as `Authorization: Bearer <key>` on both the release lookup and the download —
+which is what a private GitHub repo expects of a personal access token, and what
+your own endpoint can validate as a purchase before answering.
+
+Free extensions send no credential, so nothing changes for them.
+
+> Every URL must be HTTPS. The download becomes executable code on the site, and
+> a license key must never travel in the clear.
 
 ---
 
