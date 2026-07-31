@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { Puzzle, RefreshCw, ToggleRight, ToggleLeft, Settings, CheckCircle2, XCircle, User, Tag, Calendar, Loader2, AlertTriangle, Hammer, Upload, ChevronDown, ArrowUpCircle } from '@lucide/vue';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { Puzzle, RefreshCw, ToggleRight, ToggleLeft, Settings, CheckCircle2, XCircle, Loader2, AlertTriangle, Hammer, Upload, ChevronDown, ArrowUpCircle, KeyRound } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
 import { computed, ref } from 'vue';
@@ -19,6 +19,8 @@ interface Extension {
     enabled_at: string | null;
     /** Present only when the extension's declared feed offers a newer release. */
     update: { version: string; url: string; notes: string } | null;
+    requires_license: boolean;
+    has_license: boolean;
 }
 
 interface RebuildInfo {
@@ -72,11 +74,22 @@ function applyUpdate(ext: Extension) {
 
     // Downloads and installs through the same validated import path an
     // uploaded archive takes, so migrations and assets are handled too.
+    // preserveState keeps the current scroll position and selection, so the
+    // row updates in place instead of feeling like a page change.
     updating.value = ext.slug;
     router.post(route('admin.extensions.update', { extension: ext.id }), {}, {
         preserveScroll: true,
+        preserveState: true,
         onFinish: () => { updating.value = null; },
     });
+}
+
+// ── Select-all for the table header ─────────────────────────
+const allSelected = computed(() =>
+    props.extensions.length > 0 && selected.value.length === props.extensions.length);
+
+function toggleAll() {
+    selected.value = allSelected.value ? [] : props.extensions.map((e) => e.id);
 }
 
 // ── Bulk actions ────────────────────────────────────────────
@@ -371,107 +384,142 @@ function typeConf(type: string) {
             </button>
         </div>
 
-        <!-- Extension cards grid -->
-        <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div
-                v-for="ext in extensions"
-                :key="ext.id"
-                class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden transition-opacity"
-                :class="!ext.enabled ? 'opacity-60' : ''"
-            >
-                <!-- Card header -->
-                <div class="flex items-start gap-3 px-4 py-3 border-b border-zinc-800/60 bg-[#0d0d0f]">
-                    <input
-                        type="checkbox"
-                        :checked="selected.includes(ext.id)"
-                        class="mt-1.5 rounded border-zinc-700 bg-zinc-800 accent-blue-500 cursor-pointer shrink-0"
-                        @change="toggleOne(ext.id)"
-                    />
-                    <div
-                        class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border"
-                        :class="ext.enabled ? 'bg-blue-500/10 border-blue-500/20' : 'bg-zinc-800 border-zinc-700'"
-                    >
-                        <Puzzle :size="14" :stroke-width="1.75" :class="ext.enabled ? 'text-blue-400' : 'text-zinc-600'" />
-                    </div>
-
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <span class="text-sm font-semibold text-zinc-100">{{ ext.name }}</span>
-                            <span
-                                class="inline-flex items-center px-1.5 py-0.5 rounded border text-[10px] font-semibold"
-                                :class="typeConf(ext.type).cls"
-                            >{{ typeConf(ext.type).label }}</span>
-                            <span
-                                class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-semibold"
-                                :class="ext.enabled
-                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                    : 'bg-zinc-800 text-zinc-500 border-zinc-700'"
-                            >
-                                <component :is="ext.enabled ? CheckCircle2 : XCircle" :size="9" :stroke-width="2.5" />
-                                {{ ext.enabled ? 'Enabled' : 'Disabled' }}
-                            </span>
-                        </div>
-                        <p class="text-[11px] font-mono text-zinc-600 mt-0.5">{{ ext.slug }}</p>
-                    </div>
-                </div>
-
-                <!-- Card body -->
-                <div class="p-4">
-                    <p class="text-zinc-400 text-sm leading-relaxed mb-4">
-                        {{ ext.description || 'No description provided.' }}
-                    </p>
-
-                    <!-- Meta -->
-                    <div class="flex flex-wrap gap-x-4 gap-y-1 mb-4">
-                        <span class="flex items-center gap-1.5 text-[11px] text-zinc-600">
-                            <Tag :size="11" :stroke-width="1.75" />
-                            v{{ ext.version }}
-                        </span>
-
-                        <!-- Only rendered when the author's feed advertises something newer. -->
-                        <button v-if="ext.update" type="button"
-                            class="flex items-center gap-1.5 rounded-full border border-blue-500/40 bg-blue-500/10 px-2 py-0.5 text-[11px] font-bold text-blue-400 transition hover:bg-blue-500/20 disabled:opacity-50"
-                            :disabled="updating === ext.slug"
-                            :title="ext.update.notes || `Update to v${ext.update.version}`"
-                            @click="applyUpdate(ext)">
-                            <ArrowUpCircle :size="11" :stroke-width="2" />
-                            {{ updating === ext.slug ? 'Updating…' : `Update to v${ext.update.version}` }}
-                        </button>
-                        <span class="flex items-center gap-1.5 text-[11px] text-zinc-600">
-                            <User :size="11" :stroke-width="1.75" />
-                            {{ ext.author }}
-                        </span>
-                        <span v-if="ext.installed_at" class="flex items-center gap-1.5 text-[11px] text-zinc-600">
-                            <Calendar :size="11" :stroke-width="1.75" />
-                            {{ ext.installed_at }}
-                        </span>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="flex items-center gap-2">
-                        <button
-                            type="button"
-                            :disabled="togglingId === ext.id"
-                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors disabled:opacity-60"
-                            :class="ext.enabled
-                                ? 'border-red-500/30 text-red-400 hover:bg-red-500/10'
-                                : 'bg-blue-500 text-white border-transparent hover:bg-blue-400'"
-                            @click="toggle(ext)"
+        <!-- Extension table — one row each, so 10-20 stay scannable -->
+        <div v-else class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-zinc-800/70 bg-[#0d0d0f] text-[11px] uppercase tracking-wide text-zinc-500">
+                            <th class="w-10 px-4 py-2.5">
+                                <input
+                                    type="checkbox"
+                                    :checked="allSelected"
+                                    class="rounded border-zinc-700 bg-zinc-800 accent-blue-500 cursor-pointer"
+                                    @change="toggleAll"
+                                />
+                            </th>
+                            <th class="px-3 py-2.5 font-semibold">Extension</th>
+                            <th class="px-3 py-2.5 font-semibold">Version</th>
+                            <th class="px-3 py-2.5 font-semibold">Status</th>
+                            <th class="px-3 py-2.5 font-semibold hidden md:table-cell">Author</th>
+                            <th class="px-3 py-2.5 font-semibold text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr
+                            v-for="ext in extensions"
+                            :key="ext.id"
+                            class="border-b border-zinc-800/40 last:border-0 transition-colors hover:bg-zinc-800/20"
+                            :class="!ext.enabled ? 'opacity-60' : ''"
                         >
-                            <component :is="ext.enabled ? ToggleRight : ToggleLeft" :size="13" :stroke-width="2" />
-                            {{ togglingId === ext.id ? 'Working…' : ext.enabled ? 'Disable' : 'Enable' }}
-                        </button>
+                            <!-- Select -->
+                            <td class="px-4 py-3 align-middle">
+                                <input
+                                    type="checkbox"
+                                    :checked="selected.includes(ext.id)"
+                                    class="rounded border-zinc-700 bg-zinc-800 accent-blue-500 cursor-pointer"
+                                    @change="toggleOne(ext.id)"
+                                />
+                            </td>
 
-                        <a
-                            v-if="ext.enabled && ext.settings_url"
-                            :href="ext.settings_url"
-                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-zinc-700 text-zinc-400 hover:text-zinc-100 hover:border-zinc-600 transition-colors"
-                        >
-                            <Settings :size="12" :stroke-width="1.75" />
-                            Settings
-                        </a>
-                    </div>
-                </div>
+                            <!-- Name + slug + type -->
+                            <td class="px-3 py-3 align-middle">
+                                <div class="flex items-center gap-2.5">
+                                    <div
+                                        class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border"
+                                        :class="ext.enabled ? 'bg-blue-500/10 border-blue-500/20' : 'bg-zinc-800 border-zinc-700'"
+                                    >
+                                        <Puzzle :size="13" :stroke-width="1.75" :class="ext.enabled ? 'text-blue-400' : 'text-zinc-600'" />
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-1.5">
+                                            <Link
+                                                :href="route('admin.extensions.show', ext.id)"
+                                                class="text-sm font-semibold text-zinc-100 hover:text-blue-400 transition-colors truncate"
+                                                :title="ext.description || ext.name"
+                                            >{{ ext.name }}</Link>
+                                            <span
+                                                class="inline-flex items-center px-1.5 py-0.5 rounded border text-[9px] font-semibold shrink-0"
+                                                :class="typeConf(ext.type).cls"
+                                            >{{ typeConf(ext.type).label }}</span>
+                                            <span
+                                                v-if="ext.requires_license"
+                                                class="inline-flex items-center gap-0.5 px-1 py-0.5 rounded border text-[9px] font-semibold shrink-0"
+                                                :class="ext.has_license
+                                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                                    : 'bg-amber-500/10 text-amber-400 border-amber-500/20'"
+                                                :title="ext.has_license ? 'License key stored' : 'Paid — a license key is required for updates'"
+                                            >
+                                                <KeyRound :size="8" :stroke-width="2.5" />
+                                                {{ ext.has_license ? 'Licensed' : 'No key' }}
+                                            </span>
+                                        </div>
+                                        <p class="text-[11px] font-mono text-zinc-600 truncate">{{ ext.slug }}</p>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Version + update -->
+                            <td class="px-3 py-3 align-middle whitespace-nowrap">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-mono text-zinc-300">v{{ ext.version }}</span>
+                                    <button v-if="ext.update" type="button"
+                                        class="flex items-center gap-1 rounded-full border border-blue-500/40 bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold text-blue-400 transition hover:bg-blue-500/20 disabled:opacity-50"
+                                        :disabled="updating === ext.slug"
+                                        :title="ext.update.notes || `Update to v${ext.update.version}`"
+                                        @click="applyUpdate(ext)">
+                                        <ArrowUpCircle :size="10" :stroke-width="2" :class="updating === ext.slug ? 'animate-pulse' : ''" />
+                                        {{ updating === ext.slug ? 'Updating…' : `→ v${ext.update.version}` }}
+                                    </button>
+                                </div>
+                            </td>
+
+                            <!-- Status -->
+                            <td class="px-3 py-3 align-middle">
+                                <span
+                                    class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-semibold"
+                                    :class="ext.enabled
+                                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                        : 'bg-zinc-800 text-zinc-500 border-zinc-700'"
+                                >
+                                    <component :is="ext.enabled ? CheckCircle2 : XCircle" :size="9" :stroke-width="2.5" />
+                                    {{ ext.enabled ? 'Enabled' : 'Disabled' }}
+                                </span>
+                            </td>
+
+                            <!-- Author -->
+                            <td class="px-3 py-3 align-middle hidden md:table-cell">
+                                <span class="text-xs text-zinc-500">{{ ext.author }}</span>
+                            </td>
+
+                            <!-- Actions -->
+                            <td class="px-3 py-3 align-middle">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <a
+                                        v-if="ext.enabled && ext.settings_url"
+                                        :href="ext.settings_url"
+                                        class="flex items-center justify-center w-7 h-7 rounded-lg border border-zinc-700 text-zinc-400 hover:text-zinc-100 hover:border-zinc-600 transition-colors"
+                                        title="Settings"
+                                    >
+                                        <Settings :size="13" :stroke-width="1.75" />
+                                    </a>
+                                    <button
+                                        type="button"
+                                        :disabled="togglingId === ext.id"
+                                        class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors disabled:opacity-60"
+                                        :class="ext.enabled
+                                            ? 'border-red-500/30 text-red-400 hover:bg-red-500/10'
+                                            : 'bg-blue-500 text-white border-transparent hover:bg-blue-400'"
+                                        @click="toggle(ext)"
+                                    >
+                                        <component :is="ext.enabled ? ToggleRight : ToggleLeft" :size="13" :stroke-width="2" />
+                                        {{ togglingId === ext.id ? '…' : ext.enabled ? 'Disable' : 'Enable' }}
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
