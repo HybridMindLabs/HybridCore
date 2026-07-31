@@ -3,9 +3,14 @@ import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 import tailwindcss from '@tailwindcss/vite';
 import { resolve } from 'path';
+import extensionTailwindSources from './vite/extension-tailwind-sources.js';
 
 export default defineConfig({
     plugins: [
+        // Runs before tailwindcss(): expands the marker in app.css into one
+        // @source line per installed extension, so installing an extension
+        // never requires editing the core's stylesheet.
+        extensionTailwindSources(__dirname),
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.ts'],
             ssr: 'resources/js/ssr.ts',
