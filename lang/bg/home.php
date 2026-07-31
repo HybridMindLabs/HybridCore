@@ -145,6 +145,7 @@ return [
     'active_last_24h' => 'Активни последните 24 часа',
     'users_count' => ':count потребителя',
     'no_active_users' => 'Няма активни потребители.',
+    'presence_more' => '+:count още',
 
     /* ── Sidebar ── */
     'sidebar_online' => 'Онлайн',

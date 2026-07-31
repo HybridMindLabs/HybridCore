@@ -172,6 +172,12 @@ onUnmounted(() => { if (timer) clearInterval(timer); });
 // ── Presence ─────────────────────────────────────────────────────
 // The two blocks were ~55 lines of duplicated markup; they only differ by
 // source, accent and empty text.
+
+// A busy community pushes dozens of names into a ~250px column, which turns
+// the widget into an endless list and buries everything under it. Show a
+// readable handful and send the rest to the members page.
+const PRESENCE_VISIBLE = 12;
+
 const presenceGroups = computed(() => [
     {
         key: 'online',
@@ -191,7 +197,15 @@ const presenceGroups = computed(() => [
         live: false,
         countClass: 'border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400',
     },
-]);
+].map((group) => {
+    const users = group.data?.users ?? [];
+
+    return {
+        ...group,
+        visibleUsers: users.slice(0, PRESENCE_VISIBLE),
+        overflowCount: Math.max(0, users.length - PRESENCE_VISIBLE),
+    };
+}));
 
 /** Guards against an empty display name, which would throw on [0]. */
 function initial(name: string): string {
@@ -1012,13 +1026,13 @@ function toggleFavourite(server: HomeServer) {
                                     <span v-if="group.hint" class="ml-auto">{{ group.hint }}</span>
                                 </div>
 
-                                <ul v-if="group.data?.users.length" class="flex flex-wrap gap-1.5">
-                                    <li v-for="u in group.data.users" :key="u.id">
+                                <ul v-if="group.visibleUsers.length" class="flex flex-wrap gap-1.5">
+                                    <li v-for="u in group.visibleUsers" :key="u.id">
                                         <Link :href="u.username ? route('profile.show', { username: u.username }) : '#'"
-                                            class="group/user flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full border text-[11.5px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                                            class="group/user flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-full border text-[11.5px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                                             :class="dark ? 'border-zinc-800 bg-zinc-900/60 text-zinc-300 hover:text-blue-400 hover:border-zinc-700' : 'border-zinc-200 bg-zinc-50 text-zinc-500 hover:text-blue-600 hover:border-zinc-300'"
                                             :title="u.username ? '@' + u.username : u.name">
-                                            <span class="w-5 h-5 rounded-full overflow-hidden shrink-0 flex items-center justify-center text-[9px] font-black"
+                                            <span class="w-[18px] h-[18px] rounded-full overflow-hidden shrink-0 flex items-center justify-center text-[9px] font-black"
                                                 :class="dark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-200 text-zinc-500'">
                                                 <!-- alt is empty on purpose: the name is right beside it,
                                                      so announcing the avatar too would just repeat it. -->
@@ -1026,7 +1040,17 @@ function toggleFavourite(server: HomeServer) {
                                                     class="w-full h-full object-cover" />
                                                 <span v-else aria-hidden="true">{{ initial(u.name) }}</span>
                                             </span>
-                                            <span class="truncate max-w-[110px]">{{ u.name }}</span>
+                                            <!-- Narrow enough that two chips share a row in the sidebar
+                                                 instead of each name claiming its own line. -->
+                                            <span class="truncate max-w-[68px]">{{ u.name }}</span>
+                                        </Link>
+                                    </li>
+
+                                    <li v-if="group.overflowCount">
+                                        <Link :href="route('members.index')"
+                                            class="flex items-center px-2.5 py-1 rounded-full border border-dashed text-[11.5px] font-bold tabular-nums transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                                            :class="dark ? 'border-zinc-700 text-zinc-400 hover:text-blue-400 hover:border-blue-500/40' : 'border-zinc-300 text-zinc-500 hover:text-blue-600 hover:border-blue-400/50'">
+                                            {{ t('home.presence_more', { count: group.overflowCount }) }}
                                         </Link>
                                     </li>
                                 </ul>
