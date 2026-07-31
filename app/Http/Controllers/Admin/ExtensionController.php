@@ -31,7 +31,7 @@ class ExtensionController extends Controller
     {
         $found = count($this->updates->checkAll(fresh: true));
 
-        return back()->with(
+        return redirect()->route('admin.extensions.index')->with(
             'success',
             $found === 0
                 ? 'All extensions are up to date.'
@@ -49,10 +49,13 @@ class ExtensionController extends Controller
         try {
             $updated = $this->updates->apply($extension);
         } catch (RuntimeException $e) {
-            return back()->with('error', $e->getMessage());
+            // Always land back on the list — back() would follow a stale
+            // Referer and appear to "jump" to another page.
+            return redirect()->route('admin.extensions.index')->with('error', $e->getMessage());
         }
 
-        return back()->with('success', "{$updated->name} updated to {$updated->version}.");
+        return redirect()->route('admin.extensions.index')
+            ->with('success', "{$updated->name} updated to {$updated->version}.");
     }
 
     /**
@@ -108,6 +111,8 @@ class ExtensionController extends Controller
                     'installed_at' => $ext->installed_at?->toDateString(),
                     'enabled_at' => $ext->enabled_at?->toDateTimeString(),
                     'update' => $available[$ext->slug] ?? null,
+                    'requires_license' => (bool) ($ext->metadata['requires_license'] ?? false),
+                    'has_license' => filled($ext->license_key),
                 ];
             })
             ->values();
