@@ -138,6 +138,15 @@ source zipball is a snapshot of the repository, not a built extension, and is
 ignored. The tag is read as the version (`v1.2.0` and `1.2.0` are equivalent),
 the release body becomes the changelog shown in the panel.
 
+The official extensions carry a `.github/workflows/release.yml` that does this
+on every push to `main`: it reads the commit subjects since the last tag
+(Conventional Commits — `feat:` minor, `feat!:`/`BREAKING CHANGE` major,
+anything else patch), writes the new version into `extension.json`, tags it, and
+publishes a `git archive` of the tracked files as the release asset. Nobody
+edits the version by hand, so the tag and the manifest cannot disagree. Copy it
+into a new extension's repository to get the same behaviour; `.gitattributes`
+decides what stays out of the archive.
+
 Or serve your own JSON, for anyone running their own licensing server:
 
 ```json
