@@ -5,16 +5,17 @@ includes:
 parameters:
     level: 5
 
+    # Core only. Extensions live in their own repositories and are gitignored
+    # here, so a developer with them checked out would analyse — and baseline —
+    # files that do not exist for anyone else, which is exactly how a green
+    # local run turned into a red CI one. Each extension analyses itself.
     paths:
         - app
-        - extensions
 
-    # Generated code and third-party payloads carry no useful type information.
+    # Generated code carries no useful type information.
     excludePaths:
         analyseAndScan:
             - app/Console/Commands/MakeExtensionCommand.php
-            - extensions/*/*/vendor
-            - extensions/*/*/database/migrations
 
     # Migrations run against a schema PHPStan cannot see; models resolve their
     # columns at runtime, so column-level property access stays unverifiable.

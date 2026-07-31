@@ -67,14 +67,18 @@ jobs:
       - name: Generate key
         run: php artisan key:generate
 
-      # Covers tests/ and every bundled extension's suite (see phpunit.xml).
-      # Threshold sits just under the measured 63.4% so it catches regressions
-      # without failing on noise — raise it as coverage grows.
+      # Covers tests/ and whichever bundled extensions are in this repo — most
+      # live in their own repositories and are absent here, so CI runs fewer
+      # tests than a developer with them checked out.
+      #
+      # The threshold is a deliberately loose floor: 63.4% was measured locally
+      # *with* those extra suites present, so it is not CI's number. Raise this
+      # once a run reports the real figure.
       #
       # Coverage is measured serially: per-worker line data would have to be
       # merged, and the suite is fast enough that it is not worth it.
       - name: Run tests
-        run: php artisan test --coverage --min=60
+        run: php artisan test --coverage --min=50
 
       # Parallel workers each get an isolated storage dir (see Tests\TestCase),
       # so this also guards against cross-process state leaking back in.
