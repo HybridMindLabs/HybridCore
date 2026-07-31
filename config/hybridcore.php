@@ -21,4 +21,15 @@ return [
     */
 
     'panel_updates' => env('HYBRIDCORE_PANEL_UPDATES', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | mysqldump binary
+    |--------------------------------------------------------------------------
+    | Explicit path used by the admin backup tool when mysqldump is not on one
+    | of the standard paths. Must be read through config so the value survives
+    | `php artisan config:cache` — env() returns null once the config is cached.
+    */
+
+    'mysqldump_path' => env('MYSQLDUMP_PATH'),
 ];

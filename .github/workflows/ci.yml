@@ -56,6 +56,11 @@ jobs:
       - name: Security audit (Composer)
         run: composer audit
 
+      # Baselined at adoption: existing findings are frozen, new code is
+      # analysed at level 5. Shrink phpstan-baseline.neon over time.
+      - name: Static analysis (PHPStan)
+        run: ./vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+
       - name: Copy .env
         run: cp .env.example .env
 

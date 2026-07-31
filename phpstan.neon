@@ -1,0 +1,21 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - phpstan-baseline.neon
+
+parameters:
+    level: 5
+
+    paths:
+        - app
+        - extensions
+
+    # Generated code and third-party payloads carry no useful type information.
+    excludePaths:
+        analyseAndScan:
+            - app/Console/Commands/MakeExtensionCommand.php
+            - extensions/*/*/vendor
+            - extensions/*/*/database/migrations
+
+    # Migrations run against a schema PHPStan cannot see; models resolve their
+    # columns at runtime, so column-level property access stays unverifiable.
+    checkModelProperties: false
