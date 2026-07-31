@@ -70,8 +70,16 @@ jobs:
       # Covers tests/ and every bundled extension's suite (see phpunit.xml).
       # Threshold sits just under the measured 63.4% so it catches regressions
       # without failing on noise — raise it as coverage grows.
+      #
+      # Coverage is measured serially: per-worker line data would have to be
+      # merged, and the suite is fast enough that it is not worth it.
       - name: Run tests
         run: php artisan test --coverage --min=60
+
+      # Parallel workers each get an isolated storage dir (see Tests\TestCase),
+      # so this also guards against cross-process state leaking back in.
+      - name: Run tests in parallel
+        run: php artisan test --parallel
 
   frontend:
     name: Frontend — TypeScript & Build

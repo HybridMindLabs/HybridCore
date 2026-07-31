@@ -108,7 +108,16 @@ class ExtensionServiceProvider extends ServiceProvider
     private function registerDiscoveredExtensionSchemas(): void
     {
         foreach (glob(base_path('extensions/*/*/extension.json')) ?: [] as $manifestPath) {
-            $manifest = json_decode((string) file_get_contents($manifestPath), true);
+            // The manifest can disappear between the glob and the read — an
+            // extension being uninstalled, or a parallel test tearing down its
+            // fixture directory. Never let that abort the boot.
+            $json = @file_get_contents($manifestPath);
+
+            if ($json === false) {
+                continue;
+            }
+
+            $manifest = json_decode($json, true);
 
             if (! is_array($manifest)) {
                 continue;

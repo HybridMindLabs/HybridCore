@@ -12,6 +12,10 @@ use Tests\TestCase;
  */
 class RequirementsWritableTest extends TestCase
 {
+    // These assertions are about the real storage layout, so this suite keeps
+    // the actual paths instead of a parallel worker's isolated copy.
+    protected bool $isolatesParallelStorage = false;
+
     private function checkFor(string $label): ?array
     {
         foreach (app(InstallerService::class)->checkRequirements() as $check) {
