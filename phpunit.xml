@@ -11,6 +11,11 @@
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
+        <!-- Bundled extensions ship their own suites; without this they never
+             run in CI and regressions in them stay invisible. -->
+        <testsuite name="Extensions">
+            <directory>extensions/*/*/tests</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>

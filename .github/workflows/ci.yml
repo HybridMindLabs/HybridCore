@@ -53,12 +53,16 @@ jobs:
       - name: PHP Lint (Pint)
         run: ./vendor/bin/pint --test
 
+      - name: Security audit (Composer)
+        run: composer audit
+
       - name: Copy .env
         run: cp .env.example .env
 
       - name: Generate key
         run: php artisan key:generate
 
+      # Covers tests/ and every bundled extension's suite (see phpunit.xml).
       - name: Run tests
         run: php artisan test
 
