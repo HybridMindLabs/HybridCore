@@ -19,3 +19,13 @@ parameters:
     # Migrations run against a schema PHPStan cannot see; models resolve their
     # columns at runtime, so column-level property access stays unverifiable.
     checkModelProperties: false
+
+    ignoreErrors:
+        # Larastan types a relation from its HasOne/BelongsTo return type and
+        # ignores the "|null" the model's own docblock carries, so it calls
+        # every `$model->relation?->x` an unnecessary nullsafe. It is not:
+        # hasOne()->latestOfMany() returns null for a server with no snapshot
+        # yet, and belongsTo returns null when the parent row is gone. Acting
+        # on this rule would turn working defensive code into null crashes, so
+        # it is off rather than baselined — a baseline entry invites the fix.
+        - identifier: nullsafe.neverNull

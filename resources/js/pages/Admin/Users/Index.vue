@@ -5,7 +5,6 @@ import {
     ShieldBan, BadgeCheck, UserX, Download, ShieldCheck, Ban, CheckCircle2,
 } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import Badge from '@/components/UI/Badge.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
 import EmptyState from '@/components/UI/EmptyState.vue';
 import Tooltip from '@/components/UI/Tooltip.vue';

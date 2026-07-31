@@ -19,12 +19,6 @@ parameters:
 			path: app/Console/Commands/QueryTestCommand.php
 
 		-
-			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Game\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Console/Commands/QueryTestCommand.php
-
-		-
 			message: '#^Offset ''name'' on array\{name\: string, passwd\: string, uid\: int, gid\: int, gecos\: string, dir\: string, shell\: string\} in isset\(\) always exists and is not nullable\.$#'
 			identifier: isset.offset
 			count: 1
@@ -57,18 +51,6 @@ parameters:
 		-
 			message: '#^Ternary operator condition is always true\.$#'
 			identifier: ternary.alwaysTrue
-			count: 1
-			path: app/Http/Controllers/Admin/ContentReportController.php
-
-		-
-			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Database\\Eloquent\\Model\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Admin/ContentReportController.php
-
-		-
-			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Server\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Http/Controllers/Admin/ContentReportController.php
 
@@ -127,20 +109,8 @@ parameters:
 			path: app/Http/Controllers/Admin/ModerationController.php
 
 		-
-			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Server\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 3
-			path: app/Http/Controllers/Admin/ModerationController.php
-
-		-
 			message: '#^Match expression does not handle remaining value\: mixed$#'
 			identifier: match.unhandled
-			count: 1
-			path: app/Http/Controllers/Admin/NewsArticleController.php
-
-		-
-			message: '#^Using nullsafe method call on non\-nullable type App\\Models\\User\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Http/Controllers/Admin/NewsArticleController.php
 
@@ -148,12 +118,6 @@ parameters:
 			message: '#^Expression on left side of \?\? is not nullable\.$#'
 			identifier: nullCoalesce.expr
 			count: 2
-			path: app/Http/Controllers/Admin/NewsCommentController.php
-
-		-
-			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\User\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
 			path: app/Http/Controllers/Admin/NewsCommentController.php
 
 		-
@@ -171,18 +135,6 @@ parameters:
 		-
 			message: '#^Ternary operator condition is always true\.$#'
 			identifier: ternary.alwaysTrue
-			count: 1
-			path: app/Http/Controllers/Admin/ServerReviewController.php
-
-		-
-			message: '#^Using nullsafe method call on non\-nullable type App\\Models\\Game\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Admin/ServerReviewController.php
-
-		-
-			message: '#^Using nullsafe method call on non\-nullable type App\\Models\\User\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Http/Controllers/Admin/ServerReviewController.php
 
@@ -239,30 +191,6 @@ parameters:
 			identifier: argument.unresolvableType
 			count: 1
 			path: app/Http/Controllers/Admin/UserController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Admin/UserController.php
-
-		-
-			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Server\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Admin/UserController.php
-
-		-
-			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Game\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 3
-			path: app/Http/Controllers/Api/SearchController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>timestamp" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Api/V1/ServerController.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$blocked\.$#'
@@ -331,18 +259,6 @@ parameters:
 			path: app/Http/Controllers/Web/AccountController.php
 
 		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Web/AccountController.php
-
-		-
-			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Game\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 3
-			path: app/Http/Controllers/Web/AccountController.php
-
-		-
 			message: '#^Call to an undefined method Laravel\\Socialite\\Contracts\\User\:\:getRaw\(\)\.$#'
 			identifier: method.notFound
 			count: 2
@@ -403,18 +319,6 @@ parameters:
 			path: app/Http/Controllers/Web/GameServerController.php
 
 		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Web/GameServerController.php
-
-		-
-			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\User\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Http/Controllers/Web/GameServerController.php
-
-		-
 			message: '#^Method App\\Http\\Controllers\\Web\\HomeController\:\:viewerSummary\(\) never returns array\{banner\: string\|null, role\: array\|null, achievements\: array\<int, string\>\} so it can be removed from the return type\.$#'
 			identifier: return.unusedType
 			count: 1
@@ -430,66 +334,6 @@ parameters:
 			message: '#^Ternary operator condition is always true\.$#'
 			identifier: ternary.alwaysTrue
 			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Using nullsafe method call on non\-nullable type App\\Models\\User\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>is_online" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 4
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>map" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>ping" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>players_max" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>players_online" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>title" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Server\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\User\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 7
 			path: app/Http/Controllers/Web/HomeController.php
 
 		-
@@ -553,57 +397,9 @@ parameters:
 			path: app/Http/Controllers/Web/NewsController.php
 
 		-
-			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\User\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Http/Controllers/Web/NewsController.php
-
-		-
 			message: '#^Ternary operator condition is always true\.$#'
 			identifier: ternary.alwaysTrue
 			count: 4
-			path: app/Http/Controllers/Web/ProfileController.php
-
-		-
-			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Web/ProfileController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Http/Controllers/Web/ProfileController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>players_max" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Web/ProfileController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>players_online" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Web/ProfileController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>title" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Controllers/Web/ProfileController.php
-
-		-
-			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Game\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 3
-			path: app/Http/Controllers/Web/ProfileController.php
-
-		-
-			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Server\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
 			path: app/Http/Controllers/Web/ProfileController.php
 
 		-
@@ -635,48 +431,6 @@ parameters:
 			identifier: notIdentical.alwaysTrue
 			count: 1
 			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>is_online" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>map" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>players_max" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>players_online" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>slug" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Middleware/HandleInertiaRequests.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>locale" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Middleware/SetLocale.php
 
 		-
 			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\NotificationResource\:\:\$created_at\.$#'
@@ -763,12 +517,6 @@ parameters:
 			path: app/Http/Resources/Api/ServerResource.php
 
 		-
-			message: '#^Using nullsafe property access "\?\-\>players_max" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Http/Resources/Api/ServerResource.php
-
-		-
 			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\UserResource\:\:\$avatar\.$#'
 			identifier: property.notFound
 			count: 1
@@ -847,28 +595,10 @@ parameters:
 			path: app/Jobs/ProcessBridgeEvents.php
 
 		-
-			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Game\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Jobs/QueryServersJob.php
-
-		-
 			message: '#^Parameter \$replyTo of class Illuminate\\Mail\\Mailables\\Envelope constructor expects array\<int, Illuminate\\Mail\\Mailables\\Address\|string\>, array\<string, string\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/Mail/ContactMessageMail.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>players_online" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Models/Game.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>is_online" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Models/Server.php
 
 		-
 			message: '#^Access to an undefined property App\\Models\\Role\:\:\$pivot\.$#'
@@ -881,12 +611,6 @@ parameters:
 			identifier: notIdentical.alwaysTrue
 			count: 1
 			path: app/Models/User.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Providers/AppServiceProvider.php
 
 		-
 			message: '#^Access to an undefined property App\\Models\\PageView\:\:\$bots\.$#'
@@ -903,24 +627,6 @@ parameters:
 		-
 			message: '#^Access to an undefined property App\\Models\\PageView\:\:\$unique_sessions\.$#'
 			identifier: property.notFound
-			count: 1
-			path: app/Services/AnalyticsService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>bots" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Services/AnalyticsService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>total" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Services/AnalyticsService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>unique_sessions" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Services/AnalyticsService.php
 
@@ -983,30 +689,6 @@ parameters:
 			identifier: method.notFound
 			count: 1
 			path: app/Services/Mail/MailConfigService.php
-
-		-
-			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Game\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Services/ServerQueryService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>slug" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Services/Themes/ThemeManager.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>slug" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Services/Themes/ThemeResolver.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Support/CoreWidgets.php
 
 		-
 			message: '#^Access to an undefined property Hybridcore\\Giveaways\\Models\\Giveaway\:\:\$prize\.$#'
@@ -1465,21 +1147,9 @@ parameters:
 			path: extensions/hybridcore/hybridguard/config/hybridguard.php
 
 		-
-			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\User\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: extensions/hybridcore/hybridguard/src/Http/Controllers/Api/AppealController.php
-
-		-
 			message: '#^Call to an undefined method Illuminate\\Database\\ConnectionInterface\:\:getDriverName\(\)\.$#'
 			identifier: method.notFound
 			count: 1
-			path: extensions/hybridcore/hybridguard/src/Services/AdminConsoleService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>risk_score" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
 			path: extensions/hybridcore/hybridguard/src/Services/AdminConsoleService.php
 
 		-
@@ -1633,12 +1303,6 @@ parameters:
 			path: extensions/hybridcore/hybridguard/src/Services/PunishmentService.php
 
 		-
-			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: extensions/hybridcore/hybridguard/src/Services/PunishmentService.php
-
-		-
 			message: '#^Cannot access property \$id on array\<mixed\>\|object\.$#'
 			identifier: property.nonObject
 			count: 1
@@ -1729,12 +1393,6 @@ parameters:
 			path: extensions/hybridcore/servercast/src/Http/Controllers/Admin/BroadcastController.php
 
 		-
-			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Game\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: extensions/hybridcore/servercast/src/Http/Controllers/Admin/BroadcastController.php
-
-		-
 			message: '#^Access to an undefined property Hybridcore\\ServerCast\\Models\\Broadcast\:\:\$deliveries\.$#'
 			identifier: property.notFound
 			count: 4
@@ -1763,12 +1421,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: extensions/hybridcore/servercast/tests/Feature/ServerCastServiceTest.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>username" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: extensions/hybridcore/staff/src/Database/Seeders/DefaultSeeder.php
 
 		-
 			message: '#^Access to an undefined property Hybridcore\\Staff\\Models\\StaffMember\:\:\$bio\.$#'
@@ -1933,12 +1585,6 @@ parameters:
 			path: extensions/hybridcore/staff/src/Models/StaffMember.php
 
 		-
-			message: '#^Using nullsafe property access "\?\-\>avatar" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: extensions/hybridcore/staff/src/Models/StaffMember.php
-
-		-
 			message: '#^Access to an undefined property Hybridcore\\Staff\\Models\\StaffMember\:\:\$name\.$#'
 			identifier: property.notFound
 			count: 1
@@ -1957,39 +1603,9 @@ parameters:
 			path: extensions/hybridcore/staff/src/StaffServiceProvider.php
 
 		-
-			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/ArchiveController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>points" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/CompareController.php
-
-		-
 			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{address\: non\-falsy\-string, name\: string\|null, map\: string\|null, online\: bool, players_online\: int, players_max\: int, board_players\: mixed, leader_name\: mixed\}, Closure\(App\\Models\\Server\)\: array\{address\: non\-falsy\-string, name\: string\|null, map\: string\|null, online\: bool, players_online\: int, players_max\: int, board_players\: mixed, leader_name\: mixed\} given\.$#'
 			identifier: argument.type
 			count: 1
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/HallOfFameController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>is_online" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/HallOfFameController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>players_max" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: extensions/hybridcore/stats/src/Http/Controllers/Web/HallOfFameController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>players_online" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
 			path: extensions/hybridcore/stats/src/Http/Controllers/Web/HallOfFameController.php
 
 		-
@@ -2045,18 +1661,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: extensions/hybridcore/stats/src/Services/StatsBoardService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsGdprService.php
-
-		-
-			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Game\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsGdprService.php
 
 		-
 			message: '#^Expression on left side of \?\? is not nullable\.$#'
@@ -2263,42 +1867,6 @@ parameters:
 			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
 
 		-
-			message: '#^Using nullsafe property access "\?\-\>deaths" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>headshots" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>kills" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 2
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 3
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>playtime_seconds" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>points" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: extensions/hybridcore/stats/src/Services/StatsPlayerService.php
-
-		-
 			message: '#^Access to an undefined property Hybridcore\\Stats\\Models\\StatsDaily\:\:\$avatar_url\.$#'
 			identifier: property.notFound
 			count: 1
@@ -2337,12 +1905,6 @@ parameters:
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$points\.$#'
 			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/stats/src/StatsServiceProvider.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>points" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
 			count: 1
 			path: extensions/hybridcore/stats/src/StatsServiceProvider.php
 
@@ -2563,18 +2125,6 @@ parameters:
 			path: extensions/hybridcore/vote/src/Http/Controllers/Admin/VoteController.php
 
 		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: extensions/hybridcore/vote/src/Http/Controllers/Admin/VoteController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>username" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: extensions/hybridcore/vote/src/Http/Controllers/Admin/VoteController.php
-
-		-
 			message: '#^Access to an undefined property Hybridcore\\Vote\\Models\\VoteSite\:\:\$cooldown_hours\.$#'
 			identifier: property.notFound
 			count: 1
@@ -2631,12 +2181,6 @@ parameters:
 		-
 			message: '#^Access to an undefined property Hybridcore\\Vote\\Models\\Vote\:\:\$points_awarded\.$#'
 			identifier: property.notFound
-			count: 1
-			path: extensions/hybridcore/vote/src/Http/Controllers/Api/CallbackController.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>points_awarded" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
 			count: 1
 			path: extensions/hybridcore/vote/src/Http/Controllers/Api/CallbackController.php
 
@@ -2763,12 +2307,6 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Hybridcore\\Vote\\Models\\Vote\>\:\:map\(\) contains unresolvable type\.$#'
 			identifier: argument.unresolvableType
-			count: 1
-			path: extensions/hybridcore/vote/src/Services/VoteService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
 			count: 1
 			path: extensions/hybridcore/vote/src/Services/VoteService.php
 

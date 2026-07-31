@@ -3,7 +3,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import {
     Server, Plus, RefreshCw, Search, Gamepad2,
     CheckCircle2, XCircle, Minus, Pencil, Trash2,
-    X, ChevronDown, ChevronUp, Users, Plug, Copy, Check,
+    X, ChevronDown, Users, Plug, Copy, Check,
 } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';

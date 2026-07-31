@@ -4,7 +4,7 @@ import {
     MapPin, Globe, Calendar, BadgeCheck, Pencil,
     MessageSquare, Ban, UserCheck, UserPlus, Wifi, WifiOff, Users, Star,
     Activity as ActivityIcon,
-    Trophy, ShieldOff, Sprout, Medal, CircleCheck, Gamepad2,
+    Trophy, Sprout, Medal, CircleCheck, Gamepad2,
     Lock, FileText, Mail, Puzzle,
     PenLine, Flame, Compass, MessagesSquare, Heart,
 } from '@lucide/vue';
