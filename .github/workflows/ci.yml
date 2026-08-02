@@ -101,6 +101,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Security audit (npm)
+        run: npm audit --audit-level=high
+
       # Fails on errors only; unused-variable findings stay warnings for now.
       - name: Lint (ESLint)
         run: npm run lint
