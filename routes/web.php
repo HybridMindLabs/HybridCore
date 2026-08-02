@@ -62,7 +62,7 @@ Route::middleware([EnsureAppIsInstalled::class, EnsureNotInMaintenance::class])
                 ->middleware([HandlePrecognitiveRequests::class, 'throttle:register']);
 
             Route::get('/login', [LoginController::class, 'create'])->name('login');
-            Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:login')->name('login.store');
+            Route::post('/login', [LoginController::class, 'store'])->middleware(['throttle:login', 'throttle:login-by-account'])->name('login.store');
 
             Route::get('/forgot-password', [PasswordResetController::class, 'request'])->name('password.request');
             Route::post('/forgot-password', [PasswordResetController::class, 'email'])->middleware('throttle:5,1')->name('password.email');

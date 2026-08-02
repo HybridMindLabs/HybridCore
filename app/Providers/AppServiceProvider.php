@@ -90,6 +90,19 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute((int) config('hybridcore.login_rate_limit', 5))->by($request->ip());
         });
 
+        // Secondary login limiter keyed by the submitted account, not the
+        // caller's IP — the per-IP limiter above doesn't slow down a
+        // distributed attempt against one account spread across many
+        // addresses. Shared across web, admin, and API login so an attacker
+        // can't dodge it by switching endpoints. Uses the same config knob as
+        // the per-IP limiter: whatever legitimately drives up per-IP volume
+        // (shared office NAT, an E2E run hammering one seeded account) drives
+        // up per-account volume identically, so they need to scale together.
+        RateLimiter::for('login-by-account', function (Request $request) {
+            return Limit::perMinute((int) config('hybridcore.login_rate_limit', 5))
+                ->by('login-account:'.mb_strtolower((string) $request->input('email')));
+        });
+
         // Same split for the public contact form (real submits: 5 per 10 min).
         RateLimiter::for('contact', function (Request $request) {
             return $request->isPrecognitive()

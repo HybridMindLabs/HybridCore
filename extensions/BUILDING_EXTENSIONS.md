@@ -3,6 +3,16 @@
 > A complete guide to creating production-ready extensions.
 > Reference implementation: `extensions/hybridcore/announcements/`
 
+**Trust model.** An extension is first-party-style PHP that runs with the
+same privileges as the rest of the application the moment an admin enables
+it — a `ServiceProvider`, migrations, and routes all execute as trusted core
+code, not inside a sandbox. There is no code review, static analysis, or
+capability restriction applied at install or enable time; importing a ZIP
+only checks its manifest, version, and archive safety (no zip-slip), never
+what the PHP inside actually does. Only install extensions from an author
+you trust, the same way you'd vet any other dependency added to the
+codebase.
+
 ---
 
 ## Table of Contents

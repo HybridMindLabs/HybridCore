@@ -21,6 +21,8 @@ class E2ESeeder extends Seeder
 {
     public function run(): void
     {
+        abort_if(app()->isProduction(), 403, 'E2ESeeder must never run against a production environment.');
+
         // Roles come from the migration; permissions and the owner grant do not.
         $this->call(CorePermissionsSeeder::class);
 

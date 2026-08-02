@@ -6,6 +6,7 @@ import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { markdown } from '@codemirror/lang-markdown';
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 import { Image, Bold, Italic, Link2, Code, List, Heading2, Eye, EyeOff, Upload } from '@lucide/vue';
 
 const props = defineProps<{
@@ -25,7 +26,10 @@ let view: EditorView | null = null;
 const previewHtml = ref('');
 
 async function refreshPreview() {
-    previewHtml.value = await marked.parse(props.modelValue, { gfm: true, breaks: true }) as string;
+    const html = await marked.parse(props.modelValue, { gfm: true, breaks: true }) as string;
+    // marked doesn't sanitize — pasted content with inline HTML would
+    // otherwise execute in the admin's own session while just previewing it.
+    previewHtml.value = DOMPurify.sanitize(html);
 }
 
 watch(() => props.modelValue, (v) => {

@@ -73,4 +73,26 @@ class IpBanTest extends TestCase
 
         $response->assertStatus(403);
     }
+
+    public function test_a_banned_ip_cannot_reach_the_admin_login_page(): void
+    {
+        IpBan::factory()->create(['ip' => '5.5.5.5', 'expires_at' => null]);
+
+        $response = $this->withServerVariables(['REMOTE_ADDR' => '5.5.5.5'])
+            ->get(route('admin.login'));
+
+        $response->assertStatus(403);
+    }
+
+    public function test_an_already_authenticated_admin_is_not_locked_out_by_their_own_ip_ban(): void
+    {
+        $admin = $this->adminUser();
+        IpBan::factory()->create(['ip' => '5.5.5.5', 'expires_at' => null]);
+
+        $response = $this->actingAs($admin)
+            ->withServerVariables(['REMOTE_ADDR' => '5.5.5.5'])
+            ->get(route('admin.dashboard'));
+
+        $response->assertStatus(200);
+    }
 }

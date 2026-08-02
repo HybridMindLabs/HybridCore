@@ -16,6 +16,10 @@ class GenerateDataExportJob implements ShouldQueue
 {
     use Queueable;
 
+    public int $timeout = 120;
+
+    public int $tries = 3;
+
     public function __construct(private readonly User $user) {}
 
     public function handle(): void

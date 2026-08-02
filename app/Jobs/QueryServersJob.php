@@ -68,6 +68,11 @@ class QueryServersJob implements ShouldQueue
         }
 
         // Everything else keeps its own stateful driver (and player list).
-        $other->each(fn (Server $s) => QueryServerJob::dispatch($s));
+        // Chunked and staggered so a large server list doesn't land as one
+        // burst of jobs — each chunk is delayed a little past the last,
+        // spreading the work instead of dispatching it all in the same instant.
+        $other->chunk(25)->each(fn ($chunk, $i) => $chunk->each(
+            fn (Server $s) => QueryServerJob::dispatch($s)->delay(now()->addSeconds($i * 2)),
+        ));
     }
 }
