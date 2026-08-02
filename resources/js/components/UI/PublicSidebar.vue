@@ -56,6 +56,14 @@ const btnBorder = computed(() => dark.value
     ? 'border-zinc-700/70 text-zinc-400 hover:border-zinc-600 hover:text-zinc-100 hover:bg-white/[0.05]'
     : 'border-zinc-200   text-zinc-500 hover:border-zinc-300 hover:text-zinc-800 hover:bg-zinc-50');
 
+function achievementLabel(slug: string): string {
+    const key = 'achievements.' + slug + '.label';
+    const label = t(key);
+    // Fall back to the raw slug if the translation is missing, so a new badge
+    // still shows something meaningful instead of the dotted key.
+    return label === key ? slug.replace(/_/g, ' ') : label;
+}
+
 function activityLabel(item: CommunityActivityItem): string {
     // Extension rows carry a pre-localized `text`.
     if (item.text) return item.text;
@@ -152,13 +160,23 @@ const quickLinks = computed(() => {
                         </span>
                     </div>
 
-                    <!-- Badges -->
-                    <div v-if="viewer?.achievements?.length" class="flex items-center gap-1.5 mt-3 pt-3 border-t" :class="dark ? 'border-zinc-800/60' : 'border-zinc-100'">
-                        <component :is="achievementIcons[slug] ?? Trophy" v-for="slug in viewer.achievements.slice(0, 6)" :key="slug"
-                            :size="14" :stroke-width="1.8" :title="slug" :class="textMute" />
-                        <span v-if="viewer.achievements.length > 6" class="text-[10px]" :class="textMute">
-                            +{{ viewer.achievements.length - 6 }}
-                        </span>
+                    <!-- Badges — chips, so they read as earned achievements
+                         rather than a row of stray icons -->
+                    <div v-if="viewer?.achievements?.length" class="mt-3 pt-3 border-t" :class="dark ? 'border-zinc-800/60' : 'border-zinc-100'">
+                        <p class="text-[10px] font-semibold uppercase tracking-wide mb-2" :class="textMute">
+                            {{ t('home.sidebar_badges') }}
+                        </p>
+                        <div class="flex items-center flex-wrap gap-1.5">
+                            <span v-for="slug in viewer.achievements.slice(0, 6)" :key="slug"
+                                class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" :class="iconBg"
+                                :title="achievementLabel(slug)">
+                                <component :is="achievementIcons[slug] ?? Trophy" :size="14" :stroke-width="1.8" class="text-amber-500 dark:text-amber-400" />
+                            </span>
+                            <span v-if="viewer.achievements.length > 6"
+                                class="h-7 px-2 rounded-lg flex items-center text-[11px] font-semibold" :class="[iconBg, textSec]">
+                                +{{ viewer.achievements.length - 6 }}
+                            </span>
+                        </div>
                     </div>
                 </div>
 

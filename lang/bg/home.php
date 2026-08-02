@@ -149,6 +149,7 @@ return [
 
     /* ── Sidebar ── */
     'sidebar_online' => 'Онлайн',
+    'sidebar_badges' => 'Значки',
 
     /* ── Footer ── */
     'footer_tagline' => 'Намери сървър, виж кой играе и влез директно в играта.',

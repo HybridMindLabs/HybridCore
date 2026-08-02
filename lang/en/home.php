@@ -149,6 +149,7 @@ return [
 
     /* ── Sidebar ── */
     'sidebar_online' => 'Online',
+    'sidebar_badges' => 'Badges',
 
     /* ── Footer ── */
     'footer_tagline' => 'Find a server, see who is playing, and jump straight into the game.',
