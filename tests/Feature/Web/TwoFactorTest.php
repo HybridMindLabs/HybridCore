@@ -124,6 +124,26 @@ class TwoFactorTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_admin_login_challenge_redirects_to_admin_dashboard(): void
+    {
+        $admin = $this->userWith2FA();
+        $admin->is_admin = true;
+        $admin->save();
+
+        session(['2fa_user_id' => $admin->id, '2fa_admin_login' => true]);
+
+        $this->mock(Google2FA::class)
+            ->shouldReceive('verifyKey')
+            ->once()
+            ->andReturn(true);
+
+        $this->post(route('auth.2fa.verify'), ['code' => '123456'])
+            ->assertRedirect(route('admin.dashboard'));
+
+        $this->assertAuthenticatedAs($admin);
+        $this->assertNull(session('2fa_admin_login'));
+    }
+
     // ── Challenge verification — recovery codes ───────────────────────────────
 
     public function test_challenge_with_valid_recovery_code_authenticates_user(): void

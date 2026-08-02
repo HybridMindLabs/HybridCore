@@ -71,6 +71,25 @@ class AdminAuthTest extends TestCase
         $this->assertAuthenticatedAs($admin);
     }
 
+    public function test_admin_with_2fa_enabled_is_challenged_not_logged_in(): void
+    {
+        $admin = User::factory()->create([
+            'is_admin' => true,
+            'two_factor_secret' => 'BASE32SECRET3232',
+            'two_factor_confirmed_at' => now(),
+        ]);
+
+        $response = $this->post('/admin/login', [
+            'email' => $admin->email,
+            'password' => 'password',
+        ]);
+
+        $response->assertRedirect(route('auth.2fa.challenge'));
+        $this->assertGuest();
+        $this->assertEquals($admin->id, session('2fa_user_id'));
+        $this->assertTrue(session('2fa_admin_login'));
+    }
+
     public function test_admin_can_logout(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);

@@ -3,9 +3,11 @@
 namespace App\Jobs;
 
 use App\Games\Concurrent\A2SBatch;
+use App\Games\Data\QueryResult;
 use App\Games\Drivers\SourceDriver;
 use App\Models\Server;
 use App\Services\ServerQueryService;
+use App\Support\HostSafety;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -33,9 +35,20 @@ class QueryServersJob implements ShouldQueue
     public function handle(A2SBatch $batch, ServerQueryService $service): void
     {
         $servers = Server::active()->with('game')->get();
+
+        // A2SBatch talks straight to the host over raw sockets, bypassing the
+        // per-driver guard in ServerQueryService::run() — so unsafe hosts must
+        // be filtered out here instead, before a single packet is sent.
+        [$safe, $unsafe] = $servers->partition(fn (Server $s) => HostSafety::isSafePublicHost($s->ip));
+
+        foreach ($unsafe as $server) {
+            $service->record($server, QueryResult::offline('Host resolves to a private or reserved address'));
+            Cache::forget('server.snapshot.'.$server->id);
+        }
+
         $a2sSlugs = SourceDriver::handles();
 
-        [$a2s, $other] = $servers->partition(
+        [$a2s, $other] = $safe->partition(
             fn (Server $s) => in_array((string) $s->game?->query_driver, $a2sSlugs, true),
         );
 

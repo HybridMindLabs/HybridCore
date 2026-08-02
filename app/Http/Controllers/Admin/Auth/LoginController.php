@@ -36,7 +36,9 @@ class LoginController extends Controller
             ]);
         }
 
-        if (Auth::user()?->isBanned()) {
+        $user = Auth::user();
+
+        if ($user->isBanned()) {
             Auth::logout();
             $request->session()->invalidate();
 
@@ -45,13 +47,21 @@ class LoginController extends Controller
             ]);
         }
 
-        if (! Auth::user()?->is_admin) {
+        if (! $user->is_admin) {
             Auth::logout();
             $request->session()->invalidate();
 
             throw ValidationException::withMessages([
                 'email' => __('auth.no_admin_access'),
             ]);
+        }
+
+        if ($user->hasTwoFactorEnabled()) {
+            $request->session()->put('2fa_user_id', $user->id);
+            $request->session()->put('2fa_admin_login', true);
+            Auth::logout();
+
+            return redirect()->route('auth.2fa.challenge');
         }
 
         $request->session()->regenerate();
