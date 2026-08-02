@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\ActivityLogService;
+use App\Services\GitUpdateVerifier;
 use App\Services\SettingsService;
 use App\Services\UpdateService;
 use Illuminate\Http\JsonResponse;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Inertia\Inertia;
 use Inertia\Response;
+use RuntimeException;
 
 class UpdateController extends Controller
 {
@@ -20,6 +22,7 @@ class UpdateController extends Controller
     public function __construct(
         private readonly ActivityLogService $activity,
         private readonly SettingsService $settings,
+        private readonly GitUpdateVerifier $verifier,
     ) {
         //
     }
@@ -82,6 +85,10 @@ class UpdateController extends Controller
         $log[] = ['step' => 'maintenance on', 'output' => ''];
 
         try {
+            shell_exec('cd '.base_path().' && git fetch origin 2>&1');
+
+            $this->verifier->assertIncomingCommitsAreSigned(base_path());
+
             $pull = shell_exec('cd '.base_path().' && git pull --ff-only 2>&1');
             $log[] = ['step' => 'git pull', 'output' => trim($pull ?? '')];
 
@@ -104,6 +111,8 @@ class UpdateController extends Controller
 
             Artisan::call('queue:restart');
             $log[] = ['step' => 'queue:restart', 'output' => trim(Artisan::output())];
+        } catch (RuntimeException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         } finally {
             Artisan::call('up');
             $log[] = ['step' => 'maintenance off', 'output' => ''];

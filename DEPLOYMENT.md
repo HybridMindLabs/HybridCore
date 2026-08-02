@@ -146,6 +146,8 @@ PULSE_STORAGE_KEEP="7 days"
 # ── Updates ───────────────────────────────────────────────
 # Set to false on immutable/CI-managed deploys to hide the panel updater.
 HYBRIDCORE_PANEL_UPDATES=true
+# Optional — see "Requiring signed commits" in section 9 before enabling.
+HYBRIDCORE_REQUIRE_SIGNED_UPDATES=false
 ```
 
 > **Reverb credentials** — `REVERB_APP_KEY`/`SECRET` can be any random
@@ -384,6 +386,23 @@ Admins on a git install also see a **"new version available"** banner in
 **Admin → System → Updates** and can apply it from the panel (unless
 `HYBRIDCORE_PANEL_UPDATES=false`). The panel and CLI run the identical, safe
 sequence and always lift maintenance mode even if a step fails.
+
+**Requiring signed commits (optional).** By default the update trusts
+whatever `git pull` fetches over HTTPS — that proves the bytes weren't
+altered in transit, not that the GitHub account or repo serving them hasn't
+been compromised since. To close that gap, import the maintainer's GPG
+public key into the server's keyring and set:
+
+```bash
+gpg --import maintainer-key.asc
+HYBRIDCORE_REQUIRE_SIGNED_UPDATES=true
+```
+
+With this on, every commit the update is about to merge must pass `git
+verify-commit` against a key already in that keyring, or the update refuses
+to apply and leaves the site untouched. Off by default because most installs
+have no GPG keyring set up — turning it on without importing a key first
+means every update fails closed.
 
 After any upgrade, restart the workers so new code is loaded:
 
