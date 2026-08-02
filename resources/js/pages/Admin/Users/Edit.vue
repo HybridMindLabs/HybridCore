@@ -196,10 +196,11 @@ const errorInputClass = 'border-red-500';
                                 <label class="flex items-start gap-3 cursor-pointer select-none group">
                                     <input v-model="form.is_admin" type="checkbox" class="w-4 h-4 mt-0.5 rounded border border-zinc-700 bg-zinc-900 accent-blue-500 shrink-0" />
                                     <span>
-                                        <span class="text-zinc-100 text-sm block font-medium">Admin panel access</span>
+                                        <span class="text-zinc-100 text-sm block font-medium">Full admin access</span>
                                         <span class="text-zinc-500 text-xs leading-relaxed">
-                                            Allows this user to sign in at <code class="text-zinc-400 bg-zinc-800 px-1 py-0.5 rounded text-[11px]">/admin</code>.
-                                            Their role permissions still govern what they can do inside.
+                                            Lets this user sign in at <code class="text-zinc-400 bg-zinc-800 px-1 py-0.5 rounded text-[11px]">/admin</code>
+                                            and bypasses every role/permission check — they can do anything in the panel regardless of assigned role.
+                                            This is not a scoped permission; leave it unchecked and use roles below for limited-access staff.
                                         </span>
                                     </span>
                                 </label>

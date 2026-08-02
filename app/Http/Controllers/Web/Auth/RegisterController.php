@@ -8,6 +8,7 @@ use App\Mail\WelcomeMail;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\Auth\LoginSecurityService;
+use App\Services\CaptchaService;
 use App\Services\Extensions\Registries\HookRegistry;
 use App\Support\Hooks;
 use Illuminate\Auth\Events\Registered;
@@ -20,7 +21,10 @@ use Inertia\Response;
 
 class RegisterController extends Controller
 {
-    public function __construct(private readonly LoginSecurityService $security) {}
+    public function __construct(
+        private readonly LoginSecurityService $security,
+        private readonly CaptchaService $captcha,
+    ) {}
 
     public function create(): Response|RedirectResponse
     {
@@ -28,15 +32,21 @@ class RegisterController extends Controller
             return redirect()->route('account.index');
         }
 
+        $captcha = ['provider' => $this->captcha->activeProvider(), 'site_key' => $this->captcha->siteKey()];
+
         if (! $this->security->registrationEnabled()) {
-            return Inertia::render('Auth/Register', ['registrationEnabled' => false]);
+            return Inertia::render('Auth/Register', ['registrationEnabled' => false, 'captcha' => $captcha]);
         }
 
-        return Inertia::render('Auth/Register', ['registrationEnabled' => true]);
+        return Inertia::render('Auth/Register', ['registrationEnabled' => true, 'captcha' => $captcha]);
     }
 
     public function store(RegisterRequest $request): RedirectResponse
     {
+        if (! $this->captcha->verify($request)) {
+            return back()->withErrors(['captcha_token' => __('auth.captcha_failed')])->withInput();
+        }
+
         $data = $request->validated();
 
         $base = preg_replace('/[^a-z0-9_-]/i', '', strtolower(explode(' ', $data['name'])[0])) ?: 'user';

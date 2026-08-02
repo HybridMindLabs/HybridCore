@@ -124,8 +124,8 @@ const errorInputClass = 'border-red-500';
                         <label class="flex items-start gap-3 cursor-pointer select-none">
                             <input v-model="form.is_admin" type="checkbox" class="w-4 h-4 mt-0.5 rounded border border-zinc-800/70 bg-zinc-900/60 accent-blue-500" />
                             <span>
-                                <span class="text-zinc-100 text-sm block">Admin panel access</span>
-                                <span class="text-zinc-500 text-xs">Lets this user sign in to the admin panel, in addition to their role permissions.</span>
+                                <span class="text-zinc-100 text-sm block">Full admin access</span>
+                                <span class="text-zinc-500 text-xs">Lets this user sign in to the admin panel and bypasses every role/permission check — not a scoped permission. Use roles below for limited-access staff.</span>
                             </span>
                         </label>
                     </div>
