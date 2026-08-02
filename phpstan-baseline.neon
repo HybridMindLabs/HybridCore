@@ -319,18 +319,6 @@ parameters:
 			path: app/Http/Controllers/Web/GameServerController.php
 
 		-
-			message: '#^Method App\\Http\\Controllers\\Web\\HomeController\:\:viewerSummary\(\) never returns array\{banner\: string\|null, role\: array\|null, achievements\: array\<int, string\>\} so it can be removed from the return type\.$#'
-			identifier: return.unusedType
-			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
-			message: '#^Method App\\Http\\Controllers\\Web\\HomeController\:\:viewerSummary\(\) should return array\{banner\: string\|null, role\: array\|null, achievements\: array\<int, string\>\}\|null but returns array\{banner\: string\|null, role\: array\{name\: string, color\: string\}\|null, achievements\: Illuminate\\Support\\Collection\<\(int\|string\), mixed\>\}\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Http/Controllers/Web/HomeController.php
-
-		-
 			message: '#^Ternary operator condition is always true\.$#'
 			identifier: ternary.alwaysTrue
 			count: 1

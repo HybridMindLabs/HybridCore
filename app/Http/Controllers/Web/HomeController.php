@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\Conversation;
 use App\Models\Game;
+use App\Models\Message;
 use App\Models\NewsArticle;
 use App\Models\NewsComment;
 use App\Models\Server;
@@ -12,6 +14,7 @@ use App\Models\User;
 use App\Models\UserAchievement;
 use App\Services\AnalyticsService;
 use App\Services\Extensions\Registries\ActivityFeedRegistry;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -217,7 +220,7 @@ class HomeController extends Controller
      * role, badges) — kept out of the globally-shared auth.user prop since
      * it's only needed on the homepage, not on every page load.
      *
-     * @return array{banner: ?string, role: ?array, achievements: array<int, string>}|null
+     * @return array{banner: ?string, role: ?array, achievements: Collection<int, string>, unread_messages: int, unread_notifications: int}|null
      */
     private function viewerSummary(): ?array
     {
@@ -234,6 +237,36 @@ class HomeController extends Controller
             'banner' => $user->banner,
             'role' => $role ? ['name' => $role->name, 'color' => $role->color] : null,
             'achievements' => $user->achievements->pluck('slug'),
+            // Surfaced on the sidebar so the two things a returning member most
+            // often checks are one glance away.
+            'unread_messages' => $this->unreadMessages($user),
+            'unread_notifications' => Schema::hasTable('notifications')
+                ? $user->unreadNotifications()->count()
+                : 0,
         ];
+    }
+
+    /** Messages sent to the user, in their own conversations, still unread. */
+    private function unreadMessages(User $user): int
+    {
+        if (! Schema::hasTable('conversations') || ! Schema::hasTable('messages')) {
+            return 0;
+        }
+
+        $conversationIds = Conversation::query()
+            ->where('participant_1_id', $user->id)
+            ->orWhere('participant_2_id', $user->id)
+            ->pluck('id')
+            ->all();
+
+        if ($conversationIds === []) {
+            return 0;
+        }
+
+        return Message::query()
+            ->whereIn('conversation_id', $conversationIds)
+            ->where('sender_id', '!=', $user->id)
+            ->whereNull('read_at')
+            ->count();
     }
 }

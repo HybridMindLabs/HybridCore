@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import {
-    LogIn, Users, Star, ShieldCheck, ArrowRight,
-    Gamepad2, UsersRound,
+    LogIn, LogOut, Users, Star, ShieldCheck, ArrowRight,
+    Gamepad2, UsersRound, Bell, Settings, Mails,
     BookOpen, MessageSquare, HelpCircle, Newspaper, Trophy,
     Sprout, Medal, CircleCheck, Lock, FileText, Mail, Puzzle,
     PenLine, Flame, Compass, MessagesSquare, Heart, Activity,
@@ -11,7 +11,13 @@ import { computed } from 'vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
 
-interface Viewer { banner: string | null; role: { name: string; color: string } | null; achievements: string[] }
+interface Viewer {
+    banner: string | null;
+    role: { name: string; color: string } | null;
+    achievements: string[];
+    unread_messages: number;
+    unread_notifications: number;
+}
 interface CommunityActivityItem { type: string; username: string | null; avatar: string | null; params: Record<string, string | number>; text?: string; at: string; url: string | null }
 
 const props = defineProps<{
@@ -55,6 +61,14 @@ const iconBg    = computed(() => dark.value ? 'bg-zinc-800/80'                  
 const btnBorder = computed(() => dark.value
     ? 'border-zinc-700/70 text-zinc-400 hover:border-zinc-600 hover:text-zinc-100 hover:bg-white/[0.05]'
     : 'border-zinc-200   text-zinc-500 hover:border-zinc-300 hover:text-zinc-800 hover:bg-zinc-50');
+
+function achievementLabel(slug: string): string {
+    const key = 'achievements.' + slug + '.label';
+    const label = t(key);
+    // Fall back to the raw slug if the translation is missing, so a new badge
+    // still shows something meaningful instead of the dotted key.
+    return label === key ? slug.replace(/_/g, ' ') : label;
+}
 
 function activityLabel(item: CommunityActivityItem): string {
     // Extension rows carry a pre-localized `text`.
@@ -101,93 +115,162 @@ const quickLinks = computed(() => {
             <!-- Logged in -->
             <template v-if="page.props.auth?.user">
                 <!-- Banner: user's own, or a gradient in their role colour -->
-                <div class="relative h-14 overflow-hidden">
+                <div class="relative h-20 overflow-hidden">
                     <img v-if="viewer?.banner" :src="viewer.banner" alt="" class="w-full h-full object-cover" />
                     <div v-else class="w-full h-full"
-                        :style="{ background: `linear-gradient(135deg, ${viewerAccent}55 0%, ${viewerAccent}18 60%, transparent 100%)` }" />
+                        :style="{ background: `linear-gradient(135deg, ${viewerAccent}66 0%, ${viewerAccent}22 55%, transparent 100%)` }" />
                     <div v-if="dark" class="absolute inset-0 opacity-30"
                         style="background-image:radial-gradient(circle,rgba(255,255,255,0.05) 1px,transparent 1px);background-size:16px 16px" />
+                    <!-- Fade the banner into the card so the avatar reads cleanly -->
+                    <div class="absolute inset-x-0 bottom-0 h-10"
+                        :style="{ background: `linear-gradient(to top, ${dark ? '#111113' : '#ffffff'}, transparent)` }" />
                 </div>
 
-                <div class="px-4 -mt-6 pb-3">
+                <div class="px-4 -mt-8 pb-3">
                     <div class="flex items-end gap-3">
                         <div class="relative shrink-0">
                             <img
                                 v-if="page.props.auth.user.avatar"
                                 :src="page.props.auth.user.avatar"
                                 :alt="page.props.auth.user.name"
-                                class="w-12 h-12 rounded-xl object-cover ring-4"
+                                class="w-16 h-16 rounded-2xl object-cover ring-4 shadow-lg"
                                 :class="dark ? 'ring-[#111113]' : 'ring-white'"
                             />
                             <div
                                 v-else
-                                class="w-12 h-12 rounded-xl flex items-center justify-center text-[17px] font-bold select-none text-white ring-4"
+                                class="w-16 h-16 rounded-2xl flex items-center justify-center text-[22px] font-bold select-none text-white ring-4 shadow-lg"
                                 :class="dark ? 'ring-[#111113]' : 'ring-white'"
                                 :style="{ backgroundColor: viewerAccent }"
                             >
                                 {{ (page.props.auth.user.name ?? '?')[0].toUpperCase() }}
                             </div>
                             <span
-                                class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2"
+                                class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2"
                                 :class="dark ? 'border-[#111113]' : 'border-white'"
-                                title="Online"
+                                :title="t('home.sidebar_online')"
                             />
                         </div>
-                        <div class="min-w-0 pb-0.5">
-                            <p class="text-[14px] font-semibold truncate" :class="textPri">{{ page.props.auth.user.name }}</p>
+                        <div class="min-w-0 pb-1">
+                            <p class="text-[15px] font-bold truncate leading-tight" :class="textPri">{{ page.props.auth.user.name }}</p>
                             <p v-if="page.props.auth.user.username" class="text-[12px] font-mono truncate" :class="textMute">
                                 @{{ page.props.auth.user.username }}
                             </p>
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-2 flex-wrap mt-3">
+                    <div class="flex items-center gap-1.5 flex-wrap mt-3">
                         <span v-if="viewer?.role" class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full border"
                             :style="{ backgroundColor: viewer.role.color + '18', color: viewer.role.color, borderColor: viewer.role.color + '38' }">
                             {{ viewer.role.name }}
                         </span>
-                        <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 dark:text-emerald-400">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-1 rounded-full text-emerald-700 dark:text-emerald-400"
+                            :class="dark ? 'bg-emerald-500/10' : 'bg-emerald-50'">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 hc-pulse-dot" />
                             {{ t('home.sidebar_online') }}
                         </span>
                     </div>
 
-                    <!-- Badges -->
-                    <div v-if="viewer?.achievements?.length" class="flex items-center gap-1.5 mt-3 pt-3 border-t" :class="dark ? 'border-zinc-800/60' : 'border-zinc-100'">
-                        <component :is="achievementIcons[slug] ?? Trophy" v-for="slug in viewer.achievements.slice(0, 6)" :key="slug"
-                            :size="14" :stroke-width="1.8" :title="slug" :class="textMute" />
-                        <span v-if="viewer.achievements.length > 6" class="text-[10px]" :class="textMute">
-                            +{{ viewer.achievements.length - 6 }}
-                        </span>
+                    <!-- Badges — chips, so they read as earned achievements
+                         rather than a row of stray icons -->
+                    <div v-if="viewer?.achievements?.length" class="mt-3 pt-3 border-t" :class="dark ? 'border-zinc-800/60' : 'border-zinc-100'">
+                        <p class="text-[10px] font-semibold uppercase tracking-wide mb-2" :class="textMute">
+                            {{ t('home.sidebar_badges') }}
+                        </p>
+                        <div class="flex items-center flex-wrap gap-1.5">
+                            <span v-for="slug in viewer.achievements.slice(0, 6)" :key="slug"
+                                class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border border-amber-500/20 bg-amber-500/10"
+                                :title="achievementLabel(slug)">
+                                <component :is="achievementIcons[slug] ?? Trophy" :size="14" :stroke-width="1.8" class="text-amber-500 dark:text-amber-400" />
+                            </span>
+                            <span v-if="viewer.achievements.length > 6"
+                                class="h-7 px-2 rounded-lg flex items-center text-[11px] font-semibold" :class="[iconBg, textSec]">
+                                +{{ viewer.achievements.length - 6 }}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-2 px-4 pb-4">
-                    <Link
-                        :href="page.props.auth.user.username
-                            ? route('profile.show', { username: page.props.auth.user.username })
-                            : '#'"
-                        class="flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-medium border transition-colors"
-                        :class="btnBorder"
-                    >
-                        <Users :size="13" :stroke-width="1.8" />
-                        {{ t('home.my_profile') }}
-                    </Link>
-                    <Link
-                        :href="route('account.favorites')"
-                        class="flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-medium border transition-colors"
-                        :class="btnBorder"
-                    >
-                        <Star :size="13" :stroke-width="1.8" />
-                        {{ t('home.my_servers') }}
-                    </Link>
+                <!-- Quick actions — the things a returning member reaches for -->
+                <div class="px-4 pb-4">
+                    <!-- Messages + Notifications, each with an unread badge -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <Link
+                            :href="route('account.messages.index')"
+                            class="relative flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-medium border transition-colors"
+                            :class="btnBorder"
+                        >
+                            <Mails :size="14" :stroke-width="1.8" />
+                            {{ t('home.sidebar_messages') }}
+                            <span v-if="viewer && viewer.unread_messages > 0"
+                                class="ml-auto min-w-[18px] h-[18px] px-1 rounded-full bg-blue-500 text-white text-[10px] font-bold flex items-center justify-center">
+                                {{ viewer.unread_messages > 99 ? '99+' : viewer.unread_messages }}
+                            </span>
+                        </Link>
+                        <Link
+                            :href="route('account.notifications')"
+                            class="relative flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-medium border transition-colors"
+                            :class="btnBorder"
+                        >
+                            <Bell :size="14" :stroke-width="1.8" />
+                            {{ t('home.sidebar_alerts') }}
+                            <span v-if="viewer && viewer.unread_notifications > 0"
+                                class="ml-auto min-w-[18px] h-[18px] px-1 rounded-full bg-blue-500 text-white text-[10px] font-bold flex items-center justify-center">
+                                {{ viewer.unread_notifications > 99 ? '99+' : viewer.unread_notifications }}
+                            </span>
+                        </Link>
+                    </div>
+
+                    <!-- Profile / Favourites / Settings — compact icon+label row -->
+                    <div class="grid grid-cols-3 gap-2 mt-2">
+                        <Link
+                            :href="page.props.auth.user.username
+                                ? route('profile.show', { username: page.props.auth.user.username })
+                                : '#'"
+                            class="flex flex-col items-center justify-center gap-1 py-2 rounded-lg text-[11px] font-medium border transition-colors"
+                            :class="btnBorder"
+                            :title="t('home.my_profile')"
+                        >
+                            <Users :size="15" :stroke-width="1.8" />
+                            {{ t('home.my_profile') }}
+                        </Link>
+                        <Link
+                            :href="route('account.favorites')"
+                            class="flex flex-col items-center justify-center gap-1 py-2 rounded-lg text-[11px] font-medium border transition-colors"
+                            :class="btnBorder"
+                            :title="t('home.my_servers')"
+                        >
+                            <Star :size="15" :stroke-width="1.8" />
+                            {{ t('home.my_servers') }}
+                        </Link>
+                        <Link
+                            :href="route('account.index')"
+                            class="flex flex-col items-center justify-center gap-1 py-2 rounded-lg text-[11px] font-medium border transition-colors"
+                            :class="btnBorder"
+                            :title="t('home.sidebar_settings')"
+                        >
+                            <Settings :size="15" :stroke-width="1.8" />
+                            {{ t('home.sidebar_settings') }}
+                        </Link>
+                    </div>
+
+                    <!-- Admin panel (admins) -->
                     <Link
                         v-if="page.props.auth.user.is_admin"
                         :href="route('admin.dashboard')"
-                        class="col-span-2 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-medium bg-blue-600 text-white hover:bg-blue-500 transition-colors"
+                        class="flex items-center justify-center gap-1.5 py-2.5 mt-2 rounded-lg text-[12px] font-semibold bg-blue-600 text-white hover:bg-blue-500 transition-colors"
                     >
-                        <ShieldCheck :size="13" :stroke-width="2" />
+                        <ShieldCheck :size="14" :stroke-width="2" />
                         {{ t('home.admin_panel') }}
+                    </Link>
+
+                    <!-- Log out -->
+                    <Link
+                        :href="route('logout')" method="post" as="button"
+                        class="flex items-center justify-center gap-1.5 w-full py-2 mt-2 rounded-lg text-[11.5px] font-medium transition-colors"
+                        :class="dark ? 'text-zinc-500 hover:text-red-400 hover:bg-red-500/10' : 'text-zinc-400 hover:text-red-500 hover:bg-red-50'"
+                    >
+                        <LogOut :size="13" :stroke-width="1.8" />
+                        {{ t('home.sidebar_logout') }}
                     </Link>
                 </div>
             </template>
