@@ -22,6 +22,14 @@ class SecurityHeaders
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
 
+        // Credential-entry pages must never be written to a shared cache — a
+        // proxy, a browser's back-forward cache, or a synced profile could hand
+        // the next person a filled-in login or password-reset screen.
+        if ($this->isSensitivePath($request)) {
+            $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+            $response->headers->set('Pragma', 'no-cache');
+        }
+
         // CSP breaks the Vite dev server (HMR injects its own scripts), so
         // it's only applied when serving built assets. The Pulse dashboard
         // (Livewire, admin-only) ships its own inline scripts and is exempt.
@@ -36,6 +44,15 @@ class SecurityHeaders
         }
 
         return $response;
+    }
+
+    /** Login, registration, and password-reset flows — never cache these. */
+    private function isSensitivePath(Request $request): bool
+    {
+        return $request->is(
+            'login', 'register', 'forgot-password', 'reset-password', 'reset-password/*',
+            'admin/login',
+        );
     }
 
     private function contentSecurityPolicy(string $nonce): string
