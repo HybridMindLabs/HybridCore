@@ -150,6 +150,10 @@ return [
     /* ── Sidebar ── */
     'sidebar_online' => 'Online',
     'sidebar_badges' => 'Badges',
+    'sidebar_messages' => 'Messages',
+    'sidebar_alerts' => 'Alerts',
+    'sidebar_settings' => 'Settings',
+    'sidebar_logout' => 'Log out',
 
     /* ── Footer ── */
     'footer_tagline' => 'Find a server, see who is playing, and jump straight into the game.',

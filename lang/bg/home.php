@@ -150,6 +150,10 @@ return [
     /* ── Sidebar ── */
     'sidebar_online' => 'Онлайн',
     'sidebar_badges' => 'Значки',
+    'sidebar_messages' => 'Съобщения',
+    'sidebar_alerts' => 'Известия',
+    'sidebar_settings' => 'Настройки',
+    'sidebar_logout' => 'Изход',
 
     /* ── Footer ── */
     'footer_tagline' => 'Намери сървър, виж кой играе и влез директно в играта.',

@@ -149,6 +149,12 @@ html:not(.dark), html:not(.dark) body {
     flex-shrink: 0;
 }
 
+/* Reuses the pulse for an already-sized/coloured dot (sidebar online chip). */
+.hc-pulse-dot { animation: hc-pulse 2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+    .hc-pulse-dot { animation: none; }
+}
+
 .hc-orbit-lines::before,
 .hc-orbit-lines::after {
     content: '';
