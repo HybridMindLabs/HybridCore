@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Models\UserAchievement;
 use App\Services\AnalyticsService;
 use App\Services\Extensions\Registries\ActivityFeedRegistry;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -219,7 +220,7 @@ class HomeController extends Controller
      * role, badges) — kept out of the globally-shared auth.user prop since
      * it's only needed on the homepage, not on every page load.
      *
-     * @return array{banner: ?string, role: ?array, achievements: \Illuminate\Support\Collection<int, string>, unread_messages: int, unread_notifications: int}|null
+     * @return array{banner: ?string, role: ?array, achievements: Collection<int, string>, unread_messages: int, unread_notifications: int}|null
      */
     private function viewerSummary(): ?array
     {
