@@ -15,13 +15,19 @@ class NotificationController extends Controller
 
     public function index(Request $request): Response
     {
-        $notifications = $request->user()
+        $user = $request->user();
+
+        $notifications = $user
             ->notifications()
             ->latest()
             ->paginate(self::PER_PAGE);
 
         return Inertia::render('Account/Notifications', [
             'notifications' => $notifications,
+            // Feed the account-panel sidebar its tab badges, like every other
+            // account page does.
+            'unreadNotifications' => $user->unreadNotifications()->count(),
+            'unreadMessages' => $user->unreadMessagesCount(),
         ]);
     }
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { router, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { Bell, Check, Trash2, MessageSquare, AlertCircle, ThumbsUp, Gift, Trophy, Award } from '@lucide/vue';
+import AccountPage from '@/components/Account/AccountPage.vue';
 import type { Component } from 'vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
@@ -35,6 +36,8 @@ interface Notif {
 
 const props = defineProps<{
     notifications: { data: Notif[]; links: any; meta: any };
+    unreadNotifications?: number;
+    unreadMessages?: number;
 }>();
 
 const { theme } = useTheme();
@@ -100,6 +103,16 @@ function notifLink(n: Notif): string | null {
 </script>
 
 <template>
+    <Head :title="t('account.notif_title')" />
+
+    <AccountPage
+        active-tab="notifications"
+        :section="t('account.notif_title')"
+        :unread-notifications="unreadNotifications"
+        :unread-messages="unreadMessages"
+    >
+        <template #subtitle>{{ t('account.notif_subtitle') }}</template>
+
     <div class="rounded-2xl border overflow-hidden" :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]'">
         <div class="px-5 sm:px-6 py-4 border-b flex items-start justify-between gap-4 flex-wrap"
             :class="dark ? 'border-zinc-800/60 bg-[#17171a]' : 'border-zinc-200 bg-zinc-50'">
@@ -198,4 +211,5 @@ function notifLink(n: Notif): string | null {
             </li>
         </ul>
     </div>
+    </AccountPage>
 </template>
