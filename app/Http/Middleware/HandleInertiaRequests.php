@@ -24,6 +24,7 @@ use App\Services\SettingsService;
 use App\Services\Themes\ThemeResolver;
 use App\Support\Filters;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Middleware;
@@ -68,35 +69,39 @@ class HandleInertiaRequests extends Middleware
     {
         // Only rendered on auth pages, but shared closures run on every
         // request — cache so the random-server pick isn't queried each time.
-        return Cache::remember('inertia.auth_shell', 60, function () {
-            $games = Game::orderBy('name')->limit(6)->get(['name', 'slug']);
+        return Cache::remember('inertia.auth_shell', 60, fn () => $this->buildAuthShellData());
+    }
 
-            $servers = Server::with(['latestSnapshot', 'game'])
-                ->whereHas('latestSnapshot', fn ($q) => $q->where('is_online', true))
-                ->inRandomOrder()
-                ->limit(3)
-                ->get();
+    /** @return array{players_online: int, games: Collection<int, array{name: string, slug: string}>, servers: Collection<int, array{name: string, map: string, players: lowercase-string&non-falsy-string&uppercase-string, ping: lowercase-string&non-falsy-string, slug: string}>} */
+    private function buildAuthShellData(): array
+    {
+        $games = Game::orderBy('name')->limit(6)->get(['name', 'slug']);
 
-            return [
-                // A real figure for the badge beside the preview, which used to
-                // repeat the same label as the heading above it.
-                'players_online' => (int) Server::whereHas(
-                    'latestSnapshot',
-                    fn ($q) => $q->where('is_online', true)
-                )->with('latestSnapshot')->get()->sum(fn (Server $s) => $s->latestSnapshot?->players_online ?? 0),
-                'games' => $games->map(fn (Game $g) => [
-                    'name' => $g->name,
-                    'slug' => $g->slug,
-                ])->values(),
-                'servers' => $servers->map(fn (Server $s) => [
-                    'name' => $s->latestSnapshot?->name ?? $s->name,
-                    'map' => $s->latestSnapshot?->map ?? '—',
-                    'players' => ($s->latestSnapshot?->players_online ?? 0).' / '.($s->latestSnapshot?->players_max ?? 0),
-                    'ping' => $s->latestSnapshot?->ping ? $s->latestSnapshot->ping.'ms' : '—',
-                    'slug' => $s->game?->slug ?? '',
-                ])->values(),
-            ];
-        });
+        $servers = Server::with(['latestSnapshot', 'game'])
+            ->whereHas('latestSnapshot', fn ($q) => $q->where('is_online', true))
+            ->inRandomOrder()
+            ->limit(3)
+            ->get();
+
+        return [
+            // A real figure for the badge beside the preview, which used to
+            // repeat the same label as the heading above it.
+            'players_online' => (int) Server::whereHas(
+                'latestSnapshot',
+                fn ($q) => $q->where('is_online', true)
+            )->with('latestSnapshot')->get()->sum(fn (Server $s) => $s->latestSnapshot?->players_online ?? 0),
+            'games' => $games->map(fn (Game $g) => [
+                'name' => $g->name,
+                'slug' => $g->slug,
+            ])->values(),
+            'servers' => $servers->map(fn (Server $s) => [
+                'name' => $s->latestSnapshot?->name ?? $s->name,
+                'map' => $s->latestSnapshot?->map ?? '—',
+                'players' => ($s->latestSnapshot?->players_online ?? 0).' / '.($s->latestSnapshot?->players_max ?? 0),
+                'ping' => $s->latestSnapshot?->ping ? $s->latestSnapshot->ping.'ms' : '—',
+                'slug' => $s->game->slug,
+            ])->values(),
+        ];
     }
 
     public const MENUS_CACHE_KEY = 'inertia.menus';
@@ -157,7 +162,6 @@ class HandleInertiaRequests extends Middleware
         $online = $servers->filter(fn (Server $s) => (bool) ($s->latestSnapshot?->is_online ?? false));
 
         $games = $servers
-            ->filter(fn (Server $s) => $s->game !== null)
             ->groupBy(fn (Server $s) => $s->game->slug)
             ->map(fn ($group) => [
                 'slug' => $group->first()->game->slug,

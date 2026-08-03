@@ -104,7 +104,7 @@ class ServerController extends Controller
 
         try {
             $location = GeoIP::getLocation($data['ip']);
-            if ($location && $location->iso_code !== 'ZZ') {
+            if ($location->iso_code !== 'ZZ') {
                 $data['country_code'] = strtolower($location->iso_code);
             }
         } catch (\Throwable) {
@@ -167,6 +167,7 @@ class ServerController extends Controller
                 'deactivate' => $server->update(['is_active' => false]),
                 'refresh' => QueryServerJob::dispatch($server)->onQueue('default'),
                 'delete' => $server->delete(),
+                default => throw new \InvalidArgumentException("Unknown bulk action: {$data['action']}"),
             };
         }
 

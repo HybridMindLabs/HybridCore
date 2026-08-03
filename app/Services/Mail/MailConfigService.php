@@ -6,6 +6,7 @@ use App\Services\SettingsService;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
 use Symfony\Component\Mailer\Exception\TransportException;
+use Symfony\Component\Mailer\Transport\Smtp\SmtpTransport;
 
 class MailConfigService
 {
@@ -48,7 +49,10 @@ class MailConfigService
 
         try {
             $transport = Mail::mailer()->getSymfonyTransport();
-            $transport->start();
+
+            if ($transport instanceof SmtpTransport) {
+                $transport->start();
+            }
 
             return ['success' => true, 'message' => 'Connection successful.'];
         } catch (TransportException $e) {

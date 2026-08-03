@@ -34,8 +34,8 @@ class DashboardController extends Controller
                 ->limit(8)
                 ->get()
                 ->map(fn ($row) => [
-                    'name' => $row->game?->name ?? 'Unknown',
-                    'total' => $row->total,
+                    'name' => $row->game->name,
+                    'total' => $row->getAttribute('total'),
                 ]);
         }
 
@@ -49,6 +49,7 @@ class DashboardController extends Controller
             ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
             ->groupBy('date')
             ->orderBy('date')
+            ->toBase()
             ->get()
             ->map(fn ($r) => ['date' => $r->date, 'count' => (int) $r->count]);
 

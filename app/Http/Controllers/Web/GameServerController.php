@@ -183,6 +183,7 @@ class GameServerController extends Controller
             // CASE rather than `SUM(is_online = 1)`: the boolean-as-integer
             // shorthand is a MySQL extension.
             ->selectRaw('COUNT(*) AS total, SUM(CASE WHEN is_online = 1 THEN 1 ELSE 0 END) AS online')
+            ->toBase()
             ->first();
 
         return [
@@ -226,6 +227,7 @@ class GameServerController extends Controller
             ->groupBy('map')
             ->orderByDesc('samples')
             ->limit(8)
+            ->toBase()
             ->get();
 
         $total = max(1, (int) $maps->sum('samples'));
@@ -313,9 +315,9 @@ class GameServerController extends Controller
                     'created_at' => $r->created_at->diffForHumans(),
                     'is_mine' => $r->user_id === auth()->id(),
                     'user' => [
-                        'username' => $r->user?->username,
-                        'name' => $r->user?->name ?? 'Deleted user',
-                        'avatar' => $r->user?->avatar,
+                        'username' => $r->user->username,
+                        'name' => $r->user->name,
+                        'avatar' => $r->user->avatar,
                     ],
                 ]),
             'user_review' => $userReview ? ['rating' => $userReview->rating, 'body' => $userReview->body] : null,
@@ -363,7 +365,7 @@ class GameServerController extends Controller
         return back();
     }
 
-    private function formatServer(Server $server, $snapshot = null): array
+    private function formatServer(Server $server, ?ServerSnapshot $snapshot = null): array
     {
         $snapshot = $snapshot ?? $server->latestSnapshot;
 

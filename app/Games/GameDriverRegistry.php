@@ -4,8 +4,8 @@ namespace App\Games;
 
 use App\Games\Contracts\GameDriver;
 use Illuminate\Support\Str;
-use SplFileInfo;
 use Symfony\Component\Finder\Finder;
+use Symfony\Component\Finder\SplFileInfo;
 
 /**
  * Maps a game's query_driver slug to the driver that answers it.

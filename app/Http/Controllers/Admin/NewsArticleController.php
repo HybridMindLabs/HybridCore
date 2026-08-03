@@ -166,6 +166,7 @@ class NewsArticleController extends Controller
                 'publish' => $article->update(['status' => 'published', 'published_at' => $article->published_at ?? now()]),
                 'archive' => $article->update(['status' => 'archived']),
                 'delete' => $article->delete(),
+                default => throw new \InvalidArgumentException("Unknown bulk action: {$data['action']}"),
             };
         }
 

@@ -61,16 +61,12 @@ class ProfileController extends Controller
             'game_slug' => $server->game?->slug,
             'game_icon' => $server->game?->cover_url,
             'map' => $server->latestSnapshot?->map,
-            'map_image' => $server->game ? Game::mapImageUrl($server->game->slug, $server->latestSnapshot?->map) : null,
+            'map_image' => Game::mapImageUrl($server->game->slug, $server->latestSnapshot?->map),
             'players' => $server->latestSnapshot?->players_online ?? 0,
             'max_players' => $server->latestSnapshot?->players_max ?? 0,
             'online' => $server->is_online,
-            'connect_url' => $server->game
-                ? route('servers.connect', [$server->game->slug, $server->ip, $server->port])
-                : null,
-            'show_route' => $server->game
-                ? route('servers.show', [$server->game->slug, $server->ip, $server->port])
-                : null,
+            'connect_url' => route('servers.connect', [$server->game->slug, $server->ip, $server->port]),
+            'show_route' => route('servers.show', [$server->game->slug, $server->ip, $server->port]),
         ]);
 
         return Inertia::render('Web/Profile', app(FilterRegistry::class)->apply(Filters::PROFILE_SHOW_PROPS, [
@@ -167,11 +163,9 @@ class ProfileController extends Controller
             $server = $review->server;
             $items->push([
                 'type' => 'review',
-                'params' => ['name' => $server?->name ?? '—', 'rating' => $review->rating],
+                'params' => ['name' => $server->name, 'rating' => $review->rating],
                 'at' => $review->created_at,
-                'url' => $server?->game
-                    ? route('servers.show', [$server->game->slug, $server->ip, $server->port])
-                    : null,
+                'url' => route('servers.show', [$server->game->slug, $server->ip, $server->port]),
             ]);
         }
 

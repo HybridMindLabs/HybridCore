@@ -45,6 +45,7 @@ class Menu extends Model
         static::deleted($flush);
     }
 
+    /** @return HasMany<MenuItem, $this> */
     public function items(): HasMany
     {
         return $this->hasMany(MenuItem::class)->orderBy('sort');

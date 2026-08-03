@@ -2,25 +2,29 @@
 
 namespace App\Http\Resources\Api;
 
+use App\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResource extends JsonResource
 {
     public function toArray($request): array
     {
+        /** @var User $user */
+        $user = $this->resource;
+
+        $role = $user->roles->first();
+
         return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'username' => $this->username,
-            'avatar' => $this->avatar,
-            'bio' => $this->bio,
-            'location' => $this->location,
-            'role' => $this->roles->first()
-                ? ['name' => $this->roles->first()->name, 'color' => $this->roles->first()->color]
-                : null,
-            'verified' => $this->hasVerifiedEmail(),
-            'is_online' => $this->isOnline(),
-            'joined_at' => $this->created_at->toIso8601String(),
+            'id' => $user->id,
+            'name' => $user->name,
+            'username' => $user->username,
+            'avatar' => $user->avatar,
+            'bio' => $user->bio,
+            'location' => $user->location,
+            'role' => $role ? ['name' => $role->name, 'color' => $role->color] : null,
+            'verified' => $user->hasVerifiedEmail(),
+            'is_online' => $user->isOnline(),
+            'joined_at' => $user->created_at->toIso8601String(),
         ];
     }
 }

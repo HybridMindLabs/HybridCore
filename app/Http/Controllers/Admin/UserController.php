@@ -8,10 +8,12 @@ use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Mail\AccountBannedMail;
 use App\Models\ActivityLog;
 use App\Models\ContentReport;
+use App\Models\LoginHistory;
 use App\Models\NewsComment;
 use App\Models\Role;
 use App\Models\ServerReview;
 use App\Models\User;
+use App\Models\UserAchievement;
 use App\Models\UserAdminNote;
 use App\Services\ActivityLogService;
 use App\Services\Extensions\Registries\HookRegistry;
@@ -116,9 +118,9 @@ class UserController extends Controller
                 'provider' => $a->provider,
                 'created_at' => $a->created_at?->toDateString(),
             ]),
-            'achievements' => $user->achievements->sortByDesc('created_at')->values()->map(fn ($a) => [
+            'achievements' => $user->achievements->sortByDesc('awarded_at')->values()->map(fn (UserAchievement $a) => [
                 'slug' => $a->slug,
-                'earned_at' => $a->created_at?->toDateString(),
+                'earned_at' => $a->awarded_at->toDateString(),
             ]),
             'recentComments' => NewsComment::with('article:id,title,slug')
                 ->where('user_id', $user->id)->latest()->limit(5)->get()
@@ -147,7 +149,7 @@ class UserController extends Controller
                     'created_at' => $log->created_at?->diffForHumans(),
                 ]),
             'loginHistory' => $user->loginHistories()->latest()->limit(10)->get()
-                ->map(fn ($login) => [
+                ->map(fn (LoginHistory $login) => [
                     'ip' => $login->ip_address,
                     'country' => $login->country,
                     'city' => $login->city,
@@ -311,6 +313,7 @@ class UserController extends Controller
                 'unban' => $user->forceFill(['banned_at' => null])->save(),
                 'verify' => $user->forceFill(['email_verified_at' => $user->email_verified_at ?? now()])->save(),
                 'delete' => $user->delete(),
+                default => throw new \InvalidArgumentException("Unknown bulk action: {$data['action']}"),
             };
 
             if ($data['action'] === 'ban' && ! $wasBanned) {

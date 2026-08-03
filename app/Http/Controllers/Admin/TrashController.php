@@ -29,7 +29,7 @@ class TrashController extends Controller
                 ->through(fn (NewsArticle $a) => [
                     'id' => $a->id,
                     'title' => $a->title,
-                    'author' => $a->author?->name ?? 'unknown',
+                    'author' => $a->author->name,
                     'deleted_at' => $a->deleted_at->diffForHumans(),
                     'purge_at' => $a->deleted_at->addDays(NewsArticle::TRASH_RETENTION_DAYS)->toDateString(),
                 ]),
@@ -41,7 +41,7 @@ class TrashController extends Controller
                 ->through(fn (NewsComment $c) => [
                     'id' => $c->id,
                     'body' => \Str::limit($c->body, 160),
-                    'author' => $c->user?->username ?? $c->user?->name ?? 'unknown',
+                    'author' => $c->user->username,
                     'article_title' => $c->article?->title,
                     'deleted_at' => $c->deleted_at->diffForHumans(),
                     'purge_at' => $c->deleted_at->addDays(NewsComment::TRASH_RETENTION_DAYS)->toDateString(),

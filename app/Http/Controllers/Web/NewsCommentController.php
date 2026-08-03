@@ -39,7 +39,7 @@ class NewsCommentController extends Controller
 
         // Notify the article author (unless they commented themselves).
         $article->loadMissing('author');
-        if ($article->author && $article->author->id !== $commenter->id) {
+        if ($article->author->id !== $commenter->id) {
             $article->author->notify(new NewCommentNotification($commenter, $article, $data['body']));
         }
 
@@ -55,7 +55,7 @@ class NewsCommentController extends Controller
     {
         preg_match_all('/@([a-zA-Z0-9_\-\.]{2,30})/', $body, $matches);
 
-        $usernames = collect($matches[1] ?? [])->unique()->take(5);
+        $usernames = collect($matches[1])->unique()->take(5);
 
         if ($usernames->isEmpty()) {
             return;

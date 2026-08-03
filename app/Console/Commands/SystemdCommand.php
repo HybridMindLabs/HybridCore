@@ -29,7 +29,7 @@ class SystemdCommand extends Command
     public function handle(): int
     {
         $user = (string) ($this->option('user') ?: $this->currentUser());
-        $php = (string) (PHP_BINARY ?: 'php');
+        $php = PHP_BINARY;
         $root = base_path();
         $all = (bool) $this->option('all');
 
@@ -256,7 +256,7 @@ UNIT;
         if (function_exists('posix_geteuid') && function_exists('posix_getpwuid')) {
             $info = posix_getpwuid(posix_geteuid());
 
-            if (is_array($info) && isset($info['name'])) {
+            if (is_array($info)) {
                 return (string) $info['name'];
             }
         }

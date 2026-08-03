@@ -41,9 +41,6 @@ class SeoController extends Controller
             }
 
             foreach (Server::active()->with('game')->get() as $server) {
-                if (! $server->game) {
-                    continue;
-                }
                 $urls[] = [
                     'loc' => Seo::canonical("/servers/{$server->game->slug}/{$server->ip}/{$server->port}"),
                     'priority' => '0.6',
