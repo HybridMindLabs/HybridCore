@@ -211,8 +211,8 @@ jobs:
             storage/logs/laravel.log
           retention-days: 7
 
-  release:
-    name: Release
+  determine-version:
+    name: Determine release version
     runs-on: ubuntu-latest
     needs: [php, frontend, e2e]
     # Only main, only a real push (never a PR), and never the bot's own
@@ -223,6 +223,49 @@ jobs:
     if: >
       github.ref == 'refs/heads/main' && github.event_name == 'push'
       && !contains(github.event.head_commit.message, 'chore: release')
+    outputs:
+      bump: ${{ steps.compute.outputs.bump }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Conventional-commit prefixes drive the bump: any "type!:" or a
+      # "BREAKING CHANGE" footer forces major, "feat:" forces minor.
+      # Everything else bumps patch, UNLESS every commit since the last tag
+      # is chore/docs/style/test/ci/build only — then there's nothing worth
+      # releasing and the job is skipped entirely.
+      - name: Compute semver bump from commit history
+        id: compute
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          RANGE="HEAD"
+          [ -n "$LAST_TAG" ] && RANGE="$LAST_TAG..HEAD"
+
+          SUBJECTS=$(git log "$RANGE" --pretty=format:"%s")
+          BODY=$(git log "$RANGE" --pretty=format:"%B")
+
+          if [ -z "$SUBJECTS" ]; then
+            BUMP="none"
+          elif echo "$SUBJECTS" | grep -qE '^[a-z]+(\([^)]*\))?!:' || echo "$BODY" | grep -q "BREAKING CHANGE"; then
+            BUMP="major"
+          elif echo "$SUBJECTS" | grep -qE '^feat(\([^)]*\))?:'; then
+            BUMP="minor"
+          elif echo "$SUBJECTS" | grep -vqE '^(chore|docs|style|test|ci|build)(\([^)]*\))?:'; then
+            BUMP="patch"
+          else
+            BUMP="none"
+          fi
+
+          echo "Commits since ${LAST_TAG:-repo start}: bump=$BUMP"
+          echo "bump=$BUMP" >> "$GITHUB_OUTPUT"
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [php, frontend, e2e, determine-version]
+    if: needs.determine-version.outputs.bump != 'none'
     permissions:
       contents: write
 
@@ -253,19 +296,48 @@ jobs:
       # package.json is the one source of truth for the version number;
       # UpdateController::VERSION is kept in sync with a substitution rather
       # than a second manually-maintained value.
-      - name: Bump patch version
+      - name: Bump version
         id: bump
         run: |
-          npm version patch --no-git-tag-version
+          npm version "${{ needs.determine-version.outputs.bump }}" --no-git-tag-version
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           sed -i "s/VERSION = '[^']*';/VERSION = '${VERSION}';/" app/Http/Controllers/Admin/UpdateController.php
+
+      # Groups commits since the last tag into Keep a Changelog sections by
+      # their conventional-commit prefix and inserts them above the previous
+      # top entry — same format the file already uses, just filled in.
+      - name: Update changelog
+        run: |
+          VERSION="${{ steps.bump.outputs.version }}"
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          RANGE="HEAD"
+          [ -n "$LAST_TAG" ] && RANGE="$LAST_TAG..HEAD"
+
+          added=$(git log "$RANGE" --pretty=format:"%s" | grep -E '^feat(\([^)]*\))?!?:' | sed -E 's/^feat(\([^)]*\))?!?: ?/- /')
+          fixed=$(git log "$RANGE" --pretty=format:"%s" | grep -E '^fix(\([^)]*\))?!?:' | sed -E 's/^fix(\([^)]*\))?!?: ?/- /')
+          changed=$(git log "$RANGE" --pretty=format:"%s" | grep -vE '^(feat|fix|chore|docs|style|test|ci|build)(\([^)]*\))?!?:' | sed 's/^/- /')
+
+          {
+            echo "## [${VERSION}] — $(date +%Y-%m-%d)"
+            echo
+            if [ -n "$added" ]; then echo "### Added"; echo; echo "$added"; echo; fi
+            if [ -n "$fixed" ]; then echo "### Fixed"; echo; echo "$fixed"; echo; fi
+            if [ -n "$changed" ]; then echo "### Changed"; echo; echo "$changed"; echo; fi
+            echo "---"
+            echo
+          } > /tmp/changelog_entry.md
+
+          awk -v entryfile=/tmp/changelog_entry.md '
+            !inserted && /^## \[/ { while ((getline line < entryfile) > 0) print line; inserted=1 }
+            { print }
+          ' CHANGELOG.md > CHANGELOG.md.tmp && mv CHANGELOG.md.tmp CHANGELOG.md
 
       - name: Commit and tag
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add package.json package-lock.json app/Http/Controllers/Admin/UpdateController.php
+          git add package.json package-lock.json app/Http/Controllers/Admin/UpdateController.php CHANGELOG.md
           git commit -m "chore: release v${{ steps.bump.outputs.version }} [skip ci]"
           git tag "v${{ steps.bump.outputs.version }}"
           git push origin HEAD:main
