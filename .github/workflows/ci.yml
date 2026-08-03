@@ -202,7 +202,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
+          # laravel.log is what actually happened server-side — the
+          # Playwright-only artifacts below show a request hung/timed out,
+          # never why the server behind it did that.
           path: |
             playwright-report/
             test-results/
+            storage/logs/laravel.log
           retention-days: 7

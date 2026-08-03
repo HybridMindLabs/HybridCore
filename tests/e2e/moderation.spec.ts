@@ -26,8 +26,13 @@ test('a reported comment shows up in admin moderation and can be resolved', asyn
     await commentRow.locator('button[title="Report"], button[title="Докладвай"]').click();
     await page.getByRole('button', { name: /spam|спам/i }).click();
 
-    // Sign in as admin in a fresh context — the user session above must stay intact.
-    const adminPage = await page.context().browser()!.newPage();
+    // Sign in as admin in a fresh context — the user session above must stay
+    // intact. browser.newPage() would implicitly create a context that only
+    // gets cleaned up when the whole browser closes, not when the page does —
+    // with every e2e test sharing one browser process, that leaks for the
+    // rest of the run. Create (and close) the context explicitly instead.
+    const adminContext = await page.context().browser()!.newContext();
+    const adminPage = await adminContext.newPage();
     await adminPage.goto('/admin/login');
     await adminPage.fill('#email', ADMIN_EMAIL);
     await adminPage.fill('#password', ADMIN_PASSWORD);
@@ -41,5 +46,5 @@ test('a reported comment shows up in admin moderation and can be resolved', asyn
     await reportRow.getByRole('button', { name: 'Resolve' }).click();
     await expect(adminPage.locator('body')).toContainText('resolved');
 
-    await adminPage.close();
+    await adminContext.close();
 });
