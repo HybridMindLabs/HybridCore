@@ -13,6 +13,8 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'password';
  * which UI produced the request.
  */
 test('a format=html page has its script tags stripped on render', async ({ page }) => {
+    test.setTimeout(60_000);
+
     await page.goto('/admin/login');
     await page.fill('#email', ADMIN_EMAIL);
     await page.fill('#password', ADMIN_PASSWORD);

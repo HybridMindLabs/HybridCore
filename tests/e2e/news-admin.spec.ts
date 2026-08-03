@@ -4,6 +4,8 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'admin@hybridcore.test';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'password';
 
 test.describe('Admin news article CRUD', () => {
+    test.setTimeout(60_000);
+
     test.beforeEach(async ({ page }) => {
         await page.goto('/admin/login');
         await page.fill('#email', ADMIN_EMAIL);

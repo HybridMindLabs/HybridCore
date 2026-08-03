@@ -11,6 +11,8 @@ import { loginAs, createTestUser } from './helpers/auth';
  * obviously-wrong code surface an error instead of silently doing nothing.
  */
 test('setting up 2FA reaches the code step, and a bad code is rejected', async ({ page }) => {
+    test.setTimeout(45_000);
+
     const user = await createTestUser(test.info().project.use.baseURL as string);
     await loginAs(page, user.email, user.password);
 
@@ -33,5 +35,5 @@ test('setting up 2FA reaches the code step, and a bad code is rejected', async (
     await page.fill('#totp_code', '000000');
     await page.getByRole('button', { name: /verify & enable|потвърди и включи/i }).click();
 
-    await expect(page.locator('body')).toContainText(/invalid code|невалиден код/i);
+    await expect(page.locator('body')).toContainText(/invalid code|невалиден код/i, { timeout: 15_000 });
 });

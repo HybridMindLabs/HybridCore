@@ -75,18 +75,29 @@ class AppServiceProvider extends ServiceProvider
         // Laravel Pulse dashboard (/pulse) — super admins only.
         Gate::define('viewPulse', fn (User $user) => $user->is_admin);
 
-        // Registration limiter: real submits stay strict (5/min), but the
-        // Precognition validation pings the form sends while typing get a
-        // roomier budget so live validation can't lock users out of signing up.
+        // Registration limiter: real submits stay strict (5/min by default),
+        // but the Precognition validation pings the form sends while typing
+        // get a roomier budget so live validation can't lock users out of
+        // signing up. Shares the same configurable knob as 'login' below —
+        // an E2E run that registers several throwaway users per run needs
+        // the same headroom a shared-IP deployment does.
         RateLimiter::for('register', function (Request $request) {
             return $request->isPrecognitive()
                 ? Limit::perMinute(30)->by('precognition:'.$request->ip())
-                : Limit::perMinute(5)->by($request->ip());
+                : Limit::perMinute((int) config('hybridcore.login_rate_limit', 5))->by($request->ip());
         });
 
         // Login limiter. Same strict default as before (5/min per IP), but
         // configurable so shared-IP deployments and E2E runs can raise it.
         RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinute((int) config('hybridcore.login_rate_limit', 5))->by($request->ip());
+        });
+
+        // Admin login: previously a raw throttle:5,1 that never respected the
+        // config knob above, so a run signing into the admin panel more than
+        // 5 times a minute (several E2E specs each authenticate as admin) hit
+        // this ceiling even after LOGIN_RATE_LIMIT was raised for the rest.
+        RateLimiter::for('admin-login', function (Request $request) {
             return Limit::perMinute((int) config('hybridcore.login_rate_limit', 5))->by($request->ip());
         });
 

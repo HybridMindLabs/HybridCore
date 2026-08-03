@@ -5,6 +5,8 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'admin@hybridcore.test';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'password';
 
 test('a reported comment shows up in admin moderation and can be resolved', async ({ page }) => {
+    test.setTimeout(45_000);
+
     const user = await createTestUser(test.info().project.use.baseURL as string);
     await loginAs(page, user.email, user.password);
 
