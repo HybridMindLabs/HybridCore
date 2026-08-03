@@ -99,4 +99,25 @@ class PermissionProtectionTest extends TestCase
 
         $this->assertDatabaseHas('settings', ['key' => 'maintenance_mode', 'value' => '0']);
     }
+
+    public function test_restricted_staff_with_admin_access_permission_reaches_dashboard(): void
+    {
+        $staff = $this->userWithPermissions(['users.view']);
+
+        $this->actingAs($staff)->get(route('admin.dashboard'))->assertOk();
+    }
+
+    public function test_restricted_staff_without_admin_access_permission_is_redirected(): void
+    {
+        $user = User::factory()->create(['is_admin' => false]);
+
+        $this->actingAs($user)->get(route('admin.dashboard'))->assertRedirect(route('admin.login'));
+    }
+
+    public function test_restricted_staff_cannot_reach_routes_outside_their_grant(): void
+    {
+        $staff = $this->userWithPermissions(['users.view']);
+
+        $this->actingAs($staff)->get(route('admin.system-health.index'))->assertForbidden();
+    }
 }

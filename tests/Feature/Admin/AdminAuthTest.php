@@ -2,7 +2,10 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\CorePermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -113,5 +116,23 @@ class AdminAuthTest extends TestCase
 
         $response = $this->actingAs($admin)->get('/admin');
         $response->assertStatus(200);
+    }
+
+    public function test_staff_without_is_admin_can_login_via_admin_access_permission(): void
+    {
+        (new CorePermissionsSeeder)->run();
+
+        $staff = User::factory()->create(['is_admin' => false]);
+        $role = Role::create(['name' => 'Staff', 'slug' => 'staff-'.uniqid()]);
+        $role->permissions()->sync(Permission::where('slug', 'admin.access')->pluck('id'));
+        $staff->roles()->attach($role);
+
+        $response = $this->post('/admin/login', [
+            'email' => $staff->email,
+            'password' => 'password',
+        ]);
+
+        $response->assertRedirect('/admin');
+        $this->assertAuthenticatedAs($staff);
     }
 }

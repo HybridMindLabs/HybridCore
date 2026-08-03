@@ -47,7 +47,7 @@ class LoginController extends Controller
             ]);
         }
 
-        if (! $user->is_admin) {
+        if (! $user->hasPermission('admin.access')) {
             Auth::logout();
             $request->session()->invalidate();
 
