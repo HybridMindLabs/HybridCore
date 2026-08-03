@@ -414,7 +414,13 @@ sudo supervisorctl restart hybridcore-horizon hybridcore-reverb hybridcore-ssr
 
 ## 10. Building a release archive
 
-Maintainers package a distributable ZIP with:
+Every push to `main` that passes CI is released automatically: the `release`
+job in `.github/workflows/ci.yml` bumps the patch version, tags it, builds the
+archive below, and publishes it as a GitHub Release with the ZIP attached.
+Bump a minor/major version yourself (edit `package.json`'s `version` before
+pushing) when a release is more than a patch.
+
+To build one by hand (a local test, an off-band build):
 
 ```bash
 php artisan hybridcore:release                # sources + built assets
