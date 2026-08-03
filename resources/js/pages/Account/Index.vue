@@ -7,7 +7,7 @@ import Preferences from '@/pages/Account/Preferences.vue';
 import ConnectedAccounts from '@/pages/Account/ConnectedAccounts.vue';
 import TwoFactor from '@/pages/Account/TwoFactor.vue';
 import Sessions from '@/pages/Account/Sessions.vue';
-import Notifications from '@/pages/Account/Notifications.vue';
+import NotificationsList from '@/components/Account/NotificationsList.vue';
 import BlockedUsers from '@/pages/Account/BlockedUsers.vue';
 import DangerZone from '@/pages/Account/DangerZone.vue';
 import ActivityLog from '@/pages/Account/ActivityLog.vue';
@@ -130,7 +130,7 @@ watch(activeTab, (tab) => {
                             />
                         </template>
                         <template v-else-if="activeTab === 'notifications'">
-                            <Notifications :notifications="notifications" />
+                            <NotificationsList :notifications="notifications" />
                         </template>
                         <template v-else-if="activeTab === 'activity'">
                             <ActivityLog :history="loginHistory" />

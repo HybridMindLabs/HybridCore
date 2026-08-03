@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Page;
 use App\Support\Seo;
+use HTMLPurifier;
+use HTMLPurifier_Config;
 use Inertia\Inertia;
 use Inertia\Response;
 use League\CommonMark\CommonMarkConverter;
@@ -26,7 +28,7 @@ class PageController extends Controller
         $page = Page::published()->where('slug', $slug)->firstOrFail();
 
         $body = match ($page->format) {
-            'html' => $page->body ? $this->substitutePlaceholders($page->body) : null,
+            'html' => $page->body ? $this->sanitizeHtml($this->substitutePlaceholders($page->body)) : null,
             default => $page->body ? $this->renderMarkdown($page->body) : null,
         };
 
@@ -53,5 +55,20 @@ class PageController extends Controller
             [config('app.name', 'HybridCore'), config('app.contact_email', '')],
             $content
         );
+    }
+
+    /**
+     * format=html pages are raw admin-authored HTML with no markdown pass to
+     * strip anything — without this, a compromised or careless admin account
+     * is a stored-XSS primitive straight to every visitor of the page.
+     */
+    private function sanitizeHtml(string $html): string
+    {
+        $config = HTMLPurifier_Config::createDefault();
+        // ponytail: no definition cache — rebuilt every request. Add
+        // Cache.SerializerPath (a writable dir) if this path gets hot.
+        $config->set('Cache.DefinitionImpl', null);
+
+        return (new HTMLPurifier($config))->purify($html);
     }
 }

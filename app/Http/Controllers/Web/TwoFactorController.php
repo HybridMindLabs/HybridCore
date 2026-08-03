@@ -147,13 +147,15 @@ class TwoFactorController extends Controller
         $request->validate(['code' => ['required', 'string']]);
 
         $user = User::findOrFail($userId);
+        $isAdminLogin = $request->session()->get('2fa_admin_login', false);
+        $destination = $isAdminLogin ? route('admin.dashboard') : route('account.index');
 
         $raw = $request->string('code')->replace(' ', '')->toString();
         $code = str_replace('-', '', $raw);
 
         // Try TOTP code
         if (strlen($code) === 6 && $this->google2fa->verifyKey($user->two_factor_secret, $code)) {
-            $request->session()->forget('2fa_user_id');
+            $request->session()->forget(['2fa_user_id', '2fa_admin_login']);
             Auth::login($user, $request->session()->get('2fa_remember', false));
 
             // The session id was handed out before the second factor was
@@ -162,7 +164,7 @@ class TwoFactorController extends Controller
             $request->session()->regenerate();
             $request->session()->put('2fa_verified', true);
 
-            return redirect()->intended(route('account.index'));
+            return redirect()->intended($destination);
         }
 
         // Try recovery code
@@ -171,12 +173,12 @@ class TwoFactorController extends Controller
             $user->update([
                 'two_factor_recovery_codes' => array_values(array_filter($codes, fn ($c) => $c !== $raw)),
             ]);
-            $request->session()->forget('2fa_user_id');
+            $request->session()->forget(['2fa_user_id', '2fa_admin_login']);
             Auth::login($user);
             $request->session()->regenerate();
             $request->session()->put('2fa_verified', true);
 
-            return redirect()->intended(route('account.index'));
+            return redirect()->intended($destination);
         }
 
         return back()->withErrors(['code' => __('account.2fa_challenge_invalid')]);

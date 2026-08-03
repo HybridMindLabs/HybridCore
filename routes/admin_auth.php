@@ -12,5 +12,5 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/login', [LoginController::class, 'create'])->name('admin.login');
-Route::post('/login', [LoginController::class, 'store'])->name('admin.login.store')->middleware('throttle:5,1');
+Route::post('/login', [LoginController::class, 'store'])->name('admin.login.store')->middleware(['throttle:admin-login', 'throttle:login-by-account']);
 Route::post('/logout', [LoginController::class, 'destroy'])->name('admin.logout')->middleware('auth');

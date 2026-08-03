@@ -11,7 +11,7 @@ class CheckIpBan
 {
     public function handle(Request $request, Closure $next): mixed
     {
-        if (! $request->is('admin*')) {
+        if (! $this->isExemptAdminSession($request)) {
             try {
                 $ip = $request->ip();
                 $ban = IpBan::active()->get()->first(function (IpBan $ban) use ($ip): bool {
@@ -26,6 +26,18 @@ class CheckIpBan
         }
 
         return $next($request);
+    }
+
+    /**
+     * Only an already-signed-in admin skips the ban check — so one admin
+     * getting banned alongside their IP range (office NAT, VPN exit) doesn't
+     * lock out the rest of the staff mid-session. Anonymous requests,
+     * including /admin/login itself, are never exempt: without this, a
+     * banned IP could still hit the (throttled) admin login freely.
+     */
+    private function isExemptAdminSession(Request $request): bool
+    {
+        return $request->is('admin*') && $request->user()?->is_admin === true;
     }
 
     private function ipInCidr(string $ip, string $cidr): bool

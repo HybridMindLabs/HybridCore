@@ -67,6 +67,7 @@ return [
     'oauth_disabled' => 'Този доставчик за вход е изключен.',
     'oauth_unavailable' => 'Този доставчик за вход все още не е наличен.',
     'oauth_failed' => 'Входът не бе успешен. Опитай отново.',
+    'captcha_failed' => 'Captcha проверката не бе успешна. Опитай отново.',
     'or_continue_with' => 'Или продължи с',
     'complete_profile_title' => 'Още една стъпка',
     'complete_profile_subtitle' => 'Steam не споделя имейл адрес — добави такъв, за да завършиш създаването на акаунта.',

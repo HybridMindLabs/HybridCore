@@ -1,0 +1,35 @@
+php:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'app/**'
+          - 'database/**'
+          - 'routes/**'
+          - 'config/**'
+          - 'tests/**'
+          - 'composer.json'
+          - 'composer.lock'
+
+frontend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'resources/js/**'
+          - 'resources/css/**'
+          - 'package.json'
+          - 'package-lock.json'
+
+docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'docs/**'
+          - '**/*.md'
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/**'
+          - '.ddev/**'
+
+extensions:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'extensions/**'

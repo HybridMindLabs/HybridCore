@@ -44,6 +44,19 @@ use Throwable;
  * Every URL must be HTTPS: the download ends up as executable code, so it must
  * not be interceptable in transit, and a license key must never travel in the
  * clear.
+ *
+ * HTTPS only proves the bytes weren't altered *in transit* from whatever the
+ * feed host currently serves — it says nothing if that host, the author's
+ * GitHub account, or their DNS is compromised after install. An author can
+ * close that gap by declaring "update_public_key" (a base64 Ed25519 public
+ * key) once in extension.json; every release after that must carry a
+ * matching "signature" (base64, detached, over the raw ZIP bytes) in their
+ * own feed, checked against the key from the *currently installed* manifest —
+ * not anything the new release claims — so a compromised feed can serve a
+ * new key all it wants and still can't sign with the old private one. This
+ * only covers an author's own feed shape; a plain GitHub-releases URL has no
+ * field to carry a signature in, so a pinned key with that feed shape always
+ * fails closed rather than silently skipping the check.
  */
 class ExtensionUpdateService
 {
@@ -62,7 +75,7 @@ class ExtensionUpdateService
      * The newer release for one extension, or null when it is current, has no
      * feed, or the feed could not be read.
      *
-     * @return array{version: string, download_url: string, notes: string, url: string}|null
+     * @return array{version: string, download_url: string, notes: string, url: string, signature: ?string}|null
      */
     public function check(Extension $extension, bool $fresh = false): ?array
     {
@@ -100,7 +113,7 @@ class ExtensionUpdateService
     /**
      * Newer releases for every installed extension that declares a feed.
      *
-     * @return array<string, array{version: string, download_url: string, notes: string, url: string}>
+     * @return array<string, array{version: string, download_url: string, notes: string, url: string, signature: ?string}>
      */
     public function checkAll(bool $fresh = false): array
     {
@@ -149,6 +162,12 @@ class ExtensionUpdateService
             throw new RuntimeException('Could not download the update: '.$e->getMessage());
         }
 
+        if (! $this->verifySignature($extension, $release, $path)) {
+            @unlink($path);
+
+            throw new RuntimeException('The downloaded update failed signature verification.');
+        }
+
         // confirmImport consumes the staged file and performs every safety
         // check; it also fires the EXTENSION_UPDATED hook on a version change.
         $updated = $this->manager->confirmImport($token);
@@ -162,6 +181,43 @@ class ExtensionUpdateService
     public function forget(Extension $extension): void
     {
         Cache::forget(self::CACHE_PREFIX.$extension->slug);
+    }
+
+    /**
+     * If the currently installed manifest pins a public key, the release must
+     * carry a valid signature over the downloaded bytes — checked against
+     * that pinned key, never anything the release itself supplies. An
+     * extension that never opted into signing (no pinned key) is unaffected.
+     *
+     * @param  array{version: string, download_url: string, notes: string, url: string, signature: ?string}  $release
+     */
+    private function verifySignature(Extension $extension, array $release, string $path): bool
+    {
+        $publicKey = $extension->metadata['update_public_key'] ?? null;
+
+        if (! is_string($publicKey) || $publicKey === '') {
+            return true;
+        }
+
+        $signature = $release['signature'] ?? null;
+
+        if (! is_string($signature) || $signature === '') {
+            return false;
+        }
+
+        try {
+            $key = base64_decode($publicKey, true);
+            $sig = base64_decode($signature, true);
+            $bytes = file_get_contents($path);
+
+            if ($key === false || $sig === false || $bytes === false) {
+                return false;
+            }
+
+            return sodium_crypto_sign_verify_detached($sig, $bytes, $key);
+        } catch (\SodiumException) {
+            return false;
+        }
     }
 
     /** The declared feed URL, if it is present and safe to call. */
@@ -181,7 +237,7 @@ class ExtensionUpdateService
     }
 
     /**
-     * @return array{version: string, download_url: string, notes: string, url: string}|null
+     * @return array{version: string, download_url: string, notes: string, url: string, signature: ?string}|null
      */
     private function fetchFeed(string $url, ?string $license = null): ?array
     {
@@ -227,6 +283,7 @@ class ExtensionUpdateService
             'download_url' => $download,
             'notes' => mb_substr((string) ($data['notes'] ?? ''), 0, 4000),
             'url' => is_string($data['url'] ?? null) ? $data['url'] : $download,
+            'signature' => is_string($data['signature'] ?? null) ? $data['signature'] : null,
         ];
     }
 

@@ -67,6 +67,7 @@ return [
     'oauth_disabled' => 'This sign-in provider is disabled.',
     'oauth_unavailable' => 'This sign-in provider is not available yet.',
     'oauth_failed' => 'Sign-in failed. Please try again.',
+    'captcha_failed' => 'Captcha verification failed. Please try again.',
     'or_continue_with' => 'Or continue with',
     'complete_profile_title' => 'One more step',
     'complete_profile_subtitle' => "Steam doesn't share an email address — add one to finish creating your account.",

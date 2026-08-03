@@ -24,6 +24,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Require signed commits for the self-update
+    |--------------------------------------------------------------------------
+    | Off by default — most installs have no GPG keyring set up, and forcing
+    | this on would break every existing `git pull` update. When enabled,
+    | every commit the update is about to merge must pass `git verify-commit`
+    | against a key already in the server's keyring (`gpg --import`), so a
+    | compromised GitHub account/DNS/repo can serve whatever it wants and the
+    | update still refuses to apply it without the real signing key. See
+    | DEPLOYMENT.md for how to import a trusted key.
+    */
+
+    'require_signed_updates' => (bool) env('HYBRIDCORE_REQUIRE_SIGNED_UPDATES', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | mysqldump binary
     |--------------------------------------------------------------------------
     | Explicit path used by the admin backup tool when mysqldump is not on one

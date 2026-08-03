@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Http\Controllers\Admin\UpdateController;
+use App\Services\GitUpdateVerifier;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\Process\Process;
@@ -43,6 +44,8 @@ class CoreUpdateCommand extends Command
                     return self::FAILURE;
                 }
 
+                $this->step('git fetch', ['git', 'fetch', 'origin']);
+                app(GitUpdateVerifier::class)->assertIncomingCommitsAreSigned(base_path());
                 $this->step('git pull', ['git', 'pull', '--ff-only']);
             }
 

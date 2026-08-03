@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Plus, Lock, Users, KeySquare, Pencil, Trash2, ShieldCheck } from '@lucide/vue';
+import { Plus, Lock, Users, KeySquare, Pencil, Trash2, ShieldCheck, ShieldAlert } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
 import EmptyState from '@/components/UI/EmptyState.vue';
@@ -45,6 +45,14 @@ function deleteRole(role: RoleItem) {
                 </Link>
             </template>
         </PageHeader>
+
+        <div class="mb-5 flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3">
+            <ShieldAlert :size="15" :stroke-width="2" class="text-amber-400 shrink-0 mt-0.5" />
+            <p class="text-xs text-amber-200/90 leading-relaxed">
+                Users with <strong>Full admin access</strong> (set per-user, not here) bypass every role and permission below —
+                the roles on this page only restrict accounts that don't have that flag.
+            </p>
+        </div>
 
         <EmptyState
             v-if="roles.length === 0"

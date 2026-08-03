@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::prefix('auth')->controller(AuthController::class)->group(function () {
-        Route::post('login', 'login');
-        Route::post('register', 'register');
+        Route::post('login', 'login')->middleware(['throttle:5,1', 'throttle:login-by-account']);
+        Route::post('register', 'register')->middleware('throttle:5,1');
         Route::middleware('auth:sanctum')->group(function () {
             Route::post('logout', 'logout');
             Route::get('me', 'me');

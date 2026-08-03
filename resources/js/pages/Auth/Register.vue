@@ -5,16 +5,24 @@ import Input from '@/components/UI/Input.vue';
 import Button from '@/components/UI/Button.vue';
 import PasswordField from '@/components/Auth/PasswordField.vue';
 import OAuthButtons from '@/components/Auth/OAuthButtons.vue';
+import CaptchaWidget from '@/components/UI/CaptchaWidget.vue';
 import { useLocale } from '@/composables/useLocale';
 
-defineProps<{ registrationEnabled: boolean }>();
+const props = defineProps<{
+    registrationEnabled: boolean;
+    captcha: { provider: string; site_key: string | null };
+}>();
 
 const { t } = useLocale();
 
 // Precognition: fields are validated live against the real server rules
 // (unique email, password policy) as the user fills the form.
-const form = useForm({ name: '', email: '', password: '', password_confirmation: '' })
+const form = useForm({ name: '', email: '', password: '', password_confirmation: '', captcha_token: '' })
     .withPrecognition('post', route('register'));
+
+function onCaptchaToken(token: string) {
+    form.captcha_token = token;
+}
 
 function submit() {
     form.submit({ onFinish: () => form.reset('password', 'password_confirmation') });
@@ -58,6 +66,8 @@ function submit() {
                 :error="form.errors.password_confirmation"
                 :must-match="form.password"
             />
+            <CaptchaWidget :provider="props.captcha.provider" :site-key="props.captcha.site_key" @token="onCaptchaToken" />
+            <p v-if="form.errors.captcha_token" role="alert" class="text-[12px] text-red-600 dark:text-red-400">{{ form.errors.captcha_token }}</p>
             <Button type="submit" size="lg" :disabled="form.processing" class="w-full justify-center">{{ t('auth.register.submit') }}</Button>
         </form>
 

@@ -325,6 +325,87 @@ class ExtensionUpdateServiceTest extends TestCase
         $this->assertSame('lic_abc123', $ext->fresh()->license_key);
     }
 
+    // ── Signature verification ────────────────────────────────────────────
+
+    public function test_apply_rejects_a_pinned_extension_with_no_signature(): void
+    {
+        $publicKey = base64_encode(sodium_crypto_sign_publickey(sodium_crypto_sign_keypair()));
+
+        Http::fake([
+            'feed.test/*' => Http::response($this->feed()), // no signature field
+            'example.test/*' => Http::response('zip-bytes'),
+        ]);
+        $ext = $this->extension(['update_url' => 'https://feed.test/demo.json', 'update_public_key' => $publicKey]);
+
+        try {
+            $this->service()->apply($ext);
+            $this->fail('Expected a signature verification failure.');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('signature', $e->getMessage());
+        }
+
+        $staged = glob(storage_path('app/extension-imports/*.zip')) ?: [];
+        $this->assertSame([], $staged);
+    }
+
+    public function test_apply_rejects_a_pinned_extension_with_an_invalid_signature(): void
+    {
+        $publicKey = base64_encode(sodium_crypto_sign_publickey(sodium_crypto_sign_keypair()));
+
+        Http::fake([
+            'feed.test/*' => Http::response($this->feed(['signature' => base64_encode('not-a-genuine-signature')])),
+            'example.test/*' => Http::response('zip-bytes'),
+        ]);
+        $ext = $this->extension(['update_url' => 'https://feed.test/demo.json', 'update_public_key' => $publicKey]);
+
+        try {
+            $this->service()->apply($ext);
+            $this->fail('Expected a signature verification failure.');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('signature', $e->getMessage());
+        }
+    }
+
+    public function test_apply_accepts_a_valid_signature_from_the_pinned_key(): void
+    {
+        $keyPair = sodium_crypto_sign_keypair();
+        $publicKey = base64_encode(sodium_crypto_sign_publickey($keyPair));
+        $zipBytes = 'not-a-real-zip-but-genuinely-signed';
+        $signature = base64_encode(sodium_crypto_sign_detached($zipBytes, sodium_crypto_sign_secretkey($keyPair)));
+
+        Http::fake([
+            'feed.test/*' => Http::response($this->feed(['signature' => $signature])),
+            'example.test/*' => Http::response($zipBytes),
+        ]);
+        $ext = $this->extension(['update_url' => 'https://feed.test/demo.json', 'update_public_key' => $publicKey]);
+
+        // A valid signature clears the check and reaches confirmImport, which
+        // then fails for an unrelated reason (this isn't a real ZIP) — proving
+        // the failure is no longer about the signature.
+        try {
+            $this->service()->apply($ext);
+            $this->fail('Expected a downstream ZIP-open failure.');
+        } catch (\RuntimeException $e) {
+            $this->assertStringNotContainsString('signature', $e->getMessage());
+        }
+    }
+
+    public function test_apply_skips_the_signature_check_when_no_key_is_pinned(): void
+    {
+        Http::fake([
+            'feed.test/*' => Http::response($this->feed()),
+            'example.test/*' => Http::response('not-a-real-zip'),
+        ]);
+        $ext = $this->extension(['update_url' => 'https://feed.test/demo.json']);
+
+        try {
+            $this->service()->apply($ext);
+            $this->fail('Expected a downstream ZIP-open failure.');
+        } catch (\RuntimeException $e) {
+            $this->assertStringNotContainsString('signature', $e->getMessage());
+        }
+    }
+
     protected function tearDown(): void
     {
         Cache::flush();

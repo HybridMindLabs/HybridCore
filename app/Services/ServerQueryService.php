@@ -9,6 +9,7 @@ use App\Models\ServerPlayer;
 use App\Models\ServerSnapshot;
 use App\Services\Extensions\Registries\HookRegistry;
 use App\Support\Hooks;
+use App\Support\HostSafety;
 
 class ServerQueryService
 {
@@ -77,6 +78,10 @@ class ServerQueryService
 
         if ($driver === null) {
             return QueryResult::offline("No driver for '{$slug}'");
+        }
+
+        if (! HostSafety::isSafePublicHost($server->ip)) {
+            return QueryResult::offline('Host resolves to a private or reserved address');
         }
 
         // Fall back to the game port when no separate query port is set — right
