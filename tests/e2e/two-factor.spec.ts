@@ -35,5 +35,8 @@ test('setting up 2FA reaches the code step, and a bad code is rejected', async (
     await page.fill('#totp_code', '000000');
     await page.getByRole('button', { name: /verify & enable|потвърди и включи/i }).click();
 
-    await expect(page.locator('body')).toContainText(/invalid code|невалиден код/i, { timeout: 15_000 });
+    // account.2fa_code_invalid — distinct from the login-challenge error
+    // (account.2fa_challenge_invalid, "Invalid code..."), which is a
+    // different message for a different step.
+    await expect(page.locator('body')).toContainText(/that code is not right|кодът не е верен/i, { timeout: 15_000 });
 });
