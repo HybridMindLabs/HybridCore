@@ -38,16 +38,16 @@ class ProcessBridgeEvents implements ShouldQueue
         }
 
         foreach ($this->events as $event) {
-            $type = $event['type'] ?? '';
+            $type = $event['type'];
             if ($type === '' || ! $registry->hasListeners($type)) {
                 continue;
             }
 
-            $occurredAt = isset($event['at']) && is_int($event['at'])
+            $occurredAt = isset($event['at'])
                 ? Carbon::createFromTimestamp($event['at'])
                 : null;
 
-            $registry->dispatch($server, $type, $event['data'] ?? [], $occurredAt);
+            $registry->dispatch($server, $type, $event['data'], $occurredAt);
         }
     }
 }

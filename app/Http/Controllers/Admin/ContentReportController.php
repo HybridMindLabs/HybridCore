@@ -32,7 +32,7 @@ class ContentReportController extends Controller
                 'details' => $r->details,
                 'status' => $r->status,
                 'created_at' => $r->created_at->diffForHumans(),
-                'reporter' => $r->reporter?->username ?? 'unknown',
+                'reporter' => $r->reporter->username,
                 'content' => $this->contentPreview($r),
             ]);
 
@@ -51,7 +51,7 @@ class ContentReportController extends Controller
         if ($reportable instanceof NewsComment) {
             return [
                 'body' => $reportable->body,
-                'author' => $reportable->user?->username ?? 'unknown',
+                'author' => $reportable->user->username,
                 'url' => $reportable->article ? route('news.show', $reportable->article->slug) : null,
             ];
         }
@@ -61,10 +61,8 @@ class ContentReportController extends Controller
 
             return [
                 'body' => "({$reportable->rating}/5) ".($reportable->body ?? ''),
-                'author' => $reportable->user?->username ?? 'unknown',
-                'url' => $server?->game
-                    ? route('servers.show', [$server->game->slug, $server->ip, $server->port])
-                    : null,
+                'author' => $reportable->user->username,
+                'url' => route('servers.show', [$server->game->slug, $server->ip, $server->port]),
             ];
         }
 

@@ -132,8 +132,8 @@ class QueryTestCommand extends Command
             $servers->map(fn (Server $s) => [
                 $s->id,
                 $s->ip.':'.$s->port,
-                $s->game?->name ?? '—',
-                $s->game?->query_driver ?? '—',
+                $s->game->name,
+                $s->game->query_driver,
             ]),
         );
     }

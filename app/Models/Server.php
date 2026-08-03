@@ -132,6 +132,7 @@ class Server extends Model
         return $this->hasMany(ServerSnapshot::class);
     }
 
+    /** @return HasOne<ServerSnapshot, $this> */
     public function latestSnapshot(): HasOne
     {
         return $this->hasOne(ServerSnapshot::class)->latestOfMany('recorded_at');
@@ -147,6 +148,7 @@ class Server extends Model
         return $this->hasMany(ServerConnectionClick::class);
     }
 
+    /** @return HasMany<ServerReview, $this> */
     public function serverReviews(): HasMany
     {
         return $this->hasMany(ServerReview::class);

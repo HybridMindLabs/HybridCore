@@ -7,8 +7,10 @@ use App\Http\Requests\Account\UpdatePasswordRequest;
 use App\Http\Requests\Account\UpdateProfileRequest;
 use App\Jobs\GenerateDataExportJob;
 use App\Models\Game;
+use App\Models\LoginHistory;
 use App\Models\Server;
 use App\Models\User;
+use App\Models\UserBlock;
 use App\Services\AchievementService;
 use App\Services\Auth\LoginSecurityService;
 use App\Services\Auth\OAuthProviderRegistry;
@@ -109,7 +111,7 @@ class AccountController extends Controller
                 ->with('blocked')
                 ->latest()
                 ->get()
-                ->map(fn ($b) => [
+                ->map(fn (UserBlock $b) => [
                     'id' => $b->id,
                     'user' => [
                         'id' => $b->blocked->id,
@@ -120,7 +122,7 @@ class AccountController extends Controller
                     'blocked_at' => $b->created_at->toFormattedDateString(),
                 ]),
             'loginHistory' => [
-                'data' => $user->loginHistories()->latest()->take(20)->get()->map(fn ($h) => [
+                'data' => $user->loginHistories()->latest()->take(20)->get()->map(fn (LoginHistory $h) => [
                     'id' => $h->id,
                     'ip' => $h->ip_address,
                     'user_agent' => $h->user_agent,
@@ -251,18 +253,14 @@ class AccountController extends Controller
             'game_icon' => $s->game?->cover_url,
             'address' => $s->address,
             'map' => $s->latestSnapshot?->map,
-            'map_image' => $s->game ? Game::mapImageUrl($s->game->slug, $s->latestSnapshot?->map) : null,
+            'map_image' => Game::mapImageUrl($s->game->slug, $s->latestSnapshot?->map),
             'players' => $s->latestSnapshot?->players_online,
             'max_players' => $s->latestSnapshot?->players_max,
             'online' => $s->is_online,
             // The favourites list previously had no way back to the server page
             // — only a connect link — so the name was a dead end.
-            'show_url' => $s->game
-                ? route('servers.show', [$s->game->slug, $s->ip, $s->port])
-                : null,
-            'connect_url' => $s->game
-                ? route('servers.connect', [$s->game->slug, $s->ip, $s->port])
-                : null,
+            'show_url' => route('servers.show', [$s->game->slug, $s->ip, $s->port]),
+            'connect_url' => route('servers.connect', [$s->game->slug, $s->ip, $s->port]),
         ]);
 
         return Inertia::render('Account/Favorites', [
@@ -399,7 +397,7 @@ class AccountController extends Controller
         $history = $user->loginHistories()->latest()->paginate(20);
 
         return Inertia::render('Account/ActivityLog', [
-            'history' => $history->through(fn ($h) => [
+            'history' => $history->through(fn (LoginHistory $h) => [
                 'id' => $h->id,
                 'ip' => $h->ip_address,
                 'user_agent' => $h->user_agent,

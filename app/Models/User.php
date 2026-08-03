@@ -151,7 +151,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /** Banned users stay out of the search index. */
     public function shouldBeSearchable(): bool
     {
-        return ! $this->isBanned() && $this->username !== null;
+        return ! $this->isBanned();
     }
 
     protected function casts(): array
@@ -225,6 +225,7 @@ class User extends Authenticatable implements MustVerifyEmail
             ->orWhere('participant_2_id', $this->id);
     }
 
+    /** @return HasMany<UserBlock, $this> */
     public function blocks(): HasMany
     {
         return $this->hasMany(UserBlock::class, 'blocker_id');
@@ -235,6 +236,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(UserAchievement::class);
     }
 
+    /** @return BelongsToMany<Server, $this> */
     public function favouriteServers(): BelongsToMany
     {
         return $this->belongsToMany(Server::class, 'server_favourites');
@@ -272,6 +274,7 @@ class User extends Authenticatable implements MustVerifyEmail
             ->count();
     }
 
+    /** @return HasMany<LoginHistory, $this> */
     public function loginHistories(): HasMany
     {
         return $this->hasMany(LoginHistory::class)->orderBy('created_at', 'desc');

@@ -31,8 +31,8 @@ class NewsCommentController extends Controller
                 'body' => $c->body,
                 'created_at' => $c->created_at->diffForHumans(),
                 'user' => [
-                    'username' => $c->user?->username,
-                    'name' => $c->user?->name ?? 'Deleted user',
+                    'username' => $c->user->username,
+                    'name' => $c->user->name,
                 ],
                 'article' => $c->article ? [
                     'title' => $c->article->title,
@@ -49,7 +49,7 @@ class NewsCommentController extends Controller
     public function destroy(NewsComment $comment): RedirectResponse
     {
         $comment->delete();
-        $this->activity->log('news.comment.deleted', "Deleted comment #{$comment->id} by ".($comment->user?->username ?? 'unknown'));
+        $this->activity->log('news.comment.deleted', "Deleted comment #{$comment->id} by ".$comment->user->username);
 
         return back()->with('success', 'Comment deleted.');
     }

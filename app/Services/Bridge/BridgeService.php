@@ -257,12 +257,8 @@ class BridgeService
      * @param  array<string, mixed>  $event
      * @return array{event_id: string, type: string, data: array<string, mixed>, at: int|null}|null
      */
-    private function normaliseEvent(mixed $event): ?array
+    private function normaliseEvent(array $event): ?array
     {
-        if (! is_array($event)) {
-            return null;
-        }
-
         $eventId = $event['id'] ?? null;
         $type = $event['type'] ?? null;
 

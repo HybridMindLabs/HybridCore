@@ -99,7 +99,7 @@ class EmailDigestCommand extends Command
 
             foreach ($servers as $server) {
                 $name = $server->name ?? $server->address;
-                $items[] = '<li>New server: '.e($name).($server->game ? ' ('.e($server->game->name).')' : '').'</li>';
+                $items[] = '<li>New server: '.e($name).' ('.e($server->game->name).')</li>';
             }
         }
 

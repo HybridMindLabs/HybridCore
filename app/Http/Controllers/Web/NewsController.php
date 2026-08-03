@@ -139,12 +139,12 @@ class NewsController extends Controller
                 'published_at' => $article->published_at?->format('d M Y'),
                 'published_at_iso' => $article->published_at?->toIso8601String(),
                 'category' => $article->category?->only(['id', 'name', 'slug', 'color']),
-                'author' => $article->author ? [
+                'author' => [
                     'id' => $article->author->id,
                     'name' => $article->author->name,
                     'username' => $article->author->username,
                     'avatar' => $article->author->avatar,
-                ] : null,
+                ],
                 'tags' => $article->tags->map->only(['id', 'name', 'slug']),
                 'meta_title' => $article->meta_title ?: $article->title,
                 'meta_description' => $article->meta_description ?: $article->excerpt,
@@ -167,9 +167,9 @@ class NewsController extends Controller
                     'is_mine' => auth()->id() === $c->user_id,
                     'can_delete' => auth()->id() === $c->user_id || (bool) auth()->user()?->is_admin,
                     'user' => [
-                        'username' => $c->user?->username,
-                        'name' => $c->user?->name ?? __('news.deleted_user'),
-                        'avatar' => $c->user?->avatar,
+                        'username' => $c->user->username,
+                        'name' => $c->user->name,
+                        'avatar' => $c->user->avatar,
                     ],
                 ])->items(),
                 'current_page' => $comments->currentPage(),
@@ -272,7 +272,7 @@ class NewsController extends Controller
             'published_at' => $a->published_at?->format('d M Y'),
             'published_at_iso' => $a->published_at?->toIso8601String(),
             'category' => $a->category?->only(['id', 'name', 'slug', 'color']),
-            'author' => $a->author ? ['id' => $a->author->id, 'name' => $a->author->name, 'avatar' => $a->author->avatar] : null,
+            'author' => ['id' => $a->author->id, 'name' => $a->author->name, 'avatar' => $a->author->avatar],
             'tags' => $a->relationLoaded('tags') ? $a->tags->map->only(['id', 'name', 'slug']) : [],
         ];
     }

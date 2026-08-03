@@ -35,7 +35,9 @@ class SocialAuthController extends Controller
         private readonly SettingsService $settings,
     ) {}
 
-    public function redirect(string $provider): RedirectResponse
+    // Socialite's drivers build this with Symfony's RedirectResponse directly,
+    // never Laravel's subclass — the narrower Illuminate type would be a lie.
+    public function redirect(string $provider): \Symfony\Component\HttpFoundation\RedirectResponse
     {
         $this->configureProvider($provider);
 
@@ -83,7 +85,9 @@ class SocialAuthController extends Controller
                 'provider_user_id' => $providerId,
                 'name' => $socialUser->getName() ?: $socialUser->getNickname(),
                 'avatar' => $socialUser->getAvatar(),
-                'raw' => $socialUser->getRaw(),
+                // getRaw() is on every concrete Socialite provider but not the
+                // interface itself.
+                'raw' => $socialUser->getRaw(), // @phpstan-ignore method.notFound
             ]);
 
             return redirect()->route('oauth.complete-profile');
@@ -173,7 +177,7 @@ class SocialAuthController extends Controller
             'avatar_url' => $socialUser->getAvatar(),
             'access_token' => $socialUser->token ?? null,
             'refresh_token' => $socialUser->refreshToken ?? null,
-            'raw_profile' => $socialUser->getRaw(),
+            'raw_profile' => $socialUser->getRaw(), // @phpstan-ignore method.notFound
         ];
     }
 }

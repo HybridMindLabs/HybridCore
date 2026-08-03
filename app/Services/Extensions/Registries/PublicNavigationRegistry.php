@@ -62,7 +62,7 @@ class PublicNavigationRegistry
             'url' => route($i['route'], absolute: false),
             'icon' => $i['icon'],
             'permission' => $i['permission'],
-        ], array_values($valid));
+        ], $valid);
     }
 
     /** @return array<int, array<string, mixed>> */

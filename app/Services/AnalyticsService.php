@@ -118,6 +118,7 @@ class AnalyticsService
                 ->where('created_at', '>=', now()->subDays($days - 1)->startOfDay())
                 ->groupBy('date')
                 ->orderBy('date')
+                ->toBase()
                 ->get()
                 ->keyBy('date');
 

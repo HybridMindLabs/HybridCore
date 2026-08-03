@@ -23,7 +23,7 @@ class PermissionRegistry
     public function registerMany(array $permissions): void
     {
         foreach ($permissions as $slug => $def) {
-            $this->register($slug, $def['name'], $def['group'] ?? 'general');
+            $this->register($slug, $def['name'], $def['group']);
         }
     }
 
