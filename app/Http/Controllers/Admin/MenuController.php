@@ -54,7 +54,7 @@ class MenuController extends Controller
                 'slug' => $menu->slug,
                 'location' => $menu->location,
             ],
-            'items' => $items->map(fn ($i) => $this->formatItem($i)),
+            'items' => $items->map(fn (MenuItem $i) => $this->formatItem($i)),
         ]);
     }
 

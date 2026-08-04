@@ -46,7 +46,7 @@ class QueryServersCommand extends Command
                 $rows[] = [
                     '<fg=green>online</>',
                     $server->address,
-                    $server->game?->name ?? '—',
+                    $server->game->name,
                     $snapshot->players_online.'/'.$snapshot->players_max,
                     ($snapshot->ping ?? '—').'ms',
                     $this->trim((string) $snapshot->name),
@@ -55,7 +55,7 @@ class QueryServersCommand extends Command
                 $rows[] = [
                     '<fg=red>offline</>',
                     $server->address,
-                    $server->game?->name ?? '—',
+                    $server->game->name,
                     '—',
                     '—',
                     "<fg=gray>{$this->trim((string) $snapshot->failure_reason)}</>",

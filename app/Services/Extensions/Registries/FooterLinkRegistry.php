@@ -53,7 +53,7 @@ class FooterLinkRegistry
             'label' => __($i['label']),
             'url' => route($i['route'], absolute: false),
             'permission' => $i['permission'],
-        ], array_values($valid));
+        ], $valid);
     }
 
     /** @return array<int, array<string, mixed>> */

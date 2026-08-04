@@ -33,7 +33,7 @@ class ModerationController extends Controller
                     'details' => $r->details,
                     'status' => $r->status,
                     'created_at' => $r->created_at->diffForHumans(),
-                    'reporter' => $r->reporter?->username ?? 'unknown',
+                    'reporter' => $r->reporter->username,
                     'content' => $this->contentPreview($r),
                 ]),
             'comments' => NewsComment::with(['user:id,name,username', 'article:id,title,slug'])
@@ -43,7 +43,7 @@ class ModerationController extends Controller
                 ->through(fn (NewsComment $c) => [
                     'id' => $c->id,
                     'body' => $c->body,
-                    'author' => $c->user?->username ?? $c->user?->name ?? 'unknown',
+                    'author' => $c->user->username,
                     'article_title' => $c->article?->title,
                     'article_slug' => $c->article?->slug,
                     'created_at' => $c->created_at->diffForHumans(),
@@ -56,11 +56,9 @@ class ModerationController extends Controller
                     'id' => $r->id,
                     'rating' => $r->rating,
                     'body' => $r->body,
-                    'author' => $r->user?->username ?? $r->user?->name ?? 'unknown',
-                    'server_name' => $r->server?->name,
-                    'server_url' => $r->server?->game
-                        ? route('servers.show', [$r->server->game->slug, $r->server->ip, $r->server->port])
-                        : null,
+                    'author' => $r->user->username,
+                    'server_name' => $r->server->name,
+                    'server_url' => route('servers.show', [$r->server->game->slug, $r->server->ip, $r->server->port]),
                     'created_at' => $r->created_at->diffForHumans(),
                 ]),
             'counts' => [
@@ -80,7 +78,7 @@ class ModerationController extends Controller
         if ($reportable instanceof NewsComment) {
             return [
                 'body' => $reportable->body,
-                'author' => $reportable->user?->username ?? 'unknown',
+                'author' => $reportable->user->username,
                 'url' => $reportable->article ? route('news.show', $reportable->article->slug) : null,
             ];
         }
@@ -90,10 +88,8 @@ class ModerationController extends Controller
 
             return [
                 'body' => "({$reportable->rating}/5) ".($reportable->body ?? ''),
-                'author' => $reportable->user?->username ?? 'unknown',
-                'url' => $server?->game
-                    ? route('servers.show', [$server->game->slug, $server->ip, $server->port])
-                    : null,
+                'author' => $reportable->user->username,
+                'url' => route('servers.show', [$server->game->slug, $server->ip, $server->port]),
             ];
         }
 

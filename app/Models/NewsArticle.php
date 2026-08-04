@@ -158,6 +158,7 @@ class NewsArticle extends Model
         return $this->hasMany(NewsArticleView::class, 'article_id');
     }
 
+    /** @return HasMany<NewsComment, $this> */
     public function comments(): HasMany
     {
         return $this->hasMany(NewsComment::class, 'article_id');

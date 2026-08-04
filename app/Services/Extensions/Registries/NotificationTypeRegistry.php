@@ -16,7 +16,7 @@ namespace App\Services\Extensions\Registries;
  */
 class NotificationTypeRegistry
 {
-    /** @var array<int, array<string, mixed>> */
+    /** @var array<string, array{type: string, icon: string, accent: string}> */
     private array $items = [];
 
     /**

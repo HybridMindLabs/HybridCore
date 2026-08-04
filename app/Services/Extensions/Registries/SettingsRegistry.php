@@ -54,12 +54,12 @@ class SettingsRegistry
 
         usort($pages, fn (array $a, array $b) => $a['sort'] <=> $b['sort']);
 
-        return array_values(array_map(fn (array $p) => [
+        return array_map(fn (array $p) => [
             'slug' => $p['slug'],
             'label' => $p['label'],
             'url' => route($p['route'], absolute: false),
             'permission' => $p['permission'],
-        ], $pages));
+        ], $pages);
     }
 
     /** @return array<string, array<string, mixed>> */

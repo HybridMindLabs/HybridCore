@@ -153,13 +153,11 @@ class HomeController extends Controller
                     ->each(function ($review) use ($items) {
                         $items->push([
                             'type' => 'review',
-                            'username' => $review->user?->username,
-                            'avatar' => $review->user?->avatar,
-                            'params' => ['name' => $review->server?->name ?? '—', 'rating' => $review->rating],
+                            'username' => $review->user->username,
+                            'avatar' => $review->user->avatar,
+                            'params' => ['name' => $review->server->name, 'rating' => $review->rating],
                             'at' => $review->created_at,
-                            'url' => $review->server?->game
-                                ? route('servers.show', [$review->server->game->slug, $review->server->ip, $review->server->port])
-                                : null,
+                            'url' => route('servers.show', [$review->server->game->slug, $review->server->ip, $review->server->port]),
                         ]);
                     });
             }

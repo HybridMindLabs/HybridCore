@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property-read Message|null $latestMessage
  * @property-read Collection<int, Message> $messages
  * @property-read int|null $messages_count
+ * @property-read int $unread_count
  * @property-read User $participant1
  * @property-read User $participant2
  *
@@ -53,11 +54,13 @@ class Conversation extends Model
         return $this->belongsTo(User::class, 'participant_2_id');
     }
 
+    /** @return HasMany<Message, $this> */
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class);
     }
 
+    /** @return HasOne<Message, $this> */
     public function latestMessage(): HasOne
     {
         return $this->hasOne(Message::class)->latestOfMany();
