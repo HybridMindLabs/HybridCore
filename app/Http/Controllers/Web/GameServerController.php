@@ -243,9 +243,10 @@ class GameServerController extends Controller
         $server = Server::where('game_id', $game->id)
             ->where('ip', $ip)
             ->where('port', $port)
+            ->with('latestSnapshot.players')
             ->firstOrFail();
 
-        $snapshot = $server->latestSnapshot()->with('players')->first();
+        $snapshot = $server->latestSnapshot;
 
         // Same bucketing as the per-game page, so both charts read the same way.
         // Timestamps are ISO rather than a formatted "H:i" string — the chart

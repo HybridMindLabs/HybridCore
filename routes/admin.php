@@ -159,6 +159,7 @@ Route::middleware('perm:system.manage')->group(function (): void {
     Route::middleware('throttle:10,1')->group(function (): void {
         Route::get('/backup/export/all', [BackupController::class, 'generateBackup'])->name('admin.backup.export.all');
         Route::post('/backup/database', [BackupController::class, 'databaseBackup'])->name('admin.backup.database');
+        Route::put('/backup/schedule', [BackupController::class, 'updateSchedule'])->name('admin.backup.schedule');
         Route::get('/backup/export/settings', [BackupController::class, 'exportSettings'])->name('admin.backup.export.settings');
         Route::get('/backup/export/extensions', [BackupController::class, 'exportExtensions'])->name('admin.backup.export.extensions');
         Route::get('/backup/export/themes', [BackupController::class, 'exportThemes'])->name('admin.backup.export.themes');

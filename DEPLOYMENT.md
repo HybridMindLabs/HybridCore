@@ -361,6 +361,9 @@ Once `installed.lock` exists, `/install` is sealed off automatically.
 - **Game-server bridge** — if you connect an in-game plugin, generate the
   per-server token from **Admin → Servers** (plug icon); tokens are hashed
   and shown only once
+- **`APP_KEY` rotation** — if it's ever suspected compromised, rotate with
+  `php artisan key:generate --force`; this invalidates all encrypted data
+  (sessions, encrypted OAuth credentials) and logs every user out
 
 ---
 
