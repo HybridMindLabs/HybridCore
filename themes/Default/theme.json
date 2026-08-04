@@ -7,10 +7,11 @@
     "type": "official",
     "supports": ["pages", "news", "servers", "store"],
     "preview_image": "screenshot.png",
-    "settings": {
-        "accent_color": "#22d3ee",
-        "background_color": "#0a0f1a",
-        "surface_color": "#111827",
-        "primary_color": "#f1f5f9"
-    }
+    "requires_license": false,
+    "settings_schema": [
+        { "key": "hc_accent",   "type": "color", "label": "Accent",     "group": "Colors", "default": "#22d3ee" },
+        { "key": "hc_base",     "type": "color", "label": "Background", "group": "Colors", "default": "#0a0f1a" },
+        { "key": "hc_surface",  "type": "color", "label": "Surface",    "group": "Colors", "default": "#111827" },
+        { "key": "hc_text",     "type": "color", "label": "Text",       "group": "Colors", "default": "#f1f5f9" }
+    ]
 }

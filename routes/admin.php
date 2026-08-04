@@ -198,6 +198,8 @@ Route::middleware('perm:themes.manage')->group(function (): void {
     Route::post('/themes/sync', [ThemeController::class, 'sync'])->name('admin.themes.sync');
     Route::post('/themes/{theme}/activate', [ThemeController::class, 'activate'])->name('admin.themes.activate');
     Route::post('/themes/{theme}/deactivate', [ThemeController::class, 'deactivate'])->name('admin.themes.deactivate');
+    Route::post('/themes/{theme}/settings', [ThemeController::class, 'settings'])->name('admin.themes.settings');
+    Route::post('/themes/{theme}/license', [ThemeController::class, 'license'])->name('admin.themes.license');
 });
 
 // Email

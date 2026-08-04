@@ -58,19 +58,18 @@ const activeTheme: string =
 const themeSettings: Record<string, string> =
     (initialPage?.props?.app?.theme as { settings?: Record<string, string> })?.settings ?? {};
 
-// Apply theme CSS custom properties to :root before first paint.
-if (Object.keys(themeSettings).length > 0) {
-    const root = document.documentElement;
-    const map: Record<string, string> = {
-        accent_color:     '--color-accent',
-        background_color: '--color-background',
-        surface_color:    '--color-surface',
-        primary_color:    '--color-primary',
-    };
-    for (const [key, cssVar] of Object.entries(map)) {
-        if (themeSettings[key]) {
-            root.style.setProperty(cssVar, themeSettings[key]);
-        }
+// Apply theme CSS custom properties to :root before first paint. Any settings
+// value that looks like a hex color is applied as --color-{key-with-dashes},
+// which is the namespace Tailwind v4 compiles every colour utility against —
+// so a schema key of hc_accent overrides --color-hc-accent from app.css's
+// @theme block, and bg-hc-accent/text-hc-accent repaint live. Same trick the
+// light-mode block in app.css uses to redress the site without touching the
+// utility classes. No hardcoded key list: a theme can add a 5th, 6th, ...
+// colour field, or override a stock token like zinc-900, with zero changes here.
+const root = document.documentElement;
+for (const [key, value] of Object.entries(themeSettings)) {
+    if (typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value)) {
+        root.style.setProperty(`--color-${key.replace(/_/g, '-')}`, value);
     }
 }
 

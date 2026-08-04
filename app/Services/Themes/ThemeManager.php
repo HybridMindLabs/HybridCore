@@ -7,6 +7,7 @@ use App\Services\ActivityLogService;
 use App\Services\SettingsService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
 
 class ThemeManager
 {
@@ -56,6 +57,12 @@ class ThemeManager
      */
     public function activate(Theme $theme): void
     {
+        if (($theme->metadata['requires_license'] ?? false) && blank($theme->license_key)) {
+            throw ValidationException::withMessages([
+                'license' => 'This theme requires a license key before it can be activated.',
+            ]);
+        }
+
         if (Schema::hasTable('themes')) {
             Theme::query()->update(['active' => false]);
         }
