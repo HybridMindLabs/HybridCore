@@ -184,6 +184,7 @@ Route::middleware('perm:extensions.manage')->group(function (): void {
     Route::post('/extensions/check-updates', [ExtensionController::class, 'checkUpdates'])->name('admin.extensions.check-updates');
     Route::post('/extensions/{extension}/update', [ExtensionController::class, 'update'])->name('admin.extensions.update');
     Route::post('/extensions/{extension}/license', [ExtensionController::class, 'license'])->name('admin.extensions.license');
+    Route::post('/extensions/{extension}/settings', [ExtensionController::class, 'settings'])->name('admin.extensions.settings');
     Route::delete('/extensions/{extension}', [ExtensionController::class, 'uninstall'])->name('admin.extensions.uninstall');
     Route::post('/extensions/{extension}/enable', [ExtensionController::class, 'enable'])->name('admin.extensions.enable');
     Route::post('/extensions/{extension}/disable', [ExtensionController::class, 'disable'])->name('admin.extensions.disable');

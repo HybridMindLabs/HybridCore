@@ -33,6 +33,48 @@ class AdminExtensionTest extends TestCase
         parent::tearDown();
     }
 
+    public function test_settings_resolver_merges_defaults_overrides_and_drops_malformed_entries(): void
+    {
+        $ext = Extension::factory()->create([
+            'path' => 'hybridcore/demo',
+            'metadata' => [
+                'settings_schema' => [
+                    ['key' => 'greeting', 'type' => 'text', 'label' => 'Greeting', 'default' => 'Hi'],
+                    ['label' => 'No key or type'],
+                ],
+            ],
+        ]);
+
+        $resolver = app(\App\Services\Extensions\ExtensionSettingsResolver::class);
+        $this->assertSame(['greeting' => 'Hi'], $resolver->effective($ext));
+
+        \App\Models\ExtensionSetting::create(['extension_id' => $ext->id, 'key' => 'greeting', 'value' => 'Hey', 'type' => 'string']);
+        $this->assertSame(['greeting' => 'Hey'], $resolver->effective($ext));
+    }
+
+    public function test_settings_persists_valid_value_rejects_invalid_and_ignores_unknown_key(): void
+    {
+        $ext = Extension::factory()->create([
+            'path' => 'hybridcore/demo',
+            'metadata' => [
+                'settings_schema' => [
+                    ['key' => 'accent', 'type' => 'color', 'label' => 'Accent', 'default' => '#22d3ee'],
+                ],
+            ],
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post("/admin/extensions/{$ext->id}/settings", ['accent' => '#ff0000', 'not_in_schema' => 'x'])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('extension_settings', ['extension_id' => $ext->id, 'key' => 'accent', 'value' => '#ff0000']);
+        $this->assertDatabaseMissing('extension_settings', ['extension_id' => $ext->id, 'key' => 'not_in_schema']);
+
+        $this->actingAs($this->admin)
+            ->post("/admin/extensions/{$ext->id}/settings", ['accent' => 'not-a-color'])
+            ->assertSessionHasErrors('accent');
+    }
+
     public function test_a_license_key_can_be_stored_and_removed(): void
     {
         $ext = Extension::factory()->create(['path' => 'hybridcore/demo']);

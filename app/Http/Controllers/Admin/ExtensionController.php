@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Extension;
+use App\Models\ExtensionSetting;
 use App\Services\Extensions\ExtensionManager;
+use App\Services\Extensions\ExtensionSettingsResolver;
 use App\Services\Extensions\ExtensionUpdateService;
 use App\Services\Extensions\Registries\SettingsRegistry;
 use Illuminate\Http\JsonResponse;
@@ -20,6 +22,7 @@ class ExtensionController extends Controller
         private readonly ExtensionManager $manager,
         private readonly SettingsRegistry $settingsRegistry,
         private readonly ExtensionUpdateService $updates,
+        private readonly ExtensionSettingsResolver $extensionSettings,
     ) {}
 
     /**
@@ -147,6 +150,8 @@ class ExtensionController extends Controller
                 'installed_at' => $extension->installed_at?->toDateTimeString(),
                 'enabled_at' => $extension->enabled_at?->toDateTimeString(),
                 'disabled_at' => $extension->disabled_at?->toDateTimeString(),
+                'settings_schema' => $this->extensionSettings->schema($extension),
+                'settings' => $this->extensionSettings->effective($extension),
             ],
             'rebuild' => [
                 'status' => $this->manager->rebuildStatus(),
@@ -161,6 +166,50 @@ class ExtensionController extends Controller
 
         return redirect()->route('admin.extensions.index')
             ->with('success', "Sync complete — {$count} extension(s) discovered.");
+    }
+
+    /** Build validation rules from the extension's own declared settings_schema. */
+    private function settingsValidationRules(Extension $extension): array
+    {
+        $rules = [];
+
+        foreach ($this->extensionSettings->schema($extension) as $field) {
+            $rules[$field['key']] = match ($field['type']) {
+                'color' => ['nullable', 'regex:/^#[0-9a-f]{6}$/i'],
+                'toggle' => ['nullable', 'boolean'],
+                'select' => ['nullable', 'string', 'in:'.implode(',', $field['options'] ?? [])],
+                'textarea' => ['nullable', 'string', 'max:2000'],
+                default => ['nullable', 'string', 'max:500'], // text, image
+            };
+        }
+
+        return $rules;
+    }
+
+    /**
+     * Save extension setting overrides. Only keys declared in the extension's
+     * own settings_schema are validated and persisted — $request->validate()
+     * silently drops anything else.
+     */
+    public function settings(Extension $extension, Request $request): RedirectResponse
+    {
+        $data = $request->validate($this->settingsValidationRules($extension));
+        $schema = collect($this->extensionSettings->schema($extension))->keyBy('key');
+
+        foreach ($data as $key => $value) {
+            if ($value === null) {
+                continue;
+            }
+
+            $field = $schema->get($key);
+
+            ExtensionSetting::updateOrCreate(
+                ['extension_id' => $extension->id, 'key' => $key],
+                ['value' => (string) $value, 'type' => $field['type'] === 'toggle' ? 'bool' : 'string'],
+            );
+        }
+
+        return back()->with('success', "Settings saved for {$extension->name}.");
     }
 
     public function rebuild(): RedirectResponse
