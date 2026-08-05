@@ -108,6 +108,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'not_installed' => RedirectIfInstalled::class,
             'admin' => EnsureIsAdmin::class,
             'perm' => EnsurePermission::class,
+            'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

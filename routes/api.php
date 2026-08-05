@@ -23,9 +23,12 @@ Route::prefix('v1')->group(function () {
     Route::get('users/{username}', [UserController::class, 'show']);
 
     Route::middleware('auth:sanctum')->group(function () {
-        Route::get('notifications', [NotificationController::class, 'index']);
-        Route::post('notifications/{id}/read', [NotificationController::class, 'markRead']);
-        Route::post('notifications/read-all', [NotificationController::class, 'markAllRead']);
+        Route::middleware('abilities:notifications:read')
+            ->get('notifications', [NotificationController::class, 'index']);
+        Route::middleware('abilities:notifications:write')->group(function () {
+            Route::post('notifications/{id}/read', [NotificationController::class, 'markRead']);
+            Route::post('notifications/read-all', [NotificationController::class, 'markAllRead']);
+        });
     });
 });
 

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\ApiTokenController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\ContentReportController;
@@ -188,6 +189,15 @@ Route::middleware('perm:extensions.manage')->group(function (): void {
     Route::delete('/extensions/{extension}', [ExtensionController::class, 'uninstall'])->name('admin.extensions.uninstall');
     Route::post('/extensions/{extension}/enable', [ExtensionController::class, 'enable'])->name('admin.extensions.enable');
     Route::post('/extensions/{extension}/disable', [ExtensionController::class, 'disable'])->name('admin.extensions.disable');
+});
+
+// API Tokens
+Route::middleware('perm:api_tokens.manage')->group(function (): void {
+    Route::get('/api-tokens', [ApiTokenController::class, 'index'])->name('admin.api-tokens.index');
+    Route::post('/api-tokens', [ApiTokenController::class, 'store'])->name('admin.api-tokens.store');
+    Route::post('/api-tokens/{serviceAccount}/tokens', [ApiTokenController::class, 'issueToken'])->name('admin.api-tokens.tokens.store');
+    Route::delete('/api-tokens/tokens/{token}', [ApiTokenController::class, 'revokeToken'])->name('admin.api-tokens.tokens.destroy');
+    Route::delete('/api-tokens/{serviceAccount}', [ApiTokenController::class, 'destroy'])->name('admin.api-tokens.destroy');
 });
 
 // Themes

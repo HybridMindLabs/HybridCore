@@ -17,6 +17,7 @@ return [
     'system_health' => 'Състояние на системата',
     'updates' => 'Актуализации',
     'backup' => 'Архив и експорт',
+    'api_tokens' => 'API токени',
     'analytics' => 'Анализи',
     'activity_log' => 'Дневник на активността',
     'system_logs' => 'Системни логове',

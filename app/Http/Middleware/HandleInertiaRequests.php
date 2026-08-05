@@ -325,6 +325,8 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
                 // One-time reveal of a freshly generated bridge token.
                 'bridge_token' => fn () => $request->session()->get('bridge_token'),
+                // One-time reveal of a freshly issued API token.
+                'plain_token' => fn () => $request->session()->get('plain_token'),
             ],
             'oauthProviders' => fn () => $this->oauth->compose(),
             'legalPages' => fn () => rescue(fn () => Cache::remember(

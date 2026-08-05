@@ -17,6 +17,7 @@ return [
     'system_health' => 'System Health',
     'updates' => 'Updates',
     'backup' => 'Backup & Export',
+    'api_tokens' => 'API Tokens',
     'analytics' => 'Analytics',
     'activity_log' => 'Activity Log',
     'system_logs' => 'System Logs',
