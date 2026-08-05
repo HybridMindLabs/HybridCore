@@ -2,11 +2,14 @@
 
 namespace App\Services\Auth;
 
+use App\Mail\NewLoginMail;
 use App\Models\LoginHistory;
 use App\Models\User;
 use App\Services\AchievementService;
 use App\Services\SettingsService;
+use App\Support\UserAgent;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Password;
 
 /**
@@ -23,19 +26,40 @@ class LoginSecurityService
     /** Record successful login metadata (no sensitive values). */
     public function recordLogin(User $user, Request $request): void
     {
+        $ip = $request->ip();
+
+        // A brand-new account's first-ever login is expected from an unseen
+        // IP — only a login after that baseline is "new" in a way worth
+        // alerting on.
+        $isNewDevice = $ip !== null
+            && $user->loginHistories()->exists()
+            && ! $user->loginHistories()->where('ip_address', $ip)->exists();
+
         $user->forceFill([
             'last_login_at' => now(),
-            'last_login_ip' => $request->ip(),
+            'last_login_ip' => $ip,
         ])->save();
 
         LoginHistory::create([
             'user_id' => $user->id,
-            'ip_address' => $request->ip(),
+            'ip_address' => $ip,
             'user_agent' => $request->userAgent(),
         ]);
 
+        if ($isNewDevice) {
+            $this->notifyNewLogin($user, $ip, $request->userAgent() ?? '');
+        }
+
         // Login-count / time-based achievements ("regular", "veteran", …).
         $this->achievements->check($user);
+    }
+
+    private function notifyNewLogin(User $user, string $ip, string $userAgent): void
+    {
+        try {
+            Mail::to($user->email)->queue(new NewLoginMail($user, $ip, UserAgent::summarize($userAgent)));
+        } catch (\Exception) {
+        }
     }
 
     /** Password rule built from the configurable policy. */

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\Auth\LoginSecurityService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,6 +13,8 @@ use Inertia\Response;
 
 class LoginController extends Controller
 {
+    public function __construct(private readonly LoginSecurityService $security) {}
+
     public function create(): Response|RedirectResponse
     {
         if (Auth::check()) {
@@ -55,6 +58,8 @@ class LoginController extends Controller
                 'email' => __('auth.no_admin_access'),
             ]);
         }
+
+        $this->security->recordLogin($user, $request);
 
         if ($user->hasTwoFactorEnabled()) {
             $request->session()->put('2fa_user_id', $user->id);

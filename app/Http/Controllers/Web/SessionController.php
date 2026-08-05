@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Services\Auth\SessionSecurityService;
+use App\Support\UserAgent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,7 +29,7 @@ class SessionController extends Controller
                 'user_agent' => $session->user_agent,
                 'last_activity' => $session->last_activity,
                 'is_current' => $session->id === $currentId,
-                'device' => $this->parseDevice($session->user_agent ?? ''),
+                'device' => UserAgent::parse($session->user_agent ?? ''),
             ])
             ->all();
     }
@@ -75,34 +76,5 @@ class SessionController extends Controller
         return $request->expectsJson()
             ? response()->json(['message' => $message], 422)
             : back()->withErrors(['session' => $message]);
-    }
-
-    private function parseDevice(string $ua): array
-    {
-        $browser = match (true) {
-            str_contains($ua, 'Firefox') => 'Firefox',
-            str_contains($ua, 'Chrome')
-                && ! str_contains($ua, 'Edg')
-                && ! str_contains($ua, 'OPR') => 'Chrome',
-            str_contains($ua, 'Safari')
-                && ! str_contains($ua, 'Chrome') => 'Safari',
-            str_contains($ua, 'Edg') => 'Edge',
-            str_contains($ua, 'OPR') => 'Opera',
-            default => 'Browser',
-        };
-
-        $os = match (true) {
-            str_contains($ua, 'Windows') => 'Windows',
-            str_contains($ua, 'Mac OS') => 'macOS',
-            str_contains($ua, 'Linux') => 'Linux',
-            str_contains($ua, 'Android') => 'Android',
-            str_contains($ua, 'iPhone')
-                || str_contains($ua, 'iPad') => 'iOS',
-            default => 'Unknown OS',
-        };
-
-        $mobile = str_contains($ua, 'Mobile') || str_contains($ua, 'Android') || str_contains($ua, 'iPhone');
-
-        return ['browser' => $browser, 'os' => $os, 'mobile' => $mobile];
     }
 }

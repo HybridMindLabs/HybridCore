@@ -72,6 +72,15 @@ class MailTemplateService
                 'active' => true,
             ],
             [
+                'slug' => 'new_login_detected',
+                'name' => 'New Login Detected',
+                'subject' => 'New sign-in to your {{ app_name }} account',
+                'body_html' => $this->newLoginTemplate(),
+                'variables' => ['app_name', 'username', 'ip_address', 'device', 'at', 'sessions_url'],
+                'system' => true,
+                'active' => true,
+            ],
+            [
                 'slug' => 'digest',
                 'name' => 'Activity Digest',
                 'subject' => 'You have {{ count }} new updates on {{ app_name }}',
@@ -140,6 +149,38 @@ HTML;
         <p style="color:#94a3b8;margin:0 0 24px;line-height:1.6;">Your account has been suspended for the following reason:</p>
         <blockquote style="background:#1f2937;border-left:4px solid #ef4444;margin:0 0 24px;padding:12px 16px;color:#f1f5f9;">{{ reason }}</blockquote>
         <a href="{{ appeal_url }}" style="display:inline-block;background:#ef4444;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">Submit an appeal</a>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>
+HTML;
+    }
+
+    private function newLoginTemplate(): string
+    {
+        return <<<'HTML'
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>New Sign-In</title></head>
+<body style="margin:0;padding:0;background:#0a0f1a;font-family:sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0f1a;padding:40px 0;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" style="background:#111827;border-radius:8px;overflow:hidden;">
+      <tr><td style="background:#f59e0b;padding:24px 32px;">
+        <h1 style="color:#0a0f1a;margin:0;font-size:24px;">{{ app_name }}</h1>
+      </td></tr>
+      <tr><td style="padding:32px;">
+        <h2 style="color:#f1f5f9;margin:0 0 16px;">New sign-in detected</h2>
+        <p style="color:#94a3b8;margin:0 0 24px;line-height:1.6;">Hello {{ username }}, we noticed a sign-in to your account from a device we haven't seen before:</p>
+        <table cellpadding="0" cellspacing="0" style="background:#1f2937;border-radius:6px;width:100%;margin:0 0 24px;">
+          <tr><td style="padding:12px 16px;color:#94a3b8;font-size:13px;">Device</td><td style="padding:12px 16px;color:#f1f5f9;font-size:13px;text-align:right;">{{ device }}</td></tr>
+          <tr><td style="padding:12px 16px;color:#94a3b8;font-size:13px;border-top:1px solid #374151;">IP address</td><td style="padding:12px 16px;color:#f1f5f9;font-size:13px;text-align:right;border-top:1px solid #374151;">{{ ip_address }}</td></tr>
+          <tr><td style="padding:12px 16px;color:#94a3b8;font-size:13px;border-top:1px solid #374151;">Time</td><td style="padding:12px 16px;color:#f1f5f9;font-size:13px;text-align:right;border-top:1px solid #374151;">{{ at }}</td></tr>
+        </table>
+        <p style="color:#94a3b8;margin:0 0 24px;line-height:1.6;">If this was you, no action is needed. If you don't recognize this, review your active sessions and change your password.</p>
+        <a href="{{ sessions_url }}" style="display:inline-block;background:#f59e0b;color:#0a0f1a;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">Review sessions</a>
       </td></tr>
     </table>
   </td></tr>
