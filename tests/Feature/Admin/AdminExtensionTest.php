@@ -140,9 +140,15 @@ class AdminExtensionTest extends TestCase
 
     public function test_extension_index_returns_extensions_and_rebuild_status(): void
     {
+        // Only "demo" and "announcements" are git-tracked bundled extensions
+        // (see .gitignore's /extensions/hybridcore/* rule) — every other
+        // extensions/hybridcore/* directory is local-only dev scaffolding
+        // that doesn't exist in a fresh checkout (CI included). The third
+        // row deliberately reuses "demo" to prove the is_dir() filter in
+        // ExtensionController::index() doesn't collapse duplicate paths.
         Extension::factory()->create(['path' => 'hybridcore/demo']);
         Extension::factory()->create(['path' => 'hybridcore/announcements']);
-        Extension::factory()->create(['path' => 'hybridcore/giveaways']);
+        Extension::factory()->create(['path' => 'hybridcore/demo']);
 
         $this->actingAs($this->admin)->get('/admin/extensions')
             ->assertStatus(200)
