@@ -3,7 +3,7 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import {
     ChevronLeft, ShieldAlert, Ban, Pencil, MessageSquare, Star, Users, UserPlus,
     Trophy, Heart, Flag, FileWarning, Activity, Globe, StickyNote, Trash2,
-    CheckCircle2, XCircle, Link2, Calendar, Clock, Hash, MapPin, VenetianMask,
+    CheckCircle2, XCircle, Link2, Calendar, Clock, Hash, MapPin, VenetianMask, LockKeyholeOpen,
 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -15,7 +15,7 @@ const props = defineProps<{
     user: {
         id: number; name: string; username: string | null; email: string;
         avatar: string | null; banner: string | null; bio: string | null; location: string | null;
-        is_admin: boolean; banned: boolean; verified: boolean; online: boolean;
+        is_admin: boolean; banned: boolean; locked_out: boolean; verified: boolean; online: boolean;
         role: RoleInfo | null; roles: RoleInfo[];
         created_at: string | null; last_seen_at: string | null;
     };
@@ -75,6 +75,10 @@ function impersonate() {
     if (!confirm(`Browse the site as "${props.user.name}"? You will be signed in as them until you click "Return to my account".`)) return;
     router.post(route('admin.users.impersonate', props.user.id));
 }
+
+function unlock() {
+    router.post(route('admin.users.unlock', props.user.id), {}, { preserveScroll: true });
+}
 </script>
 
 <template>
@@ -90,6 +94,14 @@ function impersonate() {
             <span class="text-zinc-300">{{ user.name }}</span>
             <span class="text-zinc-700 font-mono text-xs ml-1">#{{ user.id }}</span>
             <div class="ml-auto flex items-center gap-2">
+                <button
+                    v-if="user.locked_out"
+                    type="button"
+                    class="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg px-3 py-1.5 text-xs font-semibold hover:bg-emerald-500/20 transition-colors"
+                    @click="unlock"
+                >
+                    <LockKeyholeOpen :size="12" :stroke-width="1.75" /> Unlock account
+                </button>
                 <button
                     v-if="canImpersonate"
                     type="button"
@@ -135,6 +147,9 @@ function impersonate() {
                         </span>
                         <span v-if="user.banned" class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium bg-red-500/15 text-red-400">
                             <Ban :size="10" :stroke-width="2" /> Banned
+                        </span>
+                        <span v-if="user.locked_out" class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium bg-amber-500/15 text-amber-400">
+                            <ShieldAlert :size="10" :stroke-width="2" /> Locked out
                         </span>
                     </div>
                     <p class="text-zinc-500 text-xs mt-0.5">

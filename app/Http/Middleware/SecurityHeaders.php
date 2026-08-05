@@ -21,6 +21,15 @@ class SecurityHeaders
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+        // allow-popups, not a bare same-origin: OAuth providers (Discord/Steam/
+        // Google) round-trip through a full-page redirect here, not a popup, but
+        // a plain same-origin would still break window.opener on any future
+        // popup-based flow (password managers, share dialogs) for no gain.
+        $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+        // Stops another origin from <img>/<script>-loading this site's responses
+        // and reading them via a timing/Spectre-class side channel. Nothing here
+        // is meant to be embedded cross-origin, so same-origin costs nothing.
+        $response->headers->set('Cross-Origin-Resource-Policy', 'same-origin');
 
         // Credential-entry pages must never be written to a shared cache — a
         // proxy, a browser's back-forward cache, or a synced profile could hand
@@ -34,7 +43,7 @@ class SecurityHeaders
         // it's only applied when serving built assets. The Pulse dashboard
         // (Livewire, admin-only) ships its own inline scripts and is exempt.
         if (! file_exists(public_path('hot')) && ! $request->is('pulse', 'pulse/*', 'horizon', 'horizon/*')) {
-            $response->headers->set('Content-Security-Policy', $this->contentSecurityPolicy($nonce));
+            $response->headers->set('Content-Security-Policy', $this->contentSecurityPolicy($nonce, $request));
         }
 
         // HSTS only over HTTPS in production — a cached HSTS header on a
@@ -55,12 +64,12 @@ class SecurityHeaders
         );
     }
 
-    private function contentSecurityPolicy(string $nonce): string
+    private function contentSecurityPolicy(string $nonce, Request $request): string
     {
         // External hosts are the captcha providers (Turnstile / hCaptcha /
         // reCAPTCHA); ws:/wss: is the Reverb websocket. Style needs
         // 'unsafe-inline' because Vue :style bindings are inline styles.
-        return implode('; ', [
+        $directives = [
             "default-src 'self'",
             "script-src 'self' 'nonce-{$nonce}' https://challenges.cloudflare.com https://js.hcaptcha.com https://www.google.com https://www.gstatic.com",
             "style-src 'self' 'unsafe-inline'",
@@ -76,6 +85,15 @@ class SecurityHeaders
             "base-uri 'self'",
             "form-action 'self'",
             "frame-ancestors 'self'",
-        ]);
+        ];
+
+        // Rewrites any stray http:// sub-resource URL to https:// in the
+        // browser rather than either silently mixed-content-blocking it or
+        // serving it in the clear — same threshold as HSTS above.
+        if (app()->isProduction() && $request->secure()) {
+            $directives[] = 'upgrade-insecure-requests';
+        }
+
+        return implode('; ', $directives);
     }
 }

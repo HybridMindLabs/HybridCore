@@ -61,6 +61,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Account lockout
+    |--------------------------------------------------------------------------
+    | Separate from the per-minute rate limiter above, which only slows an
+    | attacker down: this tracks consecutive wrong-password attempts against
+    | one account regardless of time window, and locks it out once they cross
+    | the threshold. A correct password no longer even reaches Auth::attempt
+    | while locked — the account owner is emailed when the lock triggers.
+    */
+
+    'max_failed_login_attempts' => (int) env('MAX_FAILED_LOGIN_ATTEMPTS', 5),
+
+    'lockout_minutes' => (int) env('LOCKOUT_MINUTES', 15),
+
+    /*
+    |--------------------------------------------------------------------------
     | API token requests per minute, per token
     |--------------------------------------------------------------------------
     | Applies to every route gated by the `abilities:` middleware. Raise it

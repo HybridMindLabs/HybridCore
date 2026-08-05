@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { Check, Copy, Download, Eye, EyeOff, RefreshCw, ShieldCheck, ShieldOff } from '@lucide/vue';
+import { Check, Copy, Download, Eye, EyeOff, KeyRound, RefreshCw, ShieldCheck, ShieldOff, Trash2 } from '@lucide/vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
+import { createPasskey, webauthnSupported } from '@/composables/useWebauthn';
+import { router } from '@inertiajs/vue3';
+
+interface PasskeyRow { id: number; name: string; last_used_at: string | null; created_at: string }
 
 const props = defineProps<{
     enabled: boolean;
     recoveryCodes: string[] | null;
+    hasTotp: boolean;
+    webauthnCredentials: PasskeyRow[];
 }>();
 
 const { theme } = useTheme();
@@ -97,6 +103,36 @@ async function regenerateCodes() {
     }
 }
 
+const passkeyLoading = ref(false);
+
+async function addPasskey() {
+    const name = window.prompt(t('account.2fa_webauthn_name_prompt'), t('account.2fa_webauthn_default_name'));
+    if (!name) return;
+
+    passkeyLoading.value = true;
+    error.value = '';
+
+    try {
+        const options = await send(route('account.2fa.webauthn.options'), 'POST');
+        if (!options) return;
+
+        const attestation = await createPasskey(options);
+
+        if (await send(route('account.2fa.webauthn.register'), 'POST', { name, ...attestation })) {
+            window.location.reload();
+        }
+    } catch {
+        error.value = t('account.2fa_webauthn_error');
+    } finally {
+        passkeyLoading.value = false;
+    }
+}
+
+function deletePasskey(id: number) {
+    if (!window.confirm(t('account.2fa_webauthn_delete_confirm'))) return;
+    router.delete(route('account.2fa.webauthn.destroy', id), { preserveScroll: true });
+}
+
 function copyText(text: string, key: string) {
     navigator.clipboard.writeText(text);
     copied.value = key;
@@ -184,7 +220,7 @@ const ghostBtn = computed(() =>
                 {{ error }}
             </p>
 
-            <template v-if="!enabled">
+            <template v-if="!hasTotp">
                 <button
                     v-if="step === 'idle'"
                     type="button"
@@ -412,6 +448,54 @@ const ghostBtn = computed(() =>
                     </div>
                 </div>
             </template>
+
+            <div v-if="webauthnSupported()" class="flex flex-col gap-3 pt-4 border-t" :class="dark ? 'border-zinc-800/60' : 'border-zinc-100'">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h3 class="text-[14px] font-bold" :class="dark ? 'text-zinc-200' : 'text-zinc-800'">{{ t('account.2fa_webauthn_title') }}</h3>
+                        <p class="text-[12px] mt-0.5" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ t('account.2fa_webauthn_hint') }}</p>
+                    </div>
+                    <button
+                        type="button"
+                        :disabled="passkeyLoading"
+                        class="flex items-center gap-1.5 text-[12px] font-semibold rounded-lg border px-3 py-2 transition shrink-0 disabled:opacity-60
+                               focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                        :class="ghostBtn"
+                        @click="addPasskey"
+                    >
+                        <KeyRound :size="12" :stroke-width="1.8" />
+                        {{ t('account.2fa_webauthn_add') }}
+                    </button>
+                </div>
+
+                <div v-if="webauthnCredentials.length === 0" class="text-[13px] italic" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
+                    {{ t('account.2fa_webauthn_empty') }}
+                </div>
+                <div v-else class="flex flex-col gap-1.5">
+                    <div
+                        v-for="pk in webauthnCredentials"
+                        :key="pk.id"
+                        class="flex items-center justify-between gap-2 rounded-lg border px-3 py-2"
+                        :class="dark ? 'border-zinc-800/60 bg-zinc-900/40' : 'border-zinc-200 bg-zinc-50'"
+                    >
+                        <div class="min-w-0">
+                            <p class="text-[13px] font-medium truncate" :class="dark ? 'text-zinc-200' : 'text-zinc-800'">{{ pk.name }}</p>
+                            <p class="text-[11px]" :class="dark ? 'text-zinc-600' : 'text-zinc-500'">
+                                {{ pk.last_used_at ? t('account.2fa_webauthn_last_used', { time: pk.last_used_at }) : t('account.2fa_webauthn_never_used') }}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            :aria-label="t('account.2fa_webauthn_delete')"
+                            class="p-1.5 rounded-lg transition shrink-0"
+                            :class="dark ? 'text-red-400 hover:bg-red-500/10' : 'text-red-600 hover:bg-red-50'"
+                            @click="deletePasskey(pk.id)"
+                        >
+                            <Trash2 :size="13" :stroke-width="1.8" />
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>

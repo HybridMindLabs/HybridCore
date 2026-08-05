@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\Auth\LoginSecurityService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,7 +34,19 @@ class LoginController extends Controller
 
         $remember = $request->boolean('remember');
 
+        $existing = User::where('email', $credentials['email'])->first();
+
+        if ($existing && $existing->isLockedOut()) {
+            throw ValidationException::withMessages([
+                'email' => __('auth.locked', ['minutes' => $this->security->lockoutRemainingMinutes($existing)]),
+            ]);
+        }
+
         if (! Auth::attempt($credentials, $remember)) {
+            if ($existing) {
+                $this->security->recordFailedAttempt($existing);
+            }
+
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
             ]);

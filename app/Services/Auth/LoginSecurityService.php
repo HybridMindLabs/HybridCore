@@ -2,6 +2,7 @@
 
 namespace App\Services\Auth;
 
+use App\Mail\AccountLockedMail;
 use App\Mail\NewLoginMail;
 use App\Models\LoginHistory;
 use App\Models\User;
@@ -38,6 +39,8 @@ class LoginSecurityService
         $user->forceFill([
             'last_login_at' => now(),
             'last_login_ip' => $ip,
+            'failed_login_attempts' => 0,
+            'locked_until' => null,
         ])->save();
 
         LoginHistory::create([
@@ -58,6 +61,48 @@ class LoginSecurityService
     {
         try {
             Mail::to($user->email)->queue(new NewLoginMail($user, $ip, UserAgent::summarize($userAgent)));
+        } catch (\Exception) {
+        }
+    }
+
+    /**
+     * Record one wrong-password attempt against $user, independent of and in
+     * addition to the per-minute/per-IP rate limiters — those only slow a
+     * single attacker down, this locks the account itself after enough
+     * consecutive misses regardless of where they came from.
+     */
+    public function recordFailedAttempt(User $user): void
+    {
+        $max = max(1, (int) config('hybridcore.max_failed_login_attempts', 5));
+        $attempts = $user->failed_login_attempts + 1;
+        $locked = $attempts >= $max;
+
+        $user->forceFill([
+            'failed_login_attempts' => $locked ? 0 : $attempts,
+            'locked_until' => $locked
+                ? now()->addMinutes(max(1, (int) config('hybridcore.lockout_minutes', 15)))
+                : $user->locked_until,
+        ])->save();
+
+        if ($locked) {
+            $this->notifyLocked($user);
+        }
+    }
+
+    /** Minutes left before $user's lock lifts, or 0 if they aren't locked. */
+    public function lockoutRemainingMinutes(User $user): int
+    {
+        if (! $user->isLockedOut()) {
+            return 0;
+        }
+
+        return (int) ceil(now()->diffInSeconds($user->locked_until, absolute: true) / 60);
+    }
+
+    private function notifyLocked(User $user): void
+    {
+        try {
+            Mail::to($user->email)->queue(new AccountLockedMail($user, (int) config('hybridcore.lockout_minutes', 15)));
         } catch (\Exception) {
         }
     }

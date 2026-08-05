@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\Auth\LoginSecurityService;
 use App\Services\Extensions\Registries\HookRegistry;
 use App\Support\Hooks;
@@ -33,7 +34,19 @@ class LoginController extends Controller
             'password' => ['required', 'string'],
         ]);
 
+        $existing = User::where('email', $credentials['email'])->first();
+
+        if ($existing && $existing->isLockedOut()) {
+            throw ValidationException::withMessages([
+                'email' => __('auth.locked', ['minutes' => $this->security->lockoutRemainingMinutes($existing)]),
+            ]);
+        }
+
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+            if ($existing) {
+                $this->security->recordFailedAttempt($existing);
+            }
+
             throw ValidationException::withMessages(['email' => __('auth.failed')]);
         }
 

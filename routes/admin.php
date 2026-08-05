@@ -71,6 +71,7 @@ Route::middleware('perm:users.manage')->group(function (): void {
     Route::put('/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('/users/{user}/impersonate', [ImpersonationController::class, 'start'])->name('admin.users.impersonate');
+    Route::post('/users/{user}/unlock', [UserController::class, 'unlock'])->name('admin.users.unlock');
     Route::post('/users/{user}/notes', [UserController::class, 'storeNote'])->name('admin.users.notes.store');
     Route::delete('/users/{user}/notes/{note}', [UserController::class, 'destroyNote'])->name('admin.users.notes.destroy');
 

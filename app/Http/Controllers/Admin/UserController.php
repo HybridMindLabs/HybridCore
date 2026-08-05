@@ -52,6 +52,7 @@ class UserController extends Controller
                 'avatar' => $user->avatar,
                 'is_admin' => $user->is_admin,
                 'banned' => $user->isBanned(),
+                'locked_out' => $user->isLockedOut(),
                 'verified' => ! is_null($user->email_verified_at),
                 'role' => $user->primaryRole()?->only('name', 'slug', 'color', 'icon'),
                 'roles_count' => $user->roles->count(),
@@ -191,6 +192,16 @@ class UserController extends Controller
         $this->activity->log('user.note_deleted', "Deleted admin note on {$user->email}", $user);
 
         return back()->with('success', 'Note deleted.');
+    }
+
+    /** Lifts a failed-login lockout early — the lock also expires on its own once locked_until passes. */
+    public function unlock(User $user): RedirectResponse
+    {
+        $user->forceFill(['failed_login_attempts' => 0, 'locked_until' => null])->save();
+
+        $this->activity->log('user.unlocked', "Lifted the login lockout on {$user->email}", $user);
+
+        return back()->with('success', 'Account unlocked.');
     }
 
     public function create(): Response
