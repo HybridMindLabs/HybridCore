@@ -47,6 +47,8 @@ class ServerCommand extends Model
 
     public const STATUS_EXPIRED = 'expired';
 
+    public const STATUS_CANCELLED = 'cancelled';
+
     protected $fillable = [
         'server_id', 'command', 'source', 'status',
         'attempts', 'delivered_at', 'acked_at', 'expires_at',

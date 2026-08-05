@@ -253,6 +253,7 @@ Route::middleware('perm:servers.manage')->group(function (): void {
     Route::post('/servers/{server}/refresh', [AdminServerController::class, 'refresh'])->name('admin.servers.refresh');
     Route::post('/servers/{server}/bridge-token', [AdminServerController::class, 'issueBridgeToken'])->name('admin.servers.bridge.issue');
     Route::delete('/servers/{server}/bridge-token', [AdminServerController::class, 'revokeBridgeToken'])->name('admin.servers.bridge.revoke');
+    Route::post('/servers/{server}/commands/{command}/cancel', [AdminServerController::class, 'cancelCommand'])->name('admin.servers.commands.cancel');
     Route::delete('/servers/{server}', [AdminServerController::class, 'destroy'])->name('admin.servers.destroy');
     Route::post('/servers/bulk', [AdminServerController::class, 'bulkAction'])->name('admin.servers.bulk');
 

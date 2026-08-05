@@ -83,4 +83,15 @@ return [
     */
 
     'api_token_rate_limit' => (int) env('API_TOKEN_RATE_LIMIT', 60),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Game-server bridge requests per minute, per server
+    |--------------------------------------------------------------------------
+    | Keyed by the resolved server (not the caller's IP) — several game
+    | servers can share one box/NAT and must not throttle each other. A
+    | plugin polling every couple seconds sits well under this by default.
+    */
+
+    'bridge_rate_limit' => (int) env('BRIDGE_RATE_LIMIT', 120),
 ];

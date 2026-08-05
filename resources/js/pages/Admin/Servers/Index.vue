@@ -4,6 +4,7 @@ import {
     Server, Plus, RefreshCw, Search, Gamepad2,
     CheckCircle2, XCircle, Minus, Pencil, Trash2,
     X, ChevronDown, Users, Plug, Copy, Check,
+    Terminal, Ban, Clock,
 } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
@@ -12,13 +13,20 @@ import { ref, watch, computed } from 'vue';
 
 interface GameData { id: number; name: string; color?: string; icon?: string; default_port?: number | null; default_query_port?: number | null }
 interface ServerStatus { is_online: boolean; failure_reason: string | null; players_online: number; players_max: number; map: string | null }
+interface CommandRow {
+    id: number; command: string; source: string;
+    status: 'pending' | 'delivered' | 'acked' | 'expired' | 'cancelled';
+    attempts: number;
+    created_at: string | null; delivered_at: string | null; acked_at: string | null; expires_at: string | null;
+}
 interface ServerRow {
     id: number; ip: string; port: number; query_port: number | null; address: string; name: string | null;
     country_code: string | null; tags: string[]; is_active: boolean;
     last_queried_at: string | null;
-    bridge: { enabled: boolean; last_seen: string | null; online: boolean };
+    bridge: { enabled: boolean; last_seen: string | null; online: boolean; pending_count: number };
     game: { id: number; name: string; slug: string; color: string; icon: string };
     status: ServerStatus | null;
+    commands: CommandRow[];
 }
 
 const props = defineProps<{
@@ -72,6 +80,26 @@ async function copyToken() {
 function dismissToken() {
     router.reload({ only: [] }); // clears the one-time flash on next visit
     page.props.flash.bridge_token = null;
+}
+
+// ── Bridge command log ──────────────────────────────────────
+const expandedCommands = ref<number | null>(null);
+
+function toggleCommands(id: number) {
+    expandedCommands.value = expandedCommands.value === id ? null : id;
+}
+
+const commandStatusStyle: Record<CommandRow['status'], { icon: typeof Clock; class: string; label: string }> = {
+    pending: { icon: Clock, class: 'text-amber-400', label: 'Pending' },
+    delivered: { icon: RefreshCw, class: 'text-blue-400', label: 'Delivered' },
+    acked: { icon: CheckCircle2, class: 'text-emerald-400', label: 'Acked' },
+    expired: { icon: XCircle, class: 'text-zinc-600', label: 'Expired' },
+    cancelled: { icon: Ban, class: 'text-zinc-600', label: 'Cancelled' },
+};
+
+function cancelCommand(server: ServerRow, command: CommandRow) {
+    if (!confirm(`Cancel queued command "${command.command}"? It will never be delivered.`)) return;
+    router.post(route('admin.servers.commands.cancel', [server.id, command.id]), {}, { preserveScroll: true });
 }
 
 // ── Bulk actions ────────────────────────────────────────────
@@ -526,6 +554,19 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 round
                                     </button>
                                     <button
                                         type="button"
+                                        :title="`Bridge command log${server.bridge.pending_count ? ` — ${server.bridge.pending_count} pending` : ''}`"
+                                        class="relative w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
+                                        :class="expandedCommands === server.id ? 'text-blue-400 bg-blue-500/10' : 'text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800'"
+                                        @click="toggleCommands(server.id)"
+                                    >
+                                        <Terminal :size="13" :stroke-width="1.75" />
+                                        <span
+                                            v-if="server.bridge.pending_count"
+                                            class="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-0.5 flex items-center justify-center rounded-full bg-amber-400 text-[9px] font-bold text-zinc-950 leading-none"
+                                        >{{ server.bridge.pending_count }}</span>
+                                    </button>
+                                    <button
+                                        type="button"
                                         title="Refresh status"
                                         class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
                                         @click="refresh(server.id)"
@@ -548,6 +589,51 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 round
                                     >
                                         <Trash2 :size="13" :stroke-width="1.75" />
                                     </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Bridge command log -->
+                        <tr v-if="expandedCommands === server.id" class="border-b border-zinc-800/50 bg-zinc-900/20">
+                            <td colspan="7" class="px-4 py-3">
+                                <div v-if="!server.commands.length" class="text-zinc-700 text-xs py-2">
+                                    No commands queued for this server yet — extensions and core queue them via <code class="text-zinc-600">BridgeService::queue()</code>.
+                                </div>
+                                <div v-else class="flex flex-col gap-1">
+                                    <div
+                                        v-for="cmd in server.commands"
+                                        :key="cmd.id"
+                                        class="flex items-center justify-between gap-3 px-2.5 py-1.5 rounded-lg bg-zinc-900/50 text-xs"
+                                    >
+                                        <div class="flex items-center gap-2 min-w-0">
+                                            <component
+                                                :is="commandStatusStyle[cmd.status].icon"
+                                                :size="12"
+                                                :stroke-width="2"
+                                                :class="commandStatusStyle[cmd.status].class"
+                                                class="shrink-0"
+                                            />
+                                            <code class="text-zinc-300 font-mono truncate">{{ cmd.command }}</code>
+                                            <span
+                                                class="shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-500 font-mono"
+                                                :title="'Queued by'"
+                                            >{{ cmd.source }}</span>
+                                        </div>
+                                        <div class="flex items-center gap-3 shrink-0">
+                                            <span :class="commandStatusStyle[cmd.status].class" class="font-medium">{{ commandStatusStyle[cmd.status].label }}</span>
+                                            <span v-if="cmd.attempts > 0" class="text-zinc-700">{{ cmd.attempts }}x</span>
+                                            <span class="text-zinc-700">{{ cmd.acked_at ?? cmd.delivered_at ?? cmd.created_at }}</span>
+                                            <button
+                                                v-if="cmd.status === 'pending'"
+                                                type="button"
+                                                title="Cancel command"
+                                                class="text-zinc-600 hover:text-red-400 transition-colors"
+                                                @click="cancelCommand(server, cmd)"
+                                            >
+                                                <Ban :size="12" :stroke-width="1.75" />
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                         </tr>

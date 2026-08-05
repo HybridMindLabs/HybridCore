@@ -169,12 +169,38 @@ class BridgeService
             ->update(['status' => ServerCommand::STATUS_ACKED, 'acked_at' => now()]);
     }
 
-    /** Purge finished/expired commands so the table stays small. */
+    /**
+     * Cancel a command an admin no longer wants delivered. Only pending
+     * commands can be cancelled — one already handed to the plugin may have
+     * run already, so pulling it back would just hide that from the log.
+     *
+     * The pending check runs as part of the UPDATE itself (not a read on
+     * `$command` beforehand) so a poll that delivers the command a moment
+     * before the admin clicks cancel always wins the race, never the click.
+     */
+    public function cancel(Server $server, ServerCommand $command): bool
+    {
+        if ($command->server_id !== $server->id) {
+            return false;
+        }
+
+        $cancelled = (bool) ServerCommand::where('id', $command->id)
+            ->where('status', ServerCommand::STATUS_PENDING)
+            ->update(['status' => ServerCommand::STATUS_CANCELLED]);
+
+        if ($cancelled) {
+            $command->status = ServerCommand::STATUS_CANCELLED;
+        }
+
+        return $cancelled;
+    }
+
+    /** Purge finished/expired/cancelled commands so the table stays small. */
     public function prune(): int
     {
         return ServerCommand::query()
             ->where(fn ($q) => $q
-                ->whereIn('status', [ServerCommand::STATUS_ACKED, ServerCommand::STATUS_EXPIRED])
+                ->whereIn('status', [ServerCommand::STATUS_ACKED, ServerCommand::STATUS_EXPIRED, ServerCommand::STATUS_CANCELLED])
                 ->where('updated_at', '<', now()->subDays(7)))
             ->orWhere('attempts', '>=', self::MAX_ATTEMPTS)
             ->delete();

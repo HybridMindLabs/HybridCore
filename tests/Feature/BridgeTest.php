@@ -155,6 +155,61 @@ class BridgeTest extends TestCase
         $this->assertSame(ServerCommand::STATUS_EXPIRED, $command->fresh()->status);
     }
 
+    // ── Cancelling ──────────────────────────────────────────────
+
+    public function test_cancel_marks_a_pending_command_cancelled_and_it_is_never_delivered(): void
+    {
+        $server = $this->server();
+        $token = $this->bridge()->issueToken($server);
+        $command = $this->bridge()->queue($server, 'hc_ban STEAM_0:1:1');
+
+        $this->assertTrue($this->bridge()->cancel($server, $command));
+        $this->assertSame(ServerCommand::STATUS_CANCELLED, $command->fresh()->status);
+
+        $this->postJson('/api/bridge/poll', [], ['Authorization' => "Bearer {$token}"])
+            ->assertOk()
+            ->assertJsonCount(0, 'commands');
+    }
+
+    public function test_cancel_refuses_a_command_already_delivered(): void
+    {
+        $server = $this->server();
+        $command = $this->bridge()->queue($server, 'hc_ban STEAM_0:1:1');
+        $this->bridge()->pull($server);
+
+        $this->assertFalse($this->bridge()->cancel($server, $command));
+        $this->assertSame(ServerCommand::STATUS_DELIVERED, $command->fresh()->status);
+    }
+
+    public function test_cancel_refuses_a_command_belonging_to_another_server(): void
+    {
+        $serverA = $this->server();
+        $serverB = $this->server();
+        $command = $this->bridge()->queue($serverA, 'hc_ban STEAM_0:1:1');
+
+        $this->assertFalse($this->bridge()->cancel($serverB, $command));
+    }
+
+    // ── Rate limiting ───────────────────────────────────────────
+
+    public function test_bridge_throttle_is_scoped_per_server_not_shared_across_servers(): void
+    {
+        config(['hybridcore.bridge_rate_limit' => 1]);
+
+        $serverA = $this->server();
+        $serverB = $this->server();
+        $tokenA = $this->bridge()->issueToken($serverA);
+        $tokenB = $this->bridge()->issueToken($serverB);
+
+        $this->postJson('/api/bridge/poll', [], ['Authorization' => "Bearer {$tokenA}"])->assertOk();
+        $this->postJson('/api/bridge/poll', [], ['Authorization' => "Bearer {$tokenA}"])->assertStatus(429);
+
+        // Server B has its own budget — A being throttled doesn't touch it,
+        // which would fail if the limiter were still keyed by IP (both
+        // requests come from the same test client "IP").
+        $this->postJson('/api/bridge/poll', [], ['Authorization' => "Bearer {$tokenB}"])->assertOk();
+    }
+
     // ── Admin ────────────────────────────────────────────────────
 
     public function test_admin_can_issue_and_revoke_token(): void

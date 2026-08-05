@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Jobs\QueryServerJob;
 use App\Models\Game;
 use App\Models\Server;
+use App\Models\ServerCommand;
 use App\Services\ActivityLogService;
 use App\Services\Bridge\BridgeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Torann\GeoIP\Facades\GeoIP;
@@ -21,7 +23,12 @@ class ServerController extends Controller
         $search = trim((string) $request->query('search', ''));
         $gameId = $request->query('game_id');
 
-        $servers = Server::with(['game', 'latestSnapshot'])
+        $servers = Server::with([
+            'game',
+            'latestSnapshot',
+            'bridgeCommands' => fn ($q) => $q->orderByDesc('created_at')->orderByDesc('id')->limit(10),
+        ])
+            ->withCount(['bridgeCommands as pending_command_count' => fn ($q) => $q->where('status', ServerCommand::STATUS_PENDING)])
             ->when($search !== '', fn ($q) => $q->where(function ($q) use ($search) {
                 $q->where('ip', 'like', "%{$search}%")
                     ->orWhere('name', 'like', "%{$search}%");
@@ -46,7 +53,19 @@ class ServerController extends Controller
                     'enabled' => $s->bridge_enabled,
                     'last_seen' => $s->bridge_last_seen_at?->diffForHumans(),
                     'online' => $s->bridge_last_seen_at !== null && $s->bridge_last_seen_at->gt(now()->subMinutes(2)),
+                    'pending_count' => $s->pending_command_count,
                 ],
+                'commands' => $s->bridgeCommands->map(fn (ServerCommand $c) => [
+                    'id' => $c->id,
+                    'command' => $c->command,
+                    'source' => $c->source,
+                    'status' => $c->status,
+                    'attempts' => $c->attempts,
+                    'created_at' => $c->created_at?->diffForHumans(),
+                    'delivered_at' => $c->delivered_at?->diffForHumans(),
+                    'acked_at' => $c->acked_at?->diffForHumans(),
+                    'expires_at' => $c->expires_at?->diffForHumans(),
+                ])->values()->all(),
                 'game' => ['id' => $s->game->id, 'name' => $s->game->name, 'slug' => $s->game->slug, 'color' => $s->game->color, 'icon' => $s->game->icon],
                 'status' => $s->latestSnapshot ? [
                     'is_online' => $s->latestSnapshot->is_online,
@@ -79,6 +98,21 @@ class ServerController extends Controller
             ->with('bridge_token', $token);
     }
 
+    /** Cancel a still-pending bridge command so it's never delivered — the source shows whether core or an extension queued it. */
+    public function cancelCommand(Server $server, ServerCommand $command): RedirectResponse
+    {
+        abort_unless($command->server_id === $server->id, 404);
+
+        if (! app(BridgeService::class)->cancel($server, $command)) {
+            return back()->with('error', 'Only pending commands can be cancelled.');
+        }
+
+        app(ActivityLogService::class)
+            ->log('server.command_cancelled', "Cancelled a queued command ({$command->source}) for {$server->address}", $server);
+
+        return back()->with('success', 'Command cancelled.');
+    }
+
     public function revokeBridgeToken(Server $server): RedirectResponse
     {
         app(BridgeService::class)->revokeToken($server);
@@ -93,11 +127,16 @@ class ServerController extends Controller
     {
         $data = $request->validate([
             'game_id' => ['required', 'exists:games,id'],
-            'ip' => ['required', 'string', 'max:45'],
+            'ip' => [
+                'required', 'string', 'max:45',
+                Rule::unique('servers')->where(fn ($q) => $q->where('port', $request->input('port'))),
+            ],
             'port' => ['required', 'integer', 'min:1', 'max:65535'],
             'query_port' => ['nullable', 'integer', 'min:1', 'max:65535'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['string', 'max:30'],
+        ], [
+            'ip.unique' => 'A server with this IP and port already exists.',
         ]);
 
         $data['added_by'] = auth()->id();
@@ -123,13 +162,18 @@ class ServerController extends Controller
     {
         $data = $request->validate([
             'game_id' => ['required', 'exists:games,id'],
-            'ip' => ['required', 'string', 'max:45'],
+            'ip' => [
+                'required', 'string', 'max:45',
+                Rule::unique('servers')->ignore($server->id)->where(fn ($q) => $q->where('port', $request->input('port'))),
+            ],
             'port' => ['required', 'integer', 'min:1', 'max:65535'],
             'query_port' => ['nullable', 'integer', 'min:1', 'max:65535'],
             'name' => ['nullable', 'string', 'max:100'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['string', 'max:30'],
             'is_active' => ['boolean'],
+        ], [
+            'ip.unique' => 'A server with this IP and port already exists.',
         ]);
 
         $server->update($data);

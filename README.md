@@ -90,6 +90,7 @@ bloating the foundation.
 
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** — full production self-hosting guide (requirements, nginx, Redis, Supervisor, installer, upgrades)
 - **[extensions/BUILDING_EXTENSIONS.md](extensions/BUILDING_EXTENSIONS.md)** — the Extension SDK: manifest, lifecycle, hooks, filters, slots
+- **[BRIDGE.md](BRIDGE.md)** — the game-server bridge protocol: auth, endpoints, command/event delivery semantics
 - **[CHANGELOG.md](CHANGELOG.md)** — release history
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** — branch workflow, commit style, code standards
 - **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — community standards
