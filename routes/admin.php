@@ -32,6 +32,7 @@ use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\TrashController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\WebhookController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\Web\LocaleController;
 use Illuminate\Support\Facades\Route;
@@ -196,8 +197,19 @@ Route::middleware('perm:api_tokens.manage')->group(function (): void {
     Route::get('/api-tokens', [ApiTokenController::class, 'index'])->name('admin.api-tokens.index');
     Route::post('/api-tokens', [ApiTokenController::class, 'store'])->name('admin.api-tokens.store');
     Route::post('/api-tokens/{serviceAccount}/tokens', [ApiTokenController::class, 'issueToken'])->name('admin.api-tokens.tokens.store');
+    Route::post('/api-tokens/tokens/{token}/rotate', [ApiTokenController::class, 'rotateToken'])->name('admin.api-tokens.tokens.rotate');
     Route::delete('/api-tokens/tokens/{token}', [ApiTokenController::class, 'revokeToken'])->name('admin.api-tokens.tokens.destroy');
     Route::delete('/api-tokens/{serviceAccount}', [ApiTokenController::class, 'destroy'])->name('admin.api-tokens.destroy');
+});
+
+// Webhooks
+Route::middleware('perm:webhooks.manage')->group(function (): void {
+    Route::get('/webhooks', [WebhookController::class, 'index'])->name('admin.webhooks.index');
+    Route::post('/webhooks', [WebhookController::class, 'store'])->name('admin.webhooks.store');
+    Route::put('/webhooks/{webhook}', [WebhookController::class, 'update'])->name('admin.webhooks.update');
+    Route::post('/webhooks/{webhook}/regenerate-secret', [WebhookController::class, 'regenerateSecret'])->name('admin.webhooks.regenerate-secret');
+    Route::post('/webhooks/{webhook}/test', [WebhookController::class, 'sendTest'])->name('admin.webhooks.test');
+    Route::delete('/webhooks/{webhook}', [WebhookController::class, 'destroy'])->name('admin.webhooks.destroy');
 });
 
 // Themes

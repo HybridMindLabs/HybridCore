@@ -58,4 +58,14 @@ return [
     */
 
     'login_rate_limit' => (int) env('LOGIN_RATE_LIMIT', 5),
+
+    /*
+    |--------------------------------------------------------------------------
+    | API token requests per minute, per token
+    |--------------------------------------------------------------------------
+    | Applies to every route gated by the `abilities:` middleware. Raise it
+    | for an integration that legitimately polls often.
+    */
+
+    'api_token_rate_limit' => (int) env('API_TOKEN_RATE_LIMIT', 60),
 ];

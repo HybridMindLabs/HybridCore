@@ -38,6 +38,7 @@ class ExtensionRegistry
         private readonly SlotRegistry $slots,
         private readonly HookRegistry $hooks,
         private readonly FilterRegistry $filters,
+        private readonly WebhookEventRegistry $webhookEvents,
     ) {}
 
     public function filters(): FilterRegistry
@@ -150,5 +151,11 @@ class ExtensionRegistry
     public function hooks(): HookRegistry
     {
         return $this->hooks;
+    }
+
+    /** Extension-declared events an admin can subscribe a webhook endpoint to. */
+    public function webhookEvents(): WebhookEventRegistry
+    {
+        return $this->webhookEvents;
     }
 }

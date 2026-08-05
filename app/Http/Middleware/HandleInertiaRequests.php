@@ -327,6 +327,8 @@ class HandleInertiaRequests extends Middleware
                 'bridge_token' => fn () => $request->session()->get('bridge_token'),
                 // One-time reveal of a freshly issued API token.
                 'plain_token' => fn () => $request->session()->get('plain_token'),
+                // One-time reveal of a freshly generated/regenerated webhook secret.
+                'webhook_secret' => fn () => $request->session()->get('webhook_secret'),
             ],
             'oauthProviders' => fn () => $this->oauth->compose(),
             'legalPages' => fn () => rescue(fn () => Cache::remember(

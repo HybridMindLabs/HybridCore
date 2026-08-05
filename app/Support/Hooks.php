@@ -66,4 +66,10 @@ final class Hooks
     public const EXTENSION_UNINSTALLED = 'extension.uninstalled';
 
     private function __construct() {}
+
+    /** @return array<int, string> Every declared hook's string value, for validation/UI — not the Args docs. */
+    public static function all(): array
+    {
+        return array_values((new \ReflectionClass(self::class))->getConstants());
+    }
 }

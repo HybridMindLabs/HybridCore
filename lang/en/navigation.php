@@ -18,6 +18,7 @@ return [
     'updates' => 'Updates',
     'backup' => 'Backup & Export',
     'api_tokens' => 'API Tokens',
+    'webhooks' => 'Webhooks',
     'analytics' => 'Analytics',
     'activity_log' => 'Activity Log',
     'system_logs' => 'System Logs',

@@ -154,6 +154,13 @@ class DemoServiceProvider extends ServiceProvider
             Log::info('[demo extension] user.login hook fired', ['user_id' => $user->id]);
         });
 
+        // An extension's own event, made webhook-subscribable without core
+        // knowing "demo.pinged" exists. Fire it with $registry->hooks()->fire()
+        // (see Api\DemoController::ping()) — any admin-configured endpoint
+        // subscribed to it gets a delivery automatically, same as a core Hooks::
+        // event. See BUILDING_EXTENSIONS.md's "Webhooks" section.
+        $registry->webhookEvents()->register('demo.pinged', 'Demo: Ping Endpoint Called', 'demo');
+
         // Additive only — never removes or overwrites an existing shared prop.
         $registry->filters()->add(Filters::INERTIA_SHARED, function (array $shared) {
             $shared['demo_extension_active'] = true;

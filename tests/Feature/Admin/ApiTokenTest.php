@@ -136,6 +136,58 @@ class ApiTokenTest extends TestCase
         $this->assertModelExists($token);
     }
 
+    public function test_rotate_revokes_the_old_token_and_issues_a_replacement_with_the_same_grant(): void
+    {
+        $account = ServiceAccount::factory()->create();
+        $token = $account->createToken('discord bot', ['notifications:read', 'notifications:write'])->accessToken;
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('admin.api-tokens.tokens.rotate', $token));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('plain_token');
+
+        $this->assertModelMissing($token);
+
+        $account->refresh();
+        $this->assertCount(1, $account->tokens);
+        $newToken = $account->tokens->first();
+        $this->assertNotSame($token->id, $newToken->id);
+        $this->assertSame('discord bot', $newToken->name);
+        $this->assertSame(['notifications:read', 'notifications:write'], $newToken->abilities);
+    }
+
+    public function test_rotate_refuses_a_token_that_does_not_belong_to_a_service_account(): void
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('t')->accessToken;
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.api-tokens.tokens.rotate', $token))
+            ->assertNotFound();
+
+        $this->assertModelExists($token);
+    }
+
+    public function test_index_flags_expired_and_soon_to_expire_tokens(): void
+    {
+        $account = ServiceAccount::factory()->create();
+        $account->createToken('expired', ['notifications:read'], now()->subDay());
+        $account->createToken('expires soon', ['notifications:read'], now()->addDays(3));
+        $account->createToken('healthy', ['notifications:read'], now()->addMonths(6));
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.api-tokens.index'))
+            ->assertInertia(fn ($page) => $page
+                ->where('accounts.0.tokens.0.is_expired', true)
+                ->where('accounts.0.tokens.0.expires_soon', false)
+                ->where('accounts.0.tokens.1.is_expired', false)
+                ->where('accounts.0.tokens.1.expires_soon', true)
+                ->where('accounts.0.tokens.2.is_expired', false)
+                ->where('accounts.0.tokens.2.expires_soon', false)
+            );
+    }
+
     public function test_index_never_exposes_a_plaintext_or_hashed_token_value(): void
     {
         $account = ServiceAccount::factory()->create(['name' => 'Discord Bot']);

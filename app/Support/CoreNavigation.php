@@ -44,6 +44,7 @@ class CoreNavigation
         $nav->register('navigation.updates', 'admin.updates.index', 'Download', 'navigation.sections.system', 'system.view', 30);
         $nav->register('navigation.backup', 'admin.backup.index', 'DatabaseBackup', 'navigation.sections.system', 'system.view', 40);
         $nav->register('navigation.api_tokens', 'admin.api-tokens.index', 'KeyRound', 'navigation.sections.system', 'api_tokens.manage', 45);
+        $nav->register('navigation.webhooks', 'admin.webhooks.index', 'Webhook', 'navigation.sections.system', 'webhooks.manage', 46);
         $nav->register('navigation.system_logs', 'admin.system-logs.index', 'ScrollText', 'navigation.sections.system', 'system.view', 50);
 
         // ── Extensions ────────────────────────────────────────────
