@@ -19,6 +19,8 @@ class SecurityHeadersTest extends TestCase
         $response->assertHeader('X-Content-Type-Options', 'nosniff');
         $response->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->assertHeader('Permissions-Policy');
+        $response->assertHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+        $response->assertHeader('Cross-Origin-Resource-Policy', 'same-origin');
     }
 
     public function test_auth_pages_are_not_cacheable(): void

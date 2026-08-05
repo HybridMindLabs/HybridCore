@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
-import { KeyRound, ShieldCheck } from '@lucide/vue';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { Fingerprint, KeyRound, ShieldCheck } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import AuthCard from '@/components/Auth/AuthCard.vue';
 import Button from '@/components/UI/Button.vue';
 import { useLocale } from '@/composables/useLocale';
 import { useTheme } from '@/composables/useTheme';
+import { getPasskeyAssertion, webauthnSupported } from '@/composables/useWebauthn';
+
+const props = defineProps<{ hasTotp: boolean; hasWebauthn: boolean }>();
 
 const { t } = useLocale();
 const { theme } = useTheme();
@@ -18,6 +21,41 @@ const dark = computed(() => theme.value === 'dark');
  */
 const useRecovery = ref(false);
 const form = useForm({ code: '' });
+
+const showPasskeyButton = computed(() => props.hasWebauthn && webauthnSupported());
+const showCodeForm = computed(() => props.hasTotp);
+const webauthnLoading = ref(false);
+const webauthnError = ref('');
+
+function csrfToken(): string {
+    return (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '';
+}
+
+async function useWebauthn() {
+    webauthnLoading.value = true;
+    webauthnError.value = '';
+
+    try {
+        const res = await fetch(route('auth.2fa.webauthn.options'), {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': csrfToken(), Accept: 'application/json' },
+        });
+        const options = await res.json();
+        if (!res.ok) throw new Error(options?.message ?? 'failed');
+
+        const assertion = await getPasskeyAssertion(options);
+
+        router.post(route('auth.2fa.webauthn.verify'), assertion, {
+            onError: () => {
+                webauthnError.value = t('auth.two_factor.webauthn_error');
+            },
+        });
+    } catch {
+        webauthnError.value = t('auth.two_factor.webauthn_error');
+    } finally {
+        webauthnLoading.value = false;
+    }
+}
 
 const subtitle = computed(() =>
     useRecovery.value ? t('auth.two_factor.subtitle_recovery') : t('auth.two_factor.subtitle_app'),
@@ -50,7 +88,30 @@ function submit() {
         :shell-title="t('auth.two_factor.shell_title')"
         :shell-subtitle="t('auth.two_factor.shell_subtitle')"
     >
-        <form class="flex flex-col gap-4" @submit.prevent="submit">
+        <button
+            v-if="showPasskeyButton"
+            type="button"
+            :disabled="webauthnLoading"
+            class="w-full flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-[14px] font-bold transition disabled:opacity-60
+                   focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+            :class="dark ? 'border-zinc-800 bg-zinc-900/60 text-zinc-100 hover:bg-zinc-800' : 'border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50'"
+            @click="useWebauthn"
+        >
+            <Fingerprint :size="16" :stroke-width="2" />
+            {{ webauthnLoading ? t('auth.two_factor.webauthn_verifying') : t('auth.two_factor.webauthn_submit') }}
+        </button>
+
+        <p v-if="webauthnError" role="alert" class="mt-2 text-center text-[12px] font-semibold text-red-600 dark:text-red-400">
+            {{ webauthnError }}
+        </p>
+
+        <div v-if="showPasskeyButton && showCodeForm" class="flex items-center gap-3 my-4">
+            <span class="h-px flex-1" :class="dark ? 'bg-zinc-800' : 'bg-zinc-200'" />
+            <span class="text-[11px] font-semibold uppercase tracking-widest" :class="dark ? 'text-zinc-600' : 'text-zinc-400'">{{ t('auth.two_factor.or') }}</span>
+            <span class="h-px flex-1" :class="dark ? 'bg-zinc-800' : 'bg-zinc-200'" />
+        </div>
+
+        <form v-if="showCodeForm" class="flex flex-col gap-4" @submit.prevent="submit">
             <div>
                 <label for="code" class="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest"
                     :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
@@ -91,6 +152,7 @@ function submit() {
         </form>
 
         <button
+            v-if="showCodeForm"
             type="button"
             class="mt-4 w-full text-center text-[12px] font-semibold transition rounded
                    focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"

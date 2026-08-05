@@ -34,12 +34,17 @@ use Laravel\Scout\Searchable;
  * @property string|null $two_factor_secret
  * @property array<array-key, mixed>|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
+ * @property Carbon|null $two_factor_required_since
  * @property string|null $remember_token
  * @property Carbon|null $last_seen_at
  * @property Carbon|null $onboarding_completed_at
  * @property Carbon|null $banned_at
  * @property Carbon|null $last_login_at
  * @property string|null $last_login_ip
+ * @property int $failed_login_attempts
+ * @property Carbon|null $locked_until
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, WebauthnCredential> $webauthnCredentials
+ * @property-read int|null $webauthn_credentials_count
  * @property string|null $timezone
  * @property string|null $locale
  * @property string|null $avatar
@@ -162,10 +167,12 @@ class User extends Authenticatable implements MustVerifyEmail
             'password_set_at' => 'datetime',
             'is_admin' => 'boolean',
             'banned_at' => 'datetime',
+            'locked_until' => 'datetime',
             'last_login_at' => 'datetime',
             'last_seen_at' => 'datetime',
             'username_changed_at' => 'datetime',
             'two_factor_confirmed_at' => 'datetime',
+            'two_factor_required_since' => 'datetime',
             'two_factor_recovery_codes' => 'encrypted:array',
             'two_factor_secret' => 'encrypted',
             'notification_preferences' => 'array',
@@ -192,14 +199,25 @@ class User extends Authenticatable implements MustVerifyEmail
         return ($value ?: null) ?? $this->username ?? '?';
     }
 
+    /** True with either a confirmed TOTP secret or at least one registered passkey. */
     public function hasTwoFactorEnabled(): bool
     {
-        return $this->two_factor_confirmed_at !== null;
+        return $this->two_factor_confirmed_at !== null || $this->webauthnCredentials()->exists();
+    }
+
+    public function webauthnCredentials(): HasMany
+    {
+        return $this->hasMany(WebauthnCredential::class);
     }
 
     public function isBanned(): bool
     {
         return $this->banned_at !== null;
+    }
+
+    public function isLockedOut(): bool
+    {
+        return $this->locked_until !== null && $this->locked_until->isFuture();
     }
 
     public function isOnline(): bool

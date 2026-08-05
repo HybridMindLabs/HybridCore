@@ -11,6 +11,7 @@ use App\Models\LoginHistory;
 use App\Models\Server;
 use App\Models\User;
 use App\Models\UserBlock;
+use App\Models\WebauthnCredential;
 use App\Services\AchievementService;
 use App\Services\Auth\LoginSecurityService;
 use App\Services\Auth\OAuthProviderRegistry;
@@ -69,6 +70,14 @@ class AccountController extends Controller
                 'two_factor_recovery_codes' => $user->hasTwoFactorEnabled()
                     ? $user->two_factor_recovery_codes
                     : null,
+                'has_totp' => $user->two_factor_confirmed_at !== null,
+                'webauthn_credentials' => $user->webauthnCredentials->sortByDesc('created_at')->values()
+                    ->map(fn (WebauthnCredential $c) => [
+                        'id' => $c->id,
+                        'name' => $c->name,
+                        'last_used_at' => $c->last_used_at?->diffForHumans(),
+                        'created_at' => $c->created_at->toFormattedDateString(),
+                    ]),
                 'can_change_username' => $user->canChangUsername(),
                 'username_change_available_at' => $user->username_changed_at
                     ? $user->username_changed_at->addDays(

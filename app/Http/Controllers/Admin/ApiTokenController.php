@@ -45,7 +45,7 @@ class ApiTokenController extends Controller
     }
 
     /**
-     * @return array{id: int, name: string, abilities: array<int, string>, last_used_at: string|null, expires_at: string|null, created_at: string}
+     * @return array{id: int, name: string, abilities: array<int, string>, last_used_at: string|null, expires_at: string|null, created_at: string, is_expired: bool, expires_soon: bool}
      */
     private function tokenToArray(PersonalAccessToken $token): array
     {
@@ -56,6 +56,12 @@ class ApiTokenController extends Controller
             'last_used_at' => $token->last_used_at?->toDateTimeString(),
             'expires_at' => $token->expires_at?->toDateTimeString(),
             'created_at' => $token->created_at->toDateTimeString(),
+            // Computed server-side so the admin UI never has to parse dates
+            // or reason about timezones itself.
+            'is_expired' => (bool) $token->expires_at?->isPast(),
+            'expires_soon' => $token->expires_at !== null
+                && $token->expires_at->isFuture()
+                && $token->expires_at->diffInDays(now(), absolute: true) <= 7,
         ];
     }
 
@@ -104,6 +110,30 @@ class ApiTokenController extends Controller
         $this->activityLog->log('service_account.token_issued', "Issued a new token for \"{$serviceAccount->name}\"", $serviceAccount);
 
         return back()->with('success', 'Token issued.')->with('plain_token', $token->plainTextToken);
+    }
+
+    /**
+     * Revoke $token and immediately issue a replacement with the same name
+     * and abilities — the credential changes, the grant doesn't. Any
+     * expiry is not carried over; reissue one from the account panel if
+     * the rotated token needs to expire too.
+     */
+    public function rotateToken(PersonalAccessToken $token): RedirectResponse
+    {
+        abort_unless($token->tokenable_type === ServiceAccount::class, 404);
+
+        $account = $token->tokenable;
+        abort_unless($account instanceof ServiceAccount, 404);
+
+        $name = $token->name;
+        $abilities = $token->abilities ?? [];
+
+        $token->delete();
+        $newToken = $account->createToken($name, $abilities);
+
+        $this->activityLog->log('service_account.token_rotated', "Rotated a token for \"{$account->name}\"", $account);
+
+        return back()->with('success', 'Token rotated — the old one no longer works.')->with('plain_token', $newToken->plainTextToken);
     }
 
     public function revokeToken(PersonalAccessToken $token): RedirectResponse

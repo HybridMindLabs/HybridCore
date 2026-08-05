@@ -6,6 +6,7 @@ return [
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
     'suspended' => 'This account has been suspended.',
     'no_admin_access' => 'You do not have admin access.',
+    'locked' => 'Too many failed attempts. Try again in :minutes minute(s).',
     'sign_in' => 'Sign in',
     'sign_out' => 'Sign out',
     'login' => [
@@ -119,6 +120,10 @@ return [
         'use_recovery' => 'Use a recovery code instead',
         'use_app' => 'Use your authenticator app instead',
         'lost_access' => 'Lost both your phone and your recovery codes? Contact the site staff.',
+        'webauthn_submit' => 'Sign in with a passkey',
+        'webauthn_verifying' => 'Waiting for your device…',
+        'webauthn_error' => 'Passkey sign-in failed or was cancelled.',
+        'or' => 'or',
         'shell_title' => 'One more step',
         'shell_subtitle' => 'Your password was accepted. This second check keeps the account yours even if that password leaks.',
     ],

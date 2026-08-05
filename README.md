@@ -2,7 +2,7 @@
 
 > A modular, self-hosted platform for gaming communities, server owners and multiplayer projects.
 
-**Version 0.2.0** — feature-complete core with a full extension SDK. Production-ready for self-hosting.
+**Version 0.3.0** — feature-complete core with a full extension SDK. Production-ready for self-hosting.
 
 ---
 
@@ -29,13 +29,15 @@ bloating the foundation.
 
 ---
 
-## Features (v0.2.0)
+## Features (v0.3.0)
 
 **Identity & accounts**
-- Registration, login, password reset, email verification, 2FA (TOTP)
+- Registration, login, password reset, email verification, 2FA (TOTP + WebAuthn/passkeys)
+- Account lockout after repeated failed logins, with email alerts on new-device sign-ins
+- Mandatory-2FA policy for the admin panel — configurable per-admin grace period, not a hard cutover
 - OAuth sign-in (Discord, Steam, Google) with encrypted credential storage
 - Roles & permissions with a visual editor, multi-role assignment and wildcards
-- Full account area: profile, avatar/banner, privacy, sessions, connected accounts, GDPR export & deletion
+- Full account area: profile, avatar/banner, privacy, sessions (list & revoke), connected accounts, GDPR export & deletion
 - Post-registration onboarding wizard
 
 **Community**
@@ -54,6 +56,8 @@ bloating the foundation.
 **Admin panel**
 - Dashboard with growth stats, analytics, activity & audit logs
 - Users (with a 360° detail view, admin notes and impersonation), IP bans, CSV export
+- API tokens for external integrations — scoped abilities, per-token rate limiting, one-click rotation
+- Outbound webhooks — subscribe any core (or extension-declared) event, signed deliveries, delivery history, test-send
 - Settings, legal pages, menus, SEO + auto sitemap, email templates, maintenance mode
 - Extensions & themes management, system health, backups, one-command updates
 
@@ -88,6 +92,7 @@ bloating the foundation.
 - **[extensions/BUILDING_EXTENSIONS.md](extensions/BUILDING_EXTENSIONS.md)** — the Extension SDK: manifest, lifecycle, hooks, filters, slots
 - **[CHANGELOG.md](CHANGELOG.md)** — release history
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** — branch workflow, commit style, code standards
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — community standards
 - **[SECURITY.md](SECURITY.md)** — vulnerability reporting
 
 ---

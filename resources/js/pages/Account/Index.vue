@@ -24,7 +24,8 @@ interface Account {
     profile_privacy: 'public' | 'members' | 'private';
     timezone: string | null; locale: string | null; verified: boolean;
     created_at: string; last_login_at: string | null;
-    two_factor_enabled: boolean; two_factor_recovery_codes: string[] | null;
+    two_factor_enabled: boolean; two_factor_recovery_codes: string[] | null; has_totp: boolean;
+    webauthn_credentials: { id: number; name: string; last_used_at: string | null; created_at: string }[];
     can_change_username: boolean; username_change_available_at: string | null;
     notification_preferences: Record<string, boolean> | string[];
 }
@@ -64,6 +65,9 @@ const TAB_IDS = [
 const LAST_TAB_KEY = 'hc-account-last-tab';
 
 function initialTab(): string {
+    const fromQuery = new URLSearchParams(window.location.search).get('tab');
+    if (fromQuery && TAB_IDS.includes(fromQuery)) return fromQuery;
+
     const stored = localStorage.getItem(LAST_TAB_KEY);
     return stored && TAB_IDS.includes(stored) ? stored : 'profile';
 }
@@ -113,7 +117,12 @@ watch(activeTab, (tab) => {
                         </template>
                         <template v-else-if="activeTab === 'security'">
                             <Security />
-                            <TwoFactor :enabled="account.two_factor_enabled" :recovery-codes="account.two_factor_recovery_codes" />
+                            <TwoFactor
+                                :enabled="account.two_factor_enabled"
+                                :recovery-codes="account.two_factor_recovery_codes"
+                                :has-totp="account.has_totp"
+                                :webauthn-credentials="account.webauthn_credentials"
+                            />
                         </template>
                         <template v-else-if="activeTab === 'sessions'">
                             <Sessions :sessions="sessions" />

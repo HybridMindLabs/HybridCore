@@ -54,6 +54,8 @@ Route::middleware([EnsureAppIsInstalled::class, EnsureNotInMaintenance::class])
         // ---- 2FA challenge (between login and full auth) ----
         Route::get('/two-factor-challenge', [TwoFactorController::class, 'showChallenge'])->name('auth.2fa.challenge');
         Route::post('/two-factor-challenge', [TwoFactorController::class, 'challenge'])->middleware('throttle:10,1')->name('auth.2fa.verify');
+        Route::post('/two-factor-challenge/webauthn/options', [TwoFactorController::class, 'webauthnChallengeOptions'])->middleware('throttle:10,1')->name('auth.2fa.webauthn.options');
+        Route::post('/two-factor-challenge/webauthn/verify', [TwoFactorController::class, 'webauthnChallengeVerify'])->middleware('throttle:10,1')->name('auth.2fa.webauthn.verify');
 
         // ---- Public authentication (guests) ----
         Route::middleware('guest')->group(function (): void {
@@ -107,6 +109,11 @@ Route::middleware([EnsureAppIsInstalled::class, EnsureNotInMaintenance::class])
             Route::post('/account/two-factor/confirm', [TwoFactorController::class, 'confirm'])->middleware('throttle:10,1')->name('account.2fa.confirm');
             Route::delete('/account/two-factor', [TwoFactorController::class, 'disable'])->name('account.2fa.disable');
             Route::post('/account/two-factor/recovery-codes', [TwoFactorController::class, 'regenerateCodes'])->name('account.2fa.recovery-codes');
+
+            // Passkeys (WebAuthn) — an additional/alternative second factor.
+            Route::post('/account/two-factor/webauthn/options', [TwoFactorController::class, 'webauthnRegisterOptions'])->name('account.2fa.webauthn.options');
+            Route::post('/account/two-factor/webauthn', [TwoFactorController::class, 'webauthnRegister'])->middleware('throttle:10,1')->name('account.2fa.webauthn.register');
+            Route::delete('/account/two-factor/webauthn/{credential}', [TwoFactorController::class, 'webauthnDestroy'])->name('account.2fa.webauthn.destroy');
 
             // Avatar & banner
             Route::post('/account/avatar', [MediaController::class, 'uploadAvatar'])->name('account.avatar.upload')->middleware('throttle:10,1');

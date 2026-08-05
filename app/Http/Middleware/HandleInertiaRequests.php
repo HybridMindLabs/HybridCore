@@ -23,6 +23,7 @@ use App\Services\Localization\LocaleService;
 use App\Services\SettingsService;
 use App\Services\Themes\ThemeResolver;
 use App\Services\Themes\ThemeSettingsResolver;
+use App\Services\TwoFactorPolicy;
 use App\Support\Filters;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -49,6 +50,7 @@ class HandleInertiaRequests extends Middleware
         private readonly SlotRegistry $slots,
         private readonly LocaleService $locales,
         private readonly OAuthProviderRegistry $oauth,
+        private readonly TwoFactorPolicy $twoFactorPolicy,
     ) {}
 
     public function version(Request $request): ?string
@@ -288,6 +290,12 @@ class HandleInertiaRequests extends Middleware
             'adminBadges' => fn () => $request->user()?->is_admin ? [
                 'unread_contact' => ContactMessage::whereNull('read_at')->count(),
             ] : [],
+            // Days left in the mandatory-2FA grace window (Admin > Settings >
+            // Security), or null when it doesn't apply — 2FA already on, the
+            // policy is off, or this user was never touched by it.
+            'twoFactorGraceDaysRemaining' => fn () => $request->user()
+                ? $this->twoFactorPolicy->daysRemaining($request->user())
+                : null,
             'localization' => fn () => [
                 'currentLocale' => app()->getLocale(),
                 'fallbackLocale' => $this->locales->fallbackLocale(),
@@ -327,6 +335,8 @@ class HandleInertiaRequests extends Middleware
                 'bridge_token' => fn () => $request->session()->get('bridge_token'),
                 // One-time reveal of a freshly issued API token.
                 'plain_token' => fn () => $request->session()->get('plain_token'),
+                // One-time reveal of a freshly generated/regenerated webhook secret.
+                'webhook_secret' => fn () => $request->session()->get('webhook_secret'),
             ],
             'oauthProviders' => fn () => $this->oauth->compose(),
             'legalPages' => fn () => rescue(fn () => Cache::remember(

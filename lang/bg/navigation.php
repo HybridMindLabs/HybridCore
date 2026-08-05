@@ -18,6 +18,7 @@ return [
     'updates' => 'Актуализации',
     'backup' => 'Архив и експорт',
     'api_tokens' => 'API токени',
+    'webhooks' => 'Webhooks',
     'analytics' => 'Анализи',
     'activity_log' => 'Дневник на активността',
     'system_logs' => 'Системни логове',

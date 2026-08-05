@@ -36,6 +36,8 @@ interface Props {
         password_min_length: number;
         password_require_mixed: boolean;
         password_require_numbers: boolean;
+        require_2fa_for_admins: boolean;
+        require_2fa_grace_days: number;
         loc_default_locale: string;
         loc_fallback_locale: string;
         loc_supported_locales: string;
@@ -113,6 +115,8 @@ const form = useForm({
     password_min_length:         props.settings.password_min_length ?? 8,
     password_require_mixed:      props.settings.password_require_mixed ?? false,
     password_require_numbers:    props.settings.password_require_numbers ?? true,
+    require_2fa_for_admins:      props.settings.require_2fa_for_admins ?? true,
+    require_2fa_grace_days:      props.settings.require_2fa_grace_days ?? 3,
     loc_default_locale:          props.settings.loc_default_locale ?? 'en',
     loc_fallback_locale:         props.settings.loc_fallback_locale ?? 'en',
     loc_supported_locales:       props.settings.loc_supported_locales ?? 'en,bg',
@@ -631,6 +635,39 @@ function goToSetting(result: { tab: string; label: string }) {
                         >
                             <span class="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform" :class="form.password_require_numbers ? 'translate-x-4' : 'translate-x-0.5'" />
                         </button>
+                    </div>
+                </div>
+
+                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
+                    <h3 class="text-zinc-100 text-sm font-semibold">Two-Factor Authentication</h3>
+                    <p class="text-zinc-600 text-xs -mt-2">Require every admin-panel user to set up 2FA, with a per-admin grace period instead of a hard cutover.</p>
+
+                    <div class="flex items-center justify-between py-3">
+                        <div>
+                            <p class="text-zinc-100 text-sm font-medium">Require 2FA for admin access</p>
+                            <p class="text-zinc-600 text-xs mt-0.5">Each admin gets their own grace window starting the first time this applies to them.</p>
+                        </div>
+                        <button
+                            type="button"
+                            class="relative w-10 h-6 rounded-full transition-colors shrink-0 overflow-hidden"
+                            :class="form.require_2fa_for_admins ? 'bg-blue-500' : 'bg-zinc-500'"
+                            @click="form.require_2fa_for_admins = !form.require_2fa_for_admins"
+                        >
+                            <span class="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform" :class="form.require_2fa_for_admins ? 'translate-x-4' : 'translate-x-0.5'" />
+                        </button>
+                    </div>
+
+                    <div class="flex flex-col gap-1.5 py-3 border-t border-zinc-800/70" :class="!form.require_2fa_for_admins ? 'opacity-50 pointer-events-none' : ''">
+                        <label class="text-zinc-400 text-xs font-medium">Grace period</label>
+                        <div class="flex items-center gap-3">
+                            <input
+                                v-model.number="form.require_2fa_grace_days"
+                                type="number" min="0" max="90"
+                                class="w-24 bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 rounded-lg px-3 py-2 text-sm text-center
+                                       focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                            />
+                            <p class="text-zinc-600 text-xs">days before an admin without 2FA is locked out (0 = immediately)</p>
+                        </div>
                     </div>
                 </div>
             </div>

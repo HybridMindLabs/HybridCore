@@ -2,7 +2,8 @@
 
 Thank you for your interest in contributing to HybridCore.
 
-Please read this document fully before opening a pull request.
+Please read this document fully before opening a pull request. All
+contributors are expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ---
 

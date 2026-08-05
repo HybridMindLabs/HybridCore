@@ -99,6 +99,7 @@ class SettingsService
             }
 
             Setting::updateOrCreate(['key' => $key], ['value' => (string) $value]);
+            Cache::forget('settings.'.$key);
         }
 
         Cache::forget(self::CACHE_KEY);

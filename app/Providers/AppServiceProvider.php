@@ -130,6 +130,17 @@ class AppServiceProvider extends ServiceProvider
                 : Limit::perMinute(10)->by($key);
         });
 
+        // Admin-issued API tokens (see Admin > API Tokens). Keyed by the
+        // token's own id, not IP — several service accounts can legitimately
+        // share an IP (same server, same CI runner), and one misbehaving
+        // integration must not throttle every other token issued from the
+        // same address. Config knob mirrors the login limiter's pattern.
+        RateLimiter::for('api-token', function (Request $request) {
+            $key = $request->user()?->currentAccessToken()?->id ?? $request->ip();
+
+            return Limit::perMinute((int) config('hybridcore.api_token_rate_limit', 60))->by('api-token:'.$key);
+        });
+
         // Core OAuth providers. Credentials live in admin settings, not .env —
         // SocialAuthController injects them into config() at request time.
         Event::listen(SocialiteWasCalled::class, [DiscordExtendSocialite::class, 'handle']);

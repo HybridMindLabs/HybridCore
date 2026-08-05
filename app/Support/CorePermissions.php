@@ -13,6 +13,7 @@ class CorePermissions
     public const ALL = [
         'admin.access' => ['name' => 'Access Admin Panel', 'group' => 'admin'],
         'api_tokens.manage' => ['name' => 'Manage API Tokens', 'group' => 'api_tokens'],
+        'webhooks.manage' => ['name' => 'Manage Webhooks', 'group' => 'webhooks'],
         'users.view' => ['name' => 'View Users', 'group' => 'users'],
         'users.manage' => ['name' => 'Manage Users', 'group' => 'users'],
         'roles.view' => ['name' => 'View Roles', 'group' => 'roles'],

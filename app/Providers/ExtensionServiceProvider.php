@@ -26,10 +26,12 @@ use App\Services\Extensions\Registries\SearchProviderRegistry;
 use App\Services\Extensions\Registries\SettingsRegistry;
 use App\Services\Extensions\Registries\SlotRegistry;
 use App\Services\Extensions\Registries\UserMenuRegistry;
+use App\Services\Extensions\Registries\WebhookEventRegistry;
 use App\Services\Extensions\Registries\WidgetRegistry;
 use App\Support\CoreAbilities;
 use App\Support\CoreNavigation;
 use App\Support\CorePermissions;
+use App\Support\CoreWebhookBridge;
 use App\Support\CoreWidgets;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -74,6 +76,7 @@ class ExtensionServiceProvider extends ServiceProvider
         $this->app->singleton(SlotRegistry::class);
         $this->app->singleton(HookRegistry::class);
         $this->app->singleton(FilterRegistry::class);
+        $this->app->singleton(WebhookEventRegistry::class);
         $this->app->singleton(ExtensionRegistry::class);
         $this->app->singleton(OAuthProviderRegistry::class);
     }
@@ -87,6 +90,7 @@ class ExtensionServiceProvider extends ServiceProvider
         $registry->abilities()->registerMany(CoreAbilities::ALL);
         CoreNavigation::register($registry->navigation());
         CoreWidgets::register($registry->widgets());
+        CoreWebhookBridge::register($registry->hooks());
 
         // A test run shares one process and RefreshDatabase migrates only once,
         // so every extension's schema has to be registered up front. Otherwise
@@ -99,6 +103,10 @@ class ExtensionServiceProvider extends ServiceProvider
         }
 
         $this->bootEnabledExtensions($registry);
+
+        // After extensions have registered their own webhookEvents() — bridging
+        // earlier would miss every event an extension declares in its own boot().
+        CoreWebhookBridge::bridgeExtensionEvents($registry->webhookEvents(), $registry->hooks());
     }
 
     /**

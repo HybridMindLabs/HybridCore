@@ -22,19 +22,20 @@ codebase.
 3. [ServiceProvider — the entry point](#serviceprovider--the-entry-point)
 4. [Permissions](#permissions)
 5. [API Token Abilities](#api-token-abilities)
-6. [Admin Navigation](#admin-navigation)
-7. [Admin Dashboard Widgets](#admin-dashboard-widgets)
-8. [Extension Settings Page](#extension-settings-page)
-9. [Page Slots — injecting into core pages](#page-slots--injecting-into-core-pages)
-10. [Frontend & UX Registries](#frontend--ux-registries)
-11. [Routes](#routes)
-12. [Database Migrations](#database-migrations)
-13. [Translations](#translations)
-14. [Vue Pages (Inertia)](#vue-pages-inertia)
-15. [Slot Vue Components](#slot-vue-components)
-16. [Available Slot Names](#available-slot-names)
-17. [Naming Conventions](#naming-conventions)
-18. [Installation Checklist](#installation-checklist)
+6. [Webhooks](#webhooks)
+7. [Admin Navigation](#admin-navigation)
+8. [Admin Dashboard Widgets](#admin-dashboard-widgets)
+9. [Extension Settings Page](#extension-settings-page)
+10. [Page Slots — injecting into core pages](#page-slots--injecting-into-core-pages)
+11. [Frontend & UX Registries](#frontend--ux-registries)
+12. [Routes](#routes)
+13. [Database Migrations](#database-migrations)
+14. [Translations](#translations)
+15. [Vue Pages (Inertia)](#vue-pages-inertia)
+16. [Slot Vue Components](#slot-vue-components)
+17. [Available Slot Names](#available-slot-names)
+18. [Naming Conventions](#naming-conventions)
+19. [Installation Checklist](#installation-checklist)
 
 ---
 
@@ -356,7 +357,7 @@ and is accepted by the `abilities` validation. Gate your own `routes/api.php`
 endpoints with it:
 
 ```php
-Route::middleware(['auth:sanctum', 'abilities:store:read'])
+Route::middleware(['auth:sanctum', 'abilities:store:read', 'throttle:api-token'])
     ->get('/store/products', [ProductController::class, 'index']);
 ```
 
@@ -366,8 +367,51 @@ with `abilities:store:read,store:write` — every one listed must be present on
 the token (Sanctum's own `CheckAbilities` middleware, already aliased to
 `abilities` for you).
 
+`throttle:api-token` is a shared rate limiter (60 requests/minute per token
+by default, `API_TOKEN_RATE_LIMIT` in `.env`) — add it alongside `abilities:`
+on every token-gated route so one misbehaving integration can't starve
+another that happens to share an IP.
+
 `routes.api` must be declared in `extension.json` (see the manifest table
 above) for `routes/api.php` to load at all.
+
+---
+
+## Webhooks
+
+Admins configure outbound webhook endpoints from **Admin → Webhooks** — a
+URL, a signing secret (shown once, like an API token), and which events to
+receive. Core's own lifecycle events (see `App\Support\Hooks`) are always
+selectable. Your extension can add its own:
+
+```php
+$registry->webhookEvents()->register(
+    key:   'store:order.paid',        // unique — {ext}:{event} by convention
+    label: 'Store: Order Paid',       // shown as a checkbox in Admin > Webhooks
+    group: 'store',
+);
+```
+
+Firing it is the same `HookRegistry` you'd use for any other hook — no
+separate dispatch call needed. Every endpoint subscribed to the key gets a
+signed delivery automatically:
+
+```php
+$hooks->fire('store:order.paid', $order);
+```
+
+The payload core sends for an extension-declared event is generic (a mapper
+per event only exists for the fixed core `Hooks::` set): each argument
+becomes either its `->id` (for a model) or its raw scalar value, keyed
+`arg0`, `arg1`, etc. If a receiver needs the full order, look it up by id —
+same reasoning as core's own webhook payloads: a webhook receiver is an
+external system, not a trusted extension.
+
+Delivery is HMAC-SHA256 signed over the exact JSON body sent
+(`X-HybridCore-Signature` header, `X-HybridCore-Event` for the event name) —
+verify it the same way you'd verify a GitHub or Stripe webhook. Every attempt
+(success or failure, including connection errors) is logged to the delivery
+history shown under each endpoint in Admin → Webhooks.
 
 ---
 

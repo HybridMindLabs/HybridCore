@@ -23,9 +23,9 @@ Route::prefix('v1')->group(function () {
     Route::get('users/{username}', [UserController::class, 'show']);
 
     Route::middleware('auth:sanctum')->group(function () {
-        Route::middleware('abilities:notifications:read')
+        Route::middleware(['abilities:notifications:read', 'throttle:api-token'])
             ->get('notifications', [NotificationController::class, 'index']);
-        Route::middleware('abilities:notifications:write')->group(function () {
+        Route::middleware(['abilities:notifications:write', 'throttle:api-token'])->group(function () {
             Route::post('notifications/{id}/read', [NotificationController::class, 'markRead']);
             Route::post('notifications/read-all', [NotificationController::class, 'markAllRead']);
         });

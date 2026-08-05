@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { KeyRound, Trash2, Plus, Copy, CheckCircle2 } from '@lucide/vue';
+import { KeyRound, Trash2, Plus, Copy, CheckCircle2, RefreshCw } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
@@ -12,6 +12,8 @@ interface TokenRow {
     last_used_at: string | null;
     expires_at: string | null;
     created_at: string;
+    is_expired: boolean;
+    expires_soon: boolean;
 }
 interface AccountRow {
     id: number;
@@ -76,6 +78,11 @@ function submitIssue(accountId: number) {
 function revokeToken(tokenId: number) {
     if (!confirm('Revoke this token? Anything using it stops working immediately.')) return;
     router.delete(route('admin.api-tokens.tokens.destroy', tokenId), { preserveScroll: true });
+}
+
+function rotateToken(tokenId: number) {
+    if (!confirm('Rotate this token? The old credential stops working immediately — you\'ll get a new one to copy.')) return;
+    router.post(route('admin.api-tokens.tokens.rotate', tokenId), {}, { preserveScroll: true });
 }
 
 function destroyAccount(account: AccountRow) {
@@ -158,16 +165,25 @@ function destroyAccount(account: AccountRow) {
                     <div v-else class="flex flex-col gap-1.5">
                         <div v-for="token in account.tokens" :key="token.id" class="flex items-center justify-between px-3 py-2 rounded-lg bg-zinc-900/40 border border-zinc-800/60">
                             <div class="min-w-0">
-                                <p class="text-zinc-300 text-xs font-medium truncate">{{ token.name }}</p>
+                                <div class="flex items-center gap-1.5">
+                                    <p class="text-zinc-300 text-xs font-medium truncate">{{ token.name }}</p>
+                                    <span v-if="token.is_expired" class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/15 text-red-400 shrink-0">Expired</span>
+                                    <span v-else-if="token.expires_soon" class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/15 text-amber-400 shrink-0">Expires soon</span>
+                                </div>
                                 <p class="text-zinc-600 text-[10px] font-mono truncate">{{ token.abilities.join(', ') }}</p>
                                 <p class="text-zinc-600 text-[10px]">
                                     {{ token.last_used_at ? `Last used ${token.last_used_at}` : 'Never used' }}
                                     <span v-if="token.expires_at"> · Expires {{ token.expires_at }}</span>
                                 </p>
                             </div>
-                            <button type="button" class="p-1.5 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors shrink-0" @click="revokeToken(token.id)">
-                                <Trash2 :size="12" :stroke-width="2" />
-                            </button>
+                            <div class="flex items-center gap-1 shrink-0">
+                                <button type="button" class="p-1.5 rounded-lg border border-zinc-700 text-zinc-400 hover:text-zinc-100 transition-colors" title="Rotate — revoke and reissue" @click="rotateToken(token.id)">
+                                    <RefreshCw :size="12" :stroke-width="2" />
+                                </button>
+                                <button type="button" class="p-1.5 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors" title="Revoke" @click="revokeToken(token.id)">
+                                    <Trash2 :size="12" :stroke-width="2" />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureAppIsInstalled;
 use App\Http\Middleware\EnsureIsAdmin;
 use App\Http\Middleware\EnsureNotInMaintenance;
 use App\Http\Middleware\EnsurePermission;
+use App\Http\Middleware\EnsureTwoFactorEnabled;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RedirectIfInstalled;
 use App\Http\Middleware\SecurityHeaders;
@@ -51,7 +52,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->group(base_path('routes/admin_auth.php'));
 
             // Admin panel — requires installation + authentication + admin role
-            Route::middleware(['web', EnsureAppIsInstalled::class, 'auth', EnsureIsAdmin::class])
+            // + (once its grace period elapses) two-factor authentication.
+            Route::middleware(['web', EnsureAppIsInstalled::class, 'auth', EnsureIsAdmin::class, EnsureTwoFactorEnabled::class])
                 ->prefix('admin')
                 ->group(base_path('routes/admin.php'));
         },
