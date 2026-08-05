@@ -18,6 +18,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Laravel\Sanctum\Http\Middleware\CheckAbilities;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -108,7 +109,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'not_installed' => RedirectIfInstalled::class,
             'admin' => EnsureIsAdmin::class,
             'perm' => EnsurePermission::class,
-            'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
+            'abilities' => CheckAbilities::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

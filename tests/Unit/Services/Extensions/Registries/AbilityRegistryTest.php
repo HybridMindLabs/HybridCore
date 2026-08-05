@@ -3,6 +3,7 @@
 namespace Tests\Unit\Services\Extensions\Registries;
 
 use App\Services\Extensions\Registries\AbilityRegistry;
+use App\Services\Extensions\Registries\ExtensionRegistry;
 use App\Support\CoreAbilities;
 use Tests\TestCase;
 
@@ -24,7 +25,7 @@ class AbilityRegistryTest extends TestCase
 
     public function test_core_abilities_are_registered_via_the_extension_registry_boot(): void
     {
-        $abilities = app(\App\Services\Extensions\Registries\ExtensionRegistry::class)->abilities()->all();
+        $abilities = app(ExtensionRegistry::class)->abilities()->all();
 
         $this->assertArrayHasKey('notifications:read', $abilities);
         $this->assertArrayHasKey('notifications:write', $abilities);

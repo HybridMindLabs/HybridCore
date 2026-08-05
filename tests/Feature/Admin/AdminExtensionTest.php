@@ -4,8 +4,10 @@ namespace Tests\Feature\Admin;
 
 use App\Jobs\RebuildAssetsJob;
 use App\Models\Extension;
+use App\Models\ExtensionSetting;
 use App\Models\User;
 use App\Services\Extensions\ExtensionManager;
+use App\Services\Extensions\ExtensionSettingsResolver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Mockery\MockInterface;
@@ -45,10 +47,10 @@ class AdminExtensionTest extends TestCase
             ],
         ]);
 
-        $resolver = app(\App\Services\Extensions\ExtensionSettingsResolver::class);
+        $resolver = app(ExtensionSettingsResolver::class);
         $this->assertSame(['greeting' => 'Hi'], $resolver->effective($ext));
 
-        \App\Models\ExtensionSetting::create(['extension_id' => $ext->id, 'key' => 'greeting', 'value' => 'Hey', 'type' => 'string']);
+        ExtensionSetting::create(['extension_id' => $ext->id, 'key' => 'greeting', 'value' => 'Hey', 'type' => 'string']);
         $this->assertSame(['greeting' => 'Hey'], $resolver->effective($ext));
     }
 

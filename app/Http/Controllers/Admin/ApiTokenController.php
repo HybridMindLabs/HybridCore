@@ -96,7 +96,7 @@ class ApiTokenController extends Controller
 
         $this->activityLog->log(
             'service_account.token_revoked',
-            "Revoked a token".($account ? " for \"{$account->name}\"" : ''),
+            'Revoked a token'.($account ? " for \"{$account->name}\"" : ''),
             $account instanceof ServiceAccount ? $account : null,
         );
 
