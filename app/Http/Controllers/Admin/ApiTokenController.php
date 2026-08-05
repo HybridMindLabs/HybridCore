@@ -21,24 +21,42 @@ class ApiTokenController extends Controller
 
     public function index(): Response
     {
-        $accounts = ServiceAccount::with('tokens')->orderByDesc('created_at')->get()->map(fn (ServiceAccount $account) => [
-            'id' => $account->id,
-            'name' => $account->name,
-            'created_at' => $account->created_at->toDateTimeString(),
-            'tokens' => $account->tokens->map(fn (PersonalAccessToken $token) => [
-                'id' => $token->id,
-                'name' => $token->name,
-                'abilities' => $token->abilities,
-                'last_used_at' => $token->last_used_at?->toDateTimeString(),
-                'expires_at' => $token->expires_at?->toDateTimeString(),
-                'created_at' => $token->created_at->toDateTimeString(),
-            ]),
-        ]);
+        $accounts = ServiceAccount::with('tokens')->orderByDesc('created_at')->get()
+            ->map(fn (ServiceAccount $account) => $this->accountToArray($account))
+            ->values()->all();
 
         return Inertia::render('Admin/ApiTokens/Index', [
             'accounts' => $accounts,
             'available_abilities' => $this->abilities->all(),
         ]);
+    }
+
+    /**
+     * @return array{id: int, name: string, created_at: string, tokens: array<int, array{id: int, name: string, abilities: array<int, string>, last_used_at: string|null, expires_at: string|null, created_at: string}>}
+     */
+    private function accountToArray(ServiceAccount $account): array
+    {
+        return [
+            'id' => $account->id,
+            'name' => $account->name,
+            'created_at' => $account->created_at->toDateTimeString(),
+            'tokens' => $account->tokens->map(fn (PersonalAccessToken $token) => $this->tokenToArray($token))->values()->all(),
+        ];
+    }
+
+    /**
+     * @return array{id: int, name: string, abilities: array<int, string>, last_used_at: string|null, expires_at: string|null, created_at: string}
+     */
+    private function tokenToArray(PersonalAccessToken $token): array
+    {
+        return [
+            'id' => $token->id,
+            'name' => $token->name,
+            'abilities' => $token->abilities ?? [],
+            'last_used_at' => $token->last_used_at?->toDateTimeString(),
+            'expires_at' => $token->expires_at?->toDateTimeString(),
+            'created_at' => $token->created_at->toDateTimeString(),
+        ];
     }
 
     private function abilityRules(): array
@@ -92,12 +110,12 @@ class ApiTokenController extends Controller
     {
         abort_unless($token->tokenable_type === ServiceAccount::class, 404);
 
-        $account = $token->tokenable;
+        $account = $token->tokenable instanceof ServiceAccount ? $token->tokenable : null;
 
         $this->activityLog->log(
             'service_account.token_revoked',
             'Revoked a token'.($account ? " for \"{$account->name}\"" : ''),
-            $account instanceof ServiceAccount ? $account : null,
+            $account,
         );
 
         $token->delete();
