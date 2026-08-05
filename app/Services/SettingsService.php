@@ -18,6 +18,9 @@ class SettingsService
         'timezone' => 'UTC',
         'maintenance_mode' => '0',
         'active_theme' => 'hybridcore/default',
+        'backup_schedule' => 'off', // off|daily|weekly|monthly
+        'backup_time' => '03:00',
+        'backup_retention' => '7',
     ];
 
     /**

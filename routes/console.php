@@ -2,6 +2,8 @@
 
 use App\Jobs\QueryServersJob;
 use App\Jobs\QueueHeartbeatJob;
+use App\Jobs\RunScheduledBackupJob;
+use App\Models\ActivityLog;
 use App\Models\NewsArticle;
 use App\Models\NewsComment;
 use App\Models\ServerSnapshot;
@@ -36,6 +38,22 @@ Schedule::call(function () {
         app(AnalyticsService::class)->prune(90);
     }
 })->daily()->name('prune-page-views');
+
+// Scheduled database backups — admin-configurable (off/daily/weekly/monthly)
+// in Admin -> System -> Backup. The tick itself is cheap (cached settings
+// reads); the actual mysqldump runs on the queue via RunScheduledBackupJob,
+// not inline here, so a slow dump never delays the scheduler.
+Schedule::call(function () {
+    if (RunScheduledBackupJob::isDue()) {
+        RunScheduledBackupJob::dispatch();
+    }
+})->everyMinute()->name('scheduled-backup-check')->withoutOverlapping();
+
+// Prune activity log entries older than 180 days — a security/audit trail,
+// so it gets longer retention than page_views rather than the same 90.
+Schedule::call(function () {
+    ActivityLog::where('created_at', '<', now()->subDays(180))->delete();
+})->daily()->name('prune-activity-log');
 
 // Look for a newer core release once a day and tell the administrators the
 // first time a given version shows up. Without this an update — including a

@@ -3,7 +3,7 @@ import { Head, router, useForm } from '@inertiajs/vue3';
 import {
     DatabaseBackup, Download, Upload, Trash2, AlertTriangle,
     FileJson, Settings, Puzzle, Palette, FileText, Server,
-    PackageOpen, Clock, HardDrive, Database, CheckCircle2, XCircle,
+    PackageOpen, Clock, HardDrive, Database, CheckCircle2, XCircle, CalendarClock,
 } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
@@ -11,8 +11,19 @@ import { ref } from 'vue';
 
 interface Counts { settings: number; extensions: number; themes: number; pages: number; menus: number }
 interface StoredBackup { filename: string; type: 'json' | 'sql'; size_kb: number; created_at: string }
+interface Schedule { backup_schedule: 'off' | 'daily' | 'weekly' | 'monthly'; backup_time: string; backup_retention: number; last_run_at: string | null }
 
-const props = defineProps<{ counts: Counts; backups: StoredBackup[]; mysqldump_available: boolean }>();
+const props = defineProps<{ counts: Counts; backups: StoredBackup[]; mysqldump_available: boolean; schedule: Schedule }>();
+
+const scheduleForm = useForm({
+    backup_schedule: props.schedule.backup_schedule,
+    backup_time: props.schedule.backup_time,
+    backup_retention: props.schedule.backup_retention,
+});
+
+function submitSchedule() {
+    scheduleForm.put(route('admin.backup.schedule'));
+}
 
 const dbBacking = ref(false);
 function runDatabaseBackup() {
@@ -141,6 +152,73 @@ const exports = [
                                 <Database :size="14" :stroke-width="2" />
                                 {{ dbBacking ? 'Running mysqldump…' : 'Backup Database Now' }}
                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Automatic backup schedule -->
+                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
+                            <CalendarClock :size="18" :stroke-width="1.5" class="text-violet-400" />
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-zinc-100 text-sm font-semibold mb-1">Automatic Backups</h3>
+                            <p class="text-zinc-500 text-xs leading-relaxed mb-4">
+                                Runs the same <code class="text-blue-400 font-mono">mysqldump</code> as the manual
+                                button above, on a queue worker (needs Horizon running) so a slow dump never
+                                delays the scheduler. Only the newest N database backups are kept.
+                            </p>
+
+                            <form @submit.prevent="submitSchedule" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <label class="flex flex-col gap-1">
+                                    <span class="text-[11px] font-medium text-zinc-500">Frequency</span>
+                                    <select
+                                        v-model="scheduleForm.backup_schedule"
+                                        class="px-3 py-2 rounded-lg bg-zinc-900/60 border border-zinc-800 text-sm text-zinc-200 focus:outline-none focus:border-zinc-600"
+                                    >
+                                        <option value="off">Off</option>
+                                        <option value="daily">Daily</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="monthly">Monthly</option>
+                                    </select>
+                                </label>
+
+                                <label class="flex flex-col gap-1">
+                                    <span class="text-[11px] font-medium text-zinc-500">Time (server timezone)</span>
+                                    <input
+                                        v-model="scheduleForm.backup_time"
+                                        type="time"
+                                        class="px-3 py-2 rounded-lg bg-zinc-900/60 border border-zinc-800 text-sm text-zinc-200 focus:outline-none focus:border-zinc-600"
+                                    />
+                                </label>
+
+                                <label class="flex flex-col gap-1">
+                                    <span class="text-[11px] font-medium text-zinc-500">Keep last N backups</span>
+                                    <input
+                                        v-model.number="scheduleForm.backup_retention"
+                                        type="number"
+                                        min="1"
+                                        max="90"
+                                        class="px-3 py-2 rounded-lg bg-zinc-900/60 border border-zinc-800 text-sm text-zinc-200 focus:outline-none focus:border-zinc-600"
+                                    />
+                                </label>
+
+                                <div class="sm:col-span-3 flex items-center gap-3 mt-1">
+                                    <button
+                                        type="submit"
+                                        :disabled="scheduleForm.processing"
+                                        class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-violet-500 text-white hover:bg-violet-400 transition-colors disabled:opacity-50"
+                                    >
+                                        <CalendarClock :size="14" :stroke-width="2" />
+                                        Save Schedule
+                                    </button>
+                                    <p v-if="scheduleForm.recentlySuccessful" class="text-emerald-400 text-xs">Saved.</p>
+                                    <p class="text-zinc-600 text-xs ml-auto">
+                                        Last auto-backup: {{ schedule.last_run_at ?? 'never' }}
+                                    </p>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>

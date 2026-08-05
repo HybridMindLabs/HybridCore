@@ -7,9 +7,12 @@ use App\Games\GameDriverRegistry;
 use App\Models\Server;
 use App\Models\ServerPlayer;
 use App\Models\ServerSnapshot;
+use App\Models\User;
+use App\Notifications\SystemNotification;
 use App\Services\Extensions\Registries\HookRegistry;
 use App\Support\Hooks;
 use App\Support\HostSafety;
+use Illuminate\Support\Facades\Notification;
 
 class ServerQueryService
 {
@@ -30,6 +33,14 @@ class ServerQueryService
      */
     public function record(Server $server, QueryResult $result): ServerSnapshot
     {
+        // Only the online→offline edge is worth an admin's attention — a
+        // server that's already down would otherwise renotify every cycle.
+        // Method-call form, not the ->latestSnapshot property: the property
+        // caches on the model after first access, so a $server reused across
+        // multiple record() calls (as every batch path does) would keep
+        // reading the pre-batch snapshot instead of the one just written.
+        $wasOnline = $server->latestSnapshot()->first()?->is_online ?? false;
+
         $snapshot = ServerSnapshot::create([
             'server_id' => $server->id,
             'is_online' => $result->online,
@@ -63,6 +74,18 @@ class ServerQueryService
             }
 
             $server->update($updates);
+        }
+
+        if ($wasOnline && ! $result->online) {
+            Notification::send(
+                User::where('is_admin', true)->get(),
+                new SystemNotification(
+                    message: "{$server->name} just went offline".($result->failureReason ? " ({$result->failureReason})" : '.'),
+                    level: 'warning',
+                    actionUrl: route('admin.servers.index'),
+                    actionLabel: 'View servers',
+                ),
+            );
         }
 
         app(HookRegistry::class)->fire(Hooks::SERVER_QUERIED, $server, $snapshot);

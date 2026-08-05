@@ -6,6 +6,7 @@ use App\Http\Middleware\EnsureIsAdmin;
 use App\Models\Extension;
 use App\Services\Auth\OAuthProviderRegistry;
 use App\Services\Extensions\ExtensionAutoloader;
+use App\Services\Extensions\Registries\AbilityRegistry;
 use App\Services\Extensions\Registries\AccountTabRegistry;
 use App\Services\Extensions\Registries\ActivityFeedRegistry;
 use App\Services\Extensions\Registries\BridgeEventRegistry;
@@ -26,6 +27,7 @@ use App\Services\Extensions\Registries\SettingsRegistry;
 use App\Services\Extensions\Registries\SlotRegistry;
 use App\Services\Extensions\Registries\UserMenuRegistry;
 use App\Services\Extensions\Registries\WidgetRegistry;
+use App\Support\CoreAbilities;
 use App\Support\CoreNavigation;
 use App\Support\CorePermissions;
 use App\Support\CoreWidgets;
@@ -67,6 +69,7 @@ class ExtensionServiceProvider extends ServiceProvider
         $this->app->singleton(BridgeEventRegistry::class);
         $this->app->singleton(WidgetRegistry::class);
         $this->app->singleton(PermissionRegistry::class);
+        $this->app->singleton(AbilityRegistry::class);
         $this->app->singleton(SettingsRegistry::class);
         $this->app->singleton(SlotRegistry::class);
         $this->app->singleton(HookRegistry::class);
@@ -81,6 +84,7 @@ class ExtensionServiceProvider extends ServiceProvider
 
         // Core registrations first — extensions append after.
         $registry->permissions()->registerMany(CorePermissions::ALL);
+        $registry->abilities()->registerMany(CoreAbilities::ALL);
         CoreNavigation::register($registry->navigation());
         CoreWidgets::register($registry->widgets());
 

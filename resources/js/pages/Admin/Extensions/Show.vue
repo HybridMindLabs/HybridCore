@@ -1,8 +1,18 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Puzzle, ToggleRight, ToggleLeft, Tag, User, Calendar, FolderOpen, Info, ChevronLeft, Trash2, KeyRound, CheckCircle2 } from '@lucide/vue';
+import { computed } from 'vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
+
+interface ExtensionSettingField {
+    key: string;
+    type: 'color' | 'text' | 'textarea' | 'toggle' | 'select' | 'image';
+    label: string;
+    group?: string;
+    default: string | boolean;
+    options?: string[];
+}
 
 interface ExtensionDetail {
     id: number;
@@ -21,6 +31,8 @@ interface ExtensionDetail {
     installed_at: string | null;
     enabled_at: string | null;
     disabled_at: string | null;
+    settings_schema: ExtensionSettingField[];
+    settings: Record<string, string | boolean>;
 }
 
 const props = defineProps<{ extension: ExtensionDetail }>();
@@ -60,6 +72,27 @@ function uninstall() {
     if (!confirm(`Uninstall "${props.extension.name}"? Its files will be deleted.`)) return;
     const dropData = confirm('Also delete its database tables and data?\n\nOK = delete data permanently · Cancel = keep the data for a future reinstall');
     router.delete(route('admin.extensions.uninstall', props.extension.id), { data: { drop_data: dropData } });
+}
+
+// ── Settings ─────────────────────────────────────────────────────────────────
+
+const groupedFields = computed(() => {
+    const groups: Record<string, ExtensionSettingField[]> = {};
+    for (const field of props.extension.settings_schema) {
+        const group = field.group || 'General';
+        (groups[group] ??= []).push(field);
+    }
+    return groups;
+});
+
+const settingsForm = useForm<Record<string, string | boolean>>(
+    Object.fromEntries(
+        props.extension.settings_schema.map((f) => [f.key, props.extension.settings[f.key] ?? f.default]),
+    ),
+);
+
+function submitSettings() {
+    settingsForm.post(route('admin.extensions.settings', props.extension.id), { preserveScroll: true });
 }
 </script>
 
@@ -191,16 +224,80 @@ function uninstall() {
                     </p>
                 </div>
 
-                <!-- Settings placeholder -->
+                <!-- Settings -->
                 <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
                     <h3 class="text-zinc-100 text-sm font-semibold mb-3">Extension Settings</h3>
-                    <div class="flex items-start gap-3 bg-blue-500/5 border border-blue-500/20 rounded-lg px-3 py-3">
+
+                    <div v-if="extension.settings_schema.length === 0" class="flex items-start gap-3 bg-blue-500/5 border border-blue-500/20 rounded-lg px-3 py-3">
                         <Info :size="14" :stroke-width="1.75" class="text-blue-400 mt-0.5 shrink-0" />
                         <p class="text-zinc-400 text-xs leading-relaxed">
-                            Per-extension settings are available once the extension registers a settings schema.
-                            This feature arrives in a future update.
+                            This extension has no configurable settings.
                         </p>
                     </div>
+
+                    <form v-else class="flex flex-col gap-5" @submit.prevent="submitSettings">
+                        <div v-for="(fields, group) in groupedFields" :key="group">
+                            <p class="text-zinc-500 text-[11px] font-semibold uppercase tracking-wide mb-2">{{ group }}</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div v-for="field in fields" :key="field.key" class="flex flex-col gap-1">
+                                    <span class="text-xs text-zinc-400">{{ field.label }}</span>
+
+                                    <div v-if="field.type === 'color'" class="flex items-center gap-2">
+                                        <input
+                                            v-model="settingsForm[field.key]"
+                                            type="color"
+                                            class="w-9 h-9 rounded-lg border border-zinc-800 bg-zinc-900 cursor-pointer"
+                                        />
+                                        <input
+                                            v-model="settingsForm[field.key]"
+                                            type="text"
+                                            class="flex-1 min-w-0 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs font-mono text-zinc-200 focus:outline-none focus:border-blue-500/50"
+                                        />
+                                    </div>
+
+                                    <select
+                                        v-else-if="field.type === 'select'"
+                                        v-model="settingsForm[field.key]"
+                                        class="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-blue-500/50"
+                                    >
+                                        <option v-for="opt in field.options ?? []" :key="opt" :value="opt">{{ opt }}</option>
+                                    </select>
+
+                                    <div v-else-if="field.type === 'toggle'" class="flex items-center gap-2 text-xs text-zinc-400">
+                                        <input v-model="settingsForm[field.key]" type="checkbox" class="rounded border-zinc-700" />
+                                        Enabled
+                                    </div>
+
+                                    <textarea
+                                        v-else-if="field.type === 'textarea'"
+                                        v-model="settingsForm[field.key]"
+                                        rows="3"
+                                        class="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-blue-500/50"
+                                    ></textarea>
+
+                                    <input
+                                        v-else
+                                        v-model="settingsForm[field.key]"
+                                        type="text"
+                                        class="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-blue-500/50"
+                                    />
+
+                                    <p v-if="settingsForm.errors[field.key]" class="text-red-400 text-[11px]">
+                                        {{ settingsForm.errors[field.key] }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <button
+                                type="submit"
+                                :disabled="settingsForm.processing"
+                                class="px-4 py-2 rounded-lg text-xs font-semibold bg-blue-500 text-white hover:bg-blue-400 disabled:opacity-40 transition-colors"
+                            >Save Settings</button>
+                            <span v-if="settingsForm.recentlySuccessful" class="text-emerald-400 text-xs ml-3">Saved.</span>
+                        </div>
+                    </form>
                 </div>
             </div>
 

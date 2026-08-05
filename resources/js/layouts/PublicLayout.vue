@@ -260,7 +260,7 @@ const accountLinks = computed(() => page.props.auth?.user
             href="#main-content"
             class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[200]
                    focus:rounded-xl focus:px-4 focus:py-2.5 focus:text-[13px] focus:font-bold
-                   focus:outline-2 focus:outline-offset-2 focus:outline-blue-500"
+                   focus:outline-2 focus:outline-offset-2 focus:outline-hc-accent"
             :class="dark ? 'focus:bg-zinc-900 focus:text-zinc-100' : 'focus:bg-white focus:text-zinc-900 focus:shadow-lg'"
         >{{ t('navigation.skip_to_content') }}</a>
 
@@ -276,11 +276,11 @@ const accountLinks = computed(() => page.props.auth?.user
                      cleaner until the owner can upload a real one. -->
                 <Link
                     :href="route('home')"
-                    class="group flex items-center shrink-0 rounded-lg px-1 -mx-1 outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                    class="group flex items-center shrink-0 rounded-lg px-1 -mx-1 outline-none transition focus-visible:ring-2 focus-visible:ring-hc-accent/50"
                 >
                     <span
                         class="text-[17px] font-black tracking-tight transition-colors duration-200"
-                        :class="dark ? 'text-white group-hover:text-blue-300' : 'text-zinc-900 group-hover:text-blue-600'"
+                        :class="dark ? 'text-white group-hover:text-hc-accent-hover' : 'text-zinc-900 group-hover:text-hc-accent'"
                     >
                         {{ page.props.app.name }}
                     </span>
@@ -293,7 +293,7 @@ const accountLinks = computed(() => page.props.auth?.user
                         :key="link.key"
                         :href="link.href"
                         :aria-current="isActive(link.href) ? 'page' : undefined"
-                        class="group relative flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium rounded-lg outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                        class="group relative flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium rounded-lg outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-hc-accent/50"
                         :class="isActive(link.href)
                             ? (dark ? 'text-white bg-zinc-800/70' : 'text-zinc-900 bg-zinc-100')
                             : (dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/40' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100/70')"
@@ -305,7 +305,7 @@ const accountLinks = computed(() => page.props.auth?.user
                         {{ t('navigation.' + link.key) }}
                         <span
                             v-if="isActive(link.href)"
-                            class="absolute inset-x-3 -bottom-px h-px rounded-full bg-blue-500"
+                            class="absolute inset-x-3 -bottom-px h-px rounded-full bg-hc-accent"
                             aria-hidden="true"
                         />
                     </a>
@@ -316,7 +316,7 @@ const accountLinks = computed(() => page.props.auth?.user
                         :key="item.url"
                         :href="item.url"
                         :aria-current="isActive(item.url) ? 'page' : undefined"
-                        class="group relative flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium rounded-lg outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                        class="group relative flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium rounded-lg outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-hc-accent/50"
                         :class="isActive(item.url)
                             ? (dark ? 'text-white bg-zinc-800/70' : 'text-zinc-900 bg-zinc-100')
                             : (dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/40' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100/70')"
@@ -328,7 +328,7 @@ const accountLinks = computed(() => page.props.auth?.user
                         {{ item.label }}
                         <span
                             v-if="isActive(item.url)"
-                            class="absolute inset-x-3 -bottom-px h-px rounded-full bg-blue-500"
+                            class="absolute inset-x-3 -bottom-px h-px rounded-full bg-hc-accent"
                             aria-hidden="true"
                         />
                     </a>
@@ -341,7 +341,7 @@ const accountLinks = computed(() => page.props.auth?.user
                                 type="button"
                                 :aria-expanded="false"
                                 aria-haspopup="true"
-                                class="flex items-center gap-1 px-3 py-2 text-[13px] font-medium rounded-lg outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                                class="flex items-center gap-1 px-3 py-2 text-[13px] font-medium rounded-lg outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-hc-accent/50"
                                 :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/40' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100/70'"
                             >
                                 {{ item.label }}
@@ -363,7 +363,7 @@ const accountLinks = computed(() => page.props.auth?.user
                                     :key="child.label"
                                     :href="child.url"
                                     :target="child.target"
-                                    class="block px-3.5 py-2 text-[13px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50"
+                                    class="block px-3.5 py-2 text-[13px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-hc-accent/50"
                                     :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50'"
                                 >{{ child.label }}</a>
                             </div>
@@ -372,7 +372,7 @@ const accountLinks = computed(() => page.props.auth?.user
                             v-else
                             :href="item.url"
                             :target="item.target"
-                            class="px-3 py-2 text-[13px] font-medium rounded-lg outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                            class="px-3 py-2 text-[13px] font-medium rounded-lg outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-hc-accent/50"
                             :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/40' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100/70'"
                         >{{ item.label }}</a>
                     </template>
@@ -396,7 +396,7 @@ const accountLinks = computed(() => page.props.auth?.user
                             aria-haspopup="listbox"
                             :aria-label="t('navigation.language')"
                             :title="t('navigation.language')"
-                            class="flex items-center gap-2 px-2.5 h-9 text-[12px] rounded-lg border outline-none transition-all duration-200 uppercase tracking-wide font-semibold focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                            class="flex items-center gap-2 px-2.5 h-9 text-[12px] rounded-lg border outline-none transition-all duration-200 uppercase tracking-wide font-semibold focus-visible:ring-2 focus-visible:ring-hc-accent/50"
                             :class="dark
                                 ? 'border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800/60 hover:border-zinc-700'
                                 : 'border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 hover:border-zinc-300'"
@@ -433,9 +433,9 @@ const accountLinks = computed(() => page.props.auth?.user
                                     role="option"
                                     :aria-selected="isCurrentLocale(locale.code)"
                                     :lang="locale.code"
-                                    class="flex items-center gap-2.5 w-full px-3 py-2 text-[13px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50"
+                                    class="flex items-center gap-2.5 w-full px-3 py-2 text-[13px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-hc-accent/50"
                                     :class="isCurrentLocale(locale.code)
-                                        ? (dark ? 'text-blue-400 bg-blue-500/10' : 'text-blue-600 bg-blue-50')
+                                        ? (dark ? 'text-hc-accent bg-hc-accent/10' : 'text-hc-accent bg-hc-accent/10')
                                         : dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50'"
                                     @click.stop="selectLocale(locale.code)"
                                 >
@@ -483,7 +483,7 @@ const accountLinks = computed(() => page.props.auth?.user
                                 <span class="text-[12px] font-semibold" :class="dark ? 'text-zinc-300' : 'text-zinc-500'">Notifications</span>
                                 <button type="button"
                                     class="text-[11px] font-semibold transition-colors disabled:opacity-40"
-                                    :class="dark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'"
+                                    :class="dark ? 'text-hc-accent hover:text-hc-accent-hover' : 'text-hc-accent hover:text-hc-accent-hover'"
                                     :disabled="markingAll || unreadCount === 0"
                                     @click.stop="markAllRead"
                                 >
@@ -496,7 +496,7 @@ const accountLinks = computed(() => page.props.auth?.user
                                 <p v-else-if="recentNotifications.length === 0" class="px-3 py-6 text-center text-[12px]" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">No notifications yet.</p>
                                 <div v-for="n in recentNotifications" :key="n.id"
                                     class="px-3 py-2.5 border-b last:border-0 text-[12px]"
-                                    :class="[dark ? 'border-zinc-800/60' : 'border-zinc-100', !n.read ? (dark ? 'bg-blue-500/5' : 'bg-blue-50/50') : '']">
+                                    :class="[dark ? 'border-zinc-800/60' : 'border-zinc-100', !n.read ? (dark ? 'bg-hc-accent/5' : 'bg-hc-accent/10') : '']">
                                     <p :class="dark ? 'text-zinc-300' : 'text-zinc-500'">{{ notifLabel(n) }}</p>
                                     <p class="text-[11px] mt-0.5" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">{{ n.created_at }}</p>
                                 </div>
@@ -520,9 +520,9 @@ const accountLinks = computed(() => page.props.auth?.user
                                 :class="dark ? 'border-zinc-800 hover:bg-zinc-800/60' : 'border-zinc-200 bg-white hover:bg-zinc-50'"
                                 @click.stop="userOpen = !userOpen"
                             >
-                                <div class="w-6 h-6 rounded-md overflow-hidden shrink-0 flex items-center justify-center" :class="dark ? 'bg-zinc-800' : 'bg-blue-50'">
+                                <div class="w-6 h-6 rounded-md overflow-hidden shrink-0 flex items-center justify-center" :class="dark ? 'bg-zinc-800' : 'bg-hc-accent/10'">
                                     <img v-if="page.props.auth.user.avatar" :src="page.props.auth.user.avatar" class="w-full h-full object-cover" />
-                                    <span v-else class="text-[10px] font-bold" :class="dark ? 'text-blue-400' : 'text-blue-500'">{{ page.props.auth.user.name.charAt(0) }}</span>
+                                    <span v-else class="text-[10px] font-bold" :class="dark ? 'text-hc-accent' : 'text-hc-accent'">{{ page.props.auth.user.name.charAt(0) }}</span>
                                 </div>
                                 <span class="hidden sm:block text-[13px] truncate max-w-[90px]" :class="dark ? 'text-zinc-300' : 'text-zinc-500'">{{ page.props.auth.user.name }}</span>
                                 <ChevronDown :size="11" :stroke-width="2.5" class="transition-transform hidden sm:block" :class="[userOpen ? 'rotate-180' : '', dark ? 'text-zinc-500' : 'text-zinc-400']" />
@@ -537,19 +537,19 @@ const accountLinks = computed(() => page.props.auth?.user
                                 <div class="relative px-4 pt-4 pb-3.5 overflow-hidden" :class="dark ? 'bg-zinc-800/40' : 'bg-zinc-50'">
                                     <div class="absolute inset-0 opacity-60" :style="{ background: 'radial-gradient(circle at 15% -10%, rgb(59 130 246 / 0.25), transparent 55%)' }" />
                                     <div class="relative flex items-center gap-3">
-                                        <div class="w-11 h-11 rounded-full overflow-hidden shrink-0 flex items-center justify-center ring-2" :class="dark ? 'bg-zinc-800 ring-zinc-900' : 'bg-blue-50 ring-white'">
+                                        <div class="w-11 h-11 rounded-full overflow-hidden shrink-0 flex items-center justify-center ring-2" :class="dark ? 'bg-zinc-800 ring-zinc-900' : 'bg-hc-accent/10 ring-white'">
                                             <img v-if="page.props.auth.user.avatar" :src="page.props.auth.user.avatar" class="w-full h-full object-cover" />
-                                            <span v-else class="text-[15px] font-bold" :class="dark ? 'text-blue-400' : 'text-blue-500'">{{ page.props.auth.user.name.charAt(0) }}</span>
+                                            <span v-else class="text-[15px] font-bold" :class="dark ? 'text-hc-accent' : 'text-hc-accent'">{{ page.props.auth.user.name.charAt(0) }}</span>
                                         </div>
                                         <div class="min-w-0">
                                             <p class="text-[13.5px] font-semibold truncate flex items-center gap-1.5" :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
                                                 {{ page.props.auth.user.name }}
-                                                <BadgeCheck v-if="page.props.auth.user.verified" :size="13" class="text-blue-400 shrink-0" />
+                                                <BadgeCheck v-if="page.props.auth.user.verified" :size="13" class="text-hc-accent shrink-0" />
                                             </p>
                                             <p v-if="page.props.auth.user.username" class="text-[11px] font-mono truncate" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">@{{ page.props.auth.user.username }}</p>
                                         </div>
                                     </div>
-                                    <span v-if="page.props.auth.user.is_admin" class="relative mt-2.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-blue-500/15 text-blue-400 ring-1 ring-blue-500/25">
+                                    <span v-if="page.props.auth.user.is_admin" class="relative mt-2.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-hc-accent/15 text-hc-accent ring-1 ring-hc-accent/25">
                                         <ShieldCheck :size="10" :stroke-width="2.5" />
                                         {{ t('home.administrator') }}
                                     </span>
@@ -580,7 +580,7 @@ const accountLinks = computed(() => page.props.auth?.user
                                 </div>
 
                                 <div v-if="page.props.auth.user.is_admin" class="border-t py-1.5" :class="dark ? 'border-zinc-800' : 'border-zinc-100'">
-                                    <Link :href="route('admin.dashboard')" class="flex items-center gap-2.5 px-4 py-2 text-[13px] font-medium transition-colors w-full" :class="dark ? 'text-blue-400 hover:text-blue-300 hover:bg-zinc-800' : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'" @click="userOpen = false">
+                                    <Link :href="route('admin.dashboard')" class="flex items-center gap-2.5 px-4 py-2 text-[13px] font-medium transition-colors w-full" :class="dark ? 'text-hc-accent hover:text-hc-accent-hover hover:bg-zinc-800' : 'text-hc-accent hover:text-hc-accent-hover hover:bg-hc-accent/10'" @click="userOpen = false">
                                         <ShieldCheck :size="14" :stroke-width="1.8" />
                                         {{ t('home.admin_panel') }}
                                     </Link>
@@ -598,7 +598,7 @@ const accountLinks = computed(() => page.props.auth?.user
                     <template v-else>
                         <Link
                             :href="route('login')"
-                            class="px-4 py-1.5 text-[13px] font-medium rounded-md bg-blue-600 text-white hover:bg-blue-500 transition-colors"
+                            class="px-4 py-1.5 text-[13px] font-medium rounded-md bg-hc-accent text-hc-base hover:bg-hc-accent-hover transition-colors"
                         >
                             {{ t('home.login') }}
                         </Link>
@@ -648,7 +648,7 @@ const accountLinks = computed(() => page.props.auth?.user
                 </a>
                 <div class="flex items-center gap-3 pt-3 mt-1 border-t" :class="dark ? 'border-zinc-800' : 'border-zinc-200'">
                     <template v-if="!page.props.auth?.user">
-                        <Link :href="route('login')" class="px-4 py-1.5 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-500 transition-colors">{{ t('home.login') }}</Link>
+                        <Link :href="route('login')" class="px-4 py-1.5 text-sm font-medium rounded-md bg-hc-accent text-hc-base hover:bg-hc-accent-hover transition-colors">{{ t('home.login') }}</Link>
                         <Link :href="route('register')" class="text-sm font-medium transition-colors" :class="dark ? 'text-zinc-400 hover:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900'">{{ t('home.create_account') }}</Link>
                     </template>
                     <template v-else>
@@ -687,7 +687,7 @@ const accountLinks = computed(() => page.props.auth?.user
                         {{ t('home.stat_players').toLowerCase() }}
                     </span>
                     <Link :href="route('servers.index')"
-                        class="group ml-auto inline-flex items-center gap-1.5 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded px-1"
+                        class="group ml-auto inline-flex items-center gap-1.5 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hc-accent/50 rounded px-1"
                         :class="dark ? 'text-zinc-400 hover:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900'">
                         {{ t('home.browse_all') }}
                         <ArrowRight :size="12" :stroke-width="2"
@@ -702,7 +702,7 @@ const accountLinks = computed(() => page.props.auth?.user
                     <!-- Brand -->
                     <div>
                         <Link :href="route('home')"
-                            class="inline-block mb-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded">
+                            class="inline-block mb-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hc-accent/50 rounded">
                             <span class="text-[15px] font-bold tracking-tight" :class="dark ? 'text-zinc-100' : 'text-zinc-900'">{{ page.props.app.name }}</span>
                         </Link>
                         <p class="text-[12.5px] leading-relaxed mb-4 max-w-[280px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
@@ -720,7 +720,7 @@ const accountLinks = computed(() => page.props.auth?.user
                         <ul class="flex flex-col gap-2">
                             <li v-for="g in footerData.games" :key="g.slug">
                                 <Link :href="route('servers.game', g.slug)"
-                                    class="group flex items-center gap-2 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded"
+                                    class="group flex items-center gap-2 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hc-accent/50 rounded"
                                     :class="dark ? 'text-zinc-500 hover:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900'"
                                     :title="t('home.footer_game_hint', { servers: g.servers, players: g.players })">
                                     <span class="truncate">{{ g.name }}</span>
@@ -742,21 +742,21 @@ const accountLinks = computed(() => page.props.auth?.user
                             <template v-if="footerNavItems.length">
                                 <li v-for="item in footerNavItems" :key="item.label">
                                     <a :href="item.url" :target="item.target"
-                                        class="text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded"
+                                        class="text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hc-accent/50 rounded"
                                         :class="dark ? 'text-zinc-500 hover:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900'">{{ item.label }}</a>
                                 </li>
                             </template>
                             <template v-else>
                                 <li v-for="link in communityLinks" :key="link.href">
                                     <Link :href="link.href"
-                                        class="text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded"
+                                        class="text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hc-accent/50 rounded"
                                         :class="dark ? 'text-zinc-500 hover:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900'">{{ link.label }}</Link>
                                 </li>
                             </template>
                             <!-- Extension-registered footer links -->
                             <li v-for="item in footerNav" :key="item.url">
                                 <a :href="item.url"
-                                    class="text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded"
+                                    class="text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hc-accent/50 rounded"
                                     :class="dark ? 'text-zinc-500 hover:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900'">{{ item.label }}</a>
                             </li>
                         </ul>
@@ -770,7 +770,7 @@ const accountLinks = computed(() => page.props.auth?.user
                         <ul class="flex flex-col gap-2">
                             <li v-for="link in accountLinks" :key="link.href">
                                 <Link :href="link.href"
-                                    class="text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 rounded"
+                                    class="text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hc-accent/50 rounded"
                                     :class="dark ? 'text-zinc-500 hover:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900'">{{ link.label }}</Link>
                             </li>
                         </ul>

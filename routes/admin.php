@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\ApiTokenController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\ContentReportController;
@@ -159,6 +160,7 @@ Route::middleware('perm:system.manage')->group(function (): void {
     Route::middleware('throttle:10,1')->group(function (): void {
         Route::get('/backup/export/all', [BackupController::class, 'generateBackup'])->name('admin.backup.export.all');
         Route::post('/backup/database', [BackupController::class, 'databaseBackup'])->name('admin.backup.database');
+        Route::put('/backup/schedule', [BackupController::class, 'updateSchedule'])->name('admin.backup.schedule');
         Route::get('/backup/export/settings', [BackupController::class, 'exportSettings'])->name('admin.backup.export.settings');
         Route::get('/backup/export/extensions', [BackupController::class, 'exportExtensions'])->name('admin.backup.export.extensions');
         Route::get('/backup/export/themes', [BackupController::class, 'exportThemes'])->name('admin.backup.export.themes');
@@ -183,9 +185,19 @@ Route::middleware('perm:extensions.manage')->group(function (): void {
     Route::post('/extensions/check-updates', [ExtensionController::class, 'checkUpdates'])->name('admin.extensions.check-updates');
     Route::post('/extensions/{extension}/update', [ExtensionController::class, 'update'])->name('admin.extensions.update');
     Route::post('/extensions/{extension}/license', [ExtensionController::class, 'license'])->name('admin.extensions.license');
+    Route::post('/extensions/{extension}/settings', [ExtensionController::class, 'settings'])->name('admin.extensions.settings');
     Route::delete('/extensions/{extension}', [ExtensionController::class, 'uninstall'])->name('admin.extensions.uninstall');
     Route::post('/extensions/{extension}/enable', [ExtensionController::class, 'enable'])->name('admin.extensions.enable');
     Route::post('/extensions/{extension}/disable', [ExtensionController::class, 'disable'])->name('admin.extensions.disable');
+});
+
+// API Tokens
+Route::middleware('perm:api_tokens.manage')->group(function (): void {
+    Route::get('/api-tokens', [ApiTokenController::class, 'index'])->name('admin.api-tokens.index');
+    Route::post('/api-tokens', [ApiTokenController::class, 'store'])->name('admin.api-tokens.store');
+    Route::post('/api-tokens/{serviceAccount}/tokens', [ApiTokenController::class, 'issueToken'])->name('admin.api-tokens.tokens.store');
+    Route::delete('/api-tokens/tokens/{token}', [ApiTokenController::class, 'revokeToken'])->name('admin.api-tokens.tokens.destroy');
+    Route::delete('/api-tokens/{serviceAccount}', [ApiTokenController::class, 'destroy'])->name('admin.api-tokens.destroy');
 });
 
 // Themes
@@ -197,6 +209,8 @@ Route::middleware('perm:themes.manage')->group(function (): void {
     Route::post('/themes/sync', [ThemeController::class, 'sync'])->name('admin.themes.sync');
     Route::post('/themes/{theme}/activate', [ThemeController::class, 'activate'])->name('admin.themes.activate');
     Route::post('/themes/{theme}/deactivate', [ThemeController::class, 'deactivate'])->name('admin.themes.deactivate');
+    Route::post('/themes/{theme}/settings', [ThemeController::class, 'settings'])->name('admin.themes.settings');
+    Route::post('/themes/{theme}/license', [ThemeController::class, 'license'])->name('admin.themes.license');
 });
 
 // Email

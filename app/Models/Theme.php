@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $installed_at
  * @property Carbon|null $activated_at
  * @property array<array-key, mixed>|null $metadata
+ * @property string|null $license_key
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, ThemeSetting> $settings
@@ -56,7 +57,7 @@ class Theme extends Model
     protected $fillable = [
         'name', 'slug', 'version', 'author', 'description',
         'type', 'path', 'active', 'preview_image',
-        'installed_at', 'activated_at', 'metadata',
+        'installed_at', 'activated_at', 'metadata', 'license_key',
     ];
 
     protected function casts(): array
@@ -66,6 +67,10 @@ class Theme extends Model
             'installed_at' => 'datetime',
             'activated_at' => 'datetime',
             'metadata' => 'array',
+            // A purchased theme's credential. Encrypted at rest so a database
+            // dump or a read-only replica does not hand out access to the
+            // author's private repository.
+            'license_key' => 'encrypted',
         ];
     }
 

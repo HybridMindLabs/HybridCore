@@ -21,19 +21,20 @@ codebase.
 2. [extension.json Manifest](#extensionjson-manifest)
 3. [ServiceProvider — the entry point](#serviceprovider--the-entry-point)
 4. [Permissions](#permissions)
-5. [Admin Navigation](#admin-navigation)
-6. [Admin Dashboard Widgets](#admin-dashboard-widgets)
-7. [Extension Settings Page](#extension-settings-page)
-8. [Page Slots — injecting into core pages](#page-slots--injecting-into-core-pages)
-9. [Frontend & UX Registries](#frontend--ux-registries)
-10. [Routes](#routes)
-11. [Database Migrations](#database-migrations)
-12. [Translations](#translations)
-13. [Vue Pages (Inertia)](#vue-pages-inertia)
-14. [Slot Vue Components](#slot-vue-components)
-15. [Available Slot Names](#available-slot-names)
-16. [Naming Conventions](#naming-conventions)
-17. [Installation Checklist](#installation-checklist)
+5. [API Token Abilities](#api-token-abilities)
+6. [Admin Navigation](#admin-navigation)
+7. [Admin Dashboard Widgets](#admin-dashboard-widgets)
+8. [Extension Settings Page](#extension-settings-page)
+9. [Page Slots — injecting into core pages](#page-slots--injecting-into-core-pages)
+10. [Frontend & UX Registries](#frontend--ux-registries)
+11. [Routes](#routes)
+12. [Database Migrations](#database-migrations)
+13. [Translations](#translations)
+14. [Vue Pages (Inertia)](#vue-pages-inertia)
+15. [Slot Vue Components](#slot-vue-components)
+16. [Available Slot Names](#available-slot-names)
+17. [Naming Conventions](#naming-conventions)
+18. [Installation Checklist](#installation-checklist)
 
 ---
 
@@ -331,6 +332,42 @@ Once registered, use permissions in:
 - **Middleware**: `Route::middleware('perm:announcements.view')`
 - **PHP gate**: `$user->can('announcements.view')`
 - **Vue**: `page.props.auth.user.permissions` (array of granted slugs)
+
+---
+
+## API Token Abilities
+
+Admins issue API tokens from **Admin → API Tokens** to a lightweight
+`ServiceAccount` identity (not tied to a real admin user), scoped to a
+checklist of **abilities**. Core only ships `notifications:read` /
+`notifications:write` — everything else is opt-in per extension, so adding
+one never means changing core.
+
+```php
+$registry->abilities()->register(
+    key:   'store:read',        // unique — {ext}:{action} by convention
+    label: 'Read Store Data',   // shown as a checkbox when issuing a token
+    group: 'store',             // groups related abilities together
+);
+```
+
+Once registered, the key shows up automatically in the admin token-issuing UI
+and is accepted by the `abilities` validation. Gate your own `routes/api.php`
+endpoints with it:
+
+```php
+Route::middleware(['auth:sanctum', 'abilities:store:read'])
+    ->get('/store/products', [ProductController::class, 'index']);
+```
+
+A token missing the ability gets a `403`; a request with no token at all gets
+a `401` (same as any `auth:sanctum` route). Require several abilities at once
+with `abilities:store:read,store:write` — every one listed must be present on
+the token (Sanctum's own `CheckAbilities` middleware, already aliased to
+`abilities` for you).
+
+`routes.api` must be declared in `extension.json` (see the manifest table
+above) for `routes/api.php` to load at all.
 
 ---
 

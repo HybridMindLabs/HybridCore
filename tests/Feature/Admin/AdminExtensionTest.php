@@ -4,8 +4,10 @@ namespace Tests\Feature\Admin;
 
 use App\Jobs\RebuildAssetsJob;
 use App\Models\Extension;
+use App\Models\ExtensionSetting;
 use App\Models\User;
 use App\Services\Extensions\ExtensionManager;
+use App\Services\Extensions\ExtensionSettingsResolver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Mockery\MockInterface;
@@ -31,6 +33,48 @@ class AdminExtensionTest extends TestCase
     {
         @unlink(storage_path('installed.lock'));
         parent::tearDown();
+    }
+
+    public function test_settings_resolver_merges_defaults_overrides_and_drops_malformed_entries(): void
+    {
+        $ext = Extension::factory()->create([
+            'path' => 'hybridcore/demo',
+            'metadata' => [
+                'settings_schema' => [
+                    ['key' => 'greeting', 'type' => 'text', 'label' => 'Greeting', 'default' => 'Hi'],
+                    ['label' => 'No key or type'],
+                ],
+            ],
+        ]);
+
+        $resolver = app(ExtensionSettingsResolver::class);
+        $this->assertSame(['greeting' => 'Hi'], $resolver->effective($ext));
+
+        ExtensionSetting::create(['extension_id' => $ext->id, 'key' => 'greeting', 'value' => 'Hey', 'type' => 'string']);
+        $this->assertSame(['greeting' => 'Hey'], $resolver->effective($ext));
+    }
+
+    public function test_settings_persists_valid_value_rejects_invalid_and_ignores_unknown_key(): void
+    {
+        $ext = Extension::factory()->create([
+            'path' => 'hybridcore/demo',
+            'metadata' => [
+                'settings_schema' => [
+                    ['key' => 'accent', 'type' => 'color', 'label' => 'Accent', 'default' => '#22d3ee'],
+                ],
+            ],
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post("/admin/extensions/{$ext->id}/settings", ['accent' => '#ff0000', 'not_in_schema' => 'x'])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('extension_settings', ['extension_id' => $ext->id, 'key' => 'accent', 'value' => '#ff0000']);
+        $this->assertDatabaseMissing('extension_settings', ['extension_id' => $ext->id, 'key' => 'not_in_schema']);
+
+        $this->actingAs($this->admin)
+            ->post("/admin/extensions/{$ext->id}/settings", ['accent' => 'not-a-color'])
+            ->assertSessionHasErrors('accent');
     }
 
     public function test_a_license_key_can_be_stored_and_removed(): void
@@ -96,9 +140,15 @@ class AdminExtensionTest extends TestCase
 
     public function test_extension_index_returns_extensions_and_rebuild_status(): void
     {
+        // Only "demo" and "announcements" are git-tracked bundled extensions
+        // (see .gitignore's /extensions/hybridcore/* rule) — every other
+        // extensions/hybridcore/* directory is local-only dev scaffolding
+        // that doesn't exist in a fresh checkout (CI included). The third
+        // row deliberately reuses "demo" to prove the is_dir() filter in
+        // ExtensionController::index() doesn't collapse duplicate paths.
         Extension::factory()->create(['path' => 'hybridcore/demo']);
         Extension::factory()->create(['path' => 'hybridcore/announcements']);
-        Extension::factory()->create(['path' => 'HybridCore/Example']);
+        Extension::factory()->create(['path' => 'hybridcore/demo']);
 
         $this->actingAs($this->admin)->get('/admin/extensions')
             ->assertStatus(200)

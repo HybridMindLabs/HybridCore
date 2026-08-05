@@ -9,6 +9,8 @@ use App\Models\Page;
 use App\Models\Setting;
 use App\Models\Theme;
 use App\Services\ActivityLogService;
+use App\Services\DatabaseBackupService;
+use App\Services\SettingsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,7 +26,11 @@ class BackupController extends Controller
 {
     private const SENSITIVE_SETTING_PATTERNS = ['password', 'secret', 'token', 'key', 'api'];
 
-    public function __construct(private readonly ActivityLogService $activity) {}
+    public function __construct(
+        private readonly ActivityLogService $activity,
+        private readonly DatabaseBackupService $dbBackup,
+        private readonly SettingsService $settings,
+    ) {}
 
     public function index(): Response
     {
@@ -46,9 +52,6 @@ class BackupController extends Controller
             }
         }
 
-        // Detect mysqldump availability
-        $mysqldumpPath = $this->findMysqldump();
-
         return Inertia::render('Admin/System/Backup', [
             'counts' => [
                 'settings' => Setting::count(),
@@ -58,60 +61,47 @@ class BackupController extends Controller
                 'menus' => Menu::count(),
             ],
             'backups' => array_slice($backups, 0, 20),
-            'mysqldump_available' => $mysqldumpPath !== null,
+            'mysqldump_available' => $this->dbBackup->findMysqldump() !== null,
+            'schedule' => [
+                'backup_schedule' => $this->settings->get('backup_schedule', 'off'),
+                'backup_time' => $this->settings->get('backup_time', '03:00'),
+                'backup_retention' => (int) $this->settings->get('backup_retention', 7),
+                'last_run_at' => $this->settings->get('backup_last_run_at'),
+            ],
         ]);
     }
 
-    /** Run mysqldump and save to storage/app/backups/. */
+    /** Run mysqldump now and save to storage/app/backups/. */
     public function databaseBackup(): RedirectResponse
     {
-        $mysqldump = $this->findMysqldump();
-        abort_if($mysqldump === null, 500, 'mysqldump not found on this server.');
+        $result = $this->dbBackup->create();
 
-        $db = config('database.connections.mysql');
-        $host = $db['host'] ?? '127.0.0.1';
-        $port = $db['port'] ?? 3306;
-        $dbname = $db['database'] ?? '';
-        $user = $db['username'] ?? 'root';
-        $password = $db['password'] ?? '';
-
-        $dir = storage_path('app/backups');
-        if (! is_dir($dir)) {
-            mkdir($dir, 0755, true);
+        if (! $result['ok']) {
+            return back()->withErrors(['db' => $result['error']]);
         }
 
-        $filename = 'hybridcore-db-'.now()->format('Y-m-d-His').'.sql';
-        $filepath = $dir.'/'.$filename;
+        $this->activity->log('backup.database', 'MySQL database backup created: '.$result['filename']);
 
-        // Write a temporary .cnf to avoid password in the process list
-        $cnf = tempnam(sys_get_temp_dir(), 'mysqldump_');
-        $cnfData = "[client]\npassword=".addslashes($password)."\n";
-        file_put_contents($cnf, $cnfData);
-        chmod($cnf, 0600);
+        return back()->with('success', 'Database backup created: '.$result['filename']);
+    }
 
-        $cmd = sprintf(
-            '%s --defaults-extra-file=%s -h %s -P %d -u %s --single-transaction --routines --triggers %s > %s 2>&1',
-            escapeshellcmd($mysqldump),
-            escapeshellarg($cnf),
-            escapeshellarg($host),
-            (int) $port,
-            escapeshellarg($user),
-            escapeshellarg($dbname),
-            escapeshellarg($filepath)
+    /** Update the automatic backup schedule (off/daily/weekly/monthly). */
+    public function updateSchedule(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'backup_schedule' => ['required', 'in:off,daily,weekly,monthly'],
+            'backup_time' => ['required', 'date_format:H:i'],
+            'backup_retention' => ['required', 'integer', 'min:1', 'max:90'],
+        ]);
+
+        $this->settings->setMany($data);
+
+        $this->activity->log(
+            'backup.schedule-updated',
+            "Backup schedule set to {$data['backup_schedule']} at {$data['backup_time']}, keeping {$data['backup_retention']} backups"
         );
 
-        exec($cmd, $output, $exitCode);
-        unlink($cnf);
-
-        if ($exitCode !== 0 || ! file_exists($filepath) || filesize($filepath) === 0) {
-            @unlink($filepath);
-
-            return back()->withErrors(['db' => 'mysqldump failed. Check server logs.']);
-        }
-
-        $this->activity->log('backup.database', 'MySQL database backup created: '.$filename);
-
-        return back()->with('success', 'Database backup created: '.$filename);
+        return back()->with('success', 'Backup schedule updated.');
     }
 
     /** Download a specific stored backup file. */
@@ -264,27 +254,6 @@ class BackupController extends Controller
     }
 
     // --- Helpers ---
-
-    private function findMysqldump(): ?string
-    {
-        // Honour explicit override. Read via config, not env(): env() returns
-        // null once `config:cache` has run, silently ignoring the operator's
-        // setting on exactly the production hosts that need it.
-        if ($override = config('hybridcore.mysqldump_path')) {
-            return is_executable($override) ? $override : null;
-        }
-
-        foreach (['/usr/bin/mysqldump', '/usr/local/bin/mysqldump', '/bin/mysqldump'] as $path) {
-            if (is_executable($path)) {
-                return $path;
-            }
-        }
-
-        // Last resort: ask the shell
-        $found = trim((string) shell_exec('which mysqldump 2>/dev/null'));
-
-        return ($found && is_executable($found)) ? $found : null;
-    }
 
     private function buildFullBackup(): array
     {

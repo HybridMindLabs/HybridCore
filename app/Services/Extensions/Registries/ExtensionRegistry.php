@@ -33,6 +33,7 @@ class ExtensionRegistry
         private readonly BridgeEventRegistry $bridgeEvents,
         private readonly WidgetRegistry $widgets,
         private readonly PermissionRegistry $permissions,
+        private readonly AbilityRegistry $abilities,
         private readonly SettingsRegistry $settings,
         private readonly SlotRegistry $slots,
         private readonly HookRegistry $hooks,
@@ -129,6 +130,11 @@ class ExtensionRegistry
     public function permissions(): PermissionRegistry
     {
         return $this->permissions;
+    }
+
+    public function abilities(): AbilityRegistry
+    {
+        return $this->abilities;
     }
 
     public function settings(): SettingsRegistry

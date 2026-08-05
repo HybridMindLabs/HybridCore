@@ -22,6 +22,7 @@ use App\Services\Extensions\Registries\UserMenuRegistry;
 use App\Services\Localization\LocaleService;
 use App\Services\SettingsService;
 use App\Services\Themes\ThemeResolver;
+use App\Services\Themes\ThemeSettingsResolver;
 use App\Support\Filters;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -37,6 +38,7 @@ class HandleInertiaRequests extends Middleware
     public function __construct(
         private readonly SettingsService $settings,
         private readonly ThemeResolver $themeResolver,
+        private readonly ThemeSettingsResolver $themeSettings,
         private readonly NavigationRegistry $navigation,
         private readonly PublicNavigationRegistry $publicNavigation,
         private readonly AccountTabRegistry $accountTabs,
@@ -61,7 +63,7 @@ class HandleInertiaRequests extends Middleware
 
         return [
             'slug' => $theme?->slug ?? 'Default',
-            'settings' => $theme?->metadata['settings'] ?? [],
+            'settings' => $theme ? $this->themeSettings->effective($theme) : [],
         ];
     }
 
@@ -323,6 +325,8 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
                 // One-time reveal of a freshly generated bridge token.
                 'bridge_token' => fn () => $request->session()->get('bridge_token'),
+                // One-time reveal of a freshly issued API token.
+                'plain_token' => fn () => $request->session()->get('plain_token'),
             ],
             'oauthProviders' => fn () => $this->oauth->compose(),
             'legalPages' => fn () => rescue(fn () => Cache::remember(

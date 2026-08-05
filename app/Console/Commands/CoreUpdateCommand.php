@@ -16,8 +16,8 @@ use Symfony\Component\Process\Process;
  *                                           # replaced by hand, run the upgrade steps only
  *
  * Sequence: maintenance on → (git pull) → composer install → migrate →
- * caches cleared → queue restarted → maintenance off. Maintenance mode is
- * always lifted again, even when a step fails.
+ * themes synced → caches cleared → queue restarted → maintenance off.
+ * Maintenance mode is always lifted again, even when a step fails.
  */
 class CoreUpdateCommand extends Command
 {
@@ -56,6 +56,11 @@ class CoreUpdateCommand extends Command
             }
 
             $this->artisanStep('migrate', ['--force' => true]);
+            // A release can ship an edited theme.json — new settings_schema
+            // fields, a changed requires_license flag. Those only reach the
+            // database through a sync, so without this the admin panel keeps
+            // showing the manifest that shipped with the previous version.
+            $this->artisanStep('hybridcore:themes:sync');
             $this->artisanStep('optimize:clear');
             $this->artisanStep('queue:restart');
         } catch (\Throwable $e) {

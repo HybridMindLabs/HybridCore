@@ -20,6 +20,14 @@ conventions and [Semantic Versioning](https://semver.org/).
 - `extensions:test` now forces the sqlite/array/sync test environment so an
   extension's suite always runs isolated from the live database.
 
+### Themes
+- Themes now declare a `settings_schema` in `theme.json` — typed, admin-editable
+  fields (colors, text, toggles, selects) that actually change the live site
+  instead of sitting inert. Paid themes are gated behind a license key, same
+  model as paid extensions.
+- Core updates now re-run `hybridcore:themes:sync` automatically so an
+  upgraded install picks up manifest schema changes without a manual step.
+
 ---
 
 ## [0.2.0] — Initial public release
