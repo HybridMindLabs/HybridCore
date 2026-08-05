@@ -76,8 +76,8 @@ Once the marketplace is launched, all submitted packages (extensions and themes)
 
 | Version | Supported |
 |---|---|
-| 0.2.x | Security patches provided |
-| < 0.2.0 | Not supported |
+| 0.3.x | Security patches provided |
+| < 0.3.0 | Not supported |
 
 Security patches are applied to the latest released minor version. Keep your
 installation up to date via `php artisan hybridcore:update` (see
