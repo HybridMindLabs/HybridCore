@@ -142,7 +142,7 @@ class AdminExtensionTest extends TestCase
     {
         Extension::factory()->create(['path' => 'hybridcore/demo']);
         Extension::factory()->create(['path' => 'hybridcore/announcements']);
-        Extension::factory()->create(['path' => 'HybridCore/Example']);
+        Extension::factory()->create(['path' => 'hybridcore/giveaways']);
 
         $this->actingAs($this->admin)->get('/admin/extensions')
             ->assertStatus(200)

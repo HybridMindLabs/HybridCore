@@ -6,6 +6,7 @@ use App\Models\Extension;
 use App\Providers\ExtensionServiceProvider;
 use App\Services\Extensions\Registries\ExtensionRegistry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Tests\TestCase;
 
 /**
@@ -109,7 +110,11 @@ class DemoExtensionTest extends TestCase
         $controller = $route->getController();
         $response = $controller->index();
 
-        $this->assertSame('Welcome to the Demo extension!', $response->getData(true)['message']);
+        $inertiaRequest = Request::create('/demo', 'GET');
+        $inertiaRequest->headers->set('X-Inertia', 'true');
+        $payload = json_decode($response->toResponse($inertiaRequest)->getContent(), true);
+
+        $this->assertSame('Welcome to the Demo extension!', $payload['props']['message']);
     }
 
     public function test_extensions_migrate_command_discovers_demo_path(): void

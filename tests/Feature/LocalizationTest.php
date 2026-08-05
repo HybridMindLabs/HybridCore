@@ -161,12 +161,12 @@ class LocalizationTest extends TestCase
     public function test_extension_translation_namespace_can_be_loaded(): void
     {
         // Simulate what ExtensionServiceProvider does for an enabled extension
-        // with resources/lang in its manifest (Example extension fixture).
-        app('translator')->addNamespace('example', base_path('extensions/HybridCore/Example/resources/lang'));
+        // with resources/lang in its manifest (demo extension fixture).
+        app('translator')->addNamespace('demo', base_path('extensions/hybridcore/demo/resources/lang'));
 
-        $this->assertSame('Hello from the Example extension!', trans('example::messages.hello'));
+        $this->assertSame('Welcome to the Demo extension!', trans('demo::messages.welcome'));
 
         app()->setLocale('bg');
-        $this->assertSame('Здравей от примерното разширение!', trans('example::messages.hello'));
+        $this->assertSame('Добре дошли в разширението Demo!', trans('demo::messages.welcome'));
     }
 }

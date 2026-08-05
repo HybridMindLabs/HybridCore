@@ -1,14 +1,15 @@
 {
     "id": "hybridcore/demo",
     "name": "Demo",
-    "version": "0.1.0",
-    "description": "The Demo extension.",
+    "version": "0.2.0",
+    "description": "Reference extension exercising every SDK registry — copy this to start a new extension.",
     "author": "Hybridcore",
     "type": "custom",
     "provider": "Hybridcore\\Demo\\DemoServiceProvider",
     "routes": {
         "web": "routes/web.php",
-        "admin": "routes/admin.php"
+        "admin": "routes/admin.php",
+        "api": "routes/api.php"
     },
     "migrations": "database/migrations",
     "lang": "resources/lang",
