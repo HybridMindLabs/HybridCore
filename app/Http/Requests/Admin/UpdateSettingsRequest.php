@@ -42,6 +42,8 @@ class UpdateSettingsRequest extends FormRequest
             'password_min_length' => ['nullable', 'integer', 'min:8', 'max:128'],
             'password_require_mixed' => ['boolean'],
             'password_require_numbers' => ['boolean'],
+            'require_2fa_for_admins' => ['boolean'],
+            'require_2fa_grace_days' => ['nullable', 'integer', 'min:0', 'max:90'],
             'loc_default_locale' => ['nullable', 'string', 'max:10', 'regex:/^[a-z]{2}(-[A-Za-z]{2,4})?$/'],
             'loc_fallback_locale' => ['nullable', 'string', 'max:10', 'regex:/^[a-z]{2}(-[A-Za-z]{2,4})?$/'],
             'loc_supported_locales' => ['nullable', 'string', 'max:255', 'regex:/^[a-z]{2}(\s*,\s*[a-z]{2})*$/'],

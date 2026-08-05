@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\AchievementService;
+use App\Services\TwoFactorPolicy;
 use BaconQrCode\Renderer\Color\Rgb;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -26,6 +27,7 @@ class TwoFactorController extends Controller
     public function __construct(
         private readonly Google2FA $google2fa,
         private readonly AchievementService $achievements,
+        private readonly TwoFactorPolicy $twoFactorPolicy,
     ) {}
 
     /** Generate a new secret + QR and return to the frontend (not saved yet). */
@@ -94,6 +96,7 @@ class TwoFactorController extends Controller
         ]);
 
         $request->session()->forget('2fa_setup_secret');
+        $this->twoFactorPolicy->resetClock($user);
         $this->achievements->check($user);
 
         return response()->json(['message' => __('account.2fa_was_enabled')]);

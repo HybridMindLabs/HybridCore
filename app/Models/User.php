@@ -34,6 +34,7 @@ use Laravel\Scout\Searchable;
  * @property string|null $two_factor_secret
  * @property array<array-key, mixed>|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
+ * @property Carbon|null $two_factor_required_since
  * @property string|null $remember_token
  * @property Carbon|null $last_seen_at
  * @property Carbon|null $onboarding_completed_at
@@ -166,6 +167,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'last_seen_at' => 'datetime',
             'username_changed_at' => 'datetime',
             'two_factor_confirmed_at' => 'datetime',
+            'two_factor_required_since' => 'datetime',
             'two_factor_recovery_codes' => 'encrypted:array',
             'two_factor_secret' => 'encrypted',
             'notification_preferences' => 'array',

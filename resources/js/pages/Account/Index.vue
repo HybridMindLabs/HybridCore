@@ -64,6 +64,9 @@ const TAB_IDS = [
 const LAST_TAB_KEY = 'hc-account-last-tab';
 
 function initialTab(): string {
+    const fromQuery = new URLSearchParams(window.location.search).get('tab');
+    if (fromQuery && TAB_IDS.includes(fromQuery)) return fromQuery;
+
     const stored = localStorage.getItem(LAST_TAB_KEY);
     return stored && TAB_IDS.includes(stored) ? stored : 'profile';
 }
