@@ -129,6 +129,45 @@ class GameTest extends TestCase
         $this->assertDatabaseMissing('games', ['id' => $game->id]);
     }
 
+    public function test_store_rejects_an_unregistered_query_driver(): void
+    {
+        $this->actingAs($this->admin)
+            ->post(route('admin.servers.games.store'), [
+                'name' => 'Test',
+                'slug' => 'test-game3',
+                'icon' => 'Gamepad2',
+                'color' => '#000000',
+                'query_driver' => 'goldensrc', // typo of the real 'goldsource' slug
+                'default_port' => 27015,
+            ])
+            ->assertSessionHasErrors('query_driver');
+
+        $this->assertDatabaseMissing('games', ['slug' => 'test-game3']);
+    }
+
+    public function test_store_accepts_every_driver_the_registry_actually_handles(): void
+    {
+        $this->actingAs($this->admin)
+            ->post(route('admin.servers.games.store'), [
+                'name' => 'Rust',
+                'slug' => 'rust',
+                'icon' => 'Gamepad2',
+                'color' => '#ce422b',
+                'query_driver' => 'rust',
+                'default_port' => 28015,
+            ])
+            ->assertSessionDoesntHaveErrors();
+
+        $this->assertDatabaseHas('games', ['slug' => 'rust', 'query_driver' => 'rust']);
+    }
+
+    public function test_index_exposes_the_registered_driver_slugs(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('admin.servers.games'))
+            ->assertInertia(fn ($page) => $page->has('drivers')->where('drivers', fn ($drivers) => $drivers->contains('rust') && $drivers->contains('goldsource')));
+    }
+
     public function test_store_rejects_invalid_color(): void
     {
         $this->actingAs($this->admin)

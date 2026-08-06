@@ -12,7 +12,7 @@ interface GameRow {
     sort_order: number; servers_count: number;
 }
 
-const props = defineProps<{ games: GameRow[] }>();
+const props = defineProps<{ games: GameRow[]; drivers: string[] }>();
 
 // --- Add form ---
 const showAdd = ref(false);
@@ -57,11 +57,6 @@ function destroy(g: GameRow) {
         router.delete(route('admin.servers.games.destroy', g.id));
     }
 }
-
-const drivers = [
-    'source', 'goldensrc', 'minecraft_java', 'minecraft_bedrock',
-    'fivem', 'arkse', 'sevendaystodie', 'gmod', 'tf2', 'unturned',
-];
 </script>
 
 <template>
