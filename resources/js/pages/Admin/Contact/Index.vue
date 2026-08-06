@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Mail, Eye, Trash2, Circle, CheckCircle2 } from '@lucide/vue';
+import { Mail, Eye, Trash2, Circle, CheckCircle2, Search, X } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
+import EmptyState from '@/components/UI/EmptyState.vue';
+import { ref, watch } from 'vue';
 
 interface Message {
     id: number;
@@ -24,7 +26,21 @@ interface Paginator {
     prev_page_url: string | null;
 }
 
-defineProps<{ messages: Paginator; unreadCount: number }>();
+const props = defineProps<{ messages: Paginator; unreadCount: number; filters: { search: string } }>();
+
+const search = ref(props.filters.search);
+const searching = ref(false);
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+watch(search, (value) => {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        searching.value = true;
+        router.get(route('admin.contact.index'), value ? { search: value } : {}, {
+            preserveState: true, preserveScroll: true, replace: true,
+            onFinish: () => { searching.value = false; },
+        });
+    }, 350);
+});
 
 function del(id: number) {
     if (!confirm('Delete this message? This cannot be undone.')) return;
@@ -50,17 +66,33 @@ function formatDate(d: string) {
             :icon="Mail"
         />
 
-        <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
-            <div v-if="messages.data.length === 0" class="p-10 text-center">
-                <Mail :size="24" :stroke-width="1.5" class="mx-auto mb-3 text-zinc-700" />
-                <p class="text-zinc-500 text-sm">No messages yet.</p>
-            </div>
+        <div class="relative max-w-sm mb-4">
+            <Search :size="14" :stroke-width="1.75" class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
+            <input
+                v-model="search"
+                type="text"
+                placeholder="Search by name, email or subject…"
+                class="w-full bg-[#111113] border border-zinc-800/70 text-zinc-100 rounded-lg pl-9 pr-9 py-2 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+            />
+            <button v-if="search" type="button" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-400" @click="search = ''">
+                <X :size="14" :stroke-width="1.75" />
+            </button>
+        </div>
+
+        <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden transition-opacity" :class="searching ? 'opacity-50' : ''">
+            <EmptyState
+                v-if="messages.data.length === 0"
+                :icon="Mail"
+                :title="search ? 'No matches' : 'No messages yet'"
+                :description="search ? 'Try a different search term.' : ''"
+            />
 
             <div v-else class="divide-y divide-zinc-800/50">
                 <div
-                    v-for="msg in messages.data"
+                    v-for="(msg, i) in messages.data"
                     :key="msg.id"
-                    class="flex items-start gap-4 px-5 py-4 hover:bg-white/[0.02] transition-colors"
+                    class="hc-hero-in flex items-start gap-4 px-5 py-4 hover:bg-white/[0.02] transition-colors"
+                    :style="{ animationDelay: `${Math.min(i, 12) * 25}ms` }"
                     :class="!msg.read_at ? 'bg-blue-500/[0.03]' : ''"
                 >
                     <!-- Read indicator -->

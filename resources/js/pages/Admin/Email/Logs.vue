@@ -82,7 +82,7 @@ const breadcrumbs = [
             </div>
         </div>
 
-        <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden transition-opacity"
+        <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden transition-opacity"
             :class="searching ? 'opacity-50 pointer-events-none' : ''">
             <table class="w-full text-sm">
                 <thead>
