@@ -18,9 +18,11 @@ use App\Models\UserAdminNote;
 use App\Services\ActivityLogService;
 use App\Services\Extensions\Registries\HookRegistry;
 use App\Support\Hooks;
+use App\Support\UserAgent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
@@ -157,6 +159,16 @@ class UserController extends Controller
                     'user_agent' => \Str::limit((string) $login->user_agent, 80),
                     'created_at' => $login->created_at?->toDayDateTimeString(),
                 ]),
+            'sessions' => DB::table('sessions')
+                ->where('user_id', $user->id)
+                ->orderByDesc('last_activity')
+                ->get()
+                ->map(fn ($session) => [
+                    'id' => $session->id,
+                    'ip_address' => $session->ip_address,
+                    'last_activity' => $session->last_activity,
+                    'device' => UserAgent::parse($session->user_agent ?? ''),
+                ]),
             'notes' => UserAdminNote::with('author:id,name')
                 ->where('user_id', $user->id)->latest()->get()
                 ->map(fn (UserAdminNote $note) => [
@@ -202,6 +214,16 @@ class UserController extends Controller
         $this->activity->log('user.unlocked', "Lifted the login lockout on {$user->email}", $user);
 
         return back()->with('success', 'Account unlocked.');
+    }
+
+    /** Ends one of this user's active sessions — e.g. a compromised account still logged in elsewhere. */
+    public function revokeSession(User $user, string $session): RedirectResponse
+    {
+        DB::table('sessions')->where('id', $session)->where('user_id', $user->id)->delete();
+
+        $this->activity->log('user.session_revoked', "Revoked an active session for {$user->email}", $user);
+
+        return back()->with('success', 'Session revoked.');
     }
 
     public function create(): Response

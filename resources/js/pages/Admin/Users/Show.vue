@@ -4,6 +4,7 @@ import {
     ChevronLeft, ShieldAlert, Ban, Pencil, MessageSquare, Star, Users, UserPlus,
     Trophy, Heart, Flag, FileWarning, Activity, Globe, StickyNote, Trash2,
     CheckCircle2, XCircle, Link2, Calendar, Clock, Hash, MapPin, VenetianMask, LockKeyholeOpen,
+    Monitor, Smartphone, LogOut,
 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -30,12 +31,14 @@ const props = defineProps<{
     recentActivity: { event: string; description: string | null; created_at: string }[];
     loginHistory: { ip: string; country: string | null; city: string | null; user_agent: string; created_at: string }[];
     notes: { id: number; body: string; author: string; created_at: string }[];
+    sessions: { id: string; ip_address: string | null; last_activity: number; device: { browser: string; os: string; mobile: boolean } }[];
 }>();
 
 const tabs = [
     { key: 'activity', label: 'Activity', icon: Activity },
     { key: 'content',  label: 'Content',  icon: MessageSquare },
     { key: 'logins',   label: 'Logins',   icon: Globe },
+    { key: 'sessions', label: 'Sessions', icon: Monitor },
 ] as const;
 
 const activeTab = ref<typeof tabs[number]['key']>('activity');
@@ -78,6 +81,25 @@ function impersonate() {
 
 function unlock() {
     router.post(route('admin.users.unlock', props.user.id), {}, { preserveScroll: true });
+}
+
+const revokingSession = ref<string | null>(null);
+
+function revokeSession(sessionId: string) {
+    if (!confirm('Revoke this session? The device will be signed out immediately.')) return;
+    revokingSession.value = sessionId;
+    router.delete(route('admin.users.sessions.destroy', [props.user.id, sessionId]), {
+        preserveScroll: true,
+        onFinish: () => (revokingSession.value = null),
+    });
+}
+
+function formatLastActivity(ts: number): string {
+    const diff = Math.floor(Date.now() / 1000) - ts;
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
 }
 </script>
 
@@ -281,6 +303,35 @@ function unlock() {
                             </table>
                         </div>
                         <p v-else class="text-zinc-600 text-sm py-6 text-center">No login history.</p>
+                    </div>
+
+                    <!-- Sessions tab -->
+                    <div v-show="activeTab === 'sessions'">
+                        <div v-if="sessions.length" class="flex flex-col gap-2">
+                            <div
+                                v-for="session in sessions"
+                                :key="session.id"
+                                class="flex items-center gap-3 rounded-lg border border-zinc-800/60 bg-zinc-900/40 px-3 py-2.5"
+                            >
+                                <div class="shrink-0 w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                                    <component :is="session.device.mobile ? Smartphone : Monitor" :size="13" :stroke-width="1.8" class="text-blue-400" />
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-zinc-300 text-sm font-medium">{{ session.device.browser }} on {{ session.device.os }}</p>
+                                    <p class="text-zinc-600 text-xs">{{ session.ip_address ?? 'Unknown IP' }} · {{ formatLastActivity(session.last_activity) }}</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    :disabled="revokingSession !== null"
+                                    class="flex items-center gap-1.5 shrink-0 text-zinc-500 hover:text-red-400 text-xs font-semibold transition-colors disabled:opacity-50"
+                                    @click="revokeSession(session.id)"
+                                >
+                                    <LogOut :size="12" :stroke-width="1.75" />
+                                    {{ revokingSession === session.id ? 'Revoking…' : 'Revoke' }}
+                                </button>
+                            </div>
+                        </div>
+                        <p v-else class="text-zinc-600 text-sm py-6 text-center">No active sessions.</p>
                     </div>
 
                 </div>

@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { Webhook, Trash2, Plus, Copy, CheckCircle2, RefreshCw, Send, ChevronDown } from '@lucide/vue';
+import { Webhook, Trash2, Plus, Copy, CheckCircle2, RefreshCw, Send, ChevronDown, Redo2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
 
 interface DeliveryRow {
+    id: number;
     event: string;
     success: boolean;
     response_code: number | null;
     error: string | null;
     created_at: string | null;
+    retryable: boolean;
 }
 interface EndpointRow {
     id: number;
@@ -81,6 +83,16 @@ function regenerateSecret(id: number) {
 
 function sendTest(id: number) {
     router.post(route('admin.webhooks.test', id), {}, { preserveScroll: true });
+}
+
+const retrying = ref<number | null>(null);
+
+function retryDelivery(endpointId: number, deliveryId: number) {
+    retrying.value = deliveryId;
+    router.post(route('admin.webhooks.deliveries.retry', [endpointId, deliveryId]), {}, {
+        preserveScroll: true,
+        onFinish: () => (retrying.value = null),
+    });
 }
 
 const expandedLog = ref<number | null>(null);
@@ -188,8 +200,8 @@ function destroyEndpoint(endpoint: EndpointRow) {
                     <div v-if="expandedLog === endpoint.id" class="mt-2 flex flex-col gap-1">
                         <div v-if="endpoint.deliveries.length === 0" class="text-zinc-700 text-[10px]">No deliveries yet.</div>
                         <div
-                            v-for="(delivery, i) in endpoint.deliveries"
-                            :key="i"
+                            v-for="delivery in endpoint.deliveries"
+                            :key="delivery.id"
                             class="flex items-center justify-between px-2 py-1 rounded bg-zinc-900/40 text-[10px]"
                         >
                             <span class="text-zinc-400 font-mono truncate">{{ delivery.event }}</span>
@@ -197,6 +209,17 @@ function destroyEndpoint(endpoint: EndpointRow) {
                                 <span v-if="delivery.response_code" class="text-zinc-600">HTTP {{ delivery.response_code }}</span>
                                 <span :class="delivery.success ? 'text-emerald-400' : 'text-red-400'">{{ delivery.success ? 'OK' : 'Failed' }}</span>
                                 <span class="text-zinc-700">{{ delivery.created_at }}</span>
+                                <button
+                                    v-if="delivery.retryable"
+                                    type="button"
+                                    :disabled="retrying !== null"
+                                    title="Retry this delivery"
+                                    class="flex items-center gap-1 text-zinc-500 hover:text-blue-400 transition-colors disabled:opacity-50"
+                                    @click="retryDelivery(endpoint.id, delivery.id)"
+                                >
+                                    <Redo2 :size="10" :stroke-width="2" />
+                                    {{ retrying === delivery.id ? '…' : 'Retry' }}
+                                </button>
                             </span>
                         </div>
                     </div>

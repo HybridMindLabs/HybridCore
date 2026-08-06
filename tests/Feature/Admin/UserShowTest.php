@@ -102,4 +102,51 @@ class UserShowTest extends TestCase
 
         $this->assertDatabaseHas('user_admin_notes', ['id' => $note->id]);
     }
+
+    public function test_user_detail_page_exposes_active_sessions(): void
+    {
+        $target = User::factory()->create();
+        \DB::table('sessions')->insert([
+            'id' => 'sess-1', 'user_id' => $target->id, 'ip_address' => '10.0.0.5',
+            'user_agent' => 'Mozilla/5.0 (Windows NT 10.0) Chrome/1 Safari/1', 'payload' => 'x', 'last_activity' => time(),
+        ]);
+
+        $this->actingAs($this->admin())
+            ->get(route('admin.users.show', $target))
+            ->assertInertia(fn ($page) => $page
+                ->has('sessions', 1)
+                ->where('sessions.0.id', 'sess-1')
+                ->where('sessions.0.ip_address', '10.0.0.5'));
+    }
+
+    public function test_admin_can_revoke_a_users_session(): void
+    {
+        $target = User::factory()->create();
+        \DB::table('sessions')->insert([
+            'id' => 'sess-1', 'user_id' => $target->id, 'ip_address' => '10.0.0.5',
+            'user_agent' => 'Mozilla/5.0', 'payload' => 'x', 'last_activity' => time(),
+        ]);
+
+        $this->actingAs($this->admin())
+            ->delete(route('admin.users.sessions.destroy', [$target, 'sess-1']))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('sessions', ['id' => 'sess-1']);
+    }
+
+    public function test_revoking_a_session_cannot_touch_another_users_session(): void
+    {
+        $target = User::factory()->create();
+        $other = User::factory()->create();
+        \DB::table('sessions')->insert([
+            'id' => 'sess-1', 'user_id' => $other->id, 'ip_address' => '10.0.0.5',
+            'user_agent' => 'Mozilla/5.0', 'payload' => 'x', 'last_activity' => time(),
+        ]);
+
+        $this->actingAs($this->admin())
+            ->delete(route('admin.users.sessions.destroy', [$target, 'sess-1']))
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('sessions', ['id' => 'sess-1']);
+    }
 }
