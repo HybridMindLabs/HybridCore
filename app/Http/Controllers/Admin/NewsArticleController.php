@@ -20,13 +20,21 @@ class NewsArticleController extends Controller
 {
     public function __construct(private readonly ActivityLogService $activity) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = $request->string('search')->trim()->toString();
+        $categoryId = $request->integer('category_id') ?: null;
+        $status = $request->string('status')->toString();
+
         return Inertia::render('Admin/News/Articles/Index', [
             'articles' => NewsArticle::with(['category', 'author'])
                 ->withCount('articleViews')
+                ->when($search, fn ($q) => $q->where('title', 'like', "%{$search}%"))
+                ->when($categoryId, fn ($q) => $q->where('category_id', $categoryId))
+                ->when($status, fn ($q) => $q->where('status', $status))
                 ->orderByDesc('created_at')
                 ->paginate(25)
+                ->withQueryString()
                 ->through(fn (NewsArticle $a) => [
                     'id' => $a->id,
                     'title' => $a->title,
@@ -43,6 +51,7 @@ class NewsArticleController extends Controller
                     'created_at' => $a->created_at->diffForHumans(),
                 ]),
             'categories' => NewsCategory::orderBy('name')->get(['id', 'name', 'color']),
+            'filters' => ['search' => $search, 'category_id' => $categoryId, 'status' => $status],
         ]);
     }
 

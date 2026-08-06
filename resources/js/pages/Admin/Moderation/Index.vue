@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { Flag, CheckCircle, Trash2, ExternalLink, MessageSquare, Star } from '@lucide/vue';
 import { ref } from 'vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
+import EmptyState from '@/components/UI/EmptyState.vue';
 
 interface Report {
     id: number; type: string; reason: string; details: string | null;
@@ -110,14 +111,12 @@ function destroyReview(id: number) {
 
         <!-- ── Reports tab ─────────────────────────────────────── -->
         <template v-if="activeTab === 'reports'">
-            <div class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
-                <div v-if="!reports.data.length" class="flex flex-col items-center justify-center py-16 text-center">
-                    <Flag :size="24" :stroke-width="1.5" class="text-zinc-700 mb-3" />
-                    <p class="text-[13px] text-zinc-600">No reports — all clear.</p>
-                </div>
+            <EmptyState v-if="!reports.data.length" :icon="Flag" title="No reports" description="All clear — nothing waiting on review." />
 
-                <div v-for="report in reports.data" :key="report.id"
-                    class="px-5 py-4 border-b border-zinc-800/50 last:border-0 hover:bg-white/[0.02]">
+            <div v-else class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+                <div v-for="(report, i) in reports.data" :key="report.id"
+                    class="hc-hero-in px-5 py-4 border-b border-zinc-800/50 last:border-0 hover:bg-white/[0.02]"
+                    :style="{ animationDelay: `${Math.min(i, 10) * 25}ms` }">
                     <div class="flex items-start gap-3">
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 flex-wrap">
@@ -170,14 +169,12 @@ function destroyReview(id: number) {
 
         <!-- ── Comments tab ────────────────────────────────────── -->
         <template v-if="activeTab === 'comments'">
-            <div class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
-                <div v-if="!comments.data.length" class="flex flex-col items-center justify-center py-16 text-center">
-                    <MessageSquare :size="24" :stroke-width="1.5" class="text-zinc-700 mb-3" />
-                    <p class="text-[13px] text-zinc-600">No comments yet.</p>
-                </div>
+            <EmptyState v-if="!comments.data.length" :icon="MessageSquare" title="No comments yet" description="News comments will appear here." />
 
-                <div v-for="comment in comments.data" :key="comment.id"
-                    class="flex items-start gap-3 px-5 py-3.5 border-b border-zinc-800/50 last:border-0 hover:bg-white/[0.02]">
+            <div v-else class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+                <div v-for="(comment, i) in comments.data" :key="comment.id"
+                    class="hc-hero-in flex items-start gap-3 px-5 py-3.5 border-b border-zinc-800/50 last:border-0 hover:bg-white/[0.02]"
+                    :style="{ animationDelay: `${Math.min(i, 10) * 25}ms` }">
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 flex-wrap">
                             <span class="text-[13px] font-bold text-zinc-100">{{ comment.author }}</span>
@@ -208,14 +205,12 @@ function destroyReview(id: number) {
 
         <!-- ── Reviews tab ─────────────────────────────────────── -->
         <template v-if="activeTab === 'reviews'">
-            <div class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
-                <div v-if="!reviews.data.length" class="flex flex-col items-center justify-center py-16 text-center">
-                    <Star :size="24" :stroke-width="1.5" class="text-zinc-700 mb-3" />
-                    <p class="text-[13px] text-zinc-600">No reviews yet.</p>
-                </div>
+            <EmptyState v-if="!reviews.data.length" :icon="Star" title="No reviews yet" description="Server reviews will appear here." />
 
-                <div v-for="review in reviews.data" :key="review.id"
-                    class="flex items-start gap-3 px-5 py-3.5 border-b border-zinc-800/50 last:border-0 hover:bg-white/[0.02]">
+            <div v-else class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+                <div v-for="(review, i) in reviews.data" :key="review.id"
+                    class="hc-hero-in flex items-start gap-3 px-5 py-3.5 border-b border-zinc-800/50 last:border-0 hover:bg-white/[0.02]"
+                    :style="{ animationDelay: `${Math.min(i, 10) * 25}ms` }">
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 flex-wrap">
                             <span class="text-[13px] font-bold text-zinc-100">{{ review.author }}</span>

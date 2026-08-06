@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { Trash2, Undo2, Newspaper, MessageSquare } from '@lucide/vue';
 import { ref } from 'vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
+import EmptyState from '@/components/UI/EmptyState.vue';
 
 interface TrashedArticle { id: number; title: string; author: string; deleted_at: string; purge_at: string }
 interface TrashedComment { id: number; body: string; author: string; article_title: string | null; deleted_at: string; purge_at: string }
@@ -74,14 +75,12 @@ function purgeComment(id: number) {
 
         <!-- ── Articles tab ────────────────────────────────────── -->
         <template v-if="activeTab === 'articles'">
-            <div class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
-                <div v-if="!articles.data.length" class="flex flex-col items-center justify-center py-16 text-center">
-                    <Trash2 :size="24" :stroke-width="1.5" class="text-zinc-700 mb-3" />
-                    <p class="text-[13px] text-zinc-600">No deleted articles.</p>
-                </div>
+            <EmptyState v-if="!articles.data.length" :icon="Trash2" title="No deleted articles" description="Deleted articles will land here before being purged." />
 
-                <div v-for="article in articles.data" :key="article.id"
-                    class="flex items-center gap-3 px-5 py-3.5 border-b border-zinc-800/50 last:border-0 hover:bg-white/[0.02]">
+            <div v-else class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+                <div v-for="(article, i) in articles.data" :key="article.id"
+                    class="hc-hero-in flex items-center gap-3 px-5 py-3.5 border-b border-zinc-800/50 last:border-0 hover:bg-white/[0.02]"
+                    :style="{ animationDelay: `${Math.min(i, 10) * 25}ms` }">
                     <div class="flex-1 min-w-0">
                         <p class="text-[13px] font-bold text-zinc-100 truncate">{{ article.title }}</p>
                         <p class="text-[11px] text-zinc-600 mt-0.5">
@@ -112,14 +111,12 @@ function purgeComment(id: number) {
 
         <!-- ── Comments tab ────────────────────────────────────── -->
         <template v-if="activeTab === 'comments'">
-            <div class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
-                <div v-if="!comments.data.length" class="flex flex-col items-center justify-center py-16 text-center">
-                    <Trash2 :size="24" :stroke-width="1.5" class="text-zinc-700 mb-3" />
-                    <p class="text-[13px] text-zinc-600">No deleted comments.</p>
-                </div>
+            <EmptyState v-if="!comments.data.length" :icon="Trash2" title="No deleted comments" description="Deleted comments will land here before being purged." />
 
-                <div v-for="comment in comments.data" :key="comment.id"
-                    class="flex items-start gap-3 px-5 py-3.5 border-b border-zinc-800/50 last:border-0 hover:bg-white/[0.02]">
+            <div v-else class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+                <div v-for="(comment, i) in comments.data" :key="comment.id"
+                    class="hc-hero-in flex items-start gap-3 px-5 py-3.5 border-b border-zinc-800/50 last:border-0 hover:bg-white/[0.02]"
+                    :style="{ animationDelay: `${Math.min(i, 10) * 25}ms` }">
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 flex-wrap">
                             <span class="text-[13px] font-bold text-zinc-100">{{ comment.author }}</span>

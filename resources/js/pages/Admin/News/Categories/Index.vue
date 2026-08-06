@@ -2,6 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Plus, Pencil, Trash2, Tag } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
+import EmptyState from '@/components/UI/EmptyState.vue';
 
 interface Category {
     id: number; name: string; slug: string; color: string; icon: string; articles_count: number;
@@ -28,15 +29,16 @@ function destroy(id: number, name: string) {
             </Link>
         </div>
 
-        <div class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
-            <div v-if="!categories.length" class="flex flex-col items-center justify-center py-16 text-center">
-                <Tag :size="24" :stroke-width="1.5" class="text-zinc-700 mb-3" />
-                <p class="text-[13px] text-zinc-600">No categories yet.</p>
-                <Link :href="route('admin.news.categories.create')" class="text-blue-400 text-[13px] font-semibold mt-2 hover:underline">Create one</Link>
-            </div>
+        <EmptyState v-if="!categories.length" :icon="Tag" title="No categories yet" description="Create your first category to organize articles.">
+            <template #action>
+                <Link :href="route('admin.news.categories.create')" class="text-blue-400 text-[13px] font-semibold hover:underline">Create one</Link>
+            </template>
+        </EmptyState>
 
-            <div v-for="cat in categories" :key="cat.id"
-                class="flex items-center gap-4 px-5 py-3.5 border-b border-zinc-800/50 last:border-0 hover:bg-white/[0.02]">
+        <div v-else class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+            <div v-for="(cat, i) in categories" :key="cat.id"
+                class="hc-hero-in flex items-center gap-4 px-5 py-3.5 border-b border-zinc-800/50 last:border-0 hover:bg-white/[0.02]"
+                :style="{ animationDelay: `${i * 30}ms` }">
                 <div class="w-3 h-3 rounded-full shrink-0" :style="{ backgroundColor: cat.color }" />
                 <div class="flex-1 min-w-0">
                     <p class="text-[14px] font-semibold text-zinc-100 truncate">{{ cat.name }}</p>

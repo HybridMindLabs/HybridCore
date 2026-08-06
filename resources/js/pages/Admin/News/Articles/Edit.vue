@@ -39,10 +39,14 @@ const form = useForm({
 <template>
     <Head :title="`Edit: ${article.title}`" />
     <AdminLayout :title="`Edit: ${article.title}`">
-        <div class="flex items-center gap-3 mb-5">
+        <div class="flex items-center justify-between mb-5">
             <Link :href="route('admin.news.articles.index')" class="flex items-center gap-1.5 text-[13px] text-zinc-500 hover:text-zinc-200 transition">
                 <ChevronLeft :size="14" :stroke-width="2" /> Articles
             </Link>
+            <span v-if="form.isDirty" class="flex items-center gap-1.5 text-amber-400 text-xs font-medium">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                Unsaved changes
+            </span>
         </div>
         <NewsArticleForm :form="form" :categories="categories" :tags="tags"
             :submit-route="route('admin.news.articles.update', article.id)" :upload-route="route('admin.news.media.upload')" method="put" submit-label="Save Changes" />
