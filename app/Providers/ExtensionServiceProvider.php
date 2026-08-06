@@ -32,6 +32,7 @@ use App\Support\CoreAbilities;
 use App\Support\CoreNavigation;
 use App\Support\CorePermissions;
 use App\Support\CoreWebhookBridge;
+use App\Support\CoreWebhookEvents;
 use App\Support\CoreWidgets;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -88,6 +89,7 @@ class ExtensionServiceProvider extends ServiceProvider
         // Core registrations first — extensions append after.
         $registry->permissions()->registerMany(CorePermissions::ALL);
         $registry->abilities()->registerMany(CoreAbilities::ALL);
+        $registry->webhookEvents()->registerMany(CoreWebhookEvents::ALL);
         CoreNavigation::register($registry->navigation());
         CoreWidgets::register($registry->widgets());
         CoreWebhookBridge::register($registry->hooks());

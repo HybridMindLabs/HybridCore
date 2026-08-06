@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { KeyRound, Trash2, Plus, Copy, CheckCircle2, RefreshCw } from '@lucide/vue';
+import { KeyRound, Trash2, Plus, Copy, CheckCircle2, RefreshCw, Info } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
 import EmptyState from '@/components/UI/EmptyState.vue';
+import Tooltip from '@/components/UI/Tooltip.vue';
 
 interface TokenRow {
     id: number;
@@ -22,7 +23,7 @@ interface AccountRow {
     created_at: string;
     tokens: TokenRow[];
 }
-interface AbilityDef { label: string; group: string }
+interface AbilityDef { label: string; group: string; description: string | null }
 
 const props = defineProps<{
     accounts: AccountRow[];
@@ -46,9 +47,9 @@ function dismissToken() {
 }
 
 const groupedAbilities = computed(() => {
-    const groups: Record<string, { key: string; label: string }[]> = {};
+    const groups: Record<string, { key: string; label: string; description: string | null }[]> = {};
     for (const [key, def] of Object.entries(props.available_abilities)) {
-        (groups[def.group] ??= []).push({ key, label: def.label });
+        (groups[def.group] ??= []).push({ key, label: def.label, description: def.description });
     }
     return groups;
 });
@@ -97,6 +98,16 @@ function destroyAccount(account: AccountRow) {
     <AdminLayout title="API Tokens">
         <PageHeader title="API Tokens" description="Admin-issued credentials for external integrations." :icon="KeyRound" />
 
+        <!-- How this works -->
+        <div class="hc-hero-in flex items-start gap-3 bg-blue-500/5 border border-blue-500/20 rounded-xl px-4 py-3 mb-5">
+            <Info :size="14" :stroke-width="1.75" class="text-blue-400 mt-0.5 shrink-0" />
+            <p class="text-xs text-zinc-400 leading-relaxed">
+                A <span class="text-zinc-200 font-medium">service account</span> represents one integration — a bot, script, or external dashboard.
+                Give each account multiple tokens instead of sharing one credential, so you can rotate or revoke a single token without breaking the others.
+                A token authenticates API requests with <code class="text-blue-400 font-mono">Authorization: Bearer &lt;token&gt;</code>, scoped to only the abilities you grant it.
+            </p>
+        </div>
+
         <!-- Plaintext-once banner -->
         <div
             v-if="plainToken"
@@ -124,6 +135,10 @@ function destroyAccount(account: AccountRow) {
 
             <!-- Accounts list -->
             <div class="flex flex-col gap-4">
+                <h2 v-if="accounts.length > 0" class="text-zinc-500 text-[11px] font-semibold uppercase tracking-wide">
+                    Service Accounts <span class="text-zinc-700">({{ accounts.length }})</span>
+                </h2>
+
                 <div v-if="accounts.length === 0" class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl">
                     <EmptyState
                         title="No service accounts yet"
@@ -162,6 +177,9 @@ function destroyAccount(account: AccountRow) {
                                 <label v-for="a in defs" :key="a.key" class="flex items-center gap-1.5 text-[11px] text-zinc-400">
                                     <input v-model="issueForm.abilities" type="checkbox" :value="a.key" class="rounded border-zinc-700" />
                                     {{ a.label }}
+                                    <Tooltip v-if="a.description" :text="a.description">
+                                        <Info :size="10" :stroke-width="2" class="text-zinc-700" />
+                                    </Tooltip>
                                 </label>
                             </template>
                         </div>
@@ -214,6 +232,9 @@ function destroyAccount(account: AccountRow) {
                             <label v-for="a in defs" :key="a.key" class="flex items-center gap-2 text-xs text-zinc-400">
                                 <input v-model="createForm.abilities" type="checkbox" :value="a.key" class="rounded border-zinc-700" />
                                 {{ a.label }}
+                                <Tooltip v-if="a.description" :text="a.description">
+                                    <Info :size="10" :stroke-width="2" class="text-zinc-700" />
+                                </Tooltip>
                             </label>
                         </div>
                     </div>

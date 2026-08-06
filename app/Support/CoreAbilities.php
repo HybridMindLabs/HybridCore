@@ -12,9 +12,17 @@ namespace App\Support;
  */
 class CoreAbilities
 {
-    /** @var array<string, array{label: string, group: string}> */
+    /** @var array<string, array{label: string, group: string, description: string}> */
     public const ALL = [
-        'notifications:read' => ['label' => 'Read Notifications', 'group' => 'notifications'],
-        'notifications:write' => ['label' => 'Manage Notifications', 'group' => 'notifications'],
+        'notifications:read' => [
+            'label' => 'Read Notifications',
+            'group' => 'notifications',
+            'description' => "List a user's notifications.",
+        ],
+        'notifications:write' => [
+            'label' => 'Manage Notifications',
+            'group' => 'notifications',
+            'description' => 'Mark notifications as read or delete them.',
+        ],
     ];
 }

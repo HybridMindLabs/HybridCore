@@ -8,7 +8,6 @@ use App\Models\WebhookDelivery;
 use App\Models\WebhookEndpoint;
 use App\Services\ActivityLogService;
 use App\Services\Extensions\Registries\WebhookEventRegistry;
-use App\Support\Hooks;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -34,10 +33,10 @@ class WebhookController extends Controller
         ]);
     }
 
-    /** @return array<int, string> Core Hooks:: plus every key an enabled extension registered via WebhookEventRegistry. */
+    /** @return array<string, array{label: string, group: string}> Every core Hooks:: event plus every key an enabled extension registered — both go through WebhookEventRegistry now, core registers at boot in ExtensionServiceProvider. */
     private function availableEvents(): array
     {
-        return array_values(array_unique([...Hooks::all(), ...array_keys($this->extensionEvents->all())]));
+        return $this->extensionEvents->all();
     }
 
     /**
@@ -73,7 +72,7 @@ class WebhookController extends Controller
             'name' => ['required', 'string', 'max:100'],
             'url' => ['required', 'url', 'max:500'],
             'events' => ['required', 'array', 'min:1'],
-            'events.*' => ['string', 'in:'.implode(',', $this->availableEvents())],
+            'events.*' => ['string', 'in:'.implode(',', array_keys($this->availableEvents()))],
         ];
     }
 

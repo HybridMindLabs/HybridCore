@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { Webhook, Trash2, Plus, Copy, CheckCircle2, RefreshCw, Send, ChevronDown, Redo2 } from '@lucide/vue';
+import { Webhook, Trash2, Plus, Copy, CheckCircle2, RefreshCw, Send, ChevronDown, Redo2, Info } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
@@ -28,10 +28,24 @@ interface EndpointRow {
     deliveries: DeliveryRow[];
 }
 
+interface EventDef { label: string; group: string }
+
 const props = defineProps<{
     endpoints: EndpointRow[];
-    available_events: string[];
+    available_events: Record<string, EventDef>;
 }>();
+
+const groupedEvents = computed(() => {
+    const groups: Record<string, { key: string; label: string }[]> = {};
+    for (const [key, def] of Object.entries(props.available_events)) {
+        (groups[def.group] ??= []).push({ key, label: def.label });
+    }
+    return groups;
+});
+
+function eventLabel(key: string): string {
+    return props.available_events[key]?.label ?? key;
+}
 
 const page = usePage<{ flash: { webhook_secret?: string | null } }>();
 const webhookSecret = computed(() => page.props.flash?.webhook_secret ?? null);
@@ -113,6 +127,17 @@ function destroyEndpoint(endpoint: EndpointRow) {
     <AdminLayout title="Webhooks">
         <PageHeader title="Webhooks" description="Deliver core events to external endpoints over HTTP." :icon="Webhook" />
 
+        <!-- How this works -->
+        <div class="hc-hero-in flex items-start gap-3 bg-blue-500/5 border border-blue-500/20 rounded-xl px-4 py-3 mb-5">
+            <Info :size="14" :stroke-width="1.75" class="text-blue-400 mt-0.5 shrink-0" />
+            <p class="text-xs text-zinc-400 leading-relaxed">
+                An active endpoint receives a signed <code class="text-blue-400 font-mono">POST</code> for each event it's subscribed to.
+                The body is signed with HMAC-SHA256 using the endpoint's secret — verify it against the
+                <code class="text-blue-400 font-mono">X-HybridCore-Signature</code> header before trusting the payload.
+                A failed delivery retries up to 3 times (after 10s, then 60s, then 5 minutes) before it's logged as failed and can be retried manually below.
+            </p>
+        </div>
+
         <!-- Plaintext-once secret banner -->
         <div
             v-if="webhookSecret"
@@ -140,6 +165,10 @@ function destroyEndpoint(endpoint: EndpointRow) {
 
             <!-- Endpoints list -->
             <div class="flex flex-col gap-4">
+                <h2 v-if="endpoints.length > 0" class="text-zinc-500 text-[11px] font-semibold uppercase tracking-wide">
+                    Endpoints <span class="text-zinc-700">({{ endpoints.length }})</span>
+                </h2>
+
                 <div v-if="endpoints.length === 0" class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl">
                     <EmptyState
                         title="No webhook endpoints yet"
@@ -185,10 +214,12 @@ function destroyEndpoint(endpoint: EndpointRow) {
                         <input v-model="editForm.name" type="text" placeholder="Name" class="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-blue-500/50" />
                         <input v-model="editForm.url" type="text" placeholder="https://example.com/hook" class="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-blue-500/50" />
                         <div class="flex flex-wrap gap-x-4 gap-y-1.5">
-                            <label v-for="event in props.available_events" :key="event" class="flex items-center gap-1.5 text-[11px] text-zinc-400">
-                                <input v-model="editForm.events" type="checkbox" :value="event" class="rounded border-zinc-700" />
-                                {{ event }}
-                            </label>
+                            <template v-for="(defs, group) in groupedEvents" :key="group">
+                                <label v-for="ev in defs" :key="ev.key" class="flex items-center gap-1.5 text-[11px] text-zinc-400">
+                                    <input v-model="editForm.events" type="checkbox" :value="ev.key" class="rounded border-zinc-700" />
+                                    {{ ev.label }}
+                                </label>
+                            </template>
                         </div>
                         <label class="flex items-center gap-1.5 text-[11px] text-zinc-400">
                             <input v-model="editForm.is_active" type="checkbox" class="rounded border-zinc-700" />
@@ -200,10 +231,11 @@ function destroyEndpoint(endpoint: EndpointRow) {
                         </div>
                     </form>
 
-                    <p class="text-zinc-600 text-[10px] font-mono truncate">{{ endpoint.events.join(', ') }}</p>
-                    <button type="button" class="flex items-center gap-1 text-zinc-600 text-[10px] hover:text-zinc-300 transition-colors" @click="toggleLog(endpoint.id)">
+                    <p class="text-zinc-500 text-[10px] truncate">{{ endpoint.events.map(eventLabel).join(', ') }}</p>
+                    <button type="button" class="flex items-center gap-1 text-zinc-600 text-[10px] hover:text-zinc-300 transition-colors mt-1" @click="toggleLog(endpoint.id)">
                         {{ endpoint.last_triggered_at ? `Last triggered ${endpoint.last_triggered_at}` : 'Never triggered' }}
                         <span v-if="endpoint.last_response_code"> · HTTP {{ endpoint.last_response_code }}</span>
+                        · View delivery log
                         <ChevronDown :size="10" :stroke-width="2" class="transition-transform" :class="{ 'rotate-180': expandedLog === endpoint.id }" />
                     </button>
 
@@ -214,7 +246,7 @@ function destroyEndpoint(endpoint: EndpointRow) {
                             :key="delivery.id"
                             class="flex items-center justify-between px-2 py-1 rounded bg-zinc-900/40 text-[10px]"
                         >
-                            <span class="text-zinc-400 font-mono truncate">{{ delivery.event }}</span>
+                            <span class="text-zinc-400 truncate">{{ eventLabel(delivery.event) }}</span>
                             <span class="flex items-center gap-2 shrink-0">
                                 <span v-if="delivery.response_code" class="text-zinc-600">HTTP {{ delivery.response_code }}</span>
                                 <span :class="delivery.success ? 'text-emerald-400' : 'text-red-400'">{{ delivery.success ? 'OK' : 'Failed' }}</span>
@@ -251,11 +283,16 @@ function destroyEndpoint(endpoint: EndpointRow) {
 
                     <div>
                         <p class="text-zinc-500 text-[10px] font-semibold uppercase tracking-wide mb-1.5">Events</p>
-                        <div class="flex flex-col gap-1 max-h-48 overflow-y-auto">
-                            <label v-for="event in available_events" :key="event" class="flex items-center gap-2 text-xs text-zinc-400">
-                                <input v-model="createForm.events" type="checkbox" :value="event" class="rounded border-zinc-700" />
-                                {{ event }}
-                            </label>
+                        <div class="flex flex-col gap-2.5 max-h-64 overflow-y-auto">
+                            <div v-for="(defs, group) in groupedEvents" :key="group">
+                                <p class="text-zinc-600 text-[9px] font-semibold uppercase tracking-wide mb-1">{{ group }}</p>
+                                <div class="flex flex-col gap-1">
+                                    <label v-for="ev in defs" :key="ev.key" class="flex items-center gap-2 text-xs text-zinc-400">
+                                        <input v-model="createForm.events" type="checkbox" :value="ev.key" class="rounded border-zinc-700" />
+                                        {{ ev.label }}
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <p v-if="createForm.errors.events" class="text-red-400 text-[11px]">{{ createForm.errors.events }}</p>
