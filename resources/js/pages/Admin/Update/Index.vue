@@ -58,7 +58,7 @@ async function checkForUpdates() {
 }
 
 async function applyUpdate() {
-    if (!confirm('Apply update? This will run git pull, composer install, and php artisan migrate.')) return;
+    if (!confirm('Apply update? The site goes into maintenance mode while it pulls, rebuilds, and migrates — then comes back up automatically.')) return;
     applying.value = true;
     applyLog.value = [];
     error.value = '';
@@ -66,6 +66,12 @@ async function applyUpdate() {
         const res = await fetch(route('admin.updates.apply'), { method: 'POST', headers: { 'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '', 'Accept': 'application/json' } });
         const data = await res.json();
         applyLog.value = data.log ?? [];
+
+        if (!res.ok || data.success === false) {
+            error.value = data.message || 'Update failed. Check the log below and the server logs.';
+            return;
+        }
+
         if (data.commit) currentCommit.value = data.commit;
         applied.value = true;
         commits.value = [];
@@ -275,13 +281,25 @@ async function applyUpdate() {
                 </div>
                 <div class="p-3 flex flex-col gap-1.5">
                     <div
-                        v-for="(cmd, i) in ['git pull', 'composer install', 'php artisan migrate', 'cache:clear']"
+                        v-for="(cmd, i) in [
+                            'maintenance mode on',
+                            'git pull --ff-only',
+                            'fix folder permissions',
+                            'composer install',
+                            'php artisan migrate',
+                            'npm ci && npm run build',
+                            'restart SSR renderer (if enabled)',
+                            'optimize:clear',
+                            'queue:restart',
+                            'maintenance mode off',
+                        ]"
                         :key="i"
                         class="flex items-center gap-2"
                     >
                         <span class="w-4 h-4 rounded-full bg-zinc-800 border border-zinc-700/60 text-[9px] font-bold text-zinc-500 flex items-center justify-center shrink-0">{{ i + 1 }}</span>
                         <code class="text-xs font-mono text-zinc-400">{{ cmd }}</code>
                     </div>
+                    <p class="text-[11px] text-zinc-700 mt-1">If the asset rebuild fails, the previous working bundle is restored automatically — the site never comes back with broken or missing assets.</p>
                 </div>
             </div>
 

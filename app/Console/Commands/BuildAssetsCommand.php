@@ -17,8 +17,13 @@ class BuildAssetsCommand extends Command
         if ($this->option('sync')) {
             $this->info('Building assets synchronously…');
 
-            $job = new RebuildAssetsJob;
-            $job->handle();
+            try {
+                (new RebuildAssetsJob)->handle();
+            } catch (\Throwable $e) {
+                $this->error($e->getMessage());
+
+                return self::FAILURE;
+            }
 
             $this->info('Done.');
 
