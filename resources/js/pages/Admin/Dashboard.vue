@@ -183,8 +183,37 @@ let donutChart: Highcharts.Chart | null = null;
 function donutOptions(): Highcharts.Options {
     const roles = props.stats?.role_distribution ?? [];
     const data = roles.map(r => ({ name: r.name, y: r.count, color: r.color }));
+    const total = roles.reduce((sum, r) => sum + r.count, 0);
+
     return {
-        chart: { type: 'pie', backgroundColor: C.bg(), height: 260, animation: { duration: 500 }, style: { fontFamily: 'inherit' } },
+        chart: {
+            type: 'pie', backgroundColor: C.bg(), height: 260, animation: { duration: 500 }, style: { fontFamily: 'inherit' },
+            events: {
+                // Highcharts leaves the donut's hole empty by default — this
+                // draws the total straight into it instead of wasting the space.
+                render(): void {
+                    const chart = this as unknown as Highcharts.Chart & { hcCenterLabel?: Highcharts.SVGElement };
+                    const series = chart.series[0] as unknown as { center?: number[] } | undefined;
+                    if (!series?.center) return;
+
+                    const x = chart.plotLeft + series.center[0];
+                    const y = chart.plotTop + series.center[1];
+
+                    if (!chart.hcCenterLabel) {
+                        chart.hcCenterLabel = chart.renderer.text('', 0, 0, true)
+                            .css({ pointerEvents: 'none' })
+                            .add();
+                    }
+                    chart.hcCenterLabel.attr({
+                        x, y,
+                        text: `<div style="transform:translate(-50%,-50%);text-align:center;line-height:1.15">`
+                            + `<div style="font-size:20px;font-weight:800;color:${dark.value ? '#f4f4f5' : '#18181b'}">${total.toLocaleString()}</div>`
+                            + `<div style="font-size:10px;color:#71717a;margin-top:2px;letter-spacing:.05em;text-transform:uppercase">users</div>`
+                            + `</div>`,
+                    });
+                },
+            },
+        },
         title: { text: undefined },
         credits: { enabled: false },
         tooltip: {
@@ -200,7 +229,11 @@ function donutOptions(): Highcharts.Options {
         plotOptions: {
             pie: {
                 innerSize: '60%',
-                dataLabels: { enabled: false },
+                dataLabels: {
+                    enabled: true, distance: -28, format: '{point.percentage:.0f}%',
+                    style: { color: '#fff', fontSize: '10px', fontWeight: '700', textOutline: 'none' },
+                    filter: { property: 'percentage', operator: '>', value: 6 },
+                },
                 showInLegend: true,
                 borderWidth: 0,
                 states: { hover: { brightness: 0.08 } },
@@ -308,7 +341,9 @@ function mkChart(el: HTMLElement | null, opts: Highcharts.Options): Highcharts.C
 }
 
 function rebuildAll() {
-    areaChart?.destroy();  areaChart  = mkChart(areaRef.value,  areaOptions());
+    if (props.stats?.registrations_last_30_days?.length) {
+        areaChart?.destroy(); areaChart = mkChart(areaRef.value, areaOptions());
+    }
     donutChart?.destroy(); donutChart = mkChart(donutRef.value, donutOptions());
     if (props.stats?.top_games?.length) {
         barChart?.destroy(); barChart = mkChart(barRef.value, barOptions());
@@ -332,9 +367,9 @@ watch(dark, () => rebuildAll());
 
 // ── Quick links ───────────────────────────────────────────────────────────────
 const quickLinks = [
-    { label: 'Users',      route: 'admin.users.index',      icon: Users      },
-    { label: 'Extensions', route: 'admin.extensions.index', icon: Puzzle     },
-    { label: 'Themes',     route: 'admin.themes.index',     icon: Paintbrush },
+    { label: 'Users',      desc: 'Manage accounts, roles & bans',   route: 'admin.users.index',      icon: Users,      color: C.blue,    bg: 'rgba(59,130,246,0.08)' },
+    { label: 'Extensions', desc: 'Install & configure add-ons',     route: 'admin.extensions.index', icon: Puzzle,     color: C.violet,  bg: 'rgba(139,92,246,0.08)' },
+    { label: 'Themes',     desc: 'Customise the public site look',  route: 'admin.themes.index',     icon: Paintbrush, color: C.amber,   bg: 'rgba(245,158,11,0.08)' },
 ];
 </script>
 
@@ -372,9 +407,9 @@ const quickLinks = [
         <!-- KPI grid -->
         <div v-if="kpis.length" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-6">
             <div v-for="(k, i) in kpis" :key="k.label"
-                class="hc-dash-in hc-dash-glow rounded-xl border border-zinc-800/70 bg-[#111113] px-4 py-3.5 flex items-center gap-3.5
-                       transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5"
-                :style="{ animationDelay: `${i * 40}ms`, '--hc-glow': k.color }"
+                class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] px-4 py-3.5 flex items-center gap-3.5
+                       transition-[border-color,transform] duration-200 hover:border-zinc-700/70 hover:-translate-y-0.5"
+                :style="{ animationDelay: `${i * 40}ms` }"
             >
                 <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
                     :style="{ backgroundColor: k.bg }">
@@ -396,7 +431,7 @@ const quickLinks = [
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
 
             <!-- Registrations / logins area chart -->
-            <div class="hc-dash-in lg:col-span-2 rounded-xl border border-zinc-800/70 bg-[#111113] p-5 transition-[border-color,box-shadow] duration-200 hc-dash-glow" style="animation-delay: 120ms; --hc-glow: #3b82f6">
+            <div class="hc-dash-in lg:col-span-2 rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 120ms">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
                         <Activity :size="13" :stroke-width="2" class="text-blue-400" />
@@ -414,11 +449,15 @@ const quickLinks = [
                         {{ registrationsTrend.pct }}% vs prior week
                     </span>
                 </div>
-                <div ref="areaRef" />
+                <div v-if="stats?.registrations_last_30_days?.length" ref="areaRef" />
+                <div v-else class="flex flex-col items-center justify-center gap-2 py-16 text-center">
+                    <Activity :size="22" :stroke-width="1.5" class="text-zinc-700" />
+                    <p class="text-zinc-500 text-[12px]">No signups in the last 30 days.</p>
+                </div>
             </div>
 
             <!-- User breakdown column chart -->
-            <div class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5 transition-[border-color,box-shadow] duration-200 hc-dash-glow" style="animation-delay: 160ms; --hc-glow: #8b5cf6">
+            <div class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 160ms">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center">
                         <BarChart2 :size="13" :stroke-width="2" class="text-violet-400" />
@@ -439,7 +478,7 @@ const quickLinks = [
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
 
             <!-- Role distribution donut -->
-            <div class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5 transition-[border-color,box-shadow] duration-200 hc-dash-glow" style="animation-delay: 200ms; --hc-glow: #f59e0b">
+            <div class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 200ms">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center">
                         <PieChart :size="13" :stroke-width="2" class="text-amber-400" />
@@ -460,7 +499,7 @@ const quickLinks = [
             </div>
 
             <!-- Top games bar -->
-            <div class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5 transition-[border-color,box-shadow] duration-200 hc-dash-glow" style="animation-delay: 240ms; --hc-glow: #10b981">
+            <div class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 240ms">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                         <Server :size="13" :stroke-width="2" class="text-emerald-400" />
@@ -486,17 +525,21 @@ const quickLinks = [
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
 
             <!-- Engagement counters -->
-            <div v-if="stats?.engagement" class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5 transition-[border-color,box-shadow] duration-200 hc-dash-glow" style="animation-delay: 280ms; --hc-glow: #8b5cf6">
+            <div class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 280ms">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center">
                         <Activity :size="13" :stroke-width="2" class="text-violet-400" />
                     </div>
                     <div>
-                        <p class="text-[13px] font-black text-zinc-100">Community Engagement</p>
+                        <p class="text-[13px] font-black text-zinc-100 flex items-center gap-1.5">
+                            Community Engagement
+                            <HelpTooltip text="Totals from reviews, comments and follows — only counted if that feature is enabled." />
+                        </p>
                         <p class="text-[11px] text-zinc-600">Totals, with the last 7 days in green</p>
                     </div>
                 </div>
-                <div class="grid grid-cols-3 gap-3">
+                <div v-if="stats?.engagement && [stats.engagement.reviews, stats.engagement.comments, stats.engagement.follows].some(v => v !== null)"
+                    class="grid grid-cols-3 gap-3">
                     <div v-for="item in [
                         { label: 'Reviews',  total: stats.engagement.reviews,  week: stats.engagement.reviews_week },
                         { label: 'Comments', total: stats.engagement.comments, week: stats.engagement.comments_week },
@@ -507,20 +550,27 @@ const quickLinks = [
                         <p v-if="item.week" class="text-[11px] font-semibold text-emerald-400 mt-1">+{{ item.week }} this week</p>
                     </div>
                 </div>
+                <div v-else class="flex flex-col items-center justify-center gap-2 py-10 text-center">
+                    <Activity :size="22" :stroke-width="1.5" class="text-zinc-700" />
+                    <p class="text-zinc-500 text-[12px]">No engagement data — reviews, comments and follows aren't enabled yet.</p>
+                </div>
             </div>
 
             <!-- Most clicked servers -->
-            <div v-if="stats?.top_clicked_servers?.length" class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5 transition-[border-color,box-shadow] duration-200 hc-dash-glow" style="animation-delay: 320ms; --hc-glow: #f59e0b">
+            <div class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 320ms">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center">
                         <MousePointerClick :size="13" :stroke-width="2" class="text-amber-400" />
                     </div>
                     <div>
-                        <p class="text-[13px] font-black text-zinc-100">Most Clicked Servers</p>
+                        <p class="text-[13px] font-black text-zinc-100 flex items-center gap-1.5">
+                            Most Clicked Servers
+                            <HelpTooltip text="Servers ranked by how many times visitors clicked 'Connect' on the public site." />
+                        </p>
                         <p class="text-[11px] text-zinc-600">Connect clicks, last 30 days</p>
                     </div>
                 </div>
-                <div class="flex flex-col gap-2">
+                <div v-if="stats?.top_clicked_servers?.length" class="flex flex-col gap-2">
                     <div v-for="(srv, i) in stats.top_clicked_servers" :key="srv.name"
                         class="flex items-center gap-3">
                         <span class="text-[11px] font-black tabular-nums w-5 text-zinc-600">{{ i + 1 }}.</span>
@@ -532,20 +582,27 @@ const quickLinks = [
                         <span class="text-[12px] font-bold tabular-nums text-zinc-400 w-10 text-right shrink-0">{{ srv.clicks }}</span>
                     </div>
                 </div>
+                <div v-else class="flex flex-col items-center justify-center gap-2 py-10 text-center">
+                    <MousePointerClick :size="22" :stroke-width="1.5" class="text-zinc-700" />
+                    <p class="text-zinc-500 text-[12px]">No connect clicks recorded yet.</p>
+                </div>
             </div>
         </div>
 
         <!-- Quick links -->
-        <div class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-4 max-w-sm" style="animation-delay: 360ms">
+        <div class="hc-dash-in mb-2" style="animation-delay: 360ms">
             <p class="text-zinc-400 text-[11px] uppercase tracking-widest font-bold mb-2">Quick links</p>
-            <div class="flex flex-col gap-0.5">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <Link v-for="link in quickLinks" :key="link.route" :href="route(link.route)"
-                    class="flex items-center justify-between px-2.5 py-2 rounded-lg text-sm text-zinc-500 hover:text-zinc-100 hover:bg-zinc-900/60 transition-colors group">
-                    <div class="flex items-center gap-2.5">
-                        <component :is="link.icon" :size="13" :stroke-width="1.75" class="text-zinc-700 group-hover:text-blue-400 transition-colors" />
-                        {{ link.label }}
+                    class="group flex items-center gap-3 rounded-xl border border-zinc-800/70 bg-[#111113] p-4 hover:border-zinc-700/70 transition-colors">
+                    <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" :style="{ backgroundColor: link.bg }">
+                        <component :is="link.icon" :size="16" :stroke-width="1.75" :style="{ color: link.color }" />
                     </div>
-                    <ArrowRight :size="12" :stroke-width="2" class="opacity-0 group-hover:opacity-100 transition-opacity text-blue-400" />
+                    <div class="min-w-0 flex-1">
+                        <p class="text-zinc-100 text-[13px] font-semibold">{{ link.label }}</p>
+                        <p class="text-zinc-600 text-[11px] truncate">{{ link.desc }}</p>
+                    </div>
+                    <ArrowRight :size="14" :stroke-width="2" class="text-zinc-700 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all shrink-0" />
                 </Link>
             </div>
         </div>
@@ -562,10 +619,6 @@ const quickLinks = [
 }
 .hc-dash-in {
     animation: hc-dash-in 0.4s ease-out both;
-}
-.hc-dash-glow:hover {
-    border-color: color-mix(in srgb, var(--hc-glow) 45%, transparent);
-    box-shadow: 0 8px 24px -10px color-mix(in srgb, var(--hc-glow) 45%, transparent);
 }
 @media (prefers-reduced-motion: reduce) {
     .hc-dash-in { animation: none; }

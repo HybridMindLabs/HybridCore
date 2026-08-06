@@ -198,9 +198,9 @@ function logout() {
                         :key="item.url"
                         :href="item.url"
                         :aria-current="isActive(item) ? 'page' : undefined"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-[color,background-color,box-shadow] duration-200"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
                         :class="isActive(item)
-                            ? 'text-blue-400 bg-blue-500/10 border-l-2 border-blue-500 shadow-[inset_0_0_0_1px_rgba(59,130,246,0.12)]'
+                            ? 'text-blue-400 bg-blue-500/10 border-l-2 border-blue-500'
                             : 'text-zinc-500 hover:text-zinc-100 hover:bg-zinc-900/60 border-l-2 border-transparent'"
                     >
                         <component :is="resolveIcon(item.icon)" :size="16" :stroke-width="1.75" class="shrink-0" />
