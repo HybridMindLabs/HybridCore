@@ -50,6 +50,7 @@ return [
         'communication' => 'Комуникация',
         'analytics' => 'Анализи',
         'system' => 'Система',
+        'developer' => 'За разработчици',
         'extensions' => 'Разширения',
     ],
     'breadcrumb' => 'Навигационен път',

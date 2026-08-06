@@ -8,6 +8,7 @@ import {
 import type { Component } from 'vue';
 import { ref, computed, watch, nextTick } from 'vue';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
+import { useCommandPalette } from '@/composables/useCommandPalette';
 
 interface NavItem { label: string; url: string; icon: string }
 interface NavSection { heading: string | null; items: NavItem[] }
@@ -22,7 +23,7 @@ const iconMap: Record<string, Component> = {
 };
 function resolveIcon(name: string): Component { return iconMap[name] ?? Circle; }
 
-const open = ref(false);
+const { open, show: openPalette, hide } = useCommandPalette();
 const query = ref('');
 const active = ref(0);
 const inputRef = ref<HTMLInputElement | null>(null);
@@ -44,12 +45,11 @@ const filtered = computed(() => {
 watch(filtered, () => { active.value = 0; });
 
 function show() {
-    open.value = true;
+    openPalette();
     query.value = '';
     active.value = 0;
     nextTick(() => inputRef.value?.focus());
 }
-function hide() { open.value = false; }
 function go(a: Action | undefined) {
     if (!a) return;
     hide();
