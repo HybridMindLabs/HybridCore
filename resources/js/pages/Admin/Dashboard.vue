@@ -2,11 +2,12 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import ExtensionSlot from '@/components/Core/ExtensionSlot.vue';
+import HelpTooltip from '@/components/UI/HelpTooltip.vue';
 import {
     Users, Server, MessageSquare, ShieldBan, BadgeCheck,
-    TrendingUp, UserPlus, ArrowRight, Puzzle, Paintbrush,
+    TrendingUp, TrendingDown, UserPlus, ArrowRight, Puzzle, Paintbrush,
     Activity, BarChart2, PieChart, Wifi, AlertTriangle, Power,
-    MousePointerClick,
+    MousePointerClick, Gamepad2, Shapes,
 } from '@lucide/vue';
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import type Highcharts from 'highcharts';
@@ -77,16 +78,30 @@ const kpis = computed(() => {
     const s = props.stats;
     if (!s) return [];
     const rows = [
-        { label: 'Total users',    value: s.total_users,      icon: Users,       color: C.blue,    bg: 'rgba(59,130,246,0.08)'   },
-        { label: 'New today',      value: s.new_users_today,  icon: UserPlus,    color: C.emerald, bg: 'rgba(16,185,129,0.08)'   },
-        { label: 'This week',      value: s.new_users_week,   icon: TrendingUp,  color: C.violet,  bg: 'rgba(139,92,246,0.08)'   },
-        { label: 'Banned',         value: s.banned_users,     icon: ShieldBan,   color: C.rose,    bg: 'rgba(244,63,94,0.08)'    },
-        { label: 'Verified',       value: s.verified_users,   icon: BadgeCheck,  color: C.cyan,    bg: 'rgba(6,182,212,0.08)'    },
+        { label: 'Total users',    value: s.total_users,      icon: Users,       color: C.blue,    bg: 'rgba(59,130,246,0.08)', help: 'Every registered account, including banned and unverified ones.' },
+        { label: 'New today',      value: s.new_users_today,  icon: UserPlus,    color: C.emerald, bg: 'rgba(16,185,129,0.08)', help: 'Accounts created since midnight, server time.' },
+        { label: 'This week',      value: s.new_users_week,   icon: TrendingUp,  color: C.violet,  bg: 'rgba(139,92,246,0.08)', help: 'Accounts created in the last 7 days.' },
+        { label: 'Banned',         value: s.banned_users,     icon: ShieldBan,   color: C.rose,    bg: 'rgba(244,63,94,0.08)',  help: 'Accounts currently under a ban — lifted bans are not counted.' },
+        { label: 'Verified',       value: s.verified_users,   icon: BadgeCheck,  color: C.cyan,    bg: 'rgba(6,182,212,0.08)',  help: 'Accounts with a confirmed email address.' },
     ];
-    if (s.servers_total !== null)  rows.push({ label: 'Servers',  value: s.servers_total,  icon: Server,         color: C.amber,   bg: 'rgba(245,158,11,0.08)'  });
-    if (s.servers_online !== null) rows.push({ label: 'Online',   value: s.servers_online, icon: Wifi,           color: C.emerald, bg: 'rgba(16,185,129,0.08)'  });
-    if (s.total_messages !== null) rows.push({ label: 'Messages', value: s.total_messages, icon: MessageSquare,  color: C.blue,    bg: 'rgba(59,130,246,0.08)'  });
+    if (s.servers_total !== null)  rows.push({ label: 'Servers',  value: s.servers_total,  icon: Server,         color: C.amber,   bg: 'rgba(245,158,11,0.08)', help: 'Every game server registered on the platform.' });
+    if (s.servers_online !== null) rows.push({ label: 'Online',   value: s.servers_online, icon: Wifi,           color: C.emerald, bg: 'rgba(16,185,129,0.08)', help: 'Servers that answered a status query on the last check.' });
+    if (s.total_messages !== null) rows.push({ label: 'Messages', value: s.total_messages, icon: MessageSquare,  color: C.blue,    bg: 'rgba(59,130,246,0.08)', help: 'Total private messages sent between members.' });
     return rows;
+});
+
+// ── Insight text (registrations vs the prior week) ────────────────────────────
+// Pure client-side comparison of data already on the page — no extra request.
+const registrationsTrend = computed(() => {
+    const points = props.stats?.registrations_last_30_days ?? [];
+    if (points.length < 14) return null;
+
+    const recent = points.slice(-7).reduce((sum, d) => sum + d.count, 0);
+    const prior = points.slice(-14, -7).reduce((sum, d) => sum + d.count, 0);
+    if (prior === 0) return recent > 0 ? { pct: 100, up: true } : null;
+
+    const pct = Math.round(((recent - prior) / prior) * 100);
+    return { pct: Math.abs(pct), up: pct >= 0 };
 });
 
 // ── Chart: area (registrations + logins) ─────────────────────────────────────
@@ -356,8 +371,11 @@ const quickLinks = [
 
         <!-- KPI grid -->
         <div v-if="kpis.length" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-6">
-            <div v-for="k in kpis" :key="k.label"
-                class="rounded-xl border border-zinc-800/70 bg-[#111113] px-4 py-3.5 flex items-center gap-3.5 hover:border-zinc-700/70 transition-colors">
+            <div v-for="(k, i) in kpis" :key="k.label"
+                class="hc-dash-in hc-dash-glow rounded-xl border border-zinc-800/70 bg-[#111113] px-4 py-3.5 flex items-center gap-3.5
+                       transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5"
+                :style="{ animationDelay: `${i * 40}ms`, '--hc-glow': k.color }"
+            >
                 <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
                     :style="{ backgroundColor: k.bg }">
                     <component :is="k.icon" :size="16" :stroke-width="1.8" :style="{ color: k.color }" />
@@ -366,7 +384,10 @@ const quickLinks = [
                     <p class="text-[22px] font-black leading-none" :style="{ color: k.color }">
                         {{ k.value?.toLocaleString() ?? '—' }}
                     </p>
-                    <p class="text-[11px] font-medium text-zinc-500 mt-0.5 truncate">{{ k.label }}</p>
+                    <p class="text-[11px] font-medium text-zinc-500 mt-0.5 truncate flex items-center gap-1">
+                        {{ k.label }}
+                        <HelpTooltip :text="k.help" />
+                    </p>
                 </div>
             </div>
         </div>
@@ -375,27 +396,38 @@ const quickLinks = [
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
 
             <!-- Registrations / logins area chart -->
-            <div class="lg:col-span-2 rounded-xl border border-zinc-800/70 bg-[#111113] p-5">
+            <div class="hc-dash-in lg:col-span-2 rounded-xl border border-zinc-800/70 bg-[#111113] p-5 transition-[border-color,box-shadow] duration-200 hc-dash-glow" style="animation-delay: 120ms; --hc-glow: #3b82f6">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
                         <Activity :size="13" :stroke-width="2" class="text-blue-400" />
                     </div>
-                    <div>
-                        <p class="text-[13px] font-black text-zinc-100">Registrations &amp; Logins</p>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-[13px] font-black text-zinc-100 flex items-center gap-1.5">
+                            Registrations &amp; Logins
+                            <HelpTooltip text="New account signups vs. successful logins, one point per day." />
+                        </p>
                         <p class="text-[11px] text-zinc-600">Last 30 days</p>
                     </div>
+                    <span v-if="registrationsTrend" class="flex items-center gap-1 text-[11px] font-bold shrink-0"
+                        :class="registrationsTrend.up ? 'text-emerald-400' : 'text-red-400'">
+                        <component :is="registrationsTrend.up ? TrendingUp : TrendingDown" :size="12" :stroke-width="2.5" />
+                        {{ registrationsTrend.pct }}% vs prior week
+                    </span>
                 </div>
                 <div ref="areaRef" />
             </div>
 
             <!-- User breakdown column chart -->
-            <div class="rounded-xl border border-zinc-800/70 bg-[#111113] p-5">
+            <div class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5 transition-[border-color,box-shadow] duration-200 hc-dash-glow" style="animation-delay: 160ms; --hc-glow: #8b5cf6">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center">
                         <BarChart2 :size="13" :stroke-width="2" class="text-violet-400" />
                     </div>
                     <div>
-                        <p class="text-[13px] font-black text-zinc-100">User Status</p>
+                        <p class="text-[13px] font-black text-zinc-100 flex items-center gap-1.5">
+                            User Status
+                            <HelpTooltip text="Every user split into verified, unverified, or banned." />
+                        </p>
                         <p class="text-[11px] text-zinc-600">Verified / unverified / banned</p>
                     </div>
                 </div>
@@ -407,31 +439,45 @@ const quickLinks = [
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
 
             <!-- Role distribution donut -->
-            <div v-if="stats?.role_distribution?.length" class="rounded-xl border border-zinc-800/70 bg-[#111113] p-5">
+            <div class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5 transition-[border-color,box-shadow] duration-200 hc-dash-glow" style="animation-delay: 200ms; --hc-glow: #f59e0b">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center">
                         <PieChart :size="13" :stroke-width="2" class="text-amber-400" />
                     </div>
                     <div>
-                        <p class="text-[13px] font-black text-zinc-100">Roles Distribution</p>
+                        <p class="text-[13px] font-black text-zinc-100 flex items-center gap-1.5">
+                            Roles Distribution
+                            <HelpTooltip text="Users grouped by their primary role. Users with no role assigned are excluded." />
+                        </p>
                         <p class="text-[11px] text-zinc-600">Users by primary role</p>
                     </div>
                 </div>
-                <div ref="donutRef" />
+                <div v-if="stats?.role_distribution?.length" ref="donutRef" />
+                <div v-else class="flex flex-col items-center justify-center gap-2 py-14 text-center">
+                    <Shapes :size="22" :stroke-width="1.5" class="text-zinc-700" />
+                    <p class="text-zinc-500 text-[12px]">No roles assigned to any user yet.</p>
+                </div>
             </div>
 
             <!-- Top games bar -->
-            <div v-if="stats?.top_games?.length" class="rounded-xl border border-zinc-800/70 bg-[#111113] p-5">
+            <div class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5 transition-[border-color,box-shadow] duration-200 hc-dash-glow" style="animation-delay: 240ms; --hc-glow: #10b981">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                         <Server :size="13" :stroke-width="2" class="text-emerald-400" />
                     </div>
                     <div>
-                        <p class="text-[13px] font-black text-zinc-100">Top Games</p>
+                        <p class="text-[13px] font-black text-zinc-100 flex items-center gap-1.5">
+                            Top Games
+                            <HelpTooltip text="The games with the most registered servers on this platform." />
+                        </p>
                         <p class="text-[11px] text-zinc-600">Servers per game</p>
                     </div>
                 </div>
-                <div ref="barRef" />
+                <div v-if="stats?.top_games?.length" ref="barRef" />
+                <div v-else class="flex flex-col items-center justify-center gap-2 py-14 text-center">
+                    <Gamepad2 :size="22" :stroke-width="1.5" class="text-zinc-700" />
+                    <p class="text-zinc-500 text-[12px]">No games yet — add one in Servers → Games.</p>
+                </div>
             </div>
 
         </div>
@@ -440,7 +486,7 @@ const quickLinks = [
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
 
             <!-- Engagement counters -->
-            <div v-if="stats?.engagement" class="rounded-xl border border-zinc-800/70 bg-[#111113] p-5">
+            <div v-if="stats?.engagement" class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5 transition-[border-color,box-shadow] duration-200 hc-dash-glow" style="animation-delay: 280ms; --hc-glow: #8b5cf6">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center">
                         <Activity :size="13" :stroke-width="2" class="text-violet-400" />
@@ -464,7 +510,7 @@ const quickLinks = [
             </div>
 
             <!-- Most clicked servers -->
-            <div v-if="stats?.top_clicked_servers?.length" class="rounded-xl border border-zinc-800/70 bg-[#111113] p-5">
+            <div v-if="stats?.top_clicked_servers?.length" class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5 transition-[border-color,box-shadow] duration-200 hc-dash-glow" style="animation-delay: 320ms; --hc-glow: #f59e0b">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center">
                         <MousePointerClick :size="13" :stroke-width="2" class="text-amber-400" />
@@ -490,7 +536,7 @@ const quickLinks = [
         </div>
 
         <!-- Quick links -->
-        <div class="rounded-xl border border-zinc-800/70 bg-[#111113] p-4 max-w-sm">
+        <div class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-4 max-w-sm" style="animation-delay: 360ms">
             <p class="text-zinc-400 text-[11px] uppercase tracking-widest font-bold mb-2">Quick links</p>
             <div class="flex flex-col gap-0.5">
                 <Link v-for="link in quickLinks" :key="link.route" :href="route(link.route)"
@@ -508,3 +554,20 @@ const quickLinks = [
 
     </AdminLayout>
 </template>
+
+<style scoped>
+@keyframes hc-dash-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.hc-dash-in {
+    animation: hc-dash-in 0.4s ease-out both;
+}
+.hc-dash-glow:hover {
+    border-color: color-mix(in srgb, var(--hc-glow) 45%, transparent);
+    box-shadow: 0 8px 24px -10px color-mix(in srgb, var(--hc-glow) 45%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+    .hc-dash-in { animation: none; }
+}
+</style>

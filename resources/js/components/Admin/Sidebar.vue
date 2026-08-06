@@ -198,9 +198,9 @@ function logout() {
                         :key="item.url"
                         :href="item.url"
                         :aria-current="isActive(item) ? 'page' : undefined"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-[color,background-color,box-shadow] duration-200"
                         :class="isActive(item)
-                            ? 'text-blue-400 bg-blue-500/10 border-l-2 border-blue-500'
+                            ? 'text-blue-400 bg-blue-500/10 border-l-2 border-blue-500 shadow-[inset_0_0_0_1px_rgba(59,130,246,0.12)]'
                             : 'text-zinc-500 hover:text-zinc-100 hover:bg-zinc-900/60 border-l-2 border-transparent'"
                     >
                         <component :is="resolveIcon(item.icon)" :size="16" :stroke-width="1.75" class="shrink-0" />
@@ -236,7 +236,11 @@ function logout() {
                 <LogOut :size="16" :stroke-width="1.75" class="shrink-0" />
                 Sign out
             </button>
-            <p class="text-zinc-600 text-[10px] font-mono px-3 pt-1">v0.9.0-dev</p>
+            <Link
+                :href="route('admin.updates.index')"
+                title="View updates &amp; changelog information"
+                class="text-zinc-600 hover:text-zinc-300 text-[10px] font-mono px-3 pt-1 transition-colors w-fit"
+            >v0.9.0-dev</Link>
         </div>
 
     </aside>
