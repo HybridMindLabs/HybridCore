@@ -13,7 +13,7 @@ interface Counts { settings: number; extensions: number; themes: number; pages: 
 interface StoredBackup { filename: string; type: 'json' | 'sql'; size_kb: number; created_at: string }
 interface Schedule { backup_schedule: 'off' | 'daily' | 'weekly' | 'monthly'; backup_time: string; backup_retention: number; last_run_at: string | null }
 
-const props = defineProps<{ counts: Counts; backups: StoredBackup[]; mysqldump_available: boolean; schedule: Schedule }>();
+const props = defineProps<{ counts: Counts; backups: StoredBackup[]; backups_total: number; mysqldump_available: boolean; schedule: Schedule }>();
 
 const scheduleForm = useForm({
     backup_schedule: props.schedule.backup_schedule,
@@ -23,6 +23,19 @@ const scheduleForm = useForm({
 
 function submitSchedule() {
     scheduleForm.put(route('admin.backup.schedule'));
+}
+
+// The full-backup export is a plain file download (Content-Disposition:
+// attachment), so the browser never navigates and Inertia never re-renders —
+// without this, the new file wouldn't show up in Stored Backups until a
+// manual page reload.
+const generatingFull = ref(false);
+function generateFullBackup() {
+    generatingFull.value = true;
+    window.location.href = route('admin.backup.export.all');
+    setTimeout(() => {
+        router.reload({ only: ['backups', 'backups_total'], onFinish: () => { generatingFull.value = false; } });
+    }, 600);
 }
 
 const dbBacking = ref(false);
@@ -73,13 +86,15 @@ const exports = [
 
         <PageHeader title="Backup & Export" description="Generate, download, and restore platform backups." :icon="DatabaseBackup">
             <template #actions>
-                <a
-                    :href="route('admin.backup.export.all')"
-                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-500 text-white hover:bg-blue-400 transition-colors"
+                <button
+                    type="button"
+                    :disabled="generatingFull"
+                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-500 text-white hover:bg-blue-400 transition-colors disabled:opacity-50"
+                    @click="generateFullBackup"
                 >
                     <PackageOpen :size="12" :stroke-width="2" />
-                    Generate Full Backup
-                </a>
+                    {{ generatingFull ? 'Generating…' : 'Generate Full Backup' }}
+                </button>
             </template>
         </PageHeader>
 
@@ -89,7 +104,7 @@ const exports = [
             <div class="flex flex-col gap-5">
 
                 <!-- Full backup hero card -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 0ms">
                     <div class="flex items-start gap-4">
                         <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
                             <PackageOpen :size="18" :stroke-width="1.5" class="text-blue-400" />
@@ -102,19 +117,21 @@ const exports = [
                                 The file is also saved to <code class="text-blue-400 font-mono">storage/app/backups/</code> for later download.
                                 Secrets and database rows are excluded.
                             </p>
-                            <a
-                                :href="route('admin.backup.export.all')"
-                                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-blue-500 text-white hover:bg-blue-400 transition-colors"
+                            <button
+                                type="button"
+                                :disabled="generatingFull"
+                                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-blue-500 text-white hover:bg-blue-400 transition-colors disabled:opacity-50"
+                                @click="generateFullBackup"
                             >
                                 <Download :size="14" :stroke-width="2" />
-                                Generate &amp; Download
-                            </a>
+                                {{ generatingFull ? 'Generating…' : 'Generate & Download' }}
+                            </button>
                         </div>
                     </div>
                 </div>
 
                 <!-- MySQL Backup -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 40ms">
                     <div class="flex items-start gap-4">
                         <div
                             class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border"
@@ -157,7 +174,7 @@ const exports = [
                 </div>
 
                 <!-- Automatic backup schedule -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 80ms">
                     <div class="flex items-start gap-4">
                         <div class="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
                             <CalendarClock :size="18" :stroke-width="1.5" class="text-violet-400" />
@@ -224,7 +241,7 @@ const exports = [
                 </div>
 
                 <!-- Section exports -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 120ms">
                     <div class="px-5 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                         <FileJson :size="13" :stroke-width="1.75" class="text-zinc-600" />
                         <span class="text-sm font-semibold text-zinc-100">Section Exports</span>
@@ -258,11 +275,14 @@ const exports = [
                 </div>
 
                 <!-- Stored backups -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 160ms">
                     <div class="px-5 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                         <HardDrive :size="13" :stroke-width="1.75" class="text-zinc-600" />
                         <span class="text-sm font-semibold text-zinc-100">Stored Backups</span>
-                        <span class="ml-auto text-xs text-zinc-600">storage/app/backups/</span>
+                        <span class="ml-auto text-xs text-zinc-600">
+                            <template v-if="backups_total > backups.length">Showing {{ backups.length }} of {{ backups_total }}</template>
+                            <template v-else>storage/app/backups/</template>
+                        </span>
                     </div>
 
                     <div v-if="backups.length > 0">
@@ -311,10 +331,14 @@ const exports = [
                         <p class="text-zinc-600 text-sm">No stored backups yet.</p>
                         <p class="text-zinc-700 text-xs mt-0.5">Generate a full backup to create one.</p>
                     </div>
+
+                    <p v-if="backups_total > backups.length" class="px-5 py-2.5 text-[11px] text-zinc-700 border-t border-zinc-800/40">
+                        {{ backups_total - backups.length }} older backup{{ backups_total - backups.length !== 1 ? 's' : '' }} not shown — still on disk in storage/app/backups/, only .sql backups are auto-pruned by the retention setting above.
+                    </p>
                 </div>
 
                 <!-- Import backup -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 200ms">
                     <div class="px-5 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                         <Upload :size="13" :stroke-width="1.75" class="text-zinc-600" />
                         <span class="text-sm font-semibold text-zinc-100">Import Backup</span>
@@ -372,7 +396,7 @@ const exports = [
             <div class="flex flex-col gap-4">
 
                 <!-- Warning -->
-                <div class="flex items-start gap-3 bg-amber-500/5 border border-amber-500/20 rounded-xl px-4 py-4">
+                <div class="hc-hero-in flex items-start gap-3 bg-amber-500/5 border border-amber-500/20 rounded-xl px-4 py-4" style="animation-delay: 60ms">
                     <AlertTriangle :size="15" :stroke-width="1.75" class="text-amber-400 mt-0.5 shrink-0" />
                     <div>
                         <p class="text-zinc-100 text-sm font-semibold mb-1.5">Not full database backups</p>
@@ -385,7 +409,7 @@ const exports = [
                 </div>
 
                 <!-- What's included in full backup -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 100ms">
                     <div class="px-4 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                         <Server :size="13" :stroke-width="1.75" class="text-zinc-600" />
                         <span class="text-sm font-semibold text-zinc-100">Full backup includes</span>
@@ -402,7 +426,7 @@ const exports = [
                 </div>
 
                 <!-- Import notes -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 140ms">
                     <div class="px-4 py-3 border-b border-zinc-800/70">
                         <p class="text-sm font-semibold text-zinc-100">Import notes</p>
                     </div>
@@ -424,7 +448,7 @@ const exports = [
                 </div>
 
                 <!-- Server-side backup -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 180ms">
                     <div class="px-4 py-3 border-b border-zinc-800/70">
                         <p class="text-sm font-semibold text-zinc-100">Server-side backup</p>
                         <p class="text-xs text-zinc-600 mt-0.5">Run on a schedule via cron</p>
