@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin;
 
 use App\Models\Game;
 use App\Models\Server;
+use App\Models\ServerSnapshot;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -232,5 +233,32 @@ class ServerTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('admin.servers.index', ['game_id' => $this->game->id]))
             ->assertOk();
+    }
+
+    /**
+     * The listing paginates 20 per page — stats must count every matching
+     * server, not just the ones on the current page, or "Online now" silently
+     * under-reports the moment there's more than one page.
+     */
+    public function test_stats_reflect_every_matching_server_not_just_the_current_page(): void
+    {
+        for ($i = 0; $i < 25; $i++) {
+            $server = Server::factory()->create(['game_id' => $this->game->id, 'ip' => "10.0.0.{$i}"]);
+            ServerSnapshot::create([
+                'server_id' => $server->id,
+                'is_online' => $i < 22, // 22 online, 3 offline — spans both pages of a 20-per-page paginator
+                'players_online' => $i < 22 ? 4 : 0,
+                'players_max' => 32,
+                'recorded_at' => now(),
+            ]);
+        }
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.servers.index'))
+            ->assertInertia(fn ($page) => $page
+                ->where('stats.total', 25)
+                ->where('stats.online', 22)
+                ->where('stats.players', 22 * 4)
+            );
     }
 }

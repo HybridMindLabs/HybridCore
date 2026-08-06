@@ -23,17 +23,30 @@ class ServerController extends Controller
         $search = trim((string) $request->query('search', ''));
         $gameId = $request->query('game_id');
 
-        $servers = Server::with([
-            'game',
-            'latestSnapshot',
-            'bridgeCommands' => fn ($q) => $q->orderByDesc('created_at')->orderByDesc('id')->limit(10),
-        ])
-            ->withCount(['bridgeCommands as pending_command_count' => fn ($q) => $q->where('status', ServerCommand::STATUS_PENDING)])
+        $filter = fn ($q) => $q
             ->when($search !== '', fn ($q) => $q->where(function ($q) use ($search) {
                 $q->where('ip', 'like', "%{$search}%")
                     ->orWhere('name', 'like', "%{$search}%");
             }))
-            ->when($gameId, fn ($q) => $q->where('game_id', $gameId))
+            ->when($gameId, fn ($q) => $q->where('game_id', $gameId));
+
+        // Stats must reflect every server matching the current filters, not just
+        // the 20 on this page — computed from the same filtered set, one extra
+        // query, before pagination narrows it down.
+        $filteredWithStatus = $filter(Server::query())->with('latestSnapshot')->get();
+        $stats = [
+            'total' => $filteredWithStatus->count(),
+            'online' => $filteredWithStatus->filter(fn (Server $s) => $s->latestSnapshot?->is_online)->count(),
+            'players' => $filteredWithStatus->sum(fn (Server $s) => $s->latestSnapshot->players_online ?? 0),
+        ];
+
+        $servers = $filter(Server::query())
+            ->with([
+                'game',
+                'latestSnapshot',
+                'bridgeCommands' => fn ($q) => $q->orderByDesc('created_at')->orderByDesc('id')->limit(10),
+            ])
+            ->withCount(['bridgeCommands as pending_command_count' => fn ($q) => $q->where('status', ServerCommand::STATUS_PENDING)])
             ->orderBy('game_id')
             ->orderBy('created_at', 'desc')
             ->paginate(20)
@@ -82,6 +95,7 @@ class ServerController extends Controller
             'servers' => $servers,
             'games' => $games,
             'filters' => ['search' => $search, 'game_id' => $gameId],
+            'stats' => $stats,
         ]);
     }
 

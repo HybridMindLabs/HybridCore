@@ -9,6 +9,7 @@ import {
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
 import GameIcon from '@/components/UI/GameIcon.vue';
+import EmptyState from '@/components/UI/EmptyState.vue';
 import { ref, watch, computed } from 'vue';
 
 interface GameData { id: number; name: string; color?: string; icon?: string; default_port?: number | null; default_query_port?: number | null }
@@ -33,6 +34,7 @@ const props = defineProps<{
     servers: { data: ServerRow[]; meta: any; links: any };
     games: GameData[];
     filters: { search: string | null; game_id: string | null };
+    stats: { total: number; online: number; players: number };
 }>();
 
 // Filters
@@ -219,13 +221,6 @@ function destroy(s: ServerRow) {
     router.delete(route('admin.servers.destroy', s.id));
 }
 
-const totalOnline = computed(() =>
-    props.servers.data.filter((s) => s.status?.is_online).length,
-);
-const totalPlayers = computed(() =>
-    props.servers.data.reduce((sum, s) => sum + (s.status?.players_online ?? 0), 0),
-);
-
 const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 rounded-lg px-3 py-2 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 w-full';
 </script>
 
@@ -252,33 +247,33 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 round
             </template>
         </PageHeader>
 
-        <!-- Stats bar -->
-        <div v-if="servers.data.length" class="grid grid-cols-3 gap-4 mb-5">
-            <div class="bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3">
+        <!-- Stats bar — reflects every server matching the current filters, not just this page -->
+        <div v-if="stats.total > 0" class="grid grid-cols-3 gap-4 mb-5">
+            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3">
                 <Server :size="16" :stroke-width="1.5" class="text-zinc-600 shrink-0" />
                 <div>
-                    <p class="text-zinc-100 text-lg font-bold leading-none">{{ servers.meta?.total ?? servers.data.length }}</p>
+                    <p class="text-zinc-100 text-lg font-bold leading-none">{{ stats.total }}</p>
                     <p class="text-zinc-600 text-xs mt-0.5">Total servers</p>
                 </div>
             </div>
-            <div class="bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3">
+            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3" style="animation-delay: 40ms">
                 <CheckCircle2 :size="16" :stroke-width="1.5" class="text-emerald-400 shrink-0" />
                 <div>
-                    <p class="text-emerald-400 text-lg font-bold leading-none">{{ totalOnline }}</p>
+                    <p class="text-emerald-400 text-lg font-bold leading-none">{{ stats.online }}</p>
                     <p class="text-zinc-600 text-xs mt-0.5">Online now</p>
                 </div>
             </div>
-            <div class="bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3">
+            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3" style="animation-delay: 80ms">
                 <Users :size="16" :stroke-width="1.5" class="text-blue-400 shrink-0" />
                 <div>
-                    <p class="text-blue-400 text-lg font-bold leading-none">{{ totalPlayers }}</p>
+                    <p class="text-blue-400 text-lg font-bold leading-none">{{ stats.players }}</p>
                     <p class="text-zinc-600 text-xs mt-0.5">Players online</p>
                 </div>
             </div>
         </div>
 
         <!-- Add Server Panel -->
-        <div v-if="showAdd" class="mb-5 bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+        <div v-if="showAdd" class="hc-hero-in mb-5 bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
             <div class="px-5 py-3 border-b border-zinc-800/50 flex items-center justify-between">
                 <h3 class="text-sm font-semibold text-zinc-100 flex items-center gap-2">
                     <Plus :size="14" :stroke-width="2" class="text-blue-400" /> Add New Server
@@ -634,16 +629,21 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 round
                                             </button>
                                         </div>
                                     </div>
+                                    <p v-if="server.commands.length === 10" class="text-zinc-700 text-[11px] pt-1">
+                                        Showing the 10 most recent commands.
+                                    </p>
                                 </div>
                             </td>
                         </tr>
                     </template>
 
                     <tr v-if="!servers.data.length">
-                        <td colspan="7" class="px-4 py-16 text-center">
-                            <Server :size="28" :stroke-width="1.25" class="text-zinc-800 mx-auto mb-3" />
-                            <p class="text-zinc-500 text-sm">No servers found.</p>
-                            <p class="text-zinc-700 text-xs mt-1">Try adjusting the filters or add a new server.</p>
+                        <td colspan="7">
+                            <EmptyState
+                                :icon="Server"
+                                :title="search || gameId ? 'No matches' : 'No servers yet'"
+                                :description="search || gameId ? 'Try adjusting the search or game filter.' : 'Add your first game server to start monitoring it.'"
+                            />
                         </td>
                     </tr>
                 </tbody>

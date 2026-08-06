@@ -4,6 +4,7 @@ import { Gamepad2, Plus, Pencil, Trash2, Check, X } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
 import GameIcon from '@/components/UI/GameIcon.vue';
+import EmptyState from '@/components/UI/EmptyState.vue';
 import { ref } from 'vue';
 
 interface GameRow {
@@ -76,7 +77,7 @@ function destroy(g: GameRow) {
         </PageHeader>
 
         <!-- Add Game Panel -->
-        <div v-if="showAdd" class="mb-6 bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+        <div v-if="showAdd" class="hc-hero-in mb-6 bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
             <h3 class="text-sm font-semibold text-zinc-100 mb-4">Add New Game</h3>
             <form @submit.prevent="submitAdd" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 <div>
@@ -214,7 +215,9 @@ function destroy(g: GameRow) {
                         </tr>
                     </template>
                     <tr v-if="!games.length">
-                        <td colspan="6" class="px-4 py-12 text-center text-zinc-600 text-sm">No games configured yet.</td>
+                        <td colspan="6">
+                            <EmptyState :icon="Gamepad2" title="No games yet" description="Add a game type before servers of that game can be listed." />
+                        </td>
                     </tr>
                 </tbody>
             </table>
