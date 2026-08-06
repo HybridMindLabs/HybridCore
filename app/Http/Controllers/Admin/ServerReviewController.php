@@ -33,11 +33,11 @@ class ServerReviewController extends Controller
                 'body' => $r->body,
                 'created_at' => $r->created_at->diffForHumans(),
                 'user' => $r->user?->only(['id', 'name', 'username']),
-                'server' => $r->server ? [
+                'server' => [
                     'id' => $r->server->id,
                     'label' => $r->server->name ?? ($r->server->ip.':'.$r->server->port),
                     'game' => $r->server->game?->only(['name', 'color']),
-                ] : null,
+                ],
             ]);
 
         return Inertia::render('Admin/Servers/Reviews/Index', [

@@ -12,7 +12,7 @@ interface Review {
     body: string | null;
     created_at: string;
     user: { id: number; name: string; username: string } | null;
-    server: { id: number; label: string; game: { name: string; color: string } | null } | null;
+    server: { id: number; label: string; game: { name: string; color: string } | null };
 }
 
 interface PaginatedReviews {
@@ -107,7 +107,7 @@ function stars(n: number) {
 
                         <!-- Server -->
                         <td class="px-4 py-3">
-                            <div v-if="review.server" class="flex items-center gap-2">
+                            <div class="flex items-center gap-2">
                                 <span
                                     v-if="review.server.game"
                                     class="w-2 h-2 rounded-full shrink-0"
@@ -115,7 +115,6 @@ function stars(n: number) {
                                 />
                                 <span class="text-zinc-300 font-mono text-xs truncate max-w-[160px]">{{ review.server.label }}</span>
                             </div>
-                            <span v-else class="text-zinc-600 italic text-xs">deleted</span>
                         </td>
 
                         <!-- Rating -->
