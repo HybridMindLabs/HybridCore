@@ -131,7 +131,7 @@ function removeLicense() {
 
                 <!-- Preview card -->
                 <div
-                    class="bg-[#111113] border rounded-xl overflow-hidden"
+                    class="hc-hero-in bg-[#111113] border rounded-xl overflow-hidden"
                     :class="theme.active ? 'border-blue-500/40' : 'border-zinc-800/70'"
                 >
                     <div class="w-full h-48 bg-zinc-900/60 border-b border-zinc-800/70 flex items-center justify-center overflow-hidden">
@@ -174,7 +174,8 @@ function removeLicense() {
                 <!-- License — only for themes that require or already have one -->
                 <div
                     v-if="theme.requires_license || theme.has_license"
-                    class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5"
+                    class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5"
+                    style="animation-delay: 40ms"
                 >
                     <div class="flex items-center gap-2 mb-1">
                         <KeyRound :size="14" :stroke-width="1.75" class="text-zinc-600" />
@@ -227,7 +228,7 @@ function removeLicense() {
                 </div>
 
                 <!-- Settings -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 80ms">
                     <h3 class="text-zinc-100 text-sm font-semibold mb-3">Theme Settings</h3>
 
                     <div v-if="theme.settings_schema.length === 0" class="flex items-start gap-3 bg-blue-500/5 border border-blue-500/20 rounded-lg px-3 py-3">
@@ -307,7 +308,7 @@ function removeLicense() {
             <div class="flex flex-col gap-4">
 
                 <!-- Details -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 40ms">
                     <div class="px-4 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                         <Tag :size="13" :stroke-width="1.75" class="text-zinc-600" />
                         <span class="text-sm font-semibold text-zinc-100">Details</span>
@@ -355,7 +356,7 @@ function removeLicense() {
                 </div>
 
                 <!-- Path -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 80ms">
                     <div class="px-4 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                         <FolderOpen :size="13" :stroke-width="1.75" class="text-zinc-600" />
                         <span class="text-sm font-semibold text-zinc-100">Path</span>

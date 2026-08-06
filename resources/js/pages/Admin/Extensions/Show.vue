@@ -139,7 +139,7 @@ function submitSettings() {
             <div class="flex flex-col gap-4">
 
                 <!-- Description card -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
                     <div class="flex items-center gap-3 mb-4">
                         <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border"
                             :class="extension.enabled ? 'bg-blue-500/10 border-blue-500/20' : 'bg-zinc-800 border-zinc-700'">
@@ -171,7 +171,8 @@ function submitSettings() {
                 <!-- License — only for extensions that have an update channel -->
                 <div
                     v-if="extension.requires_license || extension.has_license || extension.update_url"
-                    class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5"
+                    class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5"
+                    style="animation-delay: 40ms"
                 >
                     <div class="flex items-center gap-2 mb-1">
                         <KeyRound :size="14" :stroke-width="1.75" class="text-zinc-600" />
@@ -225,7 +226,7 @@ function submitSettings() {
                 </div>
 
                 <!-- Settings -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 80ms">
                     <h3 class="text-zinc-100 text-sm font-semibold mb-3">Extension Settings</h3>
 
                     <div v-if="extension.settings_schema.length === 0" class="flex items-start gap-3 bg-blue-500/5 border border-blue-500/20 rounded-lg px-3 py-3">
@@ -305,7 +306,7 @@ function submitSettings() {
             <div class="flex flex-col gap-4">
 
                 <!-- Meta -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 40ms">
                     <div class="px-4 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                         <Tag :size="13" :stroke-width="1.75" class="text-zinc-600" />
                         <span class="text-sm font-semibold text-zinc-100">Details</span>
@@ -353,7 +354,7 @@ function submitSettings() {
                 </div>
 
                 <!-- Path -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 80ms">
                     <div class="px-4 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                         <FolderOpen :size="13" :stroke-width="1.75" class="text-zinc-600" />
                         <span class="text-sm font-semibold text-zinc-100">Path</span>
