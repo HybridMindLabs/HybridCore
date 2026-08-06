@@ -4,6 +4,7 @@ import { KeyRound, Trash2, Plus, Copy, CheckCircle2, RefreshCw } from '@lucide/v
 import { computed, ref } from 'vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
+import EmptyState from '@/components/UI/EmptyState.vue';
 
 interface TokenRow {
     id: number;
@@ -99,7 +100,7 @@ function destroyAccount(account: AccountRow) {
         <!-- Plaintext-once banner -->
         <div
             v-if="plainToken"
-            class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 mb-5 flex items-start gap-3"
+            class="hc-hero-in bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 mb-5 flex items-start gap-3"
         >
             <CheckCircle2 :size="16" :stroke-width="2" class="text-emerald-400 mt-0.5 shrink-0" />
             <div class="flex-1 min-w-0">
@@ -123,11 +124,20 @@ function destroyAccount(account: AccountRow) {
 
             <!-- Accounts list -->
             <div class="flex flex-col gap-4">
-                <div v-if="accounts.length === 0" class="bg-[#111113] border border-zinc-800/70 rounded-xl p-6 text-center text-zinc-500 text-sm">
-                    No service accounts yet — create one to issue your first token.
+                <div v-if="accounts.length === 0" class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl">
+                    <EmptyState
+                        title="No service accounts yet"
+                        description="Create one to issue your first token."
+                        :icon="KeyRound"
+                    />
                 </div>
 
-                <div v-for="account in accounts" :key="account.id" class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+                <div
+                    v-for="(account, i) in accounts"
+                    :key="account.id"
+                    class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5"
+                    :style="{ animationDelay: `${Math.min(i, 5) * 40}ms` }"
+                >
                     <div class="flex items-center justify-between mb-3">
                         <div>
                             <h3 class="text-zinc-100 text-sm font-semibold">{{ account.name }}</h3>
@@ -190,7 +200,7 @@ function destroyAccount(account: AccountRow) {
             </div>
 
             <!-- Create new account -->
-            <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 40ms">
                 <h3 class="text-zinc-100 text-sm font-semibold mb-3">New Service Account</h3>
                 <form class="flex flex-col gap-3" @submit.prevent="submitCreate">
                     <div>

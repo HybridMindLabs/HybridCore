@@ -7,6 +7,7 @@ use App\Models\ActivityLog;
 use App\Models\NewsArticle;
 use App\Models\NewsComment;
 use App\Models\ServerSnapshot;
+use App\Models\WebhookDelivery;
 use App\Services\AnalyticsService;
 use App\Services\Bridge\BridgeService;
 use Illuminate\Foundation\Inspiring;
@@ -91,6 +92,13 @@ Schedule::call(function () {
 Schedule::call(function () {
     app(BridgeService::class)->pruneEvents();
 })->daily()->name('prune-bridge-events');
+
+// Prune webhook delivery log entries older than 30 days — each row carries
+// a full JSON payload and every fired event adds one, with nothing else
+// bounding the table.
+Schedule::call(function () {
+    WebhookDelivery::where('created_at', '<', now()->subDays(30))->delete();
+})->daily()->name('prune-webhook-deliveries');
 
 // Heartbeats for the admin System Health page — see SystemHealthController::checks().
 Schedule::call(function () {
