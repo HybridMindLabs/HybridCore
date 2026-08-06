@@ -2,12 +2,12 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import ExtensionSlot from '@/components/Core/ExtensionSlot.vue';
-import HelpTooltip from '@/components/UI/HelpTooltip.vue';
+import Tooltip from '@/components/UI/Tooltip.vue';
 import {
     Users, Server, MessageSquare, ShieldBan, BadgeCheck,
     TrendingUp, TrendingDown, UserPlus, ArrowRight, Puzzle, Paintbrush,
     Activity, BarChart2, PieChart, Wifi, AlertTriangle, Power,
-    MousePointerClick, Gamepad2, Shapes,
+    MousePointerClick, Gamepad2, Shapes, Info,
 } from '@lucide/vue';
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import type Highcharts from 'highcharts';
@@ -407,7 +407,7 @@ const quickLinks = [
         <!-- KPI grid -->
         <div v-if="kpis.length" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-6">
             <div v-for="(k, i) in kpis" :key="k.label"
-                class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] px-4 py-3.5 flex items-center gap-3.5
+                class="hc-hero-in rounded-xl border border-zinc-800/70 bg-[#111113] px-4 py-3.5 flex items-center gap-3.5
                        transition-[border-color,transform] duration-200 hover:border-zinc-700/70 hover:-translate-y-0.5"
                 :style="{ animationDelay: `${i * 40}ms` }"
             >
@@ -421,7 +421,7 @@ const quickLinks = [
                     </p>
                     <p class="text-[11px] font-medium text-zinc-500 mt-0.5 truncate flex items-center gap-1">
                         {{ k.label }}
-                        <HelpTooltip :text="k.help" />
+                        <Tooltip :text="k.help"><Info :size="12" :stroke-width="2" class="text-zinc-600 hover:text-zinc-300 transition-colors" /></Tooltip>
                     </p>
                 </div>
             </div>
@@ -431,7 +431,7 @@ const quickLinks = [
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
 
             <!-- Registrations / logins area chart -->
-            <div class="hc-dash-in lg:col-span-2 rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 120ms">
+            <div class="hc-hero-in lg:col-span-2 rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 120ms">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
                         <Activity :size="13" :stroke-width="2" class="text-blue-400" />
@@ -439,7 +439,7 @@ const quickLinks = [
                     <div class="flex-1 min-w-0">
                         <p class="text-[13px] font-black text-zinc-100 flex items-center gap-1.5">
                             Registrations &amp; Logins
-                            <HelpTooltip text="New account signups vs. successful logins, one point per day." />
+                            <Tooltip text="New account signups vs. successful logins, one point per day."><Info :size="12" :stroke-width="2" class="text-zinc-600 hover:text-zinc-300 transition-colors" /></Tooltip>
                         </p>
                         <p class="text-[11px] text-zinc-600">Last 30 days</p>
                     </div>
@@ -457,7 +457,7 @@ const quickLinks = [
             </div>
 
             <!-- User breakdown column chart -->
-            <div class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 160ms">
+            <div class="hc-hero-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 160ms">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center">
                         <BarChart2 :size="13" :stroke-width="2" class="text-violet-400" />
@@ -465,7 +465,7 @@ const quickLinks = [
                     <div>
                         <p class="text-[13px] font-black text-zinc-100 flex items-center gap-1.5">
                             User Status
-                            <HelpTooltip text="Every user split into verified, unverified, or banned." />
+                            <Tooltip text="Every user split into verified, unverified, or banned."><Info :size="12" :stroke-width="2" class="text-zinc-600 hover:text-zinc-300 transition-colors" /></Tooltip>
                         </p>
                         <p class="text-[11px] text-zinc-600">Verified / unverified / banned</p>
                     </div>
@@ -478,7 +478,7 @@ const quickLinks = [
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
 
             <!-- Role distribution donut -->
-            <div class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 200ms">
+            <div class="hc-hero-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 200ms">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center">
                         <PieChart :size="13" :stroke-width="2" class="text-amber-400" />
@@ -486,7 +486,7 @@ const quickLinks = [
                     <div>
                         <p class="text-[13px] font-black text-zinc-100 flex items-center gap-1.5">
                             Roles Distribution
-                            <HelpTooltip text="Users grouped by their primary role. Users with no role assigned are excluded." />
+                            <Tooltip text="Users grouped by their primary role. Users with no role assigned are excluded."><Info :size="12" :stroke-width="2" class="text-zinc-600 hover:text-zinc-300 transition-colors" /></Tooltip>
                         </p>
                         <p class="text-[11px] text-zinc-600">Users by primary role</p>
                     </div>
@@ -499,7 +499,7 @@ const quickLinks = [
             </div>
 
             <!-- Top games bar -->
-            <div class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 240ms">
+            <div class="hc-hero-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 240ms">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                         <Server :size="13" :stroke-width="2" class="text-emerald-400" />
@@ -507,7 +507,7 @@ const quickLinks = [
                     <div>
                         <p class="text-[13px] font-black text-zinc-100 flex items-center gap-1.5">
                             Top Games
-                            <HelpTooltip text="The games with the most registered servers on this platform." />
+                            <Tooltip text="The games with the most registered servers on this platform."><Info :size="12" :stroke-width="2" class="text-zinc-600 hover:text-zinc-300 transition-colors" /></Tooltip>
                         </p>
                         <p class="text-[11px] text-zinc-600">Servers per game</p>
                     </div>
@@ -525,7 +525,7 @@ const quickLinks = [
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
 
             <!-- Engagement counters -->
-            <div class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 280ms">
+            <div class="hc-hero-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 280ms">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center">
                         <Activity :size="13" :stroke-width="2" class="text-violet-400" />
@@ -533,7 +533,7 @@ const quickLinks = [
                     <div>
                         <p class="text-[13px] font-black text-zinc-100 flex items-center gap-1.5">
                             Community Engagement
-                            <HelpTooltip text="Totals from reviews, comments and follows — only counted if that feature is enabled." />
+                            <Tooltip text="Totals from reviews, comments and follows — only counted if that feature is enabled."><Info :size="12" :stroke-width="2" class="text-zinc-600 hover:text-zinc-300 transition-colors" /></Tooltip>
                         </p>
                         <p class="text-[11px] text-zinc-600">Totals, with the last 7 days in green</p>
                     </div>
@@ -557,7 +557,7 @@ const quickLinks = [
             </div>
 
             <!-- Most clicked servers -->
-            <div class="hc-dash-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 320ms">
+            <div class="hc-hero-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 320ms">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center">
                         <MousePointerClick :size="13" :stroke-width="2" class="text-amber-400" />
@@ -565,7 +565,7 @@ const quickLinks = [
                     <div>
                         <p class="text-[13px] font-black text-zinc-100 flex items-center gap-1.5">
                             Most Clicked Servers
-                            <HelpTooltip text="Servers ranked by how many times visitors clicked 'Connect' on the public site." />
+                            <Tooltip text="Servers ranked by how many times visitors clicked 'Connect' on the public site."><Info :size="12" :stroke-width="2" class="text-zinc-600 hover:text-zinc-300 transition-colors" /></Tooltip>
                         </p>
                         <p class="text-[11px] text-zinc-600">Connect clicks, last 30 days</p>
                     </div>
@@ -590,7 +590,7 @@ const quickLinks = [
         </div>
 
         <!-- Quick links -->
-        <div class="hc-dash-in mb-2" style="animation-delay: 360ms">
+        <div class="hc-hero-in mb-2" style="animation-delay: 360ms">
             <p class="text-zinc-400 text-[11px] uppercase tracking-widest font-bold mb-2">Quick links</p>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <Link v-for="link in quickLinks" :key="link.route" :href="route(link.route)"
@@ -611,16 +611,3 @@ const quickLinks = [
 
     </AdminLayout>
 </template>
-
-<style scoped>
-@keyframes hc-dash-in {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.hc-dash-in {
-    animation: hc-dash-in 0.4s ease-out both;
-}
-@media (prefers-reduced-motion: reduce) {
-    .hc-dash-in { animation: none; }
-}
-</style>
