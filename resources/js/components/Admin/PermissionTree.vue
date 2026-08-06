@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { Search, ChevronDown, ChevronUp } from '@lucide/vue';
+import { Search, ChevronDown, ChevronUp, ChevronsDown, ChevronsUp } from '@lucide/vue';
 
 interface PermissionItem { slug: string; name: string }
 interface PermissionGroup { group: string; permissions: PermissionItem[] }
@@ -54,6 +54,14 @@ function clearAll() { emit('update:modelValue', []); }
 function toggleCollapse(group: string) {
     collapsed.value[group] = !collapsed.value[group];
 }
+
+function collapseAll() {
+    collapsed.value = Object.fromEntries(props.groups.map((g) => [g.group, true]));
+}
+
+function expandAll() {
+    collapsed.value = {};
+}
 </script>
 
 <template>
@@ -64,8 +72,8 @@ function toggleCollapse(group: string) {
     <div v-else class="flex flex-col gap-3">
 
         <!-- Toolbar -->
-        <div class="flex items-center gap-3">
-            <div class="relative flex-1">
+        <div class="flex items-center gap-3 flex-wrap">
+            <div class="relative flex-1 min-w-[140px]">
                 <Search :size="12" :stroke-width="1.75" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-600" />
                 <input
                     v-model="search"
@@ -76,8 +84,17 @@ function toggleCollapse(group: string) {
                 />
             </div>
             <span class="text-zinc-600 text-xs shrink-0">
+                {{ groups.length }} group{{ groups.length !== 1 ? 's' : '' }} ·
                 <span :class="totalSelected > 0 ? 'text-blue-400' : ''">{{ totalSelected }}</span> / {{ totalCount }}
             </span>
+            <span class="w-px h-3.5 bg-zinc-800 shrink-0" aria-hidden="true" />
+            <button type="button" class="flex items-center gap-1 text-zinc-500 text-xs hover:text-zinc-300 transition-colors shrink-0" @click="expandAll">
+                <ChevronsDown :size="11" :stroke-width="2" /> Expand all
+            </button>
+            <button type="button" class="flex items-center gap-1 text-zinc-500 text-xs hover:text-zinc-300 transition-colors shrink-0" @click="collapseAll">
+                <ChevronsUp :size="11" :stroke-width="2" /> Collapse all
+            </button>
+            <span class="w-px h-3.5 bg-zinc-800 shrink-0" aria-hidden="true" />
             <button type="button" class="text-blue-400 text-xs hover:text-[#67e8f9] transition-colors shrink-0" @click="selectAll">All</button>
             <button type="button" class="text-zinc-600 text-xs hover:text-zinc-400 transition-colors shrink-0" @click="clearAll">None</button>
         </div>

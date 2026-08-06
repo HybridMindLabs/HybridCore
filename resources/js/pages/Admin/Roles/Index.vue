@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Plus, Lock, Users, KeySquare, Pencil, Trash2, ShieldCheck, ShieldAlert } from '@lucide/vue';
+import { Plus, Lock, Users, KeySquare, Pencil, Trash2, ShieldCheck, ShieldAlert, Search, X } from '@lucide/vue';
+import { ref, computed } from 'vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
 import EmptyState from '@/components/UI/EmptyState.vue';
@@ -19,7 +20,17 @@ interface RoleItem {
     permissions_count: number;
 }
 
-defineProps<{ roles: RoleItem[] }>();
+const props = defineProps<{ roles: RoleItem[] }>();
+
+const search = ref('');
+const filteredRoles = computed(() => {
+    const q = search.value.trim().toLowerCase();
+    if (!q) return props.roles;
+    return props.roles.filter((r) =>
+        r.name.toLowerCase().includes(q)
+        || r.slug.toLowerCase().includes(q)
+        || (r.description?.toLowerCase().includes(q) ?? false));
+});
 
 function deleteRole(role: RoleItem) {
     if (!confirm(`Delete role "${role.name}"? Users assigned to it will lose any permissions granted only by this role.`)) return;
@@ -70,11 +81,29 @@ function deleteRole(role: RoleItem) {
             </template>
         </EmptyState>
 
+        <template v-else>
+            <!-- Search — matters once the role list grows past a screenful. -->
+            <div class="relative max-w-sm mb-4">
+                <Search :size="14" :stroke-width="1.75" class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
+                <input
+                    v-model="search"
+                    type="text"
+                    placeholder="Search roles by name or description…"
+                    class="w-full bg-[#111113] border border-zinc-800/70 text-zinc-100 rounded-lg pl-9 pr-9 py-2 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                />
+                <button v-if="search" type="button" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-400" @click="search = ''">
+                    <X :size="14" :stroke-width="1.75" />
+                </button>
+            </div>
+
+            <EmptyState v-if="filteredRoles.length === 0" :icon="Search" title="No matches" :description="`No roles match &quot;${search}&quot;.`" />
+
         <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             <div
-                v-for="role in roles"
+                v-for="(role, i) in filteredRoles"
                 :key="role.id"
-                class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden flex flex-col hover:border-zinc-700/60 transition-colors"
+                class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden flex flex-col hover:border-zinc-700/60 transition-colors"
+                :style="{ animationDelay: `${i * 40}ms` }"
             >
                 <!-- Color accent bar -->
                 <div class="h-[3px] w-full shrink-0" :style="{ background: role.color }" />
@@ -153,6 +182,7 @@ function deleteRole(role: RoleItem) {
                 </div>
             </div>
         </div>
+        </template>
 
     </AdminLayout>
 </template>
