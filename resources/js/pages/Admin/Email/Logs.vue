@@ -18,12 +18,16 @@ interface EmailLog {
     created_at: string;
 }
 
+interface PageLink { url: string | null; label: string; active: boolean }
 interface Paginator {
     data: EmailLog[];
-    links: any;
+    links: PageLink[];
     total: number;
     current_page: number;
     last_page: number;
+    per_page: number;
+    from: number | null;
+    to: number | null;
 }
 
 defineProps<{ logs: Paginator }>();
@@ -116,6 +120,6 @@ const breadcrumbs = [
             </table>
         </div>
 
-        <Pagination v-if="logs.last_page > 1" :links="logs.links" class="mt-4" />
+        <Pagination :paginator="logs" class="mt-4" />
     </AdminLayout>
 </template>
