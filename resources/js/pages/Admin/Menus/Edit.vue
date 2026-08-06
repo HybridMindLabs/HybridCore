@@ -5,6 +5,7 @@ import {
     Trash2, Indent, Outdent, ExternalLink, Check, X, Pencil,
 } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
+import EmptyState from '@/components/UI/EmptyState.vue';
 import { ref, computed } from 'vue';
 
 interface MenuItemRow {
@@ -140,17 +141,15 @@ const smallInputClass = 'bg-zinc-900/60 border border-zinc-800/70 rounded-lg px-
             <div class="xl:col-span-2 flex flex-col gap-4">
 
                 <!-- Items tree -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 0ms">
                     <div class="flex items-center gap-2 px-5 py-3 border-b border-zinc-800/70">
                         <List :size="14" :stroke-width="1.75" class="text-blue-400" />
                         <span class="text-sm font-semibold text-zinc-100">Menu Items</span>
                         <span class="ml-auto text-xs text-zinc-600">{{ flatItems.length }} item{{ flatItems.length === 1 ? '' : 's' }}</span>
                     </div>
 
-                    <div v-if="flatItems.length === 0" class="px-5 py-12 text-center">
-                        <List :size="24" :stroke-width="1.25" class="text-zinc-800 mx-auto mb-3" />
-                        <p class="text-zinc-600 text-sm">No items yet.</p>
-                        <p class="text-zinc-700 text-xs mt-1">Add your first link below.</p>
+                    <div v-if="flatItems.length === 0" class="px-5 py-8">
+                        <EmptyState :icon="List" title="No items yet" description="Add your first link below." />
                     </div>
 
                     <div v-else class="divide-y divide-zinc-800/50">
@@ -212,7 +211,7 @@ const smallInputClass = 'bg-zinc-900/60 border border-zinc-800/70 rounded-lg px-
                 </div>
 
                 <!-- Add item -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 40ms">
                     <h3 class="text-sm font-semibold text-zinc-100 mb-4 flex items-center gap-2">
                         <Plus :size="14" :stroke-width="2" class="text-blue-400" /> Add Item
                     </h3>
@@ -259,9 +258,15 @@ const smallInputClass = 'bg-zinc-900/60 border border-zinc-800/70 rounded-lg px-
             </div>
 
             <!-- Right: menu settings -->
-            <div>
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
-                    <h3 class="text-sm font-semibold text-zinc-100 mb-4">Menu Settings</h3>
+            <div class="xl:sticky xl:top-6 xl:self-start">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 80ms">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-semibold text-zinc-100">Menu Settings</h3>
+                        <span v-if="settingsForm.isDirty" class="flex items-center gap-1.5 text-amber-400 text-xs font-medium">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                            Unsaved
+                        </span>
+                    </div>
                     <form class="flex flex-col gap-4" @submit.prevent="saveSettings">
                         <div class="flex flex-col gap-1.5">
                             <label class="text-zinc-500 text-xs font-medium">Name</label>
