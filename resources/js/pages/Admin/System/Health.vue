@@ -222,7 +222,7 @@ const inputClass = 'w-full bg-zinc-900/60 border border-zinc-800/70 text-zinc-10
                                 <Info :size="11" :stroke-width="2" class="text-zinc-700 hover:text-zinc-400 transition-colors" />
                             </Tooltip>
                         </div>
-                        <span class="text-zinc-500 text-xs text-right ml-4 shrink-0 max-w-[45%] truncate font-mono">{{ check.detail }}</span>
+                        <span :title="check.detail" class="text-zinc-500 text-xs text-right ml-4 shrink-0 max-w-[45%] truncate font-mono">{{ check.detail }}</span>
                     </div>
                 </div>
             </div>

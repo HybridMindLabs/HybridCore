@@ -142,11 +142,18 @@ class SystemHealthController extends Controller
             'detail' => (string) config('session.driver'),
         ];
 
+        $queueDriver = config('queue.default');
         $checks[] = [
             'label' => 'Queue Driver',
             'category' => 'Background Services',
-            'status' => config('queue.default') !== null ? 'ok' : 'warn',
-            'detail' => (string) config('queue.default'),
+            'status' => match (true) {
+                $queueDriver === null => 'warn',
+                $queueDriver === 'sync' => 'warn',
+                default => 'ok',
+            },
+            'detail' => $queueDriver === 'sync'
+                ? 'sync — jobs block requests, worker idle. Use redis/database in production.'
+                : (string) $queueDriver,
         ];
 
         $checks[] = [
