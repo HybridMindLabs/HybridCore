@@ -1,15 +1,60 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { HeartPulse, CheckCircle2, AlertTriangle, XCircle, Eraser, Construction, Cpu, HardDrive, X } from '@lucide/vue';
+import { HeartPulse, CheckCircle2, AlertTriangle, XCircle, Eraser, Construction, Cpu, HardDrive, X, RefreshCw, Info } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
+import Tooltip from '@/components/UI/Tooltip.vue';
 import { computed, ref } from 'vue';
 
-interface Check { label: string; status: 'ok' | 'warn' | 'fail'; detail: string }
+interface Check { label: string; category: string; status: 'ok' | 'warn' | 'fail'; detail: string }
 interface Info { php: string; laravel: string; environment: string }
 interface Maintenance { enabled: boolean; message: string }
 
-const props = defineProps<{ checks: Check[]; info: Info; maintenance: Maintenance }>();
+const props = defineProps<{ checks: Check[]; checkedAt: string; info: Info; maintenance: Maintenance }>();
+
+// Short "why this matters" text per check — keyed by label, mirrors the
+// event-metadata pattern used on the Activity Log page.
+const EXPLANATIONS: Record<string, string> = {
+    'PHP Version': 'The PHP runtime version the app is executing on. Older versions miss security fixes and language features this codebase relies on.',
+    'Laravel Version': 'The framework version currently installed.',
+    'PHP Extensions': 'Native PHP modules the app requires for database access, string handling, and encryption. Missing ones cause hard crashes, not degraded behavior.',
+    'APP_KEY': 'The encryption key used for sessions, cookies, and encrypted data. Without it, logins and encrypted fields break.',
+    'Database Connection': 'Whether the app can currently reach its configured database. Nothing works without this.',
+    'Storage Writable': 'The storage/ directory needs to be writable for logs, uploads, and cached views.',
+    'Bootstrap Cache Writable': 'Laravel writes compiled config and route caches here — if it can\'t, performance optimizations silently fail to apply.',
+    'Cache Writable': 'Confirms the configured cache driver actually accepts writes, not just that it\'s configured.',
+    'Session Driver': 'Where login sessions are stored (file, database, redis, etc).',
+    'Queue Driver': 'Where background jobs (emails, webhooks, backups) are dispatched to for processing.',
+    'Scheduler': 'The cron-driven process that runs Laravel\'s scheduled tasks every minute. If it stops, backups, cleanups, and other timed jobs silently stop running.',
+    'Queue Worker': 'The background process that actually executes queued jobs. If it stops, emails and other async work pile up unsent.',
+    'Reverb (Websockets)': 'The websocket server powering live notifications, presence, and real-time server stats.',
+    'Mail Configuration': 'Whether outbound email is configured. Password resets, notifications, and contact replies depend on this.',
+    'Installation Lock': 'Prevents the installer from running again. If missing, anyone can re-run setup on a live site.',
+    'Environment': 'Whether this instance is running in production or a lower environment (local/staging).',
+    'Debug Mode': 'When enabled, errors expose stack traces and environment details to visitors — a real information leak in production.',
+};
+
+const CATEGORY_ORDER = ['Runtime', 'Storage & Data', 'Background Services', 'Environment & Security'];
+const groupedChecks = computed(() => {
+    const groups = new Map<string, Check[]>();
+    for (const check of props.checks) {
+        if (!groups.has(check.category)) groups.set(check.category, []);
+        groups.get(check.category)!.push(check);
+    }
+    return CATEGORY_ORDER
+        .filter((cat) => groups.has(cat))
+        .map((cat) => ({ category: cat, items: groups.get(cat)! }));
+});
+
+const refreshing = ref(false);
+function refresh() {
+    refreshing.value = true;
+    router.reload({ only: ['checks', 'checkedAt', 'info', 'maintenance'], onFinish: () => { refreshing.value = false; } });
+}
+
+function formatCheckedAt(iso: string): string {
+    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
 
 const DEFAULT_MAINTENANCE_MSG = "We're performing scheduled maintenance. We'll be back very soon!";
 
@@ -76,6 +121,15 @@ const inputClass = 'w-full bg-zinc-900/60 border border-zinc-800/70 text-zinc-10
 
         <PageHeader title="System Health" description="Platform diagnostics and maintenance tools." :icon="HeartPulse">
             <template #actions>
+                <span class="text-xs text-zinc-600 hidden sm:inline">Checked {{ formatCheckedAt(checkedAt) }}</span>
+                <button
+                    type="button"
+                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800/70 bg-zinc-900/60 text-zinc-400 text-xs font-semibold hover:text-zinc-100 hover:border-zinc-700 transition-colors disabled:opacity-50"
+                    :disabled="refreshing"
+                    @click="refresh"
+                >
+                    <RefreshCw :size="12" :stroke-width="2" :class="refreshing ? 'animate-spin' : ''" /> {{ refreshing ? 'Refreshing…' : 'Refresh' }}
+                </button>
                 <a
                     href="/pulse"
                     target="_blank"
@@ -113,21 +167,21 @@ const inputClass = 'w-full bg-zinc-900/60 border border-zinc-800/70 text-zinc-10
 
         <!-- Summary bar -->
         <div class="grid grid-cols-3 gap-3 mb-5">
-            <div class="bg-emerald-500/5 border border-emerald-500/15 rounded-xl px-4 py-3 flex items-center gap-3">
+            <div class="hc-hero-in bg-emerald-500/5 border border-emerald-500/15 rounded-xl px-4 py-3 flex items-center gap-3" style="animation-delay: 0ms">
                 <CheckCircle2 :size="18" :stroke-width="1.75" class="text-emerald-400 shrink-0" />
                 <div>
                     <p class="text-2xl font-bold text-emerald-400 leading-none tabular-nums">{{ summary.ok }}</p>
                     <p class="text-xs text-zinc-500 mt-0.5">Passing</p>
                 </div>
             </div>
-            <div class="bg-amber-500/5 border border-amber-500/15 rounded-xl px-4 py-3 flex items-center gap-3">
+            <div class="hc-hero-in bg-amber-500/5 border border-amber-500/15 rounded-xl px-4 py-3 flex items-center gap-3" style="animation-delay: 40ms">
                 <AlertTriangle :size="18" :stroke-width="1.75" class="text-amber-400 shrink-0" />
                 <div>
                     <p class="text-2xl font-bold text-amber-400 leading-none tabular-nums">{{ summary.warn }}</p>
                     <p class="text-xs text-zinc-500 mt-0.5">Warnings</p>
                 </div>
             </div>
-            <div class="bg-red-500/5 border border-red-500/15 rounded-xl px-4 py-3 flex items-center gap-3">
+            <div class="hc-hero-in bg-red-500/5 border border-red-500/15 rounded-xl px-4 py-3 flex items-center gap-3" style="animation-delay: 80ms">
                 <XCircle :size="18" :stroke-width="1.75" class="text-red-400 shrink-0" />
                 <div>
                     <p class="text-2xl font-bold text-red-400 leading-none tabular-nums">{{ summary.fail }}</p>
@@ -139,28 +193,37 @@ const inputClass = 'w-full bg-zinc-900/60 border border-zinc-800/70 text-zinc-10
         <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_280px] gap-4 items-start">
 
             <!-- Checks list -->
-            <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 120ms">
                 <div class="px-4 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                     <HeartPulse :size="13" :stroke-width="1.75" class="text-zinc-600" />
                     <span class="text-sm font-semibold text-zinc-100">Diagnostics</span>
                     <span class="ml-auto text-xs text-zinc-600">{{ checks.length }} checks</span>
                 </div>
-                <div
-                    v-for="check in checks"
-                    :key="check.label"
-                    class="flex items-center justify-between px-4 py-3 border-b border-zinc-800/40 last:border-0 hover:bg-zinc-900/30 transition-colors"
-                >
-                    <div class="flex items-center gap-3 min-w-0">
-                        <span
-                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-bold shrink-0"
-                            :class="statusMeta[check.status].class"
-                        >
-                            <component :is="statusMeta[check.status].icon" :size="10" :stroke-width="2.5" />
-                            {{ statusMeta[check.status].label }}
-                        </span>
-                        <span class="text-zinc-200 text-sm">{{ check.label }}</span>
+
+                <div v-for="group in groupedChecks" :key="group.category">
+                    <div class="px-4 py-1.5 bg-[#1a1a1e] text-[10px] font-bold uppercase tracking-wider text-zinc-600">
+                        {{ group.category }}
                     </div>
-                    <span class="text-zinc-500 text-xs text-right ml-4 shrink-0 max-w-[45%] truncate font-mono">{{ check.detail }}</span>
+                    <div
+                        v-for="check in group.items"
+                        :key="check.label"
+                        class="flex items-center justify-between px-4 py-3 border-b border-zinc-800/40 last:border-0 hover:bg-zinc-900/30 transition-colors"
+                    >
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span
+                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-bold shrink-0"
+                                :class="statusMeta[check.status].class"
+                            >
+                                <component :is="statusMeta[check.status].icon" :size="10" :stroke-width="2.5" />
+                                {{ statusMeta[check.status].label }}
+                            </span>
+                            <span class="text-zinc-200 text-sm">{{ check.label }}</span>
+                            <Tooltip v-if="EXPLANATIONS[check.label]" :text="EXPLANATIONS[check.label]">
+                                <Info :size="11" :stroke-width="2" class="text-zinc-700 hover:text-zinc-400 transition-colors" />
+                            </Tooltip>
+                        </div>
+                        <span class="text-zinc-500 text-xs text-right ml-4 shrink-0 max-w-[45%] truncate font-mono">{{ check.detail }}</span>
+                    </div>
                 </div>
             </div>
 
@@ -168,7 +231,7 @@ const inputClass = 'w-full bg-zinc-900/60 border border-zinc-800/70 text-zinc-10
             <div class="flex flex-col gap-4">
 
                 <!-- Environment info -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 160ms">
                     <div class="px-4 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                         <Cpu :size="13" :stroke-width="1.75" class="text-zinc-600" />
                         <span class="text-sm font-semibold text-zinc-100">Environment</span>
@@ -195,7 +258,7 @@ const inputClass = 'w-full bg-zinc-900/60 border border-zinc-800/70 text-zinc-10
                 </div>
 
                 <!-- Maintenance mode -->
-                <div class="bg-[#111113] border rounded-xl overflow-hidden" :class="maintenance.enabled ? 'border-amber-500/30' : 'border-zinc-800/70'">
+                <div class="hc-hero-in bg-[#111113] border rounded-xl overflow-hidden" style="animation-delay: 200ms" :class="maintenance.enabled ? 'border-amber-500/30' : 'border-zinc-800/70'">
                     <div class="px-4 py-3 border-b flex items-center gap-2" :class="maintenance.enabled ? 'border-amber-500/20 bg-amber-500/5' : 'border-zinc-800/70'">
                         <Construction :size="13" :stroke-width="1.75" :class="maintenance.enabled ? 'text-amber-400' : 'text-zinc-600'" />
                         <span class="text-sm font-semibold text-zinc-100">Maintenance</span>
@@ -233,7 +296,7 @@ const inputClass = 'w-full bg-zinc-900/60 border border-zinc-800/70 text-zinc-10
                 </div>
 
                 <!-- Cache -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 240ms">
                     <div class="px-4 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                         <HardDrive :size="13" :stroke-width="1.75" class="text-zinc-600" />
                         <span class="text-sm font-semibold text-zinc-100">Cache</span>
