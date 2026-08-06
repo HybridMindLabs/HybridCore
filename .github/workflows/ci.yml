@@ -71,14 +71,14 @@ jobs:
       # live in their own repositories and are absent here, so CI runs fewer
       # tests than a developer with them checked out.
       #
-      # The threshold is a deliberately loose floor: 63.4% was measured locally
-      # *with* those extra suites present, so it is not CI's number. Raise this
-      # once a run reports the real figure.
+      # Real CI figure (run #31035223160, 2026-08-05): 67.7%. Floored at 60 —
+      # a few points of margin so one borderline PR doesn't redden the build,
+      # while still catching an actual coverage regression.
       #
       # Coverage is measured serially: per-worker line data would have to be
       # merged, and the suite is fast enough that it is not worth it.
       - name: Run tests
-        run: php artisan test --coverage --min=50
+        run: php artisan test --coverage --min=60
 
       # Parallel workers each get an isolated storage dir (see Tests\TestCase),
       # so this also guards against cross-process state leaking back in.
