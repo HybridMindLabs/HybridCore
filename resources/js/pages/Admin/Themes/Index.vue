@@ -67,14 +67,14 @@ function deactivateTheme(theme: Theme) {
 
         <!-- Summary bar -->
         <div v-if="themes.length > 0" class="grid grid-cols-2 gap-3 mb-5 max-w-xs">
-            <div class="bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3">
+            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3">
                 <Paintbrush :size="16" :stroke-width="1.75" class="text-zinc-500 shrink-0" />
                 <div>
                     <p class="text-2xl font-bold text-zinc-100 leading-none tabular-nums">{{ summary.total }}</p>
                     <p class="text-xs text-zinc-600 mt-0.5">Installed</p>
                 </div>
             </div>
-            <div class="bg-emerald-500/5 border border-emerald-500/15 rounded-xl px-4 py-3 flex items-center gap-3">
+            <div class="hc-hero-in bg-emerald-500/5 border border-emerald-500/15 rounded-xl px-4 py-3 flex items-center gap-3" style="animation-delay: 40ms">
                 <CheckCircle2 :size="16" :stroke-width="1.75" class="text-emerald-400 shrink-0" />
                 <div>
                     <p class="text-2xl font-bold text-emerald-400 leading-none tabular-nums">{{ summary.active }}</p>
@@ -85,7 +85,7 @@ function deactivateTheme(theme: Theme) {
 
         <!-- Empty state -->
         <template v-if="themes.length === 0">
-            <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-16 text-center mb-4">
+            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-16 text-center mb-4">
                 <div class="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center border bg-zinc-800 border-zinc-700">
                     <Paintbrush :size="22" :stroke-width="1.5" class="text-zinc-500" />
                 </div>
@@ -105,7 +105,7 @@ function deactivateTheme(theme: Theme) {
                 </button>
             </div>
 
-            <div class="flex items-start gap-3 bg-blue-500/5 border border-blue-500/20 rounded-xl px-4 py-4">
+            <div class="hc-hero-in flex items-start gap-3 bg-blue-500/5 border border-blue-500/20 rounded-xl px-4 py-4" style="animation-delay: 40ms">
                 <Info :size="15" :stroke-width="1.75" class="text-blue-400 mt-0.5 shrink-0" />
                 <div>
                     <p class="text-zinc-100 text-sm font-semibold mb-1">How themes work</p>
@@ -122,10 +122,11 @@ function deactivateTheme(theme: Theme) {
         <!-- Theme list -->
         <div v-else class="flex flex-col gap-3">
             <div
-                v-for="theme in themes"
+                v-for="(theme, i) in themes"
                 :key="theme.id"
-                class="bg-[#111113] border rounded-xl overflow-hidden"
+                class="hc-hero-in bg-[#111113] border rounded-xl overflow-hidden"
                 :class="theme.active ? 'border-blue-500/40' : 'border-zinc-800/70'"
+                :style="{ animationDelay: `${Math.min(i, 5) * 40}ms` }"
             >
                 <div class="flex items-center gap-4 p-4">
                     <!-- Preview thumbnail -->

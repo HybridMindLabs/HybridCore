@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { Settings, Globe, Search, Users, ShieldCheck, Puzzle, WrenchIcon, ExternalLink, Scale, ArrowRight, Mail, Shield, Send } from '@lucide/vue';
+import { Settings, Globe, Search, Users, ShieldCheck, Puzzle, WrenchIcon, ExternalLink, Scale, ArrowRight, Mail, Shield, Send, Paintbrush, Locate, Link2 } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
 import { Link } from '@inertiajs/vue3';
@@ -14,6 +14,7 @@ interface Props {
         timezone: string;
         maintenance_mode: boolean;
         active_theme: string;
+        active_theme_name: string | null;
         seo_site_title: string;
         seo_meta_description: string;
         seo_og_image: string;
@@ -64,8 +65,8 @@ interface Props {
         captcha_recaptcha_v3_secret_key_set: boolean;
     };
     localeCatalog: Record<string, { name: string; native_name: string }>;
-    locales: Record<string, string>;
     timezones: string[];
+    roles: { id: number; name: string; slug: string; color: string }[];
     extensionSettings: { slug: string; label: string; url: string; permission: string | null }[];
 }
 
@@ -144,10 +145,22 @@ const form = useForm({
 });
 
 function submit() {
+    // Default locale is edited only on the Localization tab — keep the legacy
+    // top-level setting in sync so nothing reads a stale value.
+    form.default_locale = form.loc_default_locale;
     form.put(route('admin.settings.update'));
 }
 
 const inputClass = 'w-full bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 placeholder:text-zinc-600';
+
+function useCurrentUrl() {
+    form.app_url = window.location.origin;
+}
+
+const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+function detectTimezone() {
+    if (props.timezones.includes(detectedTimezone)) form.timezone = detectedTimezone;
+}
 
 // Test email
 const testEmailAddress = ref('');
@@ -279,24 +292,38 @@ function goToSetting(result: { tab: string; label: string }) {
                         </div>
                         <div class="flex flex-col gap-1.5">
                             <label class="text-zinc-400 text-xs font-medium">Application URL</label>
-                            <input v-model="form.app_url" type="url" :class="[inputClass, form.errors.app_url ? 'border-red-500' : '']" placeholder="https://example.com" />
+                            <div class="flex gap-2">
+                                <input v-model="form.app_url" type="url" :class="[inputClass, form.errors.app_url ? 'border-red-500' : '']" placeholder="https://example.com" />
+                                <button
+                                    type="button"
+                                    title="Fill in the URL you're currently browsing this admin panel from"
+                                    class="flex items-center gap-1.5 px-3 rounded-lg text-xs font-medium border border-zinc-800/70 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 transition-colors shrink-0"
+                                    @click="useCurrentUrl"
+                                >
+                                    <Link2 :size="12" :stroke-width="1.75" /> Use current
+                                </button>
+                            </div>
                             <p class="text-zinc-600 text-xs">The public-facing URL. Used for generating links in emails and OAuth callbacks.</p>
                             <p v-if="form.errors.app_url" class="text-red-400 text-xs">{{ form.errors.app_url }}</p>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="flex flex-col gap-1.5">
-                            <label class="text-zinc-400 text-xs font-medium">Default locale</label>
-                            <select v-model="form.default_locale" :class="inputClass">
-                                <option v-for="(label, code) in locales" :key="code" :value="code">{{ label }}</option>
-                            </select>
-                        </div>
-                        <div class="flex flex-col gap-1.5">
-                            <label class="text-zinc-400 text-xs font-medium">Timezone</label>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-zinc-400 text-xs font-medium">
+                            Timezone <span class="text-zinc-600 font-normal">— default locale lives on the Localization tab</span>
+                        </label>
+                        <div class="flex gap-2">
                             <select v-model="form.timezone" :class="inputClass">
                                 <option v-for="tz in timezones" :key="tz" :value="tz">{{ tz }}</option>
                             </select>
+                            <button
+                                type="button"
+                                :title="`Detected: ${detectedTimezone}`"
+                                class="flex items-center gap-1.5 px-3 rounded-lg text-xs font-medium border border-zinc-800/70 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 transition-colors shrink-0"
+                                @click="detectTimezone"
+                            >
+                                <Locate :size="12" :stroke-width="1.75" /> Detect
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -306,8 +333,19 @@ function goToSetting(result: { tab: string; label: string }) {
 
                     <div class="flex flex-col gap-1.5">
                         <label class="text-zinc-400 text-xs font-medium">Active theme</label>
-                        <input v-model="form.active_theme" type="text" placeholder="hybridcore/default" :class="[inputClass, 'font-mono']" />
-                        <p class="text-zinc-600 text-xs">Use the <a :href="route('admin.themes.index')" class="text-blue-400 hover:underline">Themes page</a> to activate themes visually.</p>
+                        <Link
+                            :href="route('admin.themes.index')"
+                            class="flex items-center justify-between px-3.5 py-2.5 rounded-lg border border-zinc-800/70 bg-zinc-900/60 hover:border-blue-500/40 hover:bg-blue-500/5 transition-colors group"
+                        >
+                            <span class="flex items-center gap-2">
+                                <Paintbrush :size="13" :stroke-width="1.75" class="text-zinc-500" />
+                                <span class="text-sm text-zinc-200">{{ settings.active_theme_name ?? settings.active_theme }}</span>
+                            </span>
+                            <span class="flex items-center gap-1 text-xs text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                Change on Themes page <ArrowRight :size="11" :stroke-width="1.75" />
+                            </span>
+                        </Link>
+                        <p class="text-zinc-600 text-xs">Managed from the <a :href="route('admin.themes.index')" class="text-blue-400 hover:underline">Themes page</a> so activation always goes through its safety checks — not editable here.</p>
                     </div>
 
                     <div class="flex items-center justify-between py-3 border-t border-zinc-800/70">
@@ -343,6 +381,7 @@ function goToSetting(result: { tab: string; label: string }) {
                                     {{ meta.native_name }} ({{ code }})
                                 </option>
                             </select>
+                            <p class="text-zinc-600 text-xs">Language shown to visitors who haven't picked one — the single site-wide default.</p>
                             <p v-if="form.errors.loc_default_locale" class="text-red-400 text-xs">{{ form.errors.loc_default_locale }}</p>
                         </div>
                         <div class="flex flex-col gap-1.5">
@@ -455,7 +494,8 @@ function goToSetting(result: { tab: string; label: string }) {
             <!-- Users & Access -->
             <div v-show="activeTab === 'users'" data-tab="users" class="flex flex-col gap-4">
                 <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
-                    <h3 class="text-zinc-100 text-sm font-semibold mb-4">Registration</h3>
+                    <h3 class="text-zinc-100 text-sm font-semibold">Registration</h3>
+                    <p class="text-zinc-600 text-xs mt-1 mb-3">Controls how visitors turn into accounts on the public site.</p>
 
                     <div class="flex items-center justify-between py-3 border-t border-zinc-800/70">
                         <div>
@@ -493,8 +533,13 @@ function goToSetting(result: { tab: string; label: string }) {
 
                     <div class="flex flex-col gap-1.5">
                         <label class="text-zinc-400 text-xs font-medium">Default user role</label>
-                        <input v-model="form.default_user_role" type="text" :class="[inputClass, 'font-mono max-w-[200px]']" placeholder="member" />
-                        <p class="text-zinc-600 text-xs">Role slug assigned to new users automatically on registration.</p>
+                        <select v-model="form.default_user_role" :class="[inputClass, 'max-w-[260px]']">
+                            <option v-for="role in roles" :key="role.slug" :value="role.slug">{{ role.name }}</option>
+                        </select>
+                        <p class="text-zinc-600 text-xs">Assigned automatically to every new account on registration. Doesn't affect existing users.</p>
+                        <p v-if="!roles.some(r => r.slug === form.default_user_role)" class="text-amber-400 text-xs">
+                            Current value "{{ form.default_user_role }}" doesn't match any existing role — pick one to fix it.
+                        </p>
                     </div>
                     <div class="flex flex-col gap-1.5 pt-3 border-t border-zinc-800/70">
                         <label class="text-zinc-400 text-xs font-medium">Username change cooldown (days)</label>

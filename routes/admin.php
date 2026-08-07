@@ -72,6 +72,7 @@ Route::middleware('perm:users.manage')->group(function (): void {
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('/users/{user}/impersonate', [ImpersonationController::class, 'start'])->name('admin.users.impersonate');
     Route::post('/users/{user}/unlock', [UserController::class, 'unlock'])->name('admin.users.unlock');
+    Route::delete('/users/{user}/sessions/{session}', [UserController::class, 'revokeSession'])->name('admin.users.sessions.destroy');
     Route::post('/users/{user}/notes', [UserController::class, 'storeNote'])->name('admin.users.notes.store');
     Route::delete('/users/{user}/notes/{note}', [UserController::class, 'destroyNote'])->name('admin.users.notes.destroy');
 
@@ -98,7 +99,7 @@ Route::middleware('perm:settings.view')->group(function (): void {
 });
 Route::middleware('perm:settings.manage')->group(function (): void {
     Route::put('/settings', [SettingController::class, 'update'])->name('admin.settings.update');
-    Route::post('/settings/test-email', [SettingController::class, 'testEmail'])->name('admin.settings.test-email');
+    Route::post('/settings/test-email', [SettingController::class, 'testEmail'])->name('admin.settings.test-email')->middleware('throttle:10,1');
     Route::get('/legal', [LegalController::class, 'index'])->name('admin.legal.index');
     Route::get('/legal/create', [LegalController::class, 'create'])->name('admin.legal.create');
     Route::post('/legal', [LegalController::class, 'store'])->name('admin.legal.store');
@@ -152,7 +153,7 @@ Route::middleware('perm:system.manage')->group(function (): void {
     Route::post('/system-health/clear-routes', [SystemHealthController::class, 'clearRouteCache'])->name('admin.system-health.clear-routes');
     Route::put('/updates/channel', [UpdateController::class, 'updateChannel'])->name('admin.updates.channel');
     Route::post('/updates/check', [UpdateController::class, 'check'])->name('admin.updates.check');
-    Route::post('/updates/apply', [UpdateController::class, 'apply'])->name('admin.updates.apply');
+    Route::post('/updates/apply', [UpdateController::class, 'apply'])->name('admin.updates.apply')->middleware('throttle:5,1');
 
     // Maintenance mode
     Route::post('/maintenance/enable', [MaintenanceController::class, 'enable'])->name('admin.maintenance.enable');
@@ -181,8 +182,8 @@ Route::middleware('perm:extensions.view')->group(function (): void {
 Route::middleware('perm:extensions.manage')->group(function (): void {
     Route::post('/extensions/sync', [ExtensionController::class, 'sync'])->name('admin.extensions.sync');
     Route::post('/extensions/rebuild', [ExtensionController::class, 'rebuild'])->name('admin.extensions.rebuild');
-    Route::post('/extensions/import/preview', [ExtensionController::class, 'previewImport'])->name('admin.extensions.import.preview');
-    Route::post('/extensions/import/confirm', [ExtensionController::class, 'confirmImport'])->name('admin.extensions.import.confirm');
+    Route::post('/extensions/import/preview', [ExtensionController::class, 'previewImport'])->name('admin.extensions.import.preview')->middleware('throttle:10,1');
+    Route::post('/extensions/import/confirm', [ExtensionController::class, 'confirmImport'])->name('admin.extensions.import.confirm')->middleware('throttle:10,1');
     Route::post('/extensions/bulk', [ExtensionController::class, 'bulkAction'])->name('admin.extensions.bulk');
     Route::post('/extensions/check-updates', [ExtensionController::class, 'checkUpdates'])->name('admin.extensions.check-updates');
     Route::post('/extensions/{extension}/update', [ExtensionController::class, 'update'])->name('admin.extensions.update');
@@ -209,7 +210,8 @@ Route::middleware('perm:webhooks.manage')->group(function (): void {
     Route::post('/webhooks', [WebhookController::class, 'store'])->name('admin.webhooks.store');
     Route::put('/webhooks/{webhook}', [WebhookController::class, 'update'])->name('admin.webhooks.update');
     Route::post('/webhooks/{webhook}/regenerate-secret', [WebhookController::class, 'regenerateSecret'])->name('admin.webhooks.regenerate-secret');
-    Route::post('/webhooks/{webhook}/test', [WebhookController::class, 'sendTest'])->name('admin.webhooks.test');
+    Route::post('/webhooks/{webhook}/test', [WebhookController::class, 'sendTest'])->name('admin.webhooks.test')->middleware('throttle:10,1');
+    Route::post('/webhooks/{webhook}/deliveries/{delivery}/retry', [WebhookController::class, 'retryDelivery'])->name('admin.webhooks.deliveries.retry');
     Route::delete('/webhooks/{webhook}', [WebhookController::class, 'destroy'])->name('admin.webhooks.destroy');
 });
 
@@ -235,8 +237,8 @@ Route::middleware('perm:email.view')->group(function (): void {
 });
 Route::middleware('perm:email.manage')->group(function (): void {
     Route::post('/email/settings', [EmailController::class, 'saveSettings'])->name('admin.email.settings.save');
-    Route::post('/email/test-connection', [EmailController::class, 'testConnection'])->name('admin.email.test-connection');
-    Route::post('/email/send-test', [EmailController::class, 'sendTestEmail'])->name('admin.email.send-test');
+    Route::post('/email/test-connection', [EmailController::class, 'testConnection'])->name('admin.email.test-connection')->middleware('throttle:10,1');
+    Route::post('/email/send-test', [EmailController::class, 'sendTestEmail'])->name('admin.email.send-test')->middleware('throttle:10,1');
     Route::put('/email/templates/{template}', [EmailController::class, 'templateUpdate'])->name('admin.email.templates.update');
     Route::post('/email/templates/preview', [EmailController::class, 'templatePreview'])->name('admin.email.templates.preview');
 });
@@ -253,6 +255,7 @@ Route::middleware('perm:servers.manage')->group(function (): void {
     Route::post('/servers/{server}/refresh', [AdminServerController::class, 'refresh'])->name('admin.servers.refresh');
     Route::post('/servers/{server}/bridge-token', [AdminServerController::class, 'issueBridgeToken'])->name('admin.servers.bridge.issue');
     Route::delete('/servers/{server}/bridge-token', [AdminServerController::class, 'revokeBridgeToken'])->name('admin.servers.bridge.revoke');
+    Route::post('/servers/{server}/commands/{command}/cancel', [AdminServerController::class, 'cancelCommand'])->name('admin.servers.commands.cancel');
     Route::delete('/servers/{server}', [AdminServerController::class, 'destroy'])->name('admin.servers.destroy');
     Route::post('/servers/bulk', [AdminServerController::class, 'bulkAction'])->name('admin.servers.bulk');
 

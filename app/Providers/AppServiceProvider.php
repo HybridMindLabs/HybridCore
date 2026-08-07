@@ -6,6 +6,7 @@ use App\Events\NotificationCreated;
 use App\Games\GameDriverRegistry;
 use App\Models\User;
 use App\Services\Auth\OAuthProviderRegistry;
+use App\Services\Bridge\BridgeService;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -139,6 +140,19 @@ class AppServiceProvider extends ServiceProvider
             $key = $request->user()?->currentAccessToken()?->id ?? $request->ip();
 
             return Limit::perMinute((int) config('hybridcore.api_token_rate_limit', 60))->by('api-token:'.$key);
+        });
+
+        // Game-server bridge. Keyed by the resolved server, not the caller's
+        // IP — several servers legitimately share a box/NAT and must not
+        // share one bucket. Resolves the token itself rather than reading
+        // the "bridgeServer" attribute AuthenticateBridgeServer sets:
+        // Laravel's global middleware priority list can reorder a route's
+        // middleware relative to framework ones like ThrottleRequests, so
+        // this can't assume that middleware already ran first.
+        RateLimiter::for('bridge', function (Request $request) {
+            $server = app(BridgeService::class)->resolveServer($request->bearerToken());
+
+            return Limit::perMinute((int) config('hybridcore.bridge_rate_limit', 120))->by('bridge:'.($server?->id ?? $request->ip()));
         });
 
         // Core OAuth providers. Credentials live in admin settings, not .env —

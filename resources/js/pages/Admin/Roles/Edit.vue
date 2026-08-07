@@ -55,7 +55,7 @@ function deleteRole() {
         </div>
 
         <!-- System role notice -->
-        <div v-if="role.is_system" class="mb-5 flex items-start gap-3 bg-[#f59e0b]/10 border border-[#f59e0b]/30 rounded-xl px-4 py-3">
+        <div v-if="role.is_system" class="hc-hero-in mb-5 flex items-start gap-3 bg-[#f59e0b]/10 border border-[#f59e0b]/30 rounded-xl px-4 py-3">
             <Lock :size="15" :stroke-width="1.75" class="text-[#f59e0b] mt-0.5 shrink-0" />
             <div>
                 <p class="text-[#f59e0b] text-sm font-medium">System role</p>
@@ -67,10 +67,10 @@ function deleteRole() {
             <div class="flex flex-col xl:flex-row gap-5 items-start">
 
                 <!-- Left: identity -->
-                <div class="w-full xl:w-80 shrink-0 flex flex-col gap-4">
+                <div class="w-full xl:w-80 shrink-0 flex flex-col gap-4 xl:sticky xl:top-6">
 
                     <!-- Preview card -->
-                    <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-4">
+                    <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-4">
                         <p class="text-zinc-600 text-[11px] uppercase tracking-wide font-medium mb-3">Preview</p>
                         <div class="flex items-center gap-3">
                             <span
@@ -100,7 +100,7 @@ function deleteRole() {
                     </div>
 
                     <!-- Identity fields -->
-                    <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-4 flex flex-col gap-4">
+                    <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-4 flex flex-col gap-4" style="animation-delay: 40ms">
                         <p class="text-zinc-600 text-[11px] uppercase tracking-wide font-medium">Identity</p>
 
                         <div class="flex flex-col gap-1.5">
@@ -143,7 +143,7 @@ function deleteRole() {
                     </div>
 
                     <!-- Appearance -->
-                    <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-4 flex flex-col gap-4">
+                    <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-4 flex flex-col gap-4" style="animation-delay: 80ms">
                         <p class="text-zinc-600 text-[11px] uppercase tracking-wide font-medium">Appearance</p>
 
                         <div class="flex flex-col gap-1.5">
@@ -183,7 +183,7 @@ function deleteRole() {
                     </div>
 
                     <!-- Actions -->
-                    <div class="flex items-center gap-3">
+                    <div class="hc-hero-in flex items-center gap-3 flex-wrap" style="animation-delay: 100ms">
                         <button
                             type="submit"
                             :disabled="form.processing"
@@ -194,10 +194,14 @@ function deleteRole() {
                         <Link :href="route('admin.roles.index')" class="text-zinc-400 hover:text-zinc-100 text-sm transition-colors">
                             Cancel
                         </Link>
+                        <span v-if="form.isDirty" class="flex items-center gap-1.5 text-amber-400 text-xs font-medium w-full">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                            Unsaved changes
+                        </span>
                     </div>
 
                     <!-- Danger zone -->
-                    <div v-if="!role.is_system" class="bg-[#111113] border border-red-500/20 rounded-xl p-4">
+                    <div v-if="!role.is_system" class="hc-hero-in bg-[#111113] border border-red-500/20 rounded-xl p-4" style="animation-delay: 140ms">
                         <p class="text-red-400 text-xs font-semibold mb-1">Danger Zone</p>
                         <p class="text-zinc-600 text-xs mb-3">Permanently deletes this role. Users assigned to it will lose any permissions granted only by it.</p>
                         <button
@@ -211,7 +215,7 @@ function deleteRole() {
                 </div>
 
                 <!-- Right: permissions -->
-                <div class="flex-1 min-w-0">
+                <div class="hc-hero-in flex-1 min-w-0" style="animation-delay: 60ms">
                     <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-4">
                         <div class="flex items-center justify-between mb-4">
                             <p class="text-zinc-100 text-sm font-semibold">Permissions</p>

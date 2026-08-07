@@ -129,23 +129,23 @@ function userInitials(name: string) {
 
         <!-- Stats bar -->
         <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
-            <div class="bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3">
+            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3" style="animation-delay: 0ms">
                 <p class="text-zinc-600 text-[11px] font-medium uppercase tracking-wider mb-0.5">Total</p>
                 <p class="text-zinc-100 text-xl font-bold tabular-nums">{{ stats.total.toLocaleString() }}</p>
             </div>
-            <div class="bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3">
+            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3" style="animation-delay: 40ms">
                 <p class="text-zinc-600 text-[11px] font-medium uppercase tracking-wider mb-0.5">Active</p>
                 <p class="text-emerald-400 text-xl font-bold tabular-nums">{{ stats.active.toLocaleString() }}</p>
             </div>
-            <div class="bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3">
+            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3" style="animation-delay: 80ms">
                 <p class="text-zinc-600 text-[11px] font-medium uppercase tracking-wider mb-0.5">Banned</p>
                 <p class="text-red-400 text-xl font-bold tabular-nums">{{ stats.banned.toLocaleString() }}</p>
             </div>
-            <div class="bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3">
+            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3" style="animation-delay: 120ms">
                 <p class="text-zinc-600 text-[11px] font-medium uppercase tracking-wider mb-0.5">Admins</p>
                 <p class="text-blue-400 text-xl font-bold tabular-nums">{{ stats.admins.toLocaleString() }}</p>
             </div>
-            <div class="bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3">
+            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3" style="animation-delay: 160ms">
                 <p class="text-zinc-600 text-[11px] font-medium uppercase tracking-wider mb-0.5">Unverified</p>
                 <p class="text-amber-400 text-xl font-bold tabular-nums">{{ stats.unverified.toLocaleString() }}</p>
             </div>

@@ -40,14 +40,18 @@ const lc = 'text-zinc-500 text-[11px] font-bold uppercase tracking-widest mb-1.5
 <template>
     <Head :title="`Edit: ${category.name}`" />
     <AdminLayout :title="`Edit: ${category.name}`">
-        <div class="flex items-center gap-3 mb-5">
+        <div class="flex items-center justify-between mb-5">
             <Link :href="route('admin.news.categories.index')" class="flex items-center gap-1.5 text-[13px] text-zinc-500 hover:text-zinc-200 transition">
                 <ChevronLeft :size="14" :stroke-width="2" /> Categories
             </Link>
+            <span v-if="form.isDirty" class="flex items-center gap-1.5 text-amber-400 text-xs font-medium">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                Unsaved changes
+            </span>
         </div>
 
         <div class="max-w-2xl">
-            <div class="rounded-2xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+            <div class="hc-hero-in rounded-2xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
                 <div class="border-b border-zinc-800/60 bg-[#1a1a1e] px-5 py-3.5">
                     <h2 class="text-[14px] font-bold text-zinc-100">Edit Category</h2>
                 </div>

@@ -100,16 +100,22 @@ const breadcrumbs = [
                     <p class="text-zinc-600 text-[11px] font-mono">{{ template.slug }}</p>
                 </div>
             </div>
-            <button type="button" @click="togglePreview"
-                class="flex items-center gap-1.5 bg-zinc-800 border border-zinc-700 text-zinc-300 text-sm font-semibold rounded-lg px-3 py-2 hover:bg-zinc-700 transition-colors">
-                <Eye :size="13" />
-                {{ showPreview ? 'Hide Preview' : 'Live Preview' }}
-            </button>
+            <div class="flex items-center gap-3">
+                <span v-if="form.isDirty" class="flex items-center gap-1.5 text-amber-400 text-xs font-medium">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                    Unsaved changes
+                </span>
+                <button type="button" @click="togglePreview"
+                    class="flex items-center gap-1.5 bg-zinc-800 border border-zinc-700 text-zinc-300 text-sm font-semibold rounded-lg px-3 py-2 hover:bg-zinc-700 transition-colors">
+                    <Eye :size="13" />
+                    {{ showPreview ? 'Hide Preview' : 'Live Preview' }}
+                </button>
+            </div>
         </div>
 
         <div :class="showPreview ? 'grid grid-cols-2 gap-4' : 'max-w-2xl'">
             <!-- Editor -->
-            <form @submit.prevent="save" class="space-y-4">
+            <form @submit.prevent="save" class="hc-hero-in space-y-4">
                 <div>
                     <label class="block text-zinc-500 text-[11px] font-semibold uppercase tracking-wide mb-1">Template Name</label>
                     <input v-model="form.name" type="text" required

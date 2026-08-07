@@ -33,6 +33,7 @@ use Laravel\Scout\Searchable;
  * @property-read User|null $addedBy
  * @property-read Collection<int, ServerCommand> $bridgeCommands
  * @property-read int|null $bridge_commands_count
+ * @property-read int|null $pending_command_count
  * @property-read Collection<int, ServerConnectionClick> $connectionClicks
  * @property-read int|null $connection_clicks_count
  * @property-read Collection<int, User> $favouritedBy

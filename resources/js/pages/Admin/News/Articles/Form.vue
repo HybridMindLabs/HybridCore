@@ -95,7 +95,7 @@ function submit() {
         <div class="flex flex-col gap-4">
 
             <!-- Title -->
-            <div class="rounded-2xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+            <div class="hc-hero-in rounded-2xl border border-zinc-800/70 bg-[#111113] overflow-hidden" style="animation-delay: 0ms">
                 <div class="border-b border-zinc-800/60 bg-[#1a1a1e] px-5 py-3">
                     <h2 class="text-[13px] font-bold text-zinc-100">Title</h2>
                 </div>
@@ -109,16 +109,18 @@ function submit() {
             </div>
 
             <!-- Markdown editor -->
-            <MarkdownEditor v-model="form.body" :upload-route="uploadRoute" />
+            <div class="hc-hero-in" style="animation-delay: 40ms">
+                <MarkdownEditor v-model="form.body" :upload-route="uploadRoute" />
+            </div>
             <p v-if="form.errors.body" class="text-red-400 text-xs -mt-2">{{ form.errors.body }}</p>
 
         </div>
 
         <!-- ── Right: sidebar ──────────────────────────────────────────── -->
-        <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-4 xl:sticky xl:top-6 xl:self-start">
 
             <!-- Publish -->
-            <div class="rounded-2xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+            <div class="hc-hero-in rounded-2xl border border-zinc-800/70 bg-[#111113] overflow-hidden" style="animation-delay: 60ms">
                 <div class="border-b border-zinc-800/60 bg-[#1a1a1e] px-4 py-3">
                     <h2 class="text-[13px] font-bold text-zinc-100">Publish</h2>
                 </div>
@@ -162,7 +164,7 @@ function submit() {
             </div>
 
             <!-- Featured image -->
-            <div class="rounded-2xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+            <div class="hc-hero-in rounded-2xl border border-zinc-800/70 bg-[#111113] overflow-hidden" style="animation-delay: 100ms">
                 <div class="border-b border-zinc-800/60 bg-[#1a1a1e] px-4 py-3">
                     <h2 class="text-[13px] font-bold text-zinc-100">Featured Image</h2>
                 </div>
@@ -216,7 +218,7 @@ function submit() {
             </div>
 
             <!-- Category -->
-            <div class="rounded-2xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+            <div class="hc-hero-in rounded-2xl border border-zinc-800/70 bg-[#111113] overflow-hidden" style="animation-delay: 140ms">
                 <div class="border-b border-zinc-800/60 bg-[#1a1a1e] px-4 py-3">
                     <h2 class="text-[13px] font-bold text-zinc-100">Category</h2>
                 </div>
@@ -229,7 +231,7 @@ function submit() {
             </div>
 
             <!-- Tags -->
-            <div class="rounded-2xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+            <div class="hc-hero-in rounded-2xl border border-zinc-800/70 bg-[#111113] overflow-hidden" style="animation-delay: 180ms">
                 <div class="border-b border-zinc-800/60 bg-[#1a1a1e] px-4 py-3">
                     <h2 class="text-[13px] font-bold text-zinc-100">Tags</h2>
                 </div>

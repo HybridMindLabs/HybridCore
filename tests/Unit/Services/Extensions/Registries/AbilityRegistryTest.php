@@ -18,7 +18,7 @@ class AbilityRegistryTest extends TestCase
 
         $all = $registry->all();
 
-        $this->assertSame(['label' => 'Read Store', 'group' => 'store'], $all['store:read']);
+        $this->assertSame(['label' => 'Read Store', 'group' => 'store', 'description' => null], $all['store:read']);
         $this->assertArrayHasKey('notifications:read', $all);
         $this->assertArrayHasKey('notifications:write', $all);
     }

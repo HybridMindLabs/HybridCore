@@ -8,7 +8,6 @@ use App\Models\WebhookDelivery;
 use App\Models\WebhookEndpoint;
 use App\Services\ActivityLogService;
 use App\Services\Extensions\Registries\WebhookEventRegistry;
-use App\Support\Hooks;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -34,14 +33,14 @@ class WebhookController extends Controller
         ]);
     }
 
-    /** @return array<int, string> Core Hooks:: plus every key an enabled extension registered via WebhookEventRegistry. */
+    /** @return array<string, array{label: string, group: string}> Every core Hooks:: event plus every key an enabled extension registered — both go through WebhookEventRegistry now, core registers at boot in ExtensionServiceProvider. */
     private function availableEvents(): array
     {
-        return array_values(array_unique([...Hooks::all(), ...array_keys($this->extensionEvents->all())]));
+        return $this->extensionEvents->all();
     }
 
     /**
-     * @return array{id: int, name: string, url: string, events: array<int, string>, is_active: bool, last_triggered_at: string|null, last_status: string|null, last_response_code: int|null, created_at: string, deliveries: array<int, array{event: string, success: bool, response_code: int|null, error: string|null, created_at: string|null}>}
+     * @return array{id: int, name: string, url: string, events: array<int, string>, is_active: bool, last_triggered_at: string|null, last_status: string|null, last_response_code: int|null, created_at: string, deliveries: array<int, array{id: int, event: string, success: bool, response_code: int|null, error: string|null, created_at: string|null, retryable: bool}>}
      */
     private function toArray(WebhookEndpoint $endpoint): array
     {
@@ -56,11 +55,13 @@ class WebhookController extends Controller
             'last_response_code' => $endpoint->last_response_code,
             'created_at' => $endpoint->created_at->toDateTimeString(),
             'deliveries' => $endpoint->deliveries->map(fn (WebhookDelivery $d) => [
+                'id' => $d->id,
                 'event' => $d->event,
                 'success' => $d->success,
                 'response_code' => $d->response_code,
                 'error' => $d->error,
                 'created_at' => $d->created_at?->toDateTimeString(),
+                'retryable' => ! $d->success && $d->payload !== null,
             ])->values()->all(),
         ];
     }
@@ -71,7 +72,7 @@ class WebhookController extends Controller
             'name' => ['required', 'string', 'max:100'],
             'url' => ['required', 'url', 'max:500'],
             'events' => ['required', 'array', 'min:1'],
-            'events.*' => ['string', 'in:'.implode(',', $this->availableEvents())],
+            'events.*' => ['string', 'in:'.implode(',', array_keys($this->availableEvents()))],
         ];
     }
 
@@ -128,6 +129,22 @@ class WebhookController extends Controller
         } catch (Throwable $e) {
             return back()->with('error', 'Test delivery failed: '.$e->getMessage());
         }
+    }
+
+    /** Re-fires a failed delivery's exact original payload — for a receiver that was down, not a broken one that needs a code fix first. */
+    public function retryDelivery(WebhookEndpoint $webhook, WebhookDelivery $delivery): RedirectResponse
+    {
+        abort_unless($delivery->webhook_endpoint_id === $webhook->id, 404);
+
+        if ($delivery->success || $delivery->payload === null) {
+            return back()->with('error', 'This delivery cannot be retried.');
+        }
+
+        DeliverWebhookJob::dispatch($webhook->id, $delivery->event, $delivery->payload);
+
+        $this->activityLog->log('webhook.delivery_retried', "Retried a delivery for webhook \"{$webhook->name}\"", $webhook);
+
+        return back()->with('success', 'Retry queued.');
     }
 
     public function destroy(WebhookEndpoint $webhook): RedirectResponse

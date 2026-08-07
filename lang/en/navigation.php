@@ -50,6 +50,7 @@ return [
         'communication' => 'Communication',
         'analytics' => 'Analytics',
         'system' => 'System',
+        'developer' => 'Developer',
         'extensions' => 'Extensions',
     ],
     'breadcrumb' => 'Breadcrumb',

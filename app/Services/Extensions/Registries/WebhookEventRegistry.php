@@ -19,6 +19,14 @@ class WebhookEventRegistry
         $this->events[$key] = ['label' => $label, 'group' => $group];
     }
 
+    /** @param array<string, array{label: string, group: string}> $events */
+    public function registerMany(array $events): void
+    {
+        foreach ($events as $key => $def) {
+            $this->register($key, $def['label'], $def['group']);
+        }
+    }
+
     /** @return array<string, array{label: string, group: string}> */
     public function all(): array
     {

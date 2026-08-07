@@ -61,6 +61,7 @@ class BackupController extends Controller
                 'menus' => Menu::count(),
             ],
             'backups' => array_slice($backups, 0, 20),
+            'backups_total' => count($backups),
             'mysqldump_available' => $this->dbBackup->findMysqldump() !== null,
             'schedule' => [
                 'backup_schedule' => $this->settings->get('backup_schedule', 'off'),

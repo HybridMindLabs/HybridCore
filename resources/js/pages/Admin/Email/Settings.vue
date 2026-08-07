@@ -85,7 +85,7 @@ const breadcrumbs = [
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <!-- SMTP Config -->
-            <div class="lg:col-span-2 bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+            <div class="hc-hero-in lg:col-span-2 bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 0ms">
                 <h2 class="text-zinc-300 text-sm font-bold mb-4">SMTP Configuration</h2>
                 <form @submit.prevent="save" class="space-y-4">
                     <div>
@@ -154,12 +154,16 @@ const breadcrumbs = [
                             Save Settings
                         </button>
                         <span v-if="form.recentlySuccessful" class="text-emerald-400 text-xs">Saved!</span>
+                        <span v-else-if="form.isDirty" class="flex items-center gap-1.5 text-amber-400 text-xs font-medium">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                            Unsaved changes
+                        </span>
                     </div>
                 </form>
             </div>
 
             <!-- Test panel -->
-            <div class="space-y-4">
+            <div class="hc-hero-in space-y-4" style="animation-delay: 60ms">
                 <!-- Connection test -->
                 <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-4">
                     <h2 class="text-zinc-300 text-sm font-bold mb-3">Test Connection</h2>

@@ -10,6 +10,7 @@ use App\Services\Extensions\Registries\FilterRegistry;
 use App\Support\Filters;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class ExtensionSdkV2Test extends TestCase
@@ -110,6 +111,13 @@ class ExtensionSdkV2Test extends TestCase
 
     public function test_assets_are_published_on_enable_and_removed_on_uninstall(): void
     {
+        // publishAssets() runs synchronously before the rebuild job is
+        // dispatched — faking the queue keeps this test to that file copy,
+        // instead of a real npm build racing other parallel test workers on
+        // the shared public/build directory (see ExtensionManagerTest for
+        // the same pattern around enable()/disable()).
+        Queue::fake();
+
         $base = base_path('extensions/Testvendor/Assets');
         File::ensureDirectoryExists($base.'/resources/assets/img');
         file_put_contents($base.'/extension.json', json_encode([

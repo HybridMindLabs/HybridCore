@@ -35,7 +35,7 @@ Route::prefix('v1')->group(function () {
 // ── Game-server bridge ──────────────────────────────────────────
 // Consumed by the in-game plugin with a per-server bearer token.
 Route::prefix('bridge')
-    ->middleware([AuthenticateBridgeServer::class, 'throttle:120,1'])
+    ->middleware([AuthenticateBridgeServer::class, 'throttle:bridge'])
     ->group(function () {
         Route::post('poll', [BridgeController::class, 'poll'])->name('api.bridge.poll');
         Route::post('ack', [BridgeController::class, 'ack'])->name('api.bridge.ack');

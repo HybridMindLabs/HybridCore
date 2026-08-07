@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Star, Trash2, MessageSquare } from '@lucide/vue';
+import { Star, Trash2, MessageSquare, Search, X } from '@lucide/vue';
+import { ref, watch } from 'vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
+import EmptyState from '@/components/UI/EmptyState.vue';
 
 interface Review {
     id: number;
@@ -10,7 +12,7 @@ interface Review {
     body: string | null;
     created_at: string;
     user: { id: number; name: string; username: string } | null;
-    server: { id: number; label: string; game: { name: string; color: string } | null } | null;
+    server: { id: number; label: string; game: { name: string; color: string } | null };
 }
 
 interface PaginatedReviews {
@@ -20,7 +22,21 @@ interface PaginatedReviews {
     total: number;
 }
 
-defineProps<{ reviews: PaginatedReviews; total: number }>();
+const props = defineProps<{ reviews: PaginatedReviews; total: number; filters: { search: string } }>();
+
+const search = ref(props.filters.search);
+const searching = ref(false);
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+watch(search, (value) => {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        router.get(route('admin.servers.reviews'), value ? { search: value } : {}, {
+            preserveState: true, preserveScroll: true, replace: true,
+            onStart: () => { searching.value = true; },
+            onFinish: () => { searching.value = false; },
+        });
+    }, 350);
+});
 
 function del(id: number) {
     if (!confirm('Delete this review?')) return;
@@ -42,14 +58,30 @@ function stars(n: number) {
             </template>
         </PageHeader>
 
-        <!-- Empty state -->
-        <div v-if="reviews.data.length === 0" class="flex flex-col items-center justify-center py-20">
-            <MessageSquare :size="28" :stroke-width="1.5" class="text-zinc-700 mb-3" />
-            <p class="text-sm text-zinc-500">No reviews yet.</p>
+        <!-- Search — matters once reviews pile up across many servers -->
+        <div v-if="total > 0" class="relative max-w-sm mb-4">
+            <Search :size="14" :stroke-width="1.75" class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
+            <input
+                v-model="search"
+                type="text"
+                placeholder="Search by user, server, or review text…"
+                class="w-full bg-[#111113] border border-zinc-800/70 text-zinc-100 rounded-lg pl-9 pr-9 py-2 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+            />
+            <button v-if="search" type="button" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-400" @click="search = ''">
+                <X :size="14" :stroke-width="1.75" />
+            </button>
         </div>
 
+        <!-- Empty state -->
+        <EmptyState
+            v-if="reviews.data.length === 0"
+            :icon="search ? Search : MessageSquare"
+            :title="search ? 'No matches' : 'No reviews yet'"
+            :description="search ? `No reviews match &quot;${search}&quot;.` : undefined"
+        />
+
         <!-- Table -->
-        <div v-else class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+        <div v-else class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden transition-opacity" :class="searching ? 'opacity-50 pointer-events-none' : ''">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-zinc-800/70">
@@ -75,7 +107,7 @@ function stars(n: number) {
 
                         <!-- Server -->
                         <td class="px-4 py-3">
-                            <div v-if="review.server" class="flex items-center gap-2">
+                            <div class="flex items-center gap-2">
                                 <span
                                     v-if="review.server.game"
                                     class="w-2 h-2 rounded-full shrink-0"
@@ -83,7 +115,6 @@ function stars(n: number) {
                                 />
                                 <span class="text-zinc-300 font-mono text-xs truncate max-w-[160px]">{{ review.server.label }}</span>
                             </div>
-                            <span v-else class="text-zinc-600 italic text-xs">deleted</span>
                         </td>
 
                         <!-- Rating -->
@@ -129,12 +160,12 @@ function stars(n: number) {
                 <div class="flex items-center gap-2">
                     <Link
                         v-if="reviews.current_page > 1"
-                        :href="route('admin.servers.reviews', { page: reviews.current_page - 1 })"
+                        :href="route('admin.servers.reviews', { page: reviews.current_page - 1, search: search || undefined })"
                         class="px-3 py-1.5 rounded-lg text-xs border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
                     >Previous</Link>
                     <Link
                         v-if="reviews.current_page < reviews.last_page"
-                        :href="route('admin.servers.reviews', { page: reviews.current_page + 1 })"
+                        :href="route('admin.servers.reviews', { page: reviews.current_page + 1, search: search || undefined })"
                         class="px-3 py-1.5 rounded-lg text-xs border border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
                     >Next</Link>
                 </div>

@@ -76,6 +76,10 @@ class UpdateController extends Controller
     {
         abort_unless((bool) config('hybridcore.panel_updates'), 403, 'Panel updates are disabled on this installation.');
         abort_unless(is_dir(base_path('.git')), 422, 'Not a git installation — update from the CLI: php artisan hybridcore:update --local');
+        // Never let this flow run against an instance that isn't marked
+        // installed — nothing here creates or removes that marker, this is
+        // just a guard against updating a half-set-up install.
+        abort_unless(file_exists(storage_path('installed.lock')), 409, 'This instance is not marked as installed — refusing to update.');
 
         $log = [];
 
@@ -92,19 +96,44 @@ class UpdateController extends Controller
             $pull = shell_exec('cd '.base_path().' && git pull --ff-only 2>&1');
             $log[] = ['step' => 'git pull', 'output' => trim($pull ?? '')];
 
+            // A pull can add new subdirectories (a new extension's storage
+            // path, a new cache subfolder) that don't inherit the group
+            // permissions the rest of storage/ was set up with.
+            $perms = shell_exec('chmod -R ug+rwX '.escapeshellarg(storage_path()).' '.escapeshellarg(base_path('bootstrap/cache')).' 2>&1');
+            $log[] = ['step' => 'fix folder permissions', 'output' => trim($perms ?? '') ?: 'OK'];
+
             $composer = shell_exec('cd '.base_path().' && composer install --no-interaction --no-dev --optimize-autoloader 2>&1');
             $log[] = ['step' => 'composer install', 'output' => trim($composer ?? '')];
 
             Artisan::call('migrate', ['--force' => true]);
             $log[] = ['step' => 'php artisan migrate', 'output' => trim(Artisan::output())];
 
-            // public/build is gitignored, so the pull brings new frontend
-            // source but leaves the compiled bundle from the old version in
-            // place. Without this the panel comes back up serving stale assets
-            // against new server code. Synchronous on purpose: the update is
-            // not finished until the UI it hands back actually matches.
-            Artisan::call('hybridcore:build', ['--sync' => true]);
-            $log[] = ['step' => 'rebuild assets', 'output' => trim(Artisan::output())];
+            // public/build (and bootstrap/ssr) are gitignored, so the pull
+            // brings new frontend source but leaves the old compiled bundle
+            // in place. hybridcore:build runs `npm ci && npm run build` and,
+            // on failure, restores the previous working bundle instead of
+            // leaving the site with a half-written or empty one — see
+            // RebuildAssetsJob. Synchronous on purpose: the update is not
+            // finished until the UI it hands back actually matches.
+            $buildExit = Artisan::call('hybridcore:build', ['--sync' => true]);
+            $log[] = ['step' => 'rebuild assets (npm ci && npm run build)', 'output' => trim(Artisan::output())];
+
+            if ($buildExit !== 0) {
+                throw new RuntimeException('Asset rebuild failed — the previous working bundle was restored, nothing is broken. See the output above.');
+            }
+
+            if (config('inertia.ssr.enabled')) {
+                // The SSR renderer is a long-running Node process holding the
+                // old bundle in memory — it needs its own restart even after
+                // a successful rebuild. This only succeeds where the host
+                // has pre-authorized a narrow passwordless sudo rule for it;
+                // `-n` fails fast instead of hanging on a password prompt.
+                $ssr = shell_exec('sudo -n systemctl restart hybridcore-ssr 2>&1');
+                $log[] = [
+                    'step' => 'restart SSR renderer',
+                    'output' => trim($ssr ?? '') ?: 'Restarted hybridcore-ssr.',
+                ];
+            }
 
             Artisan::call('optimize:clear');
             $log[] = ['step' => 'optimize:clear', 'output' => trim(Artisan::output())];
@@ -112,7 +141,7 @@ class UpdateController extends Controller
             Artisan::call('queue:restart');
             $log[] = ['step' => 'queue:restart', 'output' => trim(Artisan::output())];
         } catch (RuntimeException $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            return response()->json(['success' => false, 'message' => $e->getMessage(), 'log' => $log], 422);
         } finally {
             Artisan::call('up');
             $log[] = ['step' => 'maintenance off', 'output' => ''];

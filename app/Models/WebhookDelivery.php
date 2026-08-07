@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $webhook_endpoint_id
  * @property string $event
+ * @property array<string, mixed>|null $payload
  * @property bool $success
  * @property int|null $response_code
  * @property string|null $error
@@ -26,11 +27,12 @@ class WebhookDelivery extends Model
 
     const UPDATED_AT = null;
 
-    protected $fillable = ['webhook_endpoint_id', 'event', 'success', 'response_code', 'error'];
+    protected $fillable = ['webhook_endpoint_id', 'event', 'payload', 'success', 'response_code', 'error'];
 
     protected function casts(): array
     {
         return [
+            'payload' => 'array',
             'success' => 'boolean',
             'created_at' => 'datetime',
         ];

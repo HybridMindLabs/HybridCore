@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateSettingsRequest;
 use App\Mail\TestMailMail;
+use App\Models\Role;
+use App\Models\Theme;
 use App\Services\ActivityLogService;
 use App\Services\Extensions\Registries\SettingsRegistry;
 use App\Services\Localization\LocaleService;
@@ -33,6 +35,7 @@ class SettingController extends Controller
                 'timezone' => $this->settings->get('timezone', config('app.timezone', 'UTC')),
                 'maintenance_mode' => (bool) $this->settings->get('maintenance_mode', '0'),
                 'active_theme' => $this->settings->get('active_theme', 'hybridcore/default'),
+                'active_theme_name' => Theme::where('slug', $this->settings->get('active_theme', 'hybridcore/default'))->value('name'),
                 'seo_site_title' => $this->settings->get('seo_site_title', ''),
                 'seo_meta_description' => $this->settings->get('seo_meta_description', ''),
                 'seo_og_image' => $this->settings->get('seo_og_image', ''),
@@ -85,14 +88,8 @@ class SettingController extends Controller
                 'captcha_recaptcha_v3_secret_key_set' => filled($this->settings->get('captcha_recaptcha_v3_secret_key')),
             ],
             'localeCatalog' => app(LocaleService::class)->catalog(),
-            'locales' => [
-                'en' => 'English',
-                'bg' => 'Bulgarian',
-                'de' => 'German',
-                'fr' => 'French',
-                'pl' => 'Polish',
-            ],
             'timezones' => timezone_identifiers_list(),
+            'roles' => Role::orderBy('sort')->get(['id', 'name', 'slug', 'color']),
             'extensionSettings' => $this->extensionSettingsRegistry->compose(),
         ]);
     }

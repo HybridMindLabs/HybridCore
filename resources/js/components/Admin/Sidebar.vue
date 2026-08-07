@@ -4,10 +4,11 @@ import {
     LayoutDashboard, Users, ShieldCheck, Settings, Activity, FileText,
     Puzzle, Paintbrush, Server, UserCircle, LogOut, HeartPulse, Download,
     ScrollText, List, Circle, Package, Globe, Newspaper, BarChart3, DatabaseBackup, BookOpen, Mail, TrendingUp, X,
-    KeyRound, Webhook,
+    KeyRound, Webhook, Search, ChevronDown,
 } from '@lucide/vue';
-import { onMounted, onUnmounted, watch } from 'vue';
+import { nextTick, onMounted, onUnmounted, reactive, watch } from 'vue';
 import { useAdminSidebar } from '@/composables/useAdminSidebar';
+import { useCommandPalette } from '@/composables/useCommandPalette';
 
 interface NavItem {
     label: string;
@@ -44,6 +45,7 @@ const iconMap: Record<string, unknown> = {
 
 const page = usePage<SharedProps>();
 const { mobileOpen, close } = useAdminSidebar();
+const { show: openPalette } = useCommandPalette();
 
 let stopListening: (() => void) | null = null;
 let stopOpenWatch: (() => void) | null = null;
@@ -55,6 +57,36 @@ function handleEscape(event: KeyboardEvent) {
     }
 }
 
+// ── Collapsible sections ────────────────────────────────────
+// Per-admin, per-browser preference — expanded by default so nothing is
+// hidden from someone who hasn't touched it yet.
+const COLLAPSE_KEY = 'hc-admin-nav-collapsed';
+const collapsed = reactive<Record<string, boolean>>(readCollapsed());
+
+function readCollapsed(): Record<string, boolean> {
+    try {
+        return JSON.parse(localStorage.getItem(COLLAPSE_KEY) ?? '{}');
+    } catch {
+        return {};
+    }
+}
+
+function toggleSection(heading: string) {
+    collapsed[heading] = !collapsed[heading];
+    localStorage.setItem(COLLAPSE_KEY, JSON.stringify(collapsed));
+}
+
+function sectionHasActiveItem(section: NavSection): boolean {
+    return section.items.some(isActive);
+}
+
+// A section stays visually expanded while it contains the current page,
+// regardless of the saved preference — collapsing your own location out
+// from under you would defeat the point of the auto-scroll below.
+function sectionExpanded(section: NavSection): boolean {
+    return !collapsed[section.heading ?? ''] || sectionHasActiveItem(section);
+}
+
 onMounted(() => {
     stopListening = router.on('navigate', close);
     previousBodyOverflow = document.body.style.overflow;
@@ -62,6 +94,14 @@ onMounted(() => {
         document.body.style.overflow = open ? 'hidden' : previousBodyOverflow;
     }, { immediate: true });
     window.addEventListener('keydown', handleEscape);
+
+    // The whole sidebar remounts on every navigation (no persistent Inertia
+    // layout), which used to leave a long nav list scrolled back to the top
+    // after every click — this restores "where you are" every time instead
+    // of relying on scroll state that never survives the remount.
+    nextTick(() => {
+        document.querySelector('#admin-navigation a[aria-current="page"]')?.scrollIntoView({ block: 'nearest' });
+    });
 });
 onUnmounted(() => {
     stopListening?.();
@@ -127,20 +167,37 @@ function logout() {
             </button>
         </div>
 
+        <!-- Search (opens the command palette — Ctrl/⌘+K) -->
+        <div class="px-3 pt-3">
+            <button
+                type="button"
+                class="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg border border-zinc-800/70 text-zinc-500 text-sm hover:text-zinc-100 hover:border-zinc-700 transition-colors"
+                @click="openPalette"
+            >
+                <Search :size="14" :stroke-width="1.75" class="shrink-0" />
+                <span class="flex-1 text-left">Search</span>
+                <kbd class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-600">Ctrl K</kbd>
+            </button>
+        </div>
+
         <!-- Navigation (composed from core + extension registrations) -->
-        <nav class="flex-1 overflow-y-auto py-3 px-3 flex flex-col gap-4">
+        <nav class="flex-1 overflow-y-auto py-3 px-3 flex flex-col gap-2">
             <div v-for="(section, si) in page.props.adminNav" :key="si">
-                <p
+                <button
                     v-if="section.heading"
-                    class="text-zinc-700 text-[9px] font-bold uppercase tracking-widest px-3 mb-1.5"
+                    type="button"
+                    class="flex w-full items-center gap-1 px-3 mb-1.5 text-zinc-700 text-[9px] font-bold uppercase tracking-widest hover:text-zinc-500 transition-colors"
+                    @click="toggleSection(section.heading)"
                 >
-                    {{ section.heading }}
-                </p>
-                <div class="flex flex-col gap-0.5">
+                    <span class="flex-1 text-left">{{ section.heading }}</span>
+                    <ChevronDown :size="11" :stroke-width="2.5" class="transition-transform" :class="sectionExpanded(section) ? '' : '-rotate-90'" />
+                </button>
+                <div v-show="sectionExpanded(section)" class="flex flex-col gap-0.5">
                     <Link
                         v-for="item in section.items"
                         :key="item.url"
                         :href="item.url"
+                        :aria-current="isActive(item) ? 'page' : undefined"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
                         :class="isActive(item)
                             ? 'text-blue-400 bg-blue-500/10 border-l-2 border-blue-500'
@@ -179,7 +236,11 @@ function logout() {
                 <LogOut :size="16" :stroke-width="1.75" class="shrink-0" />
                 Sign out
             </button>
-            <p class="text-zinc-600 text-[10px] font-mono px-3 pt-1">v0.9.0-dev</p>
+            <Link
+                :href="route('admin.updates.index')"
+                title="View updates &amp; changelog information"
+                class="text-zinc-600 hover:text-zinc-300 text-[10px] font-mono px-3 pt-1 transition-colors w-fit"
+            >v0.9.0-dev</Link>
         </div>
 
     </aside>

@@ -13,14 +13,23 @@ use Inertia\Response;
 
 class ContactController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = $request->string('search')->trim()->toString();
+
         $messages = ContactMessage::orderByDesc('created_at')
-            ->paginate(25);
+            ->when($search, fn ($q) => $q->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('subject', 'like', "%{$search}%");
+            }))
+            ->paginate(25)
+            ->withQueryString();
 
         return Inertia::render('Admin/Contact/Index', [
             'messages' => $messages,
             'unreadCount' => ContactMessage::whereNull('read_at')->count(),
+            'filters' => ['search' => $search],
         ]);
     }
 

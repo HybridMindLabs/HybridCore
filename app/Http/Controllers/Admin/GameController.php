@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Games\GameDriverRegistry;
 use App\Http\Controllers\Controller;
 use App\Models\Game;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class GameController extends Controller
 {
+    public function __construct(private readonly GameDriverRegistry $drivers) {}
+
     public function index(): Response
     {
         $games = Game::withCount('servers')
@@ -29,7 +33,10 @@ class GameController extends Controller
                 'servers_count' => $g->servers_count,
             ]);
 
-        return Inertia::render('Admin/Servers/Games/Index', ['games' => $games]);
+        return Inertia::render('Admin/Servers/Games/Index', [
+            'games' => $games,
+            'drivers' => $this->drivers->slugs(),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -39,7 +46,7 @@ class GameController extends Controller
             'slug' => ['required', 'string', 'max:50', 'unique:games,slug', 'alpha_dash'],
             'icon' => ['required', 'string', 'max:50'],
             'color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
-            'query_driver' => ['required', 'string', 'max:50'],
+            'query_driver' => ['required', 'string', 'max:50', Rule::in($this->drivers->slugs())],
             'default_port' => ['required', 'integer', 'min:1', 'max:65535'],
             'is_active' => ['boolean'],
             'sort_order' => ['integer', 'min:0'],
@@ -57,7 +64,7 @@ class GameController extends Controller
             'slug' => ['required', 'string', 'max:50', 'alpha_dash', "unique:games,slug,{$game->id}"],
             'icon' => ['required', 'string', 'max:50'],
             'color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
-            'query_driver' => ['required', 'string', 'max:50'],
+            'query_driver' => ['required', 'string', 'max:50', Rule::in($this->drivers->slugs())],
             'default_port' => ['required', 'integer', 'min:1', 'max:65535'],
             'is_active' => ['boolean'],
             'sort_order' => ['integer', 'min:0'],

@@ -187,4 +187,62 @@ class WebhookTest extends TestCase
                 ->where('endpoints.0.deliveries.1.success', true)
             );
     }
+
+    public function test_a_failed_delivery_with_a_stored_payload_is_marked_retryable(): void
+    {
+        $endpoint = WebhookEndpoint::factory()->create();
+        $endpoint->deliveries()->create(['event' => Hooks::USER_BANNED, 'payload' => ['id' => 1], 'success' => false, 'response_code' => 500]);
+        $endpoint->deliveries()->create(['event' => Hooks::USER_BANNED, 'payload' => ['id' => 2], 'success' => true, 'response_code' => 200]);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.webhooks.index'))
+            ->assertInertia(fn ($page) => $page
+                ->where('endpoints.0.deliveries.0.retryable', false)
+                ->where('endpoints.0.deliveries.1.retryable', true)
+            );
+    }
+
+    public function test_retry_redelivers_the_original_payload(): void
+    {
+        Http::fake(['example.com/*' => Http::response(['ok' => true], 200)]);
+
+        $endpoint = WebhookEndpoint::factory()->create(['url' => 'https://example.com/hook']);
+        $delivery = $endpoint->deliveries()->create([
+            'event' => Hooks::USER_BANNED, 'payload' => ['id' => 42], 'success' => false, 'response_code' => 500,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.webhooks.deliveries.retry', [$endpoint, $delivery]))
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        Http::assertSent(fn ($request) => $request->url() === 'https://example.com/hook'
+            && $request->data()['data']['id'] === 42);
+    }
+
+    public function test_retry_refuses_a_delivery_that_already_succeeded(): void
+    {
+        $endpoint = WebhookEndpoint::factory()->create();
+        $delivery = $endpoint->deliveries()->create([
+            'event' => Hooks::USER_BANNED, 'payload' => ['id' => 1], 'success' => true, 'response_code' => 200,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.webhooks.deliveries.retry', [$endpoint, $delivery]))
+            ->assertRedirect()
+            ->assertSessionHas('error');
+    }
+
+    public function test_retry_refuses_a_delivery_belonging_to_another_endpoint(): void
+    {
+        $endpoint = WebhookEndpoint::factory()->create();
+        $other = WebhookEndpoint::factory()->create();
+        $delivery = $other->deliveries()->create([
+            'event' => Hooks::USER_BANNED, 'payload' => ['id' => 1], 'success' => false, 'response_code' => 500,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.webhooks.deliveries.retry', [$endpoint, $delivery]))
+            ->assertNotFound();
+    }
 }

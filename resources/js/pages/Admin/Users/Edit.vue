@@ -103,7 +103,7 @@ const errorInputClass = 'border-red-500';
             <!-- ── Main column ───────────────────────────────────── -->
             <div class="flex flex-col gap-5 min-w-0">
 
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
 
                     <!-- Tabs -->
                     <div class="flex items-center gap-0.5 px-4 pt-3 border-b border-zinc-800/70">
@@ -220,7 +220,7 @@ const errorInputClass = 'border-red-500';
                 </div>
 
                 <!-- Save / Cancel -->
-                <div class="flex items-center gap-3">
+                <div class="hc-hero-in flex items-center gap-3" style="animation-delay: 80ms">
                     <button
                         type="submit"
                         :disabled="form.processing"
@@ -231,6 +231,10 @@ const errorInputClass = 'border-red-500';
                     <Link :href="route('admin.users.index')" class="text-zinc-500 hover:text-zinc-100 text-sm transition-colors">
                         Cancel
                     </Link>
+                    <span v-if="form.isDirty" class="flex items-center gap-1.5 text-amber-400 text-xs font-medium">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                        Unsaved changes
+                    </span>
                 </div>
             </div>
 
@@ -238,7 +242,7 @@ const errorInputClass = 'border-red-500';
             <div class="flex flex-col gap-4">
 
                 <!-- User card -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 60ms">
                     <!-- Avatar + name -->
                     <div class="flex items-center gap-3 mb-4">
                         <div class="w-12 h-12 rounded-xl shrink-0 overflow-hidden border border-zinc-800">
@@ -329,7 +333,7 @@ const errorInputClass = 'border-red-500';
                 </div>
 
                 <!-- Danger zone -->
-                <div class="bg-[#111113] border border-red-500/20 rounded-xl p-5">
+                <div class="hc-hero-in bg-[#111113] border border-red-500/20 rounded-xl p-5" style="animation-delay: 100ms">
                     <h3 class="text-red-400 text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5">
                         <Trash2 :size="13" :stroke-width="1.75" /> Danger Zone
                     </h3>

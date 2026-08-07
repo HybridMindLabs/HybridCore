@@ -140,21 +140,21 @@ class AdminExtensionTest extends TestCase
 
     public function test_extension_index_returns_extensions_and_rebuild_status(): void
     {
-        // Only "demo" and "announcements" are git-tracked bundled extensions
-        // (see .gitignore's /extensions/hybridcore/* rule) — every other
-        // extensions/hybridcore/* directory is local-only dev scaffolding
-        // that doesn't exist in a fresh checkout (CI included). The third
-        // row deliberately reuses "demo" to prove the is_dir() filter in
-        // ExtensionController::index() doesn't collapse duplicate paths.
+        // "demo" is the only extension bundled with core (see .gitignore's
+        // /extensions/hybridcore/* rule) — guaranteed to exist in every
+        // checkout, CI included. Two rows reusing its path prove the
+        // is_dir() filter in ExtensionController::index() doesn't collapse
+        // duplicate paths; the third, pointing nowhere, proves it excludes
+        // a row whose directory doesn't exist.
         Extension::factory()->create(['path' => 'hybridcore/demo']);
-        Extension::factory()->create(['path' => 'hybridcore/announcements']);
         Extension::factory()->create(['path' => 'hybridcore/demo']);
+        Extension::factory()->create(['path' => 'hybridcore/does-not-exist']);
 
         $this->actingAs($this->admin)->get('/admin/extensions')
             ->assertStatus(200)
             ->assertInertia(fn ($page) => $page
                 ->component('Admin/Extensions/Index')
-                ->has('extensions', 3)
+                ->has('extensions', 2)
                 ->has('rebuild')
                 ->where('rebuild.status', 'done')
             );

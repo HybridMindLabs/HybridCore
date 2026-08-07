@@ -85,6 +85,7 @@ class DeliverWebhookJob implements ShouldQueue
 
         $endpoint->deliveries()->create([
             'event' => $this->event,
+            'payload' => $this->payload,
             'success' => $success,
             'response_code' => $responseCode,
             'error' => $error,

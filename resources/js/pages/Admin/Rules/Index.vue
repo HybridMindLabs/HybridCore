@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { BookOpen, Plus, Pencil, Trash2, ExternalLink, Lock } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
+import EmptyState from '@/components/UI/EmptyState.vue';
 
 interface Rule {
     id: number;
@@ -43,18 +44,29 @@ function deleteRule(slug: string) {
             </template>
         </PageHeader>
 
-        <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
-            <div v-if="rules.length === 0" class="p-10 text-center">
-                <BookOpen :size="24" :stroke-width="1.5" class="mx-auto mb-3 text-zinc-700" />
-                <p class="text-zinc-500 text-sm">No rules yet.</p>
-                <Link :href="route('admin.rules.create')" class="mt-3 inline-block text-xs text-blue-400 hover:underline">Create your first rule</Link>
-            </div>
+        <EmptyState
+            v-if="rules.length === 0"
+            :icon="BookOpen"
+            title="No rules yet"
+            description="Create your first rule to publish community guidelines."
+        >
+            <template #action>
+                <Link
+                    :href="route('admin.rules.create')"
+                    class="flex items-center gap-1.5 bg-blue-500 text-[#0a0f1a] text-sm font-semibold px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                    <Plus :size="14" :stroke-width="2" /> New rule
+                </Link>
+            </template>
+        </EmptyState>
 
-            <div v-else class="divide-y divide-zinc-800/50">
+        <div v-else class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+            <div class="divide-y divide-zinc-800/50">
                 <div
-                    v-for="rule in rules"
+                    v-for="(rule, i) in rules"
                     :key="rule.id"
-                    class="flex items-center gap-4 px-5 py-4 hover:bg-white/[0.02] transition-colors group"
+                    class="hc-hero-in flex items-center gap-4 px-5 py-4 hover:bg-white/[0.02] transition-colors group"
+                    :style="{ animationDelay: `${i * 30}ms` }"
                 >
                     <!-- Icon -->
                     <div class="w-9 h-9 rounded-lg bg-zinc-800/60 border border-zinc-700/50 flex items-center justify-center shrink-0">

@@ -337,21 +337,21 @@ function typeConf(type: string) {
 
         <!-- Summary bar -->
         <div v-if="extensions.length > 0" class="grid grid-cols-3 gap-3 mb-5">
-            <div class="bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3">
+            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3">
                 <Puzzle :size="16" :stroke-width="1.75" class="text-zinc-500 shrink-0" />
                 <div>
                     <p class="text-2xl font-bold text-zinc-100 leading-none tabular-nums">{{ summary.total }}</p>
                     <p class="text-xs text-zinc-600 mt-0.5">Installed</p>
                 </div>
             </div>
-            <div class="bg-emerald-500/5 border border-emerald-500/15 rounded-xl px-4 py-3 flex items-center gap-3">
+            <div class="hc-hero-in bg-emerald-500/5 border border-emerald-500/15 rounded-xl px-4 py-3 flex items-center gap-3" style="animation-delay: 40ms">
                 <CheckCircle2 :size="16" :stroke-width="1.75" class="text-emerald-400 shrink-0" />
                 <div>
                     <p class="text-2xl font-bold text-emerald-400 leading-none tabular-nums">{{ summary.enabled }}</p>
                     <p class="text-xs text-zinc-600 mt-0.5">Enabled</p>
                 </div>
             </div>
-            <div class="bg-zinc-900/40 border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3">
+            <div class="hc-hero-in bg-zinc-900/40 border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3" style="animation-delay: 80ms">
                 <XCircle :size="16" :stroke-width="1.75" class="text-zinc-600 shrink-0" />
                 <div>
                     <p class="text-2xl font-bold text-zinc-500 leading-none tabular-nums">{{ summary.disabled }}</p>
@@ -363,7 +363,7 @@ function typeConf(type: string) {
         <!-- Empty state -->
         <div
             v-if="extensions.length === 0"
-            class="bg-[#111113] border border-zinc-800/70 rounded-xl p-16 text-center"
+            class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-16 text-center"
         >
             <div class="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center border bg-zinc-800 border-zinc-700">
                 <Puzzle :size="22" :stroke-width="1.5" class="text-zinc-500" />
@@ -385,7 +385,7 @@ function typeConf(type: string) {
         </div>
 
         <!-- Extension table — one row each, so 10-20 stay scannable -->
-        <div v-else class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+        <div v-else class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 120ms">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>

@@ -9,6 +9,7 @@ use App\Services\Extensions\ExtensionManager;
 use App\Services\Extensions\ExtensionRequirements;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class ExtensionLifecycleTest extends TestCase
@@ -65,6 +66,8 @@ class ExtensionLifecycleTest extends TestCase
 
     public function test_satisfied_requires_allows_enable(): void
     {
+        Queue::fake();
+
         $extension = Extension::create([
             'slug' => 'testvendor/ok',
             'name' => 'Ok',
@@ -86,6 +89,8 @@ class ExtensionLifecycleTest extends TestCase
 
     public function test_uninstall_removes_files_settings_and_record(): void
     {
+        Queue::fake();
+
         $base = base_path('extensions/Testvendor/Gone');
         File::ensureDirectoryExists($base);
         file_put_contents($base.'/extension.json', json_encode([
@@ -112,6 +117,8 @@ class ExtensionLifecycleTest extends TestCase
 
     public function test_admin_can_uninstall_via_http(): void
     {
+        Queue::fake();
+
         $admin = User::factory()->create(['is_admin' => true]);
 
         $extension = Extension::create([

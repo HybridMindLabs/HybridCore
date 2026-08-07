@@ -73,4 +73,27 @@ class ActivityLogTest extends TestCase
             ->get(route('admin.activity-log.index'))
             ->assertOk();
     }
+
+    public function test_category_filter_only_returns_matching_prefixes(): void
+    {
+        ActivityLog::create(['event' => 'user.created', 'description' => 'Created user a']);
+        ActivityLog::create(['event' => 'page.created', 'description' => 'Created page a']);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.activity-log.index', ['category' => 'users']))
+            ->assertInertia(fn ($page) => $page
+                ->where('logs.total', 1)
+                ->where('logs.data.0.event', 'user.created')
+            );
+    }
+
+    public function test_search_matches_description(): void
+    {
+        ActivityLog::create(['event' => 'user.created', 'description' => 'Created user zzzfindme']);
+        ActivityLog::create(['event' => 'page.created', 'description' => 'Created page a']);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.activity-log.index', ['search' => 'zzzfindme']))
+            ->assertInertia(fn ($page) => $page->where('logs.total', 1));
+    }
 }

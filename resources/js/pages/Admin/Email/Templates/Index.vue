@@ -40,7 +40,7 @@ const breadcrumbs = [
             </div>
         </div>
 
-        <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+        <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-zinc-800">
