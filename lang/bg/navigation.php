@@ -28,6 +28,7 @@ return [
     'news_categories' => 'Категории',
     'news_comments' => 'Коментари',
     'reports' => 'Доклади',
+    'payments' => 'Плащания',
     'profile' => 'Профил',
     'sign_out' => 'Изход',
 

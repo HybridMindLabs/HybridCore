@@ -28,6 +28,7 @@ return [
     'news_categories' => 'Categories',
     'news_comments' => 'Comments',
     'reports' => 'Reports',
+    'payments' => 'Payments',
     'profile' => 'Profile',
     'sign_out' => 'Sign out',
 

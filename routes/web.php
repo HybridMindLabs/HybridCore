@@ -4,6 +4,8 @@ use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\UnsubscribeController;
 use App\Http\Controllers\Web\AccountController;
+use App\Http\Controllers\Web\InvoiceController;
+use App\Http\Controllers\Web\TransactionController;
 use App\Http\Controllers\Web\Auth\EmailVerificationController;
 use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\Auth\OAuthController;
@@ -93,6 +95,12 @@ Route::middleware([EnsureAppIsInstalled::class, EnsureNotInMaintenance::class])
                 ->middleware([HandlePrecognitiveRequests::class, 'throttle:account-forms']);
             Route::put('/account/preferences', [AccountController::class, 'updatePreferences'])->name('account.preferences.update');
             Route::put('/account/email-preferences', [AccountController::class, 'updateEmailPreferences'])->name('account.email-preferences.update');
+
+            // Transactions (payments + subscriptions, across every extension)
+            Route::get('/account/transactions', [TransactionController::class, 'index'])->name('account.transactions.index');
+            Route::post('/account/subscriptions/{subscription}/cancel', [TransactionController::class, 'cancelSubscription'])
+                ->name('account.subscriptions.cancel');
+            Route::get('/invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download');
 
             // Connected accounts
             Route::delete('/account/connected-accounts/{provider}', [OAuthController::class, 'disconnect'])

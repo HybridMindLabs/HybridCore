@@ -79,4 +79,16 @@ class Subscription extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    /** Same duck-type as Payment::description() — see that method's docblock. */
+    public function description(): string
+    {
+        $payable = $this->payable;
+
+        if ($payable !== null && method_exists($payable, 'paymentDescription')) {
+            return $payable->paymentDescription();
+        }
+
+        return class_basename($this->payable_type).' #'.$this->payable_id;
+    }
 }

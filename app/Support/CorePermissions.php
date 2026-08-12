@@ -36,5 +36,7 @@ class CorePermissions
         'servers.manage' => ['name' => 'Manage Servers', 'group' => 'servers'],
         'news.view' => ['name' => 'View News', 'group' => 'news'],
         'news.manage' => ['name' => 'Manage News', 'group' => 'news'],
+        'payments.view' => ['name' => 'View Payments', 'group' => 'payments'],
+        'payments.manage' => ['name' => 'Manage Payments', 'group' => 'payments'],
     ];
 }

@@ -32,6 +32,7 @@ use App\Services\Extensions\Registries\WebhookEventRegistry;
 use App\Services\Extensions\Registries\WidgetRegistry;
 use App\Support\CoreAbilities;
 use App\Support\CoreNavigation;
+use App\Support\CorePayments;
 use App\Support\CorePermissions;
 use App\Support\CoreWebhookBridge;
 use App\Support\CoreWebhookEvents;
@@ -97,6 +98,7 @@ class ExtensionServiceProvider extends ServiceProvider
         CoreNavigation::register($registry->navigation());
         CoreWidgets::register($registry->widgets());
         CoreWebhookBridge::register($registry->hooks());
+        CorePayments::register($registry);
 
         // A test run shares one process and RefreshDatabase migrates only once,
         // so every extension's schema has to be registered up front. Otherwise
