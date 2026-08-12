@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, useId } from 'vue';
 
 /**
  * Single-series area chart for "players over time".
@@ -21,6 +21,12 @@ const props = withDefaults(defineProps<{
     label: string;
     emptyLabel: string;
 }>(), { dark: false, height: 132 });
+
+// A DOM id, not display text — label (translated, can contain spaces) is not
+// safe here. An unescaped space breaks the fill="url(#...)" fragment lookup,
+// and Chrome's fallback for an unresolved paint server is solid black, not
+// transparent — that's what "the chart is a black box" actually was.
+const gradientId = `player-area-${useId()}`;
 
 const W = 600;
 const PAD_TOP = 10;
@@ -150,7 +156,7 @@ const xTicks = computed(() => {
             @mousemove="onMove" @mouseleave="hoverIndex = null">
 
             <defs>
-                <linearGradient :id="`area-${label}`" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient :id="gradientId" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.28" />
                     <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.02" />
                 </linearGradient>
@@ -161,7 +167,7 @@ const xTicks = computed(() => {
                 :stroke="dark ? '#27272a' : '#d3d7df'" stroke-width="1" vector-effect="non-scaling-stroke" />
 
             <g v-for="(seg, i) in segments" :key="i">
-                <path v-if="seg.fill" :d="seg.fill" :fill="`url(#area-${label})`" />
+                <path v-if="seg.fill" :d="seg.fill" :fill="`url(#${gradientId})`" />
                 <path v-if="!seg.dot" :d="seg.line" fill="none" stroke="#3b82f6"
                     stroke-width="2" stroke-linejoin="round" stroke-linecap="round"
                     vector-effect="non-scaling-stroke" />
