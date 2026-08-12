@@ -17,6 +17,7 @@ use App\Services\Extensions\Registries\HookRegistry;
 use App\Services\Extensions\Registries\NavigationRegistry;
 use App\Services\Extensions\Registries\NotificationTypeRegistry;
 use App\Services\Extensions\Registries\OnboardingStepRegistry;
+use App\Services\Extensions\Registries\PaymentEventRegistry;
 use App\Services\Extensions\Registries\PermissionRegistry;
 use App\Services\Extensions\Registries\ProfileTabRegistry;
 use App\Services\Extensions\Registries\PublicNavigationRegistry;
@@ -70,6 +71,7 @@ class ExtensionServiceProvider extends ServiceProvider
         $this->app->singleton(OnboardingStepRegistry::class);
         $this->app->singleton(ScheduledReportRegistry::class);
         $this->app->singleton(BridgeEventRegistry::class);
+        $this->app->singleton(PaymentEventRegistry::class);
         $this->app->singleton(WidgetRegistry::class);
         $this->app->singleton(PermissionRegistry::class);
         $this->app->singleton(AbilityRegistry::class);

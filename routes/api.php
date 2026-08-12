@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\BridgeController;
+use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ServerController;
@@ -41,3 +42,9 @@ Route::prefix('bridge')
         Route::post('ack', [BridgeController::class, 'ack'])->name('api.bridge.ack');
         Route::post('events', [BridgeController::class, 'events'])->name('api.bridge.events');
     });
+
+// ── Payments ─────────────────────────────────────────────────────
+// Inbound webhook delivery from a payment gateway (Stripe, etc.).
+Route::post('payments/webhook/{gateway}', PaymentWebhookController::class)
+    ->middleware('throttle:120,1')
+    ->name('api.payments.webhook');

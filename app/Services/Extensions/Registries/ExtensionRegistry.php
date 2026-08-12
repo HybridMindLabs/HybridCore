@@ -31,6 +31,7 @@ class ExtensionRegistry
         private readonly OnboardingStepRegistry $onboardingSteps,
         private readonly ScheduledReportRegistry $scheduledReports,
         private readonly BridgeEventRegistry $bridgeEvents,
+        private readonly PaymentEventRegistry $payments,
         private readonly WidgetRegistry $widgets,
         private readonly PermissionRegistry $permissions,
         private readonly AbilityRegistry $abilities,
@@ -50,6 +51,12 @@ class ExtensionRegistry
     public function bridgeEvents(): BridgeEventRegistry
     {
         return $this->bridgeEvents;
+    }
+
+    /** Handlers for a payment's outcome (paid/failed/refunded). */
+    public function payments(): PaymentEventRegistry
+    {
+        return $this->payments;
     }
 
     public function navigation(): NavigationRegistry
