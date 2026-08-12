@@ -15,7 +15,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property string $payable_type
  * @property int $payable_id
- * @property int $user_id
+ * @property int|null $user_id
  * @property string $gateway
  * @property string|null $external_id
  * @property int $amount
@@ -25,7 +25,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Model|\Eloquent $payable
- * @property-read User $user
+ * @property-read User|null $user
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static> newQuery()

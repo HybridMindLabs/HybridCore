@@ -20,10 +20,10 @@ class PaymentService
 {
     public function __construct(private readonly PaymentManager $manager) {}
 
-    /** Creates a pending Payment for $payable and returns the checkout redirect URL. */
+    /** Creates a pending Payment for $payable and returns the checkout redirect URL. $buyer is null for guest checkout. */
     public function checkout(
         Model $payable,
-        User $buyer,
+        ?User $buyer,
         int $amountCents,
         string $currency,
         string $successUrl,
@@ -35,7 +35,7 @@ class PaymentService
         $payment = Payment::create([
             'payable_type' => $payable->getMorphClass(),
             'payable_id' => $payable->getKey(),
-            'user_id' => $buyer->id,
+            'user_id' => $buyer?->id,
             'gateway' => $gateway,
             'amount' => $amountCents,
             'currency' => $currency,
