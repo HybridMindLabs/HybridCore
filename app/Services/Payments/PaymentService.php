@@ -2,6 +2,7 @@
 
 namespace App\Services\Payments;
 
+use App\Jobs\ProcessPaymentEvent;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -42,5 +43,20 @@ class PaymentService
         ]);
 
         return $this->manager->driver($gateway)->createCheckout($payment, $successUrl, $cancelUrl);
+    }
+
+    /**
+     * Refunds a paid payment through its gateway and marks it refunded.
+     * A later refund webhook for the same payment is then a no-op — the
+     * status is already refunded, so it won't dispatch a second time.
+     */
+    public function refund(Payment $payment): void
+    {
+        $this->manager->driver($payment->gateway)->refund($payment);
+
+        if ($payment->status !== Payment::STATUS_REFUNDED) {
+            $payment->update(['status' => Payment::STATUS_REFUNDED]);
+            ProcessPaymentEvent::dispatch($payment->id);
+        }
     }
 }
