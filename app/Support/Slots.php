@@ -13,6 +13,10 @@ namespace App\Support;
  */
 final class Slots
 {
+    // ── Global ───────────────────────────────────────────────────────────────
+    /** Every public page, directly below the header — site-wide banners */
+    public const LAYOUT_TOP = 'layout.top';
+
     // ── Home ─────────────────────────────────────────────────────────────────
     /** Right column — above Featured Servers */
     public const HOME_RIGHT_TOP = 'home.right.top';

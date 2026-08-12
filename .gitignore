@@ -52,3 +52,9 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 .mcp.json
+
+# Stray Windows redirect artifact (e.g. `cmd > NUL` run from this dir) and
+# local tool scratch output — never meant to be tracked.
+/NUL
+/graphify-out
+/.playwright-mcp
