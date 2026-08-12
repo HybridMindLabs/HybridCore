@@ -4,6 +4,7 @@ namespace App\Services\Payments;
 
 use App\Jobs\ProcessPaymentEvent;
 use App\Models\Payment;
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
@@ -58,5 +59,45 @@ class PaymentService
             $payment->update(['status' => Payment::STATUS_REFUNDED]);
             ProcessPaymentEvent::dispatch($payment->id);
         }
+    }
+
+    /** Creates a pending Subscription for $payable and returns the checkout redirect URL. */
+    public function subscribe(
+        Model $payable,
+        User $buyer,
+        int $amountCents,
+        string $currency,
+        string $interval,
+        string $successUrl,
+        string $cancelUrl,
+        ?string $gateway = null,
+    ): string {
+        $gateway ??= config('payments.default');
+
+        $subscription = Subscription::create([
+            'payable_type' => $payable->getMorphClass(),
+            'payable_id' => $payable->getKey(),
+            'user_id' => $buyer->id,
+            'gateway' => $gateway,
+            'amount' => $amountCents,
+            'currency' => $currency,
+            'interval' => $interval,
+            'status' => Subscription::STATUS_INCOMPLETE,
+        ]);
+
+        return $this->manager->driver($gateway)->createSubscriptionCheckout($subscription, $successUrl, $cancelUrl);
+    }
+
+    /**
+     * Cancels a subscription at the end of its current period — never
+     * immediately, so the subscriber keeps what they already paid for.
+     * The actual status flip to `canceled` happens when the
+     * customer.subscription.deleted webhook fires at period end.
+     */
+    public function cancelSubscription(Subscription $subscription): void
+    {
+        $this->manager->driver($subscription->gateway)->cancelSubscription($subscription);
+
+        $subscription->update(['cancel_at_period_end' => true]);
     }
 }

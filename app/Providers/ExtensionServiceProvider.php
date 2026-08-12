@@ -26,6 +26,7 @@ use App\Services\Extensions\Registries\ScheduledReportRegistry;
 use App\Services\Extensions\Registries\SearchProviderRegistry;
 use App\Services\Extensions\Registries\SettingsRegistry;
 use App\Services\Extensions\Registries\SlotRegistry;
+use App\Services\Extensions\Registries\SubscriptionEventRegistry;
 use App\Services\Extensions\Registries\UserMenuRegistry;
 use App\Services\Extensions\Registries\WebhookEventRegistry;
 use App\Services\Extensions\Registries\WidgetRegistry;
@@ -72,6 +73,7 @@ class ExtensionServiceProvider extends ServiceProvider
         $this->app->singleton(ScheduledReportRegistry::class);
         $this->app->singleton(BridgeEventRegistry::class);
         $this->app->singleton(PaymentEventRegistry::class);
+        $this->app->singleton(SubscriptionEventRegistry::class);
         $this->app->singleton(WidgetRegistry::class);
         $this->app->singleton(PermissionRegistry::class);
         $this->app->singleton(AbilityRegistry::class);

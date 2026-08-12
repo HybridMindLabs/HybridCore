@@ -3,6 +3,7 @@
 namespace App\Services\Payments\Contracts;
 
 use App\Models\Payment;
+use App\Models\Subscription;
 use Illuminate\Http\Request;
 
 /**
@@ -18,6 +19,14 @@ interface PaymentGateway
     public function createCheckout(Payment $payment, string $successUrl, string $cancelUrl): string;
 
     /**
+     * Starts a hosted checkout for a recurring subscription and returns the
+     * URL to redirect the buyer to. The subscription's own amount/currency/
+     * interval define the recurring price — no pre-created gateway-side
+     * price/product objects.
+     */
+    public function createSubscriptionCheckout(Subscription $subscription, string $successUrl, string $cancelUrl): string;
+
+    /**
      * Verifies the inbound webhook's signature and normalizes it.
      * Returns null if the signature is invalid or the event isn't recognized.
      */
@@ -25,4 +34,7 @@ interface PaymentGateway
 
     /** Issues a refund for a previously-paid payment. */
     public function refund(Payment $payment): void;
+
+    /** Cancels a subscription at the end of its current period — never immediately. */
+    public function cancelSubscription(Subscription $subscription): void;
 }

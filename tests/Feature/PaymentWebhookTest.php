@@ -61,6 +61,7 @@ class PaymentWebhookTest extends TestCase
                 'object' => [
                     'id' => 'cs_test_1',
                     'object' => 'checkout.session',
+                    'mode' => 'payment',
                     'payment_intent' => $paymentIntent,
                 ],
             ],

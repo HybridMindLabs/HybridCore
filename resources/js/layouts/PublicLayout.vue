@@ -665,6 +665,8 @@ const accountLinks = computed(() => page.props.auth?.user
             </div>
         </header>
 
+        <ExtensionSlot name="layout.top" />
+
         <main id="main-content" tabindex="-1" class="flex-1">
             <slot />
         </main>
