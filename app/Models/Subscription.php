@@ -30,7 +30,7 @@ use Illuminate\Support\Carbon;
  * @property bool $cancel_at_period_end
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read Model|\Eloquent $payable
+ * @property-read Model|\Eloquent|null $payable
  * @property-read User $user
  * @property-read Collection<int, Payment> $payments
  *

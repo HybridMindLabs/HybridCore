@@ -26,7 +26,7 @@ use Illuminate\Support\Carbon;
  * @property array<string, mixed>|null $metadata
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read Model|\Eloquent $payable
+ * @property-read Model|\Eloquent|null $payable
  * @property-read User|null $user
  * @property-read Subscription|null $subscription
  * @property-read Invoice|null $invoice
