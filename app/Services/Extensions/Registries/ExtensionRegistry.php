@@ -32,6 +32,7 @@ class ExtensionRegistry
         private readonly ScheduledReportRegistry $scheduledReports,
         private readonly BridgeEventRegistry $bridgeEvents,
         private readonly PaymentEventRegistry $payments,
+        private readonly SubscriptionEventRegistry $subscriptions,
         private readonly WidgetRegistry $widgets,
         private readonly PermissionRegistry $permissions,
         private readonly AbilityRegistry $abilities,
@@ -57,6 +58,12 @@ class ExtensionRegistry
     public function payments(): PaymentEventRegistry
     {
         return $this->payments;
+    }
+
+    /** Handlers for subscription lifecycle events (created/renewed/past_due/canceled). */
+    public function subscriptions(): SubscriptionEventRegistry
+    {
+        return $this->subscriptions;
     }
 
     public function navigation(): NavigationRegistry

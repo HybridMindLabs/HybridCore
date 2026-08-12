@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property string $payable_type
  * @property int $payable_id
+ * @property int|null $subscription_id
  * @property int|null $user_id
  * @property string $gateway
  * @property string|null $external_id
@@ -26,6 +27,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read Model|\Eloquent $payable
  * @property-read User|null $user
+ * @property-read Subscription|null $subscription
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static> newQuery()
@@ -44,7 +46,7 @@ class Payment extends Model
     public const STATUS_REFUNDED = 'refunded';
 
     protected $fillable = [
-        'payable_type', 'payable_id', 'user_id', 'gateway',
+        'payable_type', 'payable_id', 'subscription_id', 'user_id', 'gateway',
         'external_id', 'amount', 'currency', 'status', 'metadata',
     ];
 
@@ -64,5 +66,10 @@ class Payment extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function subscription(): BelongsTo
+    {
+        return $this->belongsTo(Subscription::class);
     }
 }
