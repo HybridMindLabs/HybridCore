@@ -7,6 +7,7 @@ use App\Games\GameDriverRegistry;
 use App\Models\User;
 use App\Services\Auth\OAuthProviderRegistry;
 use App\Services\Bridge\BridgeService;
+use App\Services\Payments\PaymentManager;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -31,6 +32,10 @@ class AppServiceProvider extends ServiceProvider
         // Discovering drivers scans the filesystem once; keep the result for
         // the whole request/worker cycle.
         $this->app->singleton(GameDriverRegistry::class);
+
+        // Resolves the configured gateway driver once per request rather
+        // than rebuilding a StripeClient on every PaymentManager::driver() call.
+        $this->app->singleton(PaymentManager::class);
     }
 
     /**

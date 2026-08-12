@@ -19,6 +19,10 @@ conventions and [Semantic Versioning](https://semver.org/).
   - **Search providers** — grouped results in global search
 - `extensions:test` now forces the sqlite/array/sync test environment so an
   extension's suite always runs isolated from the live database.
+- New core payment layer: a provider-agnostic checkout + webhook pipeline
+  (Stripe today, any hosted-checkout gateway is a new driver later) so paid
+  extensions never touch a payment SDK directly — they call
+  `PaymentService::checkout()` and listen on `$registry->payments()->on('paid', ...)`.
 
 ### Themes
 - Themes now declare a `settings_schema` in `theme.json` — typed, admin-editable
