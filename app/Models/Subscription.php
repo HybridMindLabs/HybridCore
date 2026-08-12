@@ -30,7 +30,7 @@ use Illuminate\Support\Carbon;
  * @property bool $cancel_at_period_end
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read Model|\Eloquent $payable
+ * @property-read Model|\Eloquent|null $payable
  * @property-read User $user
  * @property-read Collection<int, Payment> $payments
  *
@@ -78,5 +78,17 @@ class Subscription extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /** Same duck-type as Payment::description() — see that method's docblock. */
+    public function description(): string
+    {
+        $payable = $this->payable;
+
+        if ($payable !== null && method_exists($payable, 'paymentDescription')) {
+            return $payable->paymentDescription();
+        }
+
+        return class_basename($this->payable_type).' #'.$this->payable_id;
     }
 }

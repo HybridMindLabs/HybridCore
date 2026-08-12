@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
 
@@ -25,9 +26,10 @@ use Illuminate\Support\Carbon;
  * @property array<string, mixed>|null $metadata
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read Model|\Eloquent $payable
+ * @property-read Model|\Eloquent|null $payable
  * @property-read User|null $user
  * @property-read Subscription|null $subscription
+ * @property-read Invoice|null $invoice
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static> newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static> newQuery()
@@ -71,5 +73,27 @@ class Payment extends Model
     public function subscription(): BelongsTo
     {
         return $this->belongsTo(Subscription::class);
+    }
+
+    public function invoice(): HasOne
+    {
+        return $this->hasOne(Invoice::class);
+    }
+
+    /**
+     * Human-readable label for invoices/transaction lists. Duck-typed, not a
+     * formal contract — a payable optionally defines paymentDescription(),
+     * same philosophy as ContentReport's bare morphTo() with no interface
+     * obligation on the reportable model.
+     */
+    public function description(): string
+    {
+        $payable = $this->payable;
+
+        if ($payable !== null && method_exists($payable, 'paymentDescription')) {
+            return $payable->paymentDescription();
+        }
+
+        return class_basename($this->payable_type).' #'.$this->payable_id;
     }
 }

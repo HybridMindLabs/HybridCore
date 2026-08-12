@@ -3,7 +3,7 @@ import { router, usePage } from '@inertiajs/vue3';
 import {
     User, ShieldCheck, Monitor, Settings, Link2, LogOut,
     BadgeCheck, ExternalLink, Bell, MessageSquare, Star,
-    History, Ban, Trash, MailCheck, ThumbsUp, Gift, Trophy, Puzzle,
+    History, Ban, Trash, MailCheck, ThumbsUp, Gift, Trophy, Puzzle, Receipt,
 } from '@lucide/vue';
 import type { Component } from 'vue';
 import { computed } from 'vue';
@@ -48,7 +48,7 @@ const user = computed(() => page.props.auth?.user);
 
 // Extension-registered account tabs (each navigates to its own route).
 interface ExtTab { key: string; label: string; url: string; icon: string }
-const extTabIcons: Record<string, Component> = { ThumbsUp, Gift, Trophy, Star, Puzzle };
+const extTabIcons: Record<string, Component> = { ThumbsUp, Gift, Trophy, Star, Puzzle, Receipt };
 const extensionTabs = computed(() => page.props.accountTabs ?? []);
 function extTabIcon(name: string): Component { return extTabIcons[name] ?? Puzzle; }
 function isExtTabActive(url: string): boolean {

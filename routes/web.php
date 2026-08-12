@@ -16,6 +16,7 @@ use App\Http\Controllers\Web\ContentReportController;
 use App\Http\Controllers\Web\FollowController;
 use App\Http\Controllers\Web\GameServerController;
 use App\Http\Controllers\Web\HomeController;
+use App\Http\Controllers\Web\InvoiceController;
 use App\Http\Controllers\Web\LegalController;
 use App\Http\Controllers\Web\LocaleController;
 use App\Http\Controllers\Web\MediaController;
@@ -30,6 +31,7 @@ use App\Http\Controllers\Web\RuleController as WebRuleController;
 use App\Http\Controllers\Web\SeoController;
 use App\Http\Controllers\Web\ServerReviewController;
 use App\Http\Controllers\Web\SessionController;
+use App\Http\Controllers\Web\TransactionController;
 use App\Http\Controllers\Web\TwoFactorController;
 use App\Http\Middleware\EnsureAppIsInstalled;
 use App\Http\Middleware\EnsureNotInMaintenance;
@@ -93,6 +95,12 @@ Route::middleware([EnsureAppIsInstalled::class, EnsureNotInMaintenance::class])
                 ->middleware([HandlePrecognitiveRequests::class, 'throttle:account-forms']);
             Route::put('/account/preferences', [AccountController::class, 'updatePreferences'])->name('account.preferences.update');
             Route::put('/account/email-preferences', [AccountController::class, 'updateEmailPreferences'])->name('account.email-preferences.update');
+
+            // Transactions (payments + subscriptions, across every extension)
+            Route::get('/account/transactions', [TransactionController::class, 'index'])->name('account.transactions.index');
+            Route::post('/account/subscriptions/{subscription}/cancel', [TransactionController::class, 'cancelSubscription'])
+                ->name('account.subscriptions.cancel');
+            Route::get('/invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download');
 
             // Connected accounts
             Route::delete('/account/connected-accounts/{provider}', [OAuthController::class, 'disconnect'])

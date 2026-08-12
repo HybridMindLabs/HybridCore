@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\NewsCategoryController;
 use App\Http\Controllers\Admin\NewsCommentController;
 use App\Http\Controllers\Admin\NewsMediaController;
 use App\Http\Controllers\Admin\PageController;
+use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\RuleController;
@@ -284,6 +285,14 @@ Route::middleware('perm:news.view')->group(function (): void {
 Route::middleware('perm:news.manage')->group(function (): void {
     Route::delete('/news/comments/{comment}', [NewsCommentController::class, 'destroy'])->name('admin.news.comments.destroy');
     Route::post('/news/comments/bulk-delete', [NewsCommentController::class, 'bulkDestroy'])->name('admin.news.comments.bulk');
+});
+
+// ── Payments ────────────────────────────────────────────────────
+Route::middleware('perm:payments.view')->group(function (): void {
+    Route::get('/payments', [PaymentController::class, 'index'])->name('admin.payments.index');
+});
+Route::middleware('perm:payments.manage')->group(function (): void {
+    Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund'])->name('admin.payments.refund');
 });
 
 // ── Content reports ────────────────────────────────────────────
