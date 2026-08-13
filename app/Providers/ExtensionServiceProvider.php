@@ -337,7 +337,7 @@ class ExtensionServiceProvider extends ServiceProvider
      * just invoked eagerly, right here, so a throwing provider is caught by
      * the exact same try/catch every other extension boot step already has.
      *
-     * @param array<string, mixed> $manifest
+     * @param  array<string, mixed>  $manifest
      */
     private function registerExtensionProvider(string $base, array $manifest): void
     {
