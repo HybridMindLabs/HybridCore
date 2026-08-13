@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -38,7 +39,7 @@ class InvoiceController extends Controller
         $since = now()->startOfMonth();
 
         // One aggregate query instead of four separate COUNT/SUM round trips.
-        $agg = Invoice::selectRaw(
+        $agg = DB::table('invoices')->selectRaw(
             'COUNT(*) as total,
              SUM(CASE WHEN currency = ? THEN amount ELSE 0 END) as total_amount,
              SUM(CASE WHEN issued_at >= ? THEN 1 ELSE 0 END) as month_count,
