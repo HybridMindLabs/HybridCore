@@ -17,6 +17,10 @@ class CoreNavigation
         // ── Management ────────────────────────────────────────────
         $nav->register('navigation.users', 'admin.users.index', 'Users', 'navigation.sections.management', 'users.view', 10);
         $nav->register('navigation.roles', 'admin.roles.index', 'ShieldCheck', 'navigation.sections.management', 'roles.view', 20);
+        // 'Payments' is NOT registered here — CorePayments::register() already
+        // covers admin.payments.index via this same registry. Adding it here
+        // too duplicates the sidebar entry.
+        $nav->register('navigation.invoices', 'admin.invoices.index', 'Receipt', 'navigation.sections.management', 'payments.view', 40);
 
         // ── Gaming ────────────────────────────────────────────────
         $nav->register('Servers', 'admin.servers.index', 'Server', 'navigation.sections.gaming', 'servers.view', 10);

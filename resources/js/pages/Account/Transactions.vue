@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Receipt, Download, RefreshCw, XCircle } from '@lucide/vue';
+import { Receipt, Download, RefreshCw, XCircle, Wallet, RotateCw, ListOrdered } from '@lucide/vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
 import AccountPage from '@/components/Account/AccountPage.vue';
@@ -15,6 +15,7 @@ interface PaymentRow {
     gateway: string;
     created_at: string;
     invoice_url: string | null;
+    items_url: string | null;
 }
 
 interface SubscriptionRow {
@@ -36,6 +37,8 @@ interface PaginatedPayments {
 const props = defineProps<{
     payments: PaginatedPayments;
     subscriptions: SubscriptionRow[];
+    totalSpent: number;
+    totalSpentCurrency: string;
     unreadNotifications?: number;
     unreadMessages?: number;
 }>();
@@ -72,6 +75,11 @@ function formatDate(value: string | null): string {
     return new Date(value).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
+// Small at-a-glance header — the page previously jumped straight into two
+// bare lists with nothing orienting the reader first.
+const activeSubCount = computed(() =>
+    props.subscriptions.filter((s) => s.status === 'active' || s.status === 'past_due').length);
+
 const canceling = ref<number | null>(null);
 
 function cancelSubscription(subscription: SubscriptionRow) {
@@ -95,6 +103,30 @@ function cancelSubscription(subscription: SubscriptionRow) {
         :unread-messages="unreadMessages"
     >
         <template #subtitle>{{ t('account.tx_subtitle') }}</template>
+
+        <!-- Stat header — orients before the two lists, real numbers only. -->
+        <div class="grid grid-cols-2 gap-3 mb-6">
+            <div class="rounded-2xl border p-4 flex items-center gap-3"
+                :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]'">
+                <span class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" :class="dark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600'">
+                    <Wallet :size="17" :stroke-width="2" />
+                </span>
+                <div class="min-w-0">
+                    <p class="text-[11px] font-bold uppercase tracking-wide" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ t('account.tx_total_spent') }}</p>
+                    <p class="text-[16px] font-black tabular-nums truncate" :class="dark ? 'text-zinc-100' : 'text-zinc-900'">{{ formatMoney(totalSpent, totalSpentCurrency) }}</p>
+                </div>
+            </div>
+            <div class="rounded-2xl border p-4 flex items-center gap-3"
+                :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]'">
+                <span class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" :class="dark ? 'bg-violet-500/10 text-violet-400' : 'bg-violet-50 text-violet-600'">
+                    <RotateCw :size="17" :stroke-width="2" />
+                </span>
+                <div class="min-w-0">
+                    <p class="text-[11px] font-bold uppercase tracking-wide" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ t('account.tx_active_subs') }}</p>
+                    <p class="text-[16px] font-black tabular-nums truncate" :class="dark ? 'text-zinc-100' : 'text-zinc-900'">{{ activeSubCount }}</p>
+                </div>
+            </div>
+        </div>
 
         <!-- Subscriptions -->
         <div class="rounded-2xl border overflow-hidden"
@@ -201,6 +233,13 @@ function cancelSubscription(subscription: SubscriptionRow) {
                     <span class="px-2.5 py-1 rounded-full text-[11px] font-bold shrink-0" :class="statusStyles[p.status]">
                         {{ paymentStatusLabel(p.status) }}
                     </span>
+
+                    <Link v-if="p.items_url" :href="p.items_url"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11.5px] font-bold transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                        :class="dark ? 'border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600' : 'border-zinc-300 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400'">
+                        <ListOrdered :size="12" :stroke-width="2" aria-hidden="true" />
+                        {{ t('account.tx_view_items') }}
+                    </Link>
 
                     <a v-if="p.invoice_url" :href="p.invoice_url"
                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11.5px] font-bold transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"

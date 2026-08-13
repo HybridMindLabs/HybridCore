@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EmailController;
 use App\Http\Controllers\Admin\ExtensionController;
 use App\Http\Controllers\Admin\GameController;
+use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\IpBanController;
 use App\Http\Controllers\Admin\LegalController;
 use App\Http\Controllers\Admin\MaintenanceController;
@@ -290,6 +291,7 @@ Route::middleware('perm:news.manage')->group(function (): void {
 // ── Payments ────────────────────────────────────────────────────
 Route::middleware('perm:payments.view')->group(function (): void {
     Route::get('/payments', [PaymentController::class, 'index'])->name('admin.payments.index');
+    Route::get('/invoices', [InvoiceController::class, 'index'])->name('admin.invoices.index');
 });
 Route::middleware('perm:payments.manage')->group(function (): void {
     Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund'])->name('admin.payments.refund');

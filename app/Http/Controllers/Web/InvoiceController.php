@@ -25,6 +25,7 @@ class InvoiceController extends Controller
             'invoice' => $invoice,
             'payment' => $invoice->payment,
             'siteName' => $this->settings->appName(),
+            'contactEmail' => config('app.contact_email', ''),
         ]);
 
         return $pdf->download($invoice->number().'.pdf');

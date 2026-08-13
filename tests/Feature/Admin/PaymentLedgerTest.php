@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Server;
 use App\Models\User;
@@ -54,6 +55,31 @@ class PaymentLedgerTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->component('Admin/Payments/Index')
                 ->where('payments.data.0.id', $payment->id));
+    }
+
+    public function test_ledger_links_to_the_invoice_when_one_exists(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $payment = $this->payment();
+        $invoice = Invoice::create([
+            'payment_id' => $payment->id, 'user_id' => $payment->user_id,
+            'amount' => $payment->amount, 'currency' => $payment->currency, 'issued_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.payments.index'))
+            ->assertInertia(fn ($page) => $page
+                ->where('payments.data.0.invoice_url', route('invoices.download', ['invoice' => $invoice->id])));
+    }
+
+    public function test_ledger_has_no_invoice_link_when_none_exists(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->payment();
+
+        $this->actingAs($admin)
+            ->get(route('admin.payments.index'))
+            ->assertInertia(fn ($page) => $page->where('payments.data.0.invoice_url', null));
     }
 
     public function test_status_filter_narrows_the_list(): void

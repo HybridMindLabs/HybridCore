@@ -22,7 +22,7 @@ class PaymentController extends Controller
     {
         $status = $request->string('status')->toString() ?: 'all';
 
-        $payments = Payment::with(['user', 'payable'])
+        $payments = Payment::with(['user', 'payable', 'invoice'])
             ->when($status !== 'all', fn ($q) => $q->where('status', $status))
             ->latest()
             ->paginate(25)
@@ -37,6 +37,7 @@ class PaymentController extends Controller
                 'gateway' => $p->gateway,
                 'external_id' => $p->external_id,
                 'created_at' => $p->created_at->diffForHumans(),
+                'invoice_url' => $p->invoice ? route('invoices.download', ['invoice' => $p->invoice->id]) : null,
             ]);
 
         return Inertia::render('Admin/Payments/Index', [

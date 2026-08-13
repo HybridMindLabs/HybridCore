@@ -323,18 +323,38 @@ class ExtensionServiceProvider extends ServiceProvider
         }
     }
 
-    /** @param array<string, mixed> $manifest */
+    /**
+     * Deliberately NOT $this->app->register(): that hands the instance to
+     * Laravel's own provider-boot loop (Application::boot()'s array_walk
+     * over $serviceProviders), which — because a provider registered from
+     * inside another provider's boot() is appended to that same array and
+     * picked up later in the same walk — runs the new provider's boot()
+     * *after* this method (and bootEnabledExtensions()'s try/catch around
+     * it) has already returned. A throw there is uncaught by anything here
+     * and takes down the entire request, not just this one extension.
+     *
+     * Mirrors what Laravel's own register()/bootProvider() do internally,
+     * just invoked eagerly, right here, so a throwing provider is caught by
+     * the exact same try/catch every other extension boot step already has.
+     *
+     * @param array<string, mixed> $manifest
+     */
     private function registerExtensionProvider(string $base, array $manifest): void
     {
         $provider = $manifest['provider'] ?? null;
 
-        if (! is_string($provider) || $provider === '') {
+        if (! is_string($provider) || $provider === '' || ! class_exists($provider)) {
             return;
         }
 
-        // Providers are expected to be autoloadable (composer or extension autoload).
-        if (class_exists($provider)) {
-            $this->app->register($provider);
+        $instance = new $provider($this->app);
+
+        if (method_exists($instance, 'register')) {
+            $instance->register();
+        }
+
+        if (method_exists($instance, 'boot')) {
+            $this->app->call([$instance, 'boot']);
         }
     }
 
