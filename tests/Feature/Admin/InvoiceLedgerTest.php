@@ -65,7 +65,7 @@ class InvoiceLedgerTest extends TestCase
             ->get(route('admin.invoices.index'))
             ->assertInertia(fn ($page) => $page
                 ->where('stats.total', 2)
-                ->where('stats.totalAmount', 40.0)
+                ->where('stats.totalAmount', fn ($amount) => (float) $amount === 40.0)
                 ->where('stats.monthCount', 2));
     }
 
