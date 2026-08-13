@@ -3,7 +3,7 @@ import { router, usePage } from '@inertiajs/vue3';
 import {
     User, ShieldCheck, Monitor, Settings, Link2, LogOut,
     BadgeCheck, ExternalLink, Bell, MessageSquare, Star,
-    History, Ban, Trash, MailCheck, ThumbsUp, Gift, Trophy, Puzzle, Receipt,
+    History, Ban, Trash, MailCheck, ThumbsUp, Gift, Trophy, Puzzle, Receipt, Heart,
 } from '@lucide/vue';
 import type { Component } from 'vue';
 import { computed } from 'vue';
@@ -21,7 +21,12 @@ const emit = defineEmits<{ 'update:activeTab': [value: string] }>();
 
 const LAST_TAB_KEY = 'hc-account-last-tab';
 
-/** Tabs that live on their own dedicated route rather than as an Index.vue tab. */
+/**
+ * Tabs that live on their own dedicated route rather than as an Index.vue
+ * tab. Transactions is NOT listed here — it's registered via CorePayments's
+ * accountTabs()->register() and rendered by the extensionTabs loop below;
+ * listing it here too used to render it twice.
+ */
 const routableTabs: Record<string, string> = {
     favorites: 'account.favorites',
     messages: 'account.messages.index',
@@ -48,7 +53,7 @@ const user = computed(() => page.props.auth?.user);
 
 // Extension-registered account tabs (each navigates to its own route).
 interface ExtTab { key: string; label: string; url: string; icon: string }
-const extTabIcons: Record<string, Component> = { ThumbsUp, Gift, Trophy, Star, Puzzle, Receipt };
+const extTabIcons: Record<string, Component> = { ThumbsUp, Gift, Trophy, Star, Puzzle, Receipt, Heart };
 const extensionTabs = computed(() => page.props.accountTabs ?? []);
 function extTabIcon(name: string): Component { return extTabIcons[name] ?? Puzzle; }
 function isExtTabActive(url: string): boolean {

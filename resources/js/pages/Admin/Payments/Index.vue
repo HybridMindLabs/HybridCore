@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Receipt, Undo2 } from '@lucide/vue';
+import { Receipt, Undo2, Download } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 
 interface PaymentRow {
@@ -13,6 +13,7 @@ interface PaymentRow {
     gateway: string;
     external_id: string | null;
     created_at: string;
+    invoice_url: string | null;
 }
 interface PageLink { url: string | null; label: string; active: boolean }
 interface Paginator { data: PaymentRow[]; links: PageLink[]; total: number }
@@ -90,6 +91,10 @@ function refund(payment: PaymentRow) {
 
                     <div class="flex items-center gap-3 shrink-0">
                         <span class="text-[14px] font-bold tabular-nums text-zinc-100">{{ formatMoney(payment.amount, payment.currency) }}</span>
+                        <a v-if="payment.invoice_url" :href="payment.invoice_url"
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-zinc-800 text-zinc-300 text-[11px] font-bold hover:text-white hover:border-zinc-600 transition">
+                            <Download :size="11" :stroke-width="2" /> Invoice
+                        </a>
                         <button v-if="payment.status === 'paid'" type="button" @click="refund(payment)"
                             class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 text-[11px] font-bold hover:bg-red-500/20 transition">
                             <Undo2 :size="11" :stroke-width="2" /> Refund

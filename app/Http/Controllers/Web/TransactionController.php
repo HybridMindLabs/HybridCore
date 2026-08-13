@@ -8,6 +8,7 @@ use App\Models\Subscription;
 use App\Services\Payments\PaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -34,6 +35,11 @@ class TransactionController extends Controller
                 'invoice_url' => $p->invoice
                     ? route('invoices.download', ['invoice' => $p->invoice->id])
                     : null,
+                // Shop is optional — only link to its itemized order view
+                // when the extension is actually installed.
+                'items_url' => $p->payable_type === 'Hybridcore\\Shop\\Models\\ShopOrder' && Route::has('shop.orders.show')
+                    ? route('shop.orders.show', $p->payable_id)
+                    : null,
             ]);
 
         $subscriptions = Subscription::where('user_id', $user->id)
@@ -50,9 +56,13 @@ class TransactionController extends Controller
                 'cancel_at_period_end' => $s->cancel_at_period_end,
             ]);
 
+        $totalSpent = Payment::where('user_id', $user->id)->where('status', Payment::STATUS_PAID)->sum('amount');
+
         return Inertia::render('Account/Transactions', [
             'payments' => $payments,
             'subscriptions' => $subscriptions,
+            'totalSpent' => $totalSpent / 100,
+            'totalSpentCurrency' => Payment::where('user_id', $user->id)->value('currency') ?? 'usd',
             'unreadNotifications' => $user->unreadNotifications()->count(),
             'unreadMessages' => $user->unreadMessagesCount(),
         ]);

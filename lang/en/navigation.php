@@ -29,6 +29,7 @@ return [
     'news_comments' => 'Comments',
     'reports' => 'Reports',
     'payments' => 'Payments',
+    'invoices' => 'Invoices',
     'profile' => 'Profile',
     'sign_out' => 'Sign out',
 

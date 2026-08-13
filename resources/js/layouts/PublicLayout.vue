@@ -4,7 +4,7 @@ import {
     Menu, X, UserCircle, Users, User, LogOut, BadgeCheck,
     Home, Server, BookOpen, Phone, Star, ShieldCheck,
     ChevronDown, Check, Moon, Sun, Bell,
-    ThumbsUp, Trophy, Gift, Package, Link as LinkIcon, ArrowRight,
+    ThumbsUp, Trophy, Gift, Package, Link as LinkIcon, ArrowRight, ShoppingCart,
 } from '@lucide/vue';
 import type { Component } from 'vue';
 import { ref, computed, onMounted, onUnmounted, watchEffect } from 'vue';
@@ -191,7 +191,7 @@ function isActive(href: string): boolean {
 
 // Public header links registered by enabled extensions (e.g. Vote).
 interface PublicNavItem { label: string; url: string; icon: string }
-const publicNavIcons: Record<string, Component> = { ThumbsUp, Trophy, Gift, Package, Server, BookOpen, Star };
+const publicNavIcons: Record<string, Component> = { ThumbsUp, Trophy, Gift, Package, Server, BookOpen, Star, ShoppingCart };
 const publicNav = computed(() => (page.props.publicNav as PublicNavItem[] | undefined) ?? []);
 const userMenu = computed(() => (page.props.userMenu as PublicNavItem[] | undefined) ?? []);
 const footerNav = computed(() => (page.props.footerNav as { label: string; url: string }[] | undefined) ?? []);
@@ -446,6 +446,9 @@ const accountLinks = computed(() => page.props.auth?.user
                             </div>
                         </transition>
                     </div>
+
+                    <!-- Extension-registered header icons (e.g. Shop's cart badge) -->
+                    <ExtensionSlot name="header.actions" />
 
                     <!-- Theme toggle -->
                     <button

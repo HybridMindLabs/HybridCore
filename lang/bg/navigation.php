@@ -29,6 +29,7 @@ return [
     'news_comments' => 'Коментари',
     'reports' => 'Доклади',
     'payments' => 'Плащания',
+    'invoices' => 'Фактури',
     'profile' => 'Профил',
     'sign_out' => 'Изход',
 

@@ -17,6 +17,9 @@ final class Slots
     /** Every public page, directly below the header — site-wide banners */
     public const LAYOUT_TOP = 'layout.top';
 
+    /** Header, right side, next to the theme toggle — small persistent icons (e.g. a cart badge) */
+    public const HEADER_ACTIONS = 'header.actions';
+
     // ── Home ─────────────────────────────────────────────────────────────────
     /** Right column — above Featured Servers */
     public const HOME_RIGHT_TOP = 'home.right.top';

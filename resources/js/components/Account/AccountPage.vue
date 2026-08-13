@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { Lightbulb } from '@lucide/vue';
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import ExtensionSlot from '@/components/Core/ExtensionSlot.vue';
@@ -24,6 +24,13 @@ const emit = defineEmits<{ 'update:activeTab': [value: string] }>();
 const { theme } = useTheme();
 const { t } = useLocale();
 const dark = computed(() => theme.value === 'dark');
+
+interface ExtTab { key: string; label: string; url: string; icon: string; permission: string | null }
+const page = usePage<{ accountTabs?: ExtTab[] }>();
+// Extension-registered tabs (AccountTabRegistry) render on the desktop
+// sidebar already — this mirrors them here so a phone-width visitor isn't
+// stranded without a way to reach an extension's account page at all.
+const extensionTabs = computed(() => page.props.accountTabs ?? []);
 
 const heading = computed(() => props.section ?? t('account.my_account'));
 
@@ -71,7 +78,12 @@ const mobileTabs = computed(() => [
     { id: 'danger', label: t('account.tab_danger'), badge: 0 },
 ]);
 
-/** Mirrors the sidebar: some sections are their own route, the rest are tabs. */
+/**
+ * Mirrors the sidebar: some sections are their own route, the rest are tabs.
+ * Transactions is NOT listed here — it's registered via CorePayments's
+ * accountTabs()->register() and rendered through extensionTabs below;
+ * listing it here too used to render it twice.
+ */
 const routableTabs: Record<string, string> = {
     favorites: 'account.favorites',
     messages: 'account.messages.index',
@@ -150,6 +162,15 @@ function selectMobileTab(tabId: string) {
                     {{ tab.label }}
                     <span v-if="tab.badge" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold tabular-nums"
                         :class="activeTab === tab.id ? 'bg-black/25 text-white' : 'bg-red-500 text-white'">{{ tab.badge }}</span>
+                </button>
+                <button v-for="tab in extensionTabs" :key="tab.key" type="button"
+                    class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12.5px] font-semibold whitespace-nowrap transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                    :class="activeTab === tab.key
+                        ? 'bg-blue-600 text-white'
+                        : dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05]' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100'"
+                    :aria-current="activeTab === tab.key ? 'page' : undefined"
+                    @click="router.visit(tab.url)">
+                    {{ tab.label }}
                 </button>
             </div>
         </nav>
