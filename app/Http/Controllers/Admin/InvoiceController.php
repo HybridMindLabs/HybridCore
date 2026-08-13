@@ -52,9 +52,9 @@ class InvoiceController extends Controller
             'filters' => ['q' => $search],
             'stats' => [
                 'total' => (int) $agg->total,
-                'totalAmount' => ((int) $agg->total_amount) / 100,
+                'totalAmount' => ((int) $agg->total_amount) / 100.0,
                 'monthCount' => (int) $agg->month_count,
-                'monthAmount' => ((int) $agg->month_amount) / 100,
+                'monthAmount' => ((int) $agg->month_amount) / 100.0,
                 'currency' => $currency,
             ],
         ]);
