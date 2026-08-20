@@ -7,6 +7,19 @@ conventions and [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.4.1] — 2026-08-20
+
+### Fixed
+
+- rehydrate Server::cachedSnapshot from raw attributes
+
+### Changed
+
+- Merge pull request #77 from HybridMindLabs/feature/bridge-admin-tools
+- Merge branch 'main' into feature/bridge-admin-tools
+
+---
+
 ## [0.4.0] — 2026-08-13
 
 ### Added
