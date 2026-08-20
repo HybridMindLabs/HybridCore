@@ -174,8 +174,25 @@ class Server extends Model
 
     public function getCachedSnapshotAttribute(): ?ServerSnapshot
     {
-        return Cache::remember('server.snapshot.'.$this->id, 60, fn () => $this->latestSnapshot
+        // Caching a raw Eloquent model here collides with
+        // config('cache.serializable_classes') = false — a hardening
+        // setting that blocks unserialize() from reconstructing ANY object
+        // (gadget-chain protection if APP_KEY ever leaks), so every cache
+        // hit came back as __PHP_Incomplete_Class instead of a
+        // ServerSnapshot. Cache the plain attribute array instead — arrays
+        // need no class reconstruction — and rehydrate a real model from it
+        // on every read.
+        $attributes = Cache::remember(
+            'server.snapshot.'.$this->id,
+            60,
+            fn () => $this->latestSnapshot?->getAttributes(),
         );
+
+        if ($attributes === null) {
+            return null;
+        }
+
+        return (new ServerSnapshot)->setRawAttributes($attributes, true);
     }
 
     public function scopeActive($query)
