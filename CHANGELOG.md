@@ -7,6 +7,14 @@ conventions and [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.4.4] — 2026-08-21
+
+### Fixed
+
+- unscoped throttle:X,Y shares one rate-limit bucket per IP across unrelated routes
+
+---
+
 ## [0.4.3] — 2026-08-21
 
 ### Changed
