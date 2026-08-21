@@ -431,6 +431,8 @@ return [
     'pf_visibility_private' => 'Private',
     'pf_visibility_private_desc' => 'Only you.',
     'pf_saved' => 'Saved',
+    'avatar_updated' => 'Profile picture updated.',
+    'banner_updated' => 'Profile banner updated.',
     'unsaved_changes' => 'Unsaved changes',
 
     // Unsubscribe

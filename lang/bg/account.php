@@ -431,6 +431,8 @@ return [
     'pf_visibility_private' => 'Личен',
     'pf_visibility_private_desc' => 'Само ти.',
     'pf_saved' => 'Запазено',
+    'avatar_updated' => 'Профилната снимка е обновена.',
+    'banner_updated' => 'Банерът на профила е обновен.',
     'unsaved_changes' => 'Незапазени промени',
 
     // Unsubscribe
