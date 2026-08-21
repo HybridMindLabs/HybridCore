@@ -28,17 +28,17 @@ class ActivityLogTest extends TestCase
         $this->get(route('account.activity'))->assertRedirect(route('login'));
     }
 
-    public function test_account_index_contains_login_history(): void
+    public function test_activity_log_contains_login_history(): void
     {
         $user = User::factory()->create();
         LoginHistory::factory()->create(['user_id' => $user->id, 'ip_address' => '1.2.3.4']);
 
-        $response = $this->actingAs($user)->get(route('account.index'));
+        $response = $this->actingAs($user)->get(route('account.activity'));
 
         $response->assertInertia(fn ($page) => $page
-            ->component('Account/Index')
-            ->has('loginHistory.data', 1)
-            ->where('loginHistory.data.0.ip', '1.2.3.4')
+            ->component('Account/ActivityLog')
+            ->has('history.data', 1)
+            ->where('history.data.0.ip', '1.2.3.4')
         );
     }
 
@@ -49,11 +49,11 @@ class ActivityLogTest extends TestCase
         LoginHistory::factory()->create(['user_id' => $user->id, 'ip_address' => '10.0.0.1']);
         LoginHistory::factory()->create(['user_id' => $other->id, 'ip_address' => '10.0.0.2']);
 
-        $response = $this->actingAs($user)->get(route('account.index'));
+        $response = $this->actingAs($user)->get(route('account.activity'));
 
         $response->assertInertia(fn ($page) => $page
-            ->has('loginHistory.data', 1)
-            ->where('loginHistory.data.0.ip', '10.0.0.1')
+            ->has('history.data', 1)
+            ->where('history.data.0.ip', '10.0.0.1')
         );
     }
 }
