@@ -15,7 +15,7 @@ interface LegalPage {
     updated_at: string;
 }
 
-const props = defineProps<{ pages: LegalPage[] }>();
+defineProps<{ pages: LegalPage[] }>();
 
 function deletePage(slug: string) {
     if (!confirm('Delete this page? This cannot be undone.')) return;

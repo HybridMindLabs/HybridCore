@@ -18,7 +18,7 @@ interface PaymentRow {
 interface PageLink { url: string | null; label: string; active: boolean }
 interface Paginator { data: PaymentRow[]; links: PageLink[]; total: number }
 
-const props = defineProps<{
+defineProps<{
     payments: Paginator;
     filters: { status: string };
     totals: { paid: number; refunded: number; failed: number };

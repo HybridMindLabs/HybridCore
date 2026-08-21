@@ -11,7 +11,7 @@ interface Report {
 interface PageLink { url: string | null; label: string; active: boolean }
 interface Paginator { data: Report[]; links: PageLink[]; total: number }
 
-const props = defineProps<{ reports: Paginator; filters: { status: string }; openCount: number }>();
+defineProps<{ reports: Paginator; filters: { status: string }; openCount: number }>();
 
 const reasonColors: Record<string, string> = {
     spam: 'text-amber-400 border-amber-500/30 bg-amber-500/10',

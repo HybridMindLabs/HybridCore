@@ -177,10 +177,6 @@ async function toggleFavourite() {
     } finally { favouriteLoading.value = false; }
 }
 
-function playerBarWidth(online: number, max: number) {
-    if (!max) return '0%';
-    return `${Math.min(100, Math.round((online / max) * 100))}%`;
-}
 function playerBarColor(online: number, max: number) {
     if (!max) return '#52525b';
     const pct = online / max;

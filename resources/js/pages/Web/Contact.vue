@@ -8,7 +8,7 @@ import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
 import { Mail, Clock, Send, CheckCircle, MessageSquare, BookOpen, ArrowRight } from '@lucide/vue';
 
-const props = defineProps<{
+defineProps<{
     captcha: { provider: string; site_key: string | null };
 }>();
 

@@ -16,7 +16,7 @@ interface Rule {
     updated_at: string;
 }
 
-const props = defineProps<{ rules: Rule[] }>();
+defineProps<{ rules: Rule[] }>();
 
 function deleteRule(slug: string) {
     if (!confirm('Delete this rule? This cannot be undone.')) return;

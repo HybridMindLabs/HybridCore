@@ -7,7 +7,7 @@ const NewsArticleForm = defineAsyncComponent(() => import('./Form.vue'));
 
 interface Category { id: number; name: string; color: string }
 interface Tag { id: number; name: string; slug: string }
-const props = defineProps<{ categories: Category[]; tags: Tag[] }>();
+defineProps<{ categories: Category[]; tags: Tag[] }>();
 
 const form = useForm({
     title: '', slug: '', category_id: null as number | null,

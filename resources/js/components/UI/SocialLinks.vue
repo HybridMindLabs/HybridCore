@@ -12,7 +12,7 @@ import { useTheme } from '@/composables/useTheme';
  * value clears 3:1 against both themes' backgrounds — icons are non-text
  * content, so that is the bar they have to meet.
  */
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
     /** `bar` is the bare header row; `boxed` is the bordered footer tile. */
     variant?: 'bar' | 'boxed';
 }>(), { variant: 'bar' });

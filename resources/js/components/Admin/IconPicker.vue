@@ -4,7 +4,7 @@ import { Search, ChevronDown } from '@lucide/vue';
 import { ROLE_ICONS, ROLE_ICON_NAMES } from '@/constants/icons';
 import { useLocale } from '@/composables/useLocale';
 
-const props = defineProps<{ modelValue: string; color?: string }>();
+defineProps<{ modelValue: string; color?: string }>();
 const emit = defineEmits<{ 'update:modelValue': [string] }>();
 
 const { t } = useLocale();

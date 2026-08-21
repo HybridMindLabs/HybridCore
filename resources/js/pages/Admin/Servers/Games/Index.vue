@@ -13,7 +13,7 @@ interface GameRow {
     sort_order: number; servers_count: number;
 }
 
-const props = defineProps<{ games: GameRow[]; drivers: string[] }>();
+defineProps<{ games: GameRow[]; drivers: string[] }>();
 
 // --- Add form ---
 const showAdd = ref(false);

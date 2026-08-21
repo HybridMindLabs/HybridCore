@@ -70,7 +70,6 @@ onMounted(() => {
 
 onBeforeUnmount(() => observer?.disconnect());
 
-const formattedDate = computed(() => formatDate(props.rule.updated_at, { dateStyle: 'long' }));
 const readingMinutes = computed(() => props.reading_minutes);
 
 const ruleIndex = computed(() => props.allRules.findIndex(r => r.slug === props.rule.slug));
