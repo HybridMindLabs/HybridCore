@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import { ChevronDown, ChevronRight, Copy, Check } from '@lucide/vue';
 
-const props = defineProps<{ format: 'markdown' | 'html' }>();
+defineProps<{ format: 'markdown' | 'html' }>();
 
 const sections = ref({
     placeholders: true,

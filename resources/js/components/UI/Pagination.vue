@@ -13,7 +13,7 @@ interface Paginator {
     to: number | null;
 }
 
-const props = defineProps<{ paginator: Paginator }>();
+defineProps<{ paginator: Paginator }>();
 
 function go(url: string | null) {
     if (! url) return;

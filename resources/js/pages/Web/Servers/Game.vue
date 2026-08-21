@@ -152,10 +152,6 @@ function refresh() {
 
 onUnmounted(() => { if (copyTimer) clearTimeout(copyTimer); });
 
-function playerBarWidth(s: ServerStatus | null) {
-    if (!s || s.players_max === 0) return '0%';
-    return `${Math.min(100, Math.round((s.players_online / s.players_max) * 100))}%`;
-}
 function playerBarColor(s: ServerStatus | null) {
     if (!s || s.players_max === 0) return '#52525b';
     const pct = s.players_online / s.players_max;

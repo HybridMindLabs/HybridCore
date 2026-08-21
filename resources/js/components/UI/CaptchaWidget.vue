@@ -12,7 +12,6 @@ const emit = defineEmits<{
 }>();
 
 const widgetRef = ref<HTMLElement | null>(null);
-let widgetId: string | number | null = null;
 
 const scriptId = 'captcha-script';
 
@@ -35,7 +34,7 @@ onMounted(() => {
 
     if (props.provider === 'turnstile') {
         injectScript('https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit', () => {
-            widgetId = (window as any).turnstile.render(widgetRef.value, {
+            (window as any).turnstile.render(widgetRef.value, {
                 sitekey: props.siteKey,
                 callback: (token: string) => emit('token', token),
                 'error-callback': () => emit('error'),
@@ -45,7 +44,7 @@ onMounted(() => {
 
     if (props.provider === 'hcaptcha') {
         injectScript('https://js.hcaptcha.com/1/api.js?render=explicit', () => {
-            widgetId = (window as any).hcaptcha.render(widgetRef.value, {
+            (window as any).hcaptcha.render(widgetRef.value, {
                 sitekey: props.siteKey,
                 callback: (token: string) => emit('token', token),
                 'error-callback': () => emit('error'),
@@ -55,7 +54,7 @@ onMounted(() => {
 
     if (props.provider === 'recaptcha_v2') {
         injectScript('https://www.google.com/recaptcha/api.js?render=explicit', () => {
-            widgetId = (window as any).grecaptcha.render(widgetRef.value, {
+            (window as any).grecaptcha.render(widgetRef.value, {
                 sitekey: props.siteKey,
                 callback: (token: string) => emit('token', token),
                 'error-callback': () => emit('error'),

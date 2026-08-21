@@ -413,13 +413,13 @@ const initials = computed(() => {
                     <!-- Tags -->
                     <div v-if="article.tags.length" class="flex flex-wrap gap-2 mt-10 pt-7 border-t"
                         :class="dark ? 'border-zinc-800/70' : 'border-zinc-200'">
-                        <Link v-for="t in article.tags" :key="t.slug"
-                            :href="route('news.tag', t.slug)"
+                        <Link v-for="tag in article.tags" :key="tag.slug"
+                            :href="route('news.tag', tag.slug)"
                             class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[12px] font-semibold transition"
                             :class="dark
                                 ? 'border-zinc-800/70 text-zinc-500 hover:text-zinc-100 hover:border-zinc-600'
                                 : 'border-zinc-200 text-zinc-500 hover:text-zinc-800 hover:border-zinc-400'">
-                            <Tag :size="10" :stroke-width="2" />#{{ t.name }}
+                            <Tag :size="10" :stroke-width="2" />#{{ tag.name }}
                         </Link>
                     </div>
 
@@ -665,13 +665,13 @@ const initials = computed(() => {
                                 :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ t('news.sidebar_tags') }}</h2>
                         </div>
                         <div class="p-3 flex flex-wrap gap-1.5">
-                            <Link v-for="t in article.tags" :key="t.slug"
-                                :href="route('news.tag', t.slug)"
+                            <Link v-for="tag in article.tags" :key="tag.slug"
+                                :href="route('news.tag', tag.slug)"
                                 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-semibold transition"
                                 :class="dark
                                     ? 'border-zinc-800/70 text-zinc-500 hover:text-zinc-200 hover:border-zinc-600'
                                     : 'border-zinc-200 text-zinc-500 hover:text-zinc-800 hover:border-zinc-400'">
-                                <Tag :size="9" :stroke-width="2" />#{{ t.name }}
+                                <Tag :size="9" :stroke-width="2" />#{{ tag.name }}
                             </Link>
                         </div>
                     </div>

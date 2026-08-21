@@ -38,7 +38,7 @@ interface NotifData { type: string; level?: string; message?: string; sender_use
 interface Notif { id: string; type: string; data: NotifData; read: boolean; created_at: string }
 interface BlockEntry { id: number; user: { id: number; username: string; display_name: string; avatar: string | null }; blocked_at: string }
 
-const props = defineProps<{
+defineProps<{
     account: Account;
     sessions: SessionItem[];
     connectedAccounts: Connected[];

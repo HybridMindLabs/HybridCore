@@ -12,7 +12,7 @@ interface SessionItem {
     device: { browser: string; os: string; mobile: boolean };
 }
 
-const props = defineProps<{ sessions: SessionItem[] }>();
+defineProps<{ sessions: SessionItem[] }>();
 
 const { theme } = useTheme();
 const { t } = useLocale();
