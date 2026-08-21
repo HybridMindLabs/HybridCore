@@ -50,6 +50,7 @@ return [
     'comment_login_suffix' => 'to join the discussion.',
     'no_comments' => 'No comments yet — start the discussion.',
     'delete_comment' => 'Delete comment',
+    'delete_comment_confirm' => 'Delete this comment? This cannot be undone.',
 
     'pagination_label' => 'Article pages',
     'page_number' => 'Page :page',
@@ -75,6 +76,7 @@ return [
 
     'toc_title' => 'On this page',
     'reading_progress' => 'Reading progress',
+    'back_to_top' => 'Back to top',
     'back_to_top' => 'Back to top',
     'jump_to_comments' => 'Jump to comments',
     'meta_by' => 'by :name',

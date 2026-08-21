@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
-import { Eye, EyeOff, KeyRound } from '@lucide/vue';
+import { Check, Eye, EyeOff, KeyRound } from '@lucide/vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
 import { computed, ref } from 'vue';
@@ -168,7 +168,23 @@ function submit() {
                 </p>
             </div>
 
-            <div class="flex justify-end pt-4 border-t" :class="dark ? 'border-zinc-800/60' : 'border-zinc-100'">
+            <div class="flex items-center justify-end gap-3 pt-4 border-t" :class="dark ? 'border-zinc-800/60' : 'border-zinc-100'">
+                <Transition
+                    enter-active-class="transition duration-200"
+                    enter-from-class="opacity-0 translate-y-1"
+                    leave-active-class="transition duration-200"
+                    leave-to-class="opacity-0"
+                >
+                    <span
+                        v-if="form.recentlySuccessful"
+                        role="status"
+                        class="inline-flex items-center gap-1 text-[12px] font-semibold"
+                        :class="dark ? 'text-emerald-400' : 'text-emerald-800'"
+                    >
+                        <Check :size="13" :stroke-width="2.4" />
+                        {{ t('account.sec_pw_saved') }}
+                    </span>
+                </Transition>
                 <button
                     type="submit"
                     :disabled="form.processing || mismatch"

@@ -56,18 +56,25 @@ function submit() {
         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]'"
     >
         <div
-            class="px-6 py-4 border-b flex items-start gap-2.5"
+            class="px-6 py-4 border-b flex items-start justify-between gap-2.5"
             :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e]' : 'border-zinc-100 bg-zinc-50'"
         >
-            <MailCheck :size="15" :stroke-width="1.8" class="mt-0.5 shrink-0" :class="dark ? 'text-cyan-400' : 'text-cyan-600'" />
-            <div>
-                <h2 class="text-[15px] font-black tracking-tight" :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
-                    {{ t('account.email_title') }}
-                </h2>
-                <p class="text-[12px] mt-0.5 leading-relaxed" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
-                    {{ t('account.email_subtitle') }}
-                </p>
+            <div class="flex items-start gap-2.5">
+                <MailCheck :size="15" :stroke-width="1.8" class="mt-0.5 shrink-0" :class="dark ? 'text-cyan-400' : 'text-cyan-600'" />
+                <div>
+                    <h2 class="text-[15px] font-black tracking-tight" :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
+                        {{ t('account.email_title') }}
+                    </h2>
+                    <p class="text-[12px] mt-0.5 leading-relaxed" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
+                        {{ t('account.email_subtitle') }}
+                    </p>
+                </div>
             </div>
+            <span v-if="form.isDirty" class="flex items-center gap-1.5 text-[11px] font-semibold shrink-0 mt-0.5"
+                :class="dark ? 'text-amber-400' : 'text-amber-700'">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400" aria-hidden="true" />
+                {{ t('account.unsaved_changes') }}
+            </span>
         </div>
 
         <form class="p-6 flex flex-col gap-1" @submit.prevent="submit">

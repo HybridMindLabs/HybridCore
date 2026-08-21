@@ -1,6 +1,6 @@
 ﻿<script setup lang="ts">
 import { Head, Link, usePage, router } from '@inertiajs/vue3';
-import { Activity, Star, ArrowRight, Users, Server, Gamepad2, Wifi, ChevronLeft, ChevronRight, Newspaper, Eye, Clock, MousePointerClick, Copy, Check, Play, Pause } from '@lucide/vue';
+import { Activity, Star, ArrowRight, Users, Server, Gamepad2, Wifi, ChevronLeft, ChevronRight, Newspaper, Eye, Clock, MousePointerClick, Copy, Check, Play, Pause, UserPlus } from '@lucide/vue';
 import { ref, computed, reactive, watch, onMounted, onUnmounted } from 'vue';
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import PublicSidebar from '@/components/UI/PublicSidebar.vue';
@@ -29,6 +29,7 @@ interface NewsCard {
 }
 
 interface OnlineUser { id: number; name: string; username: string | null; avatar: string | null }
+interface RecentMember { id: number; username: string | null; name: string; avatar: string | null; joined_at: string }
 
 const props = defineProps<{
     servers: HomeServer[];
@@ -43,6 +44,7 @@ const props = defineProps<{
     activeToday: { users: OnlineUser[]; guests: number; bots: number } | null;
     communityActivity: { type: string; username: string | null; avatar: string | null; params: Record<string, string | number>; text?: string; at: string; url: string | null }[];
     preferredGameSlugs: string[];
+    recentMembers: RecentMember[];
 }>();
 
 const { theme } = useTheme();
@@ -60,6 +62,12 @@ const activeFilter = ref('all');
 const gameFilters = computed(() => {
     const statBySlug = new Map(props.gameStats.map(g => [g.slug, g]));
     const preferred = props.preferredGameSlugs;
+    // props.games is every active game on the platform, most with zero
+    // servers — a tab strip listing all of them (vs. the handful that
+    // actually host something) reads as broken/cluttered. Only tab games
+    // that have at least one server; /servers already has the full catalog
+    // for "what does this network support".
+    const slugsWithServers = new Set(props.servers.map(s => s.game_slug));
 
     const filters: { key: string; label: string; players: number; max: number }[] = [
         { key: 'all', label: t('home.all_games'), players: props.totalPlayers, max: props.maxPlayers },
@@ -76,10 +84,12 @@ const gameFilters = computed(() => {
         });
     }
 
-    filters.push(...props.games.map(g => {
-        const stat = statBySlug.get(g.slug);
-        return { key: g.slug, label: g.name, players: stat?.players ?? 0, max: stat?.max_players ?? 0 };
-    }));
+    filters.push(...props.games
+        .filter(g => slugsWithServers.has(g.slug))
+        .map(g => {
+            const stat = statBySlug.get(g.slug);
+            return { key: g.slug, label: g.name, players: stat?.players ?? 0, max: stat?.max_players ?? 0 };
+        }));
 
     return filters;
 });
@@ -149,7 +159,11 @@ let timer: ReturnType<typeof setInterval> | null = null;
 const reducedMotion = typeof window !== 'undefined'
     && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-const autoplay = ref(!reducedMotion);
+// The user's pause/resume choice is a deliberate preference — resetting it to
+// "playing" on every reload undoes the very thing they just clicked.
+const AUTOPLAY_STORAGE_KEY = 'hc-home-autoplay';
+const storedAutoplay = typeof window !== 'undefined' ? window.localStorage.getItem(AUTOPLAY_STORAGE_KEY) : null;
+const autoplay = ref(!reducedMotion && storedAutoplay !== '0');
 const sliderHovered = ref(false);
 
 function nextSlide() { slideIndex.value = (slideIndex.value + 1) % featured.value.length; }
@@ -166,8 +180,25 @@ function resetTimer() {
 }
 
 watch([autoplay, sliderHovered, featured], resetTimer);
+watch(autoplay, (value) => { window.localStorage.setItem(AUTOPLAY_STORAGE_KEY, value ? '1' : '0'); });
 onMounted(resetTimer);
 onUnmounted(() => { if (timer) clearInterval(timer); });
+
+// ── Touch swipe for the featured-servers carousel ──────────────────
+const SWIPE_THRESHOLD = 40;
+let touchStartX = 0;
+
+function onSliderTouchStart(e: TouchEvent) {
+    touchStartX = e.changedTouches[0].clientX;
+    sliderHovered.value = true;
+}
+function onSliderTouchEnd(e: TouchEvent) {
+    const deltaX = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(deltaX) >= SWIPE_THRESHOLD) {
+        if (deltaX < 0) nextSlide(); else prevSlide();
+    }
+    sliderHovered.value = false;
+}
 
 // ── Presence ─────────────────────────────────────────────────────
 // The two blocks were ~55 lines of duplicated markup; they only differ by
@@ -185,6 +216,7 @@ const presenceGroups = computed(() => [
         hint: t('home.last_5_minutes'),
         data: props.whoIsOnline,
         empty: t('home.no_registered_online'),
+        emptyIcon: Wifi,
         live: true,
         countClass: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-400',
     },
@@ -194,6 +226,7 @@ const presenceGroups = computed(() => [
         hint: '',
         data: props.activeToday,
         empty: t('home.no_active_users'),
+        emptyIcon: Clock,
         live: false,
         countClass: 'border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400',
     },
@@ -868,7 +901,8 @@ function toggleFavourite(server: HomeServer) {
 
                     <!-- Cards -->
                     <div class="relative" style="min-height: 340px"
-                        aria-live="polite" :aria-atomic="false">
+                        aria-live="polite" :aria-atomic="false"
+                        @touchstart.passive="onSliderTouchStart" @touchend.passive="onSliderTouchEnd">
                         <template v-for="(server, i) in featured" :key="server.id">
                             <Transition
                                 enter-active-class="transition-all duration-500 ease-out"
@@ -999,6 +1033,39 @@ function toggleFavourite(server: HomeServer) {
                     </div>
                     </section>
 
+                    <!-- ── New members ── -->
+                    <div v-if="recentMembers.length" class="hc-reveal rounded-xl border overflow-hidden" style="animation-delay:0.08s"
+                        :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]'">
+                        <div class="px-4 py-3 border-b" :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e]' : 'border-zinc-100 bg-zinc-50'">
+                            <div class="flex items-center gap-2">
+                                <UserPlus :size="13" :stroke-width="1.8" :class="dark ? 'text-blue-400' : 'text-blue-500'" />
+                                <p class="text-[13px] font-semibold" :class="dark ? 'text-zinc-100' : 'text-zinc-800'">
+                                    {{ t('home.recently_joined') }}
+                                </p>
+                            </div>
+                            <p class="text-[11px] mt-0.5 leading-snug" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
+                                {{ t('home.recently_joined_hint') }}
+                            </p>
+                        </div>
+                        <div class="divide-y" :class="dark ? 'divide-zinc-800/60' : 'divide-zinc-100'">
+                            <Link v-for="m in recentMembers" :key="m.id"
+                                :href="m.username ? route('profile.show', { username: m.username }) : '#'"
+                                class="flex items-center gap-2.5 px-4 py-2.5 transition-colors"
+                                :class="dark ? 'hover:bg-white/[0.04]' : 'hover:bg-zinc-50'">
+                                <span class="w-6 h-6 rounded-lg overflow-hidden shrink-0">
+                                    <img v-if="m.avatar" :src="m.avatar" alt="" loading="lazy" decoding="async" class="w-full h-full object-cover" />
+                                    <span v-else class="w-full h-full flex items-center justify-center text-[9px] font-black text-white uppercase bg-blue-500">
+                                        {{ initial(m.name) }}
+                                    </span>
+                                </span>
+                                <p class="flex-1 min-w-0 text-[12px] leading-snug" :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
+                                    <span class="font-bold" :class="dark ? 'text-zinc-100' : 'text-zinc-800'">{{ m.name }}</span>
+                                    <span class="text-[10px]" :class="dark ? 'text-zinc-500' : 'text-zinc-400'"> · {{ m.joined_at }}</span>
+                                </p>
+                            </Link>
+                        </div>
+                    </div>
+
                     <!-- ── Who is here ── -->
                     <div class="hc-reveal rounded-xl border overflow-hidden" style="animation-delay:0.1s"
                         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]'">
@@ -1059,7 +1126,8 @@ function toggleFavourite(server: HomeServer) {
                                         </Link>
                                     </li>
                                 </ul>
-                                <p v-else class="text-[11.5px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
+                                <p v-else class="flex items-center gap-1.5 text-[11.5px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
+                                    <component :is="group.emptyIcon" :size="13" :stroke-width="1.8" aria-hidden="true" />
                                     {{ group.empty }}
                                 </p>
                             </div>

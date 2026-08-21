@@ -24,4 +24,5 @@ return [
     'no_results_hint' => 'Try a shorter search, or clear it to see everyone.',
     'location_hint' => 'Where this member says they are',
     'joined_hint' => 'When they registered on the site',
+    'all_loaded' => 'All :count members loaded',
 ];

@@ -121,12 +121,23 @@ function connect(providerId: string) {
                 >
                     <div class="flex items-center gap-3 min-w-0">
                         <div
-                            class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                            class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 overflow-hidden"
                             :class="connectionFor(provider.id)
                                 ? dark ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-emerald-50 border border-emerald-100'
                                 : dark ? 'bg-zinc-800/60 border border-zinc-800' : 'bg-white border border-zinc-200'"
                         >
+                            <!-- The linked provider's own avatar, when it sent one —
+                                 lets the reader confirm which Steam/Discord account
+                                 this actually is, not just a generic provider glyph. -->
+                            <img
+                                v-if="connectionFor(provider.id)?.avatar_url"
+                                :src="connectionFor(provider.id)?.avatar_url ?? undefined"
+                                :alt="`${provider.name} ${t('account.connected')}`"
+                                loading="lazy"
+                                class="w-full h-full object-cover"
+                            />
                             <component
+                                v-else
                                 :is="iconFor(provider)"
                                 :size="13"
                                 :stroke-width="1.75"

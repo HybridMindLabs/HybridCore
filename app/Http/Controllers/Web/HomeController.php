@@ -134,7 +134,33 @@ class HomeController extends Controller
             'preferredGameSlugs' => auth()->check()
                 ? auth()->user()->preferredGames()->pluck('slug')
                 : [],
+            'recentMembers' => $this->recentMembers(),
         ]);
+    }
+
+    /**
+     * Newest registered members, for the "new faces" strip in the right
+     * column — cached alongside the rest of the shared homepage data.
+     *
+     * @return array<int, array{id: int, username: ?string, name: string, avatar: ?string, joined_at: string}>
+     */
+    private function recentMembers(): array
+    {
+        return Cache::remember('home.recent_members', 60, function () {
+            return User::whereNull('banned_at')
+                ->latest()
+                ->limit(8)
+                ->get()
+                ->map(fn (User $u) => [
+                    'id' => $u->id,
+                    'username' => $u->username,
+                    'name' => $u->name,
+                    'avatar' => $u->avatar,
+                    'joined_at' => $u->created_at->diffForHumans(),
+                ])
+                ->values()
+                ->all();
+        });
     }
 
     /**
@@ -235,6 +261,7 @@ class HomeController extends Controller
             'banner' => $user->banner,
             'role' => $role ? ['name' => $role->name, 'color' => $role->color] : null,
             'achievements' => $user->achievements->pluck('slug'),
+            'joined_at' => $user->created_at?->format('M Y'),
             // Surfaced on the sidebar so the two things a returning member most
             // often checks are one glance away.
             'unread_messages' => $this->unreadMessages($user),

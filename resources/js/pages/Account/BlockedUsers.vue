@@ -3,7 +3,7 @@ import { router, Link } from '@inertiajs/vue3';
 import { Ban, UserX, Info } from '@lucide/vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
-import { computed, ref } from 'vue';
+import { computed, reactive } from 'vue';
 
 interface BlockEntry {
     id: number;
@@ -17,14 +17,17 @@ const { theme } = useTheme();
 const { t } = useLocale();
 const dark = computed(() => theme.value === 'dark');
 
-const pending = ref<number | null>(null);
+// Per-user, not a single ref — a single "pending" value locked every other
+// row's button while one unblock was in flight, even though each request is
+// independent.
+const pending = reactive(new Set<number>());
 
 function unblock(userId: number) {
-    if (pending.value) return;
-    pending.value = userId;
+    if (pending.has(userId)) return;
+    pending.add(userId);
     router.delete(route('account.unblock', userId), {
         preserveScroll: true,
-        onFinish: () => { pending.value = null; },
+        onFinish: () => { pending.delete(userId); },
     });
 }
 
@@ -103,7 +106,7 @@ function avatarBg(name: string) {
                     <button type="button"
                         class="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-[12px] font-bold transition disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                         :class="dark ? 'border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-600' : 'border-zinc-300 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400'"
-                        :disabled="pending === b.user.id"
+                        :disabled="pending.has(b.user.id)"
                         :aria-label="t('account.blk_unblock_user', { name: b.user.display_name || b.user.username })"
                         @click="unblock(b.user.id)">
                         <UserX :size="12" :stroke-width="2" aria-hidden="true" />

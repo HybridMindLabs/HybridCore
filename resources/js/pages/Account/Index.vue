@@ -10,7 +10,6 @@ import Sessions from '@/pages/Account/Sessions.vue';
 import NotificationsList from '@/components/Account/NotificationsList.vue';
 import BlockedUsers from '@/pages/Account/BlockedUsers.vue';
 import DangerZone from '@/pages/Account/DangerZone.vue';
-import ActivityLog from '@/pages/Account/ActivityLog.vue';
 import EmailPreferences from '@/pages/Account/EmailPreferences.vue';
 import AccountPage from '@/components/Account/AccountPage.vue';
 import { useTheme } from '@/composables/useTheme';
@@ -49,7 +48,6 @@ const props = defineProps<{
     blocks: BlockEntry[];
     unreadNotifications: number;
     unreadMessages: number;
-    loginHistory: { data: any[]; links: any; meta: any };
     games: { id: number; name: string; slug: string }[];
 }>();
 
@@ -60,7 +58,7 @@ const page = usePage<{ flash: { success: string | null; error: string | null } }
 const flash = computed(() => page.props.flash);
 const TAB_IDS = [
     'profile', 'security', 'sessions', 'prefs', 'connected', 'notifications',
-    'activity', 'blocked', 'email-prefs', 'danger',
+    'blocked', 'email-prefs', 'danger',
 ];
 const LAST_TAB_KEY = 'hc-account-last-tab';
 
@@ -74,8 +72,17 @@ function initialTab(): string {
 
 const activeTab = ref(initialTab());
 
+// Tabs switch client-side with no page reload, so without this a refresh,
+// bookmark or shared link always landed back on whatever tab localStorage
+// remembered — never the one actually being looked at.
 watch(activeTab, (tab) => {
     localStorage.setItem(LAST_TAB_KEY, tab);
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', tab);
+    window.history.replaceState(window.history.state, '', url);
+
+    window.scrollTo(0, 0);
 });
 </script>
 
@@ -140,9 +147,6 @@ watch(activeTab, (tab) => {
                         </template>
                         <template v-else-if="activeTab === 'notifications'">
                             <NotificationsList :notifications="notifications" />
-                        </template>
-                        <template v-else-if="activeTab === 'activity'">
-                            <ActivityLog :history="loginHistory" />
                         </template>
                         <template v-else-if="activeTab === 'blocked'">
                             <BlockedUsers :blocks="blocks" />

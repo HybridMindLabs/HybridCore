@@ -191,26 +191,39 @@ function donutOptions(): Highcharts.Options {
             events: {
                 // Highcharts leaves the donut's hole empty by default — this
                 // draws the total straight into it instead of wasting the space.
+                // Plain SVG text with text-anchor:middle, not useHTML + a
+                // CSS-transform div: the foreignObject wrapper Highcharts
+                // creates for useHTML text has no intrinsic size until after
+                // layout, so `transform:translate(-50%,-50%)` resolved
+                // against a zero-size box and the label rendered off-center,
+                // clipped by the ring for any large dominant-slice case.
                 render(): void {
-                    const chart = this as unknown as Highcharts.Chart & { hcCenterLabel?: Highcharts.SVGElement };
+                    const chart = this as unknown as Highcharts.Chart & {
+                        hcCenterValue?: Highcharts.SVGElement;
+                        hcCenterCaption?: Highcharts.SVGElement;
+                    };
                     const series = chart.series[0] as unknown as { center?: number[] } | undefined;
                     if (!series?.center) return;
 
                     const x = chart.plotLeft + series.center[0];
                     const y = chart.plotTop + series.center[1];
 
-                    if (!chart.hcCenterLabel) {
-                        chart.hcCenterLabel = chart.renderer.text('', 0, 0, true)
-                            .css({ pointerEvents: 'none' })
+                    if (!chart.hcCenterValue) {
+                        chart.hcCenterValue = chart.renderer.text('', 0, 0)
+                            .css({ textAnchor: 'middle', pointerEvents: 'none', fontSize: '20px', fontWeight: '800' })
                             .add();
                     }
-                    chart.hcCenterLabel.attr({
-                        x, y,
-                        text: `<div style="transform:translate(-50%,-50%);text-align:center;line-height:1.15">`
-                            + `<div style="font-size:20px;font-weight:800;color:${dark.value ? '#f4f4f5' : '#18181b'}">${total.toLocaleString()}</div>`
-                            + `<div style="font-size:10px;color:#71717a;margin-top:2px;letter-spacing:.05em;text-transform:uppercase">users</div>`
-                            + `</div>`,
-                    });
+                    if (!chart.hcCenterCaption) {
+                        chart.hcCenterCaption = chart.renderer.text('', 0, 0)
+                            .css({
+                                textAnchor: 'middle', pointerEvents: 'none', fontSize: '10px', fontWeight: '600',
+                                letterSpacing: '.05em', textTransform: 'uppercase', fill: '#71717a',
+                            })
+                            .add();
+                    }
+                    chart.hcCenterValue.attr({ x, y: y - 4, text: total.toLocaleString() })
+                        .css({ fill: dark.value ? '#f4f4f5' : '#18181b' });
+                    chart.hcCenterCaption.attr({ x, y: y + 14, text: 'users' });
                 },
             },
         },

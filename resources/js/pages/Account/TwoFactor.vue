@@ -90,6 +90,8 @@ async function verifyAndEnable() {
 }
 
 async function disable() {
+    if (!window.confirm(t('account.2fa_disable_confirm'))) return;
+
     if (await send(route('account.2fa.disable'), 'DELETE', { password: disablePassword.value })) {
         window.location.reload();
     }

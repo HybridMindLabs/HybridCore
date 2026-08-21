@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { router, usePage } from '@inertiajs/vue3';
-import { Bell, Check, Trash2, MessageSquare, AlertCircle, ThumbsUp, Gift, Trophy, Award } from '@lucide/vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { Bell, Check, ChevronLeft, ChevronRight, Trash2, MessageSquare, AlertCircle, ThumbsUp, Gift, Trophy, Award } from '@lucide/vue';
 import type { Component } from 'vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
@@ -33,8 +33,19 @@ interface Notif {
     created_at: string;
 }
 
+interface PageLink { url: string | null; label: string; active: boolean }
+
 const props = defineProps<{
-    notifications: { data: Notif[]; links: any; meta: any };
+    notifications: {
+        data: Notif[];
+        links: PageLink[];
+        meta: unknown;
+        current_page?: number;
+        last_page?: number;
+        total?: number;
+        from?: number | null;
+        to?: number | null;
+    };
 }>();
 
 const { theme } = useTheme();
@@ -43,6 +54,31 @@ const dark = computed(() => theme.value === 'dark');
 
 const unreadCount = computed(() => props.notifications.data.filter(n => !n.read).length);
 const markingAll = ref(false);
+
+/**
+ * The controller passes the raw Eloquent paginator straight to Inertia, which
+ * serializes it flat (current_page/last_page/links at the top level) — not the
+ * {data,links,meta} API-resource shape the props were typed for. The embedded
+ * Account tab sends a hand-built {data:[...20 most recent], links:[], meta:[]}
+ * instead (no pagination there by design), so this quietly renders nothing
+ * for that source since last_page is never set.
+ */
+const showPagination = computed(() => (props.notifications.last_page ?? 0) > 1);
+
+/** A window around the current page, same as the News archive pager. */
+const pageWindow = computed(() => {
+    const current = props.notifications.current_page ?? 1;
+    const last = props.notifications.last_page ?? 1;
+    const span = 2;
+    const from = Math.max(1, current - span);
+    const to = Math.min(last, current + span);
+
+    return Array.from({ length: to - from + 1 }, (_, i) => from + i);
+});
+
+function pageHref(page: number): string {
+    return route('account.notifications', { page });
+}
 
 function markRead(id: string) {
     router.post(route('account.notifications.read', id), {}, { preserveScroll: true });
@@ -197,5 +233,38 @@ function notifLink(n: Notif): string | null {
                 <div v-if="!n.read" class="w-2 h-2 rounded-full bg-blue-500 shrink-0 mt-3" aria-hidden="true" />
             </li>
         </ul>
+
+        <nav v-if="showPagination" :aria-label="t('account.notif_pagination_label')"
+            class="flex flex-col items-center gap-2 px-5 py-4 border-t"
+            :class="dark ? 'border-zinc-800/60' : 'border-zinc-200'">
+            <div class="flex items-center gap-1">
+                <Link v-if="(notifications.current_page ?? 1) > 1" :href="pageHref((notifications.current_page ?? 1) - 1)" rel="prev"
+                    class="h-9 px-3 flex items-center gap-1 rounded-xl border text-[12px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                    :class="dark ? 'border-zinc-800/70 text-zinc-400 hover:text-zinc-100 hover:border-zinc-600' : 'border-zinc-200 text-zinc-500 hover:text-zinc-800 hover:border-zinc-300'">
+                    <ChevronLeft :size="13" :stroke-width="2" aria-hidden="true" />
+                    {{ t('account.notif_prev') }}
+                </Link>
+
+                <Link v-for="p in pageWindow" :key="p" :href="pageHref(p)"
+                    :aria-current="p === notifications.current_page ? 'page' : undefined"
+                    :aria-label="t('account.notif_page_number', { page: p })"
+                    class="w-9 h-9 flex items-center justify-center rounded-xl border text-[13px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                    :class="p === notifications.current_page
+                        ? dark ? 'border-blue-500/40 bg-blue-500/10 text-blue-400' : 'border-blue-300 bg-blue-50 text-blue-700'
+                        : dark ? 'border-zinc-800/70 text-zinc-400 hover:text-zinc-100 hover:border-zinc-600' : 'border-zinc-200 text-zinc-500 hover:text-zinc-800 hover:border-zinc-300'">
+                    {{ p }}
+                </Link>
+
+                <Link v-if="(notifications.current_page ?? 1) < (notifications.last_page ?? 1)" :href="pageHref((notifications.current_page ?? 1) + 1)" rel="next"
+                    class="h-9 px-3 flex items-center gap-1 rounded-xl border text-[12px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                    :class="dark ? 'border-zinc-800/70 text-zinc-400 hover:text-zinc-100 hover:border-zinc-600' : 'border-zinc-200 text-zinc-500 hover:text-zinc-800 hover:border-zinc-300'">
+                    {{ t('account.notif_next') }}
+                    <ChevronRight :size="13" :stroke-width="2" aria-hidden="true" />
+                </Link>
+            </div>
+            <p class="text-[11px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
+                {{ t('account.notif_showing', { current: notifications.current_page, last: notifications.last_page }) }}
+            </p>
+        </nav>
     </div>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import Breadcrumb from '@/components/UI/Breadcrumb.vue';
 import CaptchaWidget from '@/components/UI/CaptchaWidget.vue';
@@ -17,6 +17,16 @@ const { t } = useLocale();
 const dark = computed(() => theme.value === 'dark');
 const page = usePage();
 const success = computed(() => (page.props.flash as any)?.success);
+
+// `preserveScroll` keeps the viewport where the reader left it — usually
+// scrolled down into the message field — so the confirmation above the form
+// can land off-screen and read as "nothing happened". Bring it into view.
+const successBannerEl = ref<HTMLElement | null>(null);
+watch(success, (value) => {
+    if (!value) return;
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    nextTick(() => successBannerEl.value?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' }));
+});
 
 const includeItems = computed(() => [
     t('contact.include_name'),
@@ -178,8 +188,9 @@ const labelClass = computed(() =>
                              just shown. -->
                         <div
                             v-if="success"
+                            ref="successBannerEl"
                             role="status"
-                            class="flex items-start gap-3 rounded-xl border p-4 mb-6"
+                            class="flex items-start gap-3 rounded-xl border p-4 mb-6 scroll-mt-24"
                             :class="dark ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800'"
                         >
                             <CheckCircle :size="20" class="shrink-0 mt-0.5" aria-hidden="true" />
@@ -242,6 +253,7 @@ const labelClass = computed(() =>
                                     id="contact-subject"
                                     v-model="form.subject"
                                     type="text"
+                                    maxlength="150"
                                     :class="inputClass"
                                     :placeholder="t('contact.field_subject')"
                                 />
@@ -256,6 +268,7 @@ const labelClass = computed(() =>
                                     v-model="form.message"
                                     rows="7"
                                     required
+                                    maxlength="5000"
                                     :class="inputClass"
                                     :placeholder="t('contact.field_message')"
                                     style="resize:vertical"
@@ -263,10 +276,18 @@ const labelClass = computed(() =>
                                     :aria-describedby="form.errors.message ? 'contact-message-error' : 'contact-message-hint'"
                                     @change="form.validate('message')"
                                 />
-                                <p v-if="form.errors.message" id="contact-message-error" role="alert"
-                                   class="text-[12px] text-red-600 dark:text-red-400">{{ form.errors.message }}</p>
-                                <p v-else id="contact-message-hint" class="text-[11.5px]"
-                                   :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ t('contact.field_message_hint') }}</p>
+                                <div class="flex items-center justify-between gap-3">
+                                    <p v-if="form.errors.message" id="contact-message-error" role="alert"
+                                       class="text-[12px] text-red-600 dark:text-red-400">{{ form.errors.message }}</p>
+                                    <p v-else id="contact-message-hint" class="text-[11.5px]"
+                                       :class="dark ? 'text-zinc-500' : 'text-zinc-500'">{{ t('contact.field_message_hint') }}</p>
+                                    <span class="text-[11px] tabular-nums shrink-0"
+                                        :class="form.message.length > 4500
+                                            ? (dark ? 'text-amber-400' : 'text-amber-600')
+                                            : (dark ? 'text-zinc-500' : 'text-zinc-500')">
+                                        {{ form.message.length }}/5000
+                                    </span>
+                                </div>
                             </div>
 
                             <!-- Captcha -->

@@ -29,6 +29,7 @@ class ProfileController extends Controller
                 'achievements',
                 'favouriteServers.game',
                 'favouriteServers.latestSnapshot',
+                'connectedAccounts',
             ])
             ->firstOrFail();
 
@@ -108,13 +109,64 @@ class ProfileController extends Controller
                 'is_following' => $authUser && ! $isSelf
                     ? $authUser->following()->where('followed_id', $user->id)->exists()
                     : false,
+                'connected_accounts' => $this->connectedAccountLinks($user),
             ],
             'activity' => $this->recentActivity($user),
+            'reviews' => $this->reviewsWritten($user),
             'followers' => $this->miniUsers($user->followers()),
             'following' => $this->miniUsers($user->following()),
             // Extension-registered profile panels (rendered via global slot components).
             'extensionPanels' => app(ProfileTabRegistry::class)->compose($user),
         ], $user));
+    }
+
+    /**
+     * Public profile links for linked accounts — only providers with a
+     * real public profile URL, and only the fields already surfaced by
+     * the "steam_linked"/"discord_linked" achievement badges (no tokens,
+     * no email; those stay server-side).
+     *
+     * @return array<int, array{provider: string, username: string|null, url: string}>
+     */
+    private function connectedAccountLinks(User $user): array
+    {
+        return $user->connectedAccounts
+            ->filter(fn ($a) => in_array($a->provider, ['steam', 'discord'], true))
+            ->map(fn ($a) => [
+                'provider' => $a->provider,
+                'username' => $a->provider_username,
+                'url' => $a->provider === 'steam'
+                    ? "https://steamcommunity.com/profiles/{$a->provider_user_id}"
+                    : "https://discord.com/users/{$a->provider_user_id}",
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Reviews this user has written, most recent first — a dedicated panel
+     * next to Achievements/Favourite Servers rather than buried in the
+     * activity feed's one-line summary.
+     *
+     * @return array<int, array{id: int, server_name: string, game_slug: string, rating: int, body: string|null, created_at: string, show_route: string}>
+     */
+    private function reviewsWritten(User $user): array
+    {
+        return ServerReview::where('user_id', $user->id)
+            ->with('server.game')
+            ->latest()
+            ->limit(10)
+            ->get()
+            ->map(fn (ServerReview $review) => [
+                'id' => $review->id,
+                'server_name' => $review->server->name ?? $review->server->address,
+                'game_slug' => $review->server->game->slug,
+                'rating' => $review->rating,
+                'body' => $review->body,
+                'created_at' => $review->created_at->diffForHumans(),
+                'show_route' => route('servers.show', [$review->server->game->slug, $review->server->ip, $review->server->port]),
+            ])
+            ->all();
     }
 
     /** @return array<int, array{username: string|null, name: string, avatar: string|null}> */

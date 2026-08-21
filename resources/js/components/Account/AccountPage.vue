@@ -87,6 +87,7 @@ const mobileTabs = computed(() => [
 const routableTabs: Record<string, string> = {
     favorites: 'account.favorites',
     messages: 'account.messages.index',
+    activity: 'account.activity',
 };
 
 function selectMobileTab(tabId: string) {

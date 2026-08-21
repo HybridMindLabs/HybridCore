@@ -130,19 +130,6 @@ class AccountController extends Controller
                     ],
                     'blocked_at' => $b->created_at->toFormattedDateString(),
                 ]),
-            'loginHistory' => [
-                'data' => $user->loginHistories()->latest()->take(20)->get()->map(fn (LoginHistory $h) => [
-                    'id' => $h->id,
-                    'ip' => $h->ip_address,
-                    'user_agent' => $h->user_agent,
-                    'country' => null,
-                    'city' => null,
-                    'at' => $h->created_at->diffForHumans(),
-                    'at_full' => $h->created_at->toDateTimeString(),
-                ]),
-                'links' => [],
-                'meta' => [],
-            ],
         ]);
     }
 
@@ -415,6 +402,10 @@ class AccountController extends Controller
                 'at' => $h->created_at->diffForHumans(),
                 'at_full' => $h->created_at->format('d M Y, H:i'),
             ]),
+            // Feeds the account-panel sidebar its tab badges, like every other
+            // account page does.
+            'unreadNotifications' => $user->unreadNotifications()->count(),
+            'unreadMessages' => $user->unreadMessagesCount(),
         ]);
     }
 }

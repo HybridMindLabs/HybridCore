@@ -26,11 +26,15 @@ const exportForm = useForm({ password: '', username_confirm: '' });
  */
 const confirmsWithPassword = computed(() => props.hasPassword);
 
+// The typed username has to actually match, not just be non-empty — this is
+// the deliberate friction that stops an accidental click from deleting or
+// exporting the account. A non-empty check let any input through and only
+// failed server-side, so the client's "are you sure" gate was a no-op.
 const canDelete = computed(
-    () => deleteForm.username_confirm.length > 0 && (!confirmsWithPassword.value || deleteForm.password.length > 0),
+    () => deleteForm.username_confirm === props.username && (!confirmsWithPassword.value || deleteForm.password.length > 0),
 );
 const canExport = computed(() =>
-    confirmsWithPassword.value ? exportForm.password.length > 0 : exportForm.username_confirm.length > 0,
+    confirmsWithPassword.value ? exportForm.password.length > 0 : exportForm.username_confirm === props.username,
 );
 
 function submitDelete() {
@@ -111,6 +115,9 @@ const label = computed(() =>
                     />
                     <p v-if="exportForm.errors.username_confirm" class="text-red-600 dark:text-red-400 text-[12px] font-semibold">
                         {{ exportForm.errors.username_confirm }}
+                    </p>
+                    <p v-else-if="exportForm.username_confirm && exportForm.username_confirm !== username" class="text-red-600 dark:text-red-400 text-[12px] font-semibold">
+                        {{ t('account.dz_username_mismatch') }}
                     </p>
                     <p class="text-[12px] leading-relaxed" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                         {{ t('account.dz_no_password_note') }}
@@ -244,6 +251,9 @@ const label = computed(() =>
                         />
                         <p v-if="deleteForm.errors.username_confirm" class="text-red-600 dark:text-red-400 text-[12px] font-semibold">
                             {{ deleteForm.errors.username_confirm }}
+                        </p>
+                        <p v-else-if="deleteForm.username_confirm && deleteForm.username_confirm !== username" class="text-red-600 dark:text-red-400 text-[12px] font-semibold">
+                            {{ t('account.dz_username_mismatch') }}
                         </p>
                     </div>
 

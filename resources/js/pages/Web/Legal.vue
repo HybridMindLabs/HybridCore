@@ -5,7 +5,7 @@ import PublicLayout from '@/layouts/PublicLayout.vue';
 import Breadcrumb from '@/components/UI/Breadcrumb.vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
-import { ArrowRight, Clock, Cookie, FileText, History, List, Scale, Shield } from '@lucide/vue';
+import { ArrowRight, ArrowUp, Clock, Cookie, FileText, History, List, Scale, Shield } from '@lucide/vue';
 
 interface TocEntry { id: string; text: string; level: number }
 
@@ -79,6 +79,38 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => observer?.disconnect());
+
+// ── Reading progress + back to top ──────────────────────────────────────
+// Same treatment as News/Show.vue: this is exactly the long-form content
+// type that benefits most, and it previously had neither.
+const readingProgress = ref(0);
+const showBackToTop = ref(false);
+const bodyEl = ref<HTMLElement | null>(null);
+
+function updateProgress() {
+    const el = bodyEl.value;
+    if (!el) return;
+
+    const start = el.offsetTop;
+    const scrollable = el.offsetHeight - window.innerHeight;
+
+    if (scrollable <= 0) {
+        readingProgress.value = window.scrollY > start ? 100 : 0;
+    } else {
+        const passed = window.scrollY - start;
+        readingProgress.value = Math.min(100, Math.max(0, Math.round((passed / scrollable) * 100)));
+    }
+
+    showBackToTop.value = window.scrollY > window.innerHeight;
+}
+
+onMounted(() => window.addEventListener('scroll', updateProgress, { passive: true }));
+onBeforeUnmount(() => window.removeEventListener('scroll', updateProgress));
+
+function backToTop() {
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
+}
 </script>
 
 <template>
@@ -89,6 +121,35 @@ onBeforeUnmount(() => observer?.disconnect());
     </Head>
 
     <PublicLayout>
+
+        <!-- Position in a long read. -->
+        <div class="fixed top-0 left-0 right-0 h-0.5 z-50 pointer-events-none">
+            <div class="h-full bg-blue-500 transition-[width] duration-150 ease-out"
+                role="progressbar"
+                :aria-label="t('legal.reading_progress')"
+                :aria-valuenow="readingProgress"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                :style="{ width: readingProgress + '%' }" />
+        </div>
+
+        <Transition
+            enter-active-class="transition-all duration-200 ease-out"
+            enter-from-class="opacity-0 translate-y-2"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition-all duration-150 ease-in"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 translate-y-2"
+        >
+            <button v-if="showBackToTop" type="button" @click="backToTop"
+                class="fixed bottom-6 right-6 z-40 w-10 h-10 rounded-full border flex items-center justify-center shadow-lg backdrop-blur-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                :class="dark
+                    ? 'border-zinc-700/70 bg-zinc-900/85 text-zinc-300 hover:text-white hover:border-zinc-600'
+                    : 'border-zinc-200 bg-white/90 text-zinc-500 hover:text-zinc-900 hover:border-zinc-300'"
+                :aria-label="t('legal.back_to_top')" :title="t('legal.back_to_top')">
+                <ArrowUp :size="16" :stroke-width="2.2" aria-hidden="true" />
+            </button>
+        </Transition>
 
         <!-- ═══════════════════════════════════════════════════ HERO -->
         <section
@@ -199,8 +260,8 @@ onBeforeUnmount(() => observer?.disconnect());
 
                 <!-- Contents. Anchors, not buttons: a section is now something
                      you can link to, open in a new tab and reach by keyboard. -->
-                <aside v-if="toc.length" class="hidden lg:block w-60 xl:w-64 shrink-0 sticky top-24 self-start">
-                    <nav class="hc-reveal rounded-2xl border overflow-hidden" :aria-label="t('legal.toc_title')"
+                <aside v-if="toc.length || otherPages.length" class="hidden lg:flex flex-col gap-4 w-60 xl:w-64 shrink-0 sticky top-24 self-start">
+                    <nav v-if="toc.length" class="hc-reveal rounded-2xl border overflow-hidden" :aria-label="t('legal.toc_title')"
                         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-sm'">
                         <p class="px-4 py-3 border-b text-[11px] font-black uppercase tracking-widest"
                             :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e] text-zinc-400' : 'border-zinc-100 bg-zinc-50 text-zinc-500'">
@@ -221,6 +282,25 @@ onBeforeUnmount(() => observer?.disconnect());
                                 >{{ entry.text }}</a>
                             </li>
                         </ol>
+                    </nav>
+
+                    <!-- Other policies — the hero card above scrolls away with
+                         the rest of the hero, so this keeps the switcher within
+                         reach for the whole read, not just the first screen. -->
+                    <nav v-if="otherPages.length" class="hc-reveal rounded-2xl border overflow-hidden" style="animation-delay:0.06s"
+                        :aria-label="t('legal.other_pages')"
+                        :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-sm'">
+                        <p class="px-4 py-3 border-b text-[11px] font-black uppercase tracking-widest"
+                            :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e] text-zinc-400' : 'border-zinc-100 bg-zinc-50 text-zinc-500'">
+                            {{ t('legal.other_pages') }}
+                        </p>
+                        <div class="flex flex-col p-2 gap-0.5">
+                            <Link v-for="p in otherPages" :key="p.slug" :href="pageHref(p.slug)"
+                                class="block text-left text-[13px] py-1.5 px-3 rounded-lg transition-colors truncate focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                                :class="dark ? 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.04]' : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50'">
+                                {{ p.title }}
+                            </Link>
+                        </div>
                     </nav>
                 </aside>
 
@@ -247,7 +327,7 @@ onBeforeUnmount(() => observer?.disconnect());
                         </ol>
                     </details>
 
-                    <div class="hc-reveal rounded-2xl border overflow-hidden" style="animation-delay:0.08s"
+                    <div ref="bodyEl" class="hc-reveal rounded-2xl border overflow-hidden" style="animation-delay:0.08s"
                         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-sm'">
                         <!-- eslint-disable-next-line vue/no-v-html -->
                         <div v-if="content" class="legal-body p-6 sm:p-8" :class="dark ? 'legal-dark' : 'legal-light'" v-html="content" />
@@ -255,6 +335,22 @@ onBeforeUnmount(() => observer?.disconnect());
                             {{ t('legal.empty') }}
                         </p>
                     </div>
+
+                    <!-- Mobile "other policies" — the hero switcher scrolls away
+                         with everything else; this stays reachable at the end
+                         of a long document without hunting for the footer. -->
+                    <nav v-if="otherPages.length" class="mt-6 lg:hidden" :aria-label="t('legal.other_pages')">
+                        <p class="text-[11px] font-black uppercase tracking-widest mb-3" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
+                            {{ t('legal.other_pages') }}
+                        </p>
+                        <div class="flex flex-wrap gap-2">
+                            <Link v-for="p in otherPages" :key="p.slug" :href="pageHref(p.slug)"
+                                class="px-3 py-1.5 rounded-full text-[13px] border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                                :class="dark ? 'text-zinc-400 border-zinc-800 hover:border-zinc-600 hover:text-zinc-100' : 'text-zinc-500 border-zinc-300 hover:border-zinc-400 hover:text-zinc-900'">
+                                {{ p.title }}
+                            </Link>
+                        </div>
+                    </nav>
                 </div>
 
             </div>

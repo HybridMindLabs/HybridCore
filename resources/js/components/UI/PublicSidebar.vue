@@ -5,7 +5,7 @@ import {
     Gamepad2, UsersRound, Bell, Settings, Mails,
     BookOpen, MessageSquare, HelpCircle, Newspaper, Trophy,
     Sprout, Medal, CircleCheck, Lock, FileText, Mail, Puzzle,
-    PenLine, Flame, Compass, MessagesSquare, Heart, Activity,
+    PenLine, Flame, Compass, MessagesSquare, Heart, Activity, CalendarDays,
 } from '@lucide/vue';
 import { computed } from 'vue';
 import { useTheme } from '@/composables/useTheme';
@@ -15,6 +15,7 @@ interface Viewer {
     banner: string | null;
     role: { name: string; color: string } | null;
     achievements: string[];
+    joined_at: string | null;
     unread_messages: number;
     unread_notifications: number;
 }
@@ -121,9 +122,10 @@ const quickLinks = computed(() => {
                         :style="{ background: `linear-gradient(135deg, ${viewerAccent}66 0%, ${viewerAccent}22 55%, transparent 100%)` }" />
                     <div v-if="dark" class="absolute inset-0 opacity-30"
                         style="background-image:radial-gradient(circle,rgba(255,255,255,0.05) 1px,transparent 1px);background-size:16px 16px" />
-                    <!-- Fade the banner into the card so the avatar reads cleanly -->
-                    <div class="absolute inset-x-0 bottom-0 h-10"
-                        :style="{ background: `linear-gradient(to top, ${dark ? '#111113' : '#ffffff'}, transparent)` }" />
+                    <!-- Fade the banner into the card so the avatar + name read
+                         cleanly no matter how bright or busy a custom banner is. -->
+                    <div class="absolute inset-x-0 bottom-0 h-16"
+                        :style="{ background: `linear-gradient(to top, ${dark ? '#111113' : '#ffffff'} 15%, transparent)` }" />
                 </div>
 
                 <div class="px-4 -mt-8 pb-3">
@@ -133,12 +135,12 @@ const quickLinks = computed(() => {
                                 v-if="page.props.auth.user.avatar"
                                 :src="page.props.auth.user.avatar"
                                 :alt="page.props.auth.user.name"
-                                class="w-16 h-16 rounded-2xl object-cover ring-4 shadow-lg"
+                                class="w-16 h-16 rounded-2xl object-cover ring-4 shadow-xl"
                                 :class="dark ? 'ring-[#111113]' : 'ring-white'"
                             />
                             <div
                                 v-else
-                                class="w-16 h-16 rounded-2xl flex items-center justify-center text-[22px] font-bold select-none text-white ring-4 shadow-lg"
+                                class="w-16 h-16 rounded-2xl flex items-center justify-center text-[22px] font-bold select-none text-white ring-4 shadow-xl"
                                 :class="dark ? 'ring-[#111113]' : 'ring-white'"
                                 :style="{ backgroundColor: viewerAccent }"
                             >
@@ -150,13 +152,22 @@ const quickLinks = computed(() => {
                                 :title="t('home.sidebar_online')"
                             />
                         </div>
-                        <div class="min-w-0 pb-1">
+                        <!-- Own backdrop chip, not just the banner fade above — a
+                             bright or busy custom banner must never be able to
+                             swallow the name, no matter where it sits. -->
+                        <div class="min-w-0 pb-1 rounded-lg px-2 py-1 -ml-2"
+                            :class="dark ? 'bg-[#111113]/80' : 'bg-white/85'">
                             <p class="text-[15px] font-bold truncate leading-tight" :class="textPri">{{ page.props.auth.user.name }}</p>
                             <p v-if="page.props.auth.user.username" class="text-[12px] font-mono truncate" :class="textMute">
                                 @{{ page.props.auth.user.username }}
                             </p>
                         </div>
                     </div>
+
+                    <p v-if="viewer?.joined_at" class="flex items-center gap-1.5 text-[11px] mt-2.5" :class="textMute">
+                        <CalendarDays :size="11" :stroke-width="1.8" aria-hidden="true" />
+                        {{ t('home.member_since', { date: viewer.joined_at }) }}
+                    </p>
 
                     <div class="flex items-center gap-1.5 flex-wrap mt-3">
                         <span v-if="viewer?.role" class="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-full border"
@@ -370,7 +381,10 @@ const quickLinks = computed(() => {
         <!-- ── Quick links ── -->
         <div class="hc-reveal rounded-xl border overflow-hidden" :class="card" style="animation-delay:0.12s">
             <div class="px-4 py-3 border-b" :class="cardHead">
-                <p class="text-[13px] font-semibold" :class="textPri">{{ t('home.links_title') }}</p>
+                <div class="flex items-center gap-2">
+                    <Compass :size="13" :stroke-width="1.8" :class="dark ? 'text-blue-400' : 'text-blue-500'" />
+                    <p class="text-[13px] font-semibold" :class="textPri">{{ t('home.links_title') }}</p>
+                </div>
                 <p class="text-[11px] mt-0.5 leading-snug" :class="textMute">{{ t('home.links_hint') }}</p>
             </div>
             <div class="divide-y" :class="divider">

@@ -44,8 +44,9 @@ const props = defineProps<{
 }>();
 
 const { theme } = useTheme();
-const { t } = useLocale();
+const { t, formatDate } = useLocale();
 const dark = computed(() => theme.value === 'dark');
+const DATE_FORMAT: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
 
 const statusStyles: Record<string, string> = {
     pending: 'bg-amber-500/10 text-amber-500',
@@ -68,11 +69,6 @@ function subStatusLabel(status: string): string {
 
 function formatMoney(amount: number, currency: string): string {
     return new Intl.NumberFormat(undefined, { style: 'currency', currency: currency.toUpperCase() }).format(amount);
-}
-
-function formatDate(value: string | null): string {
-    if (!value) return '';
-    return new Date(value).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 // Small at-a-glance header — the page previously jumped straight into two
@@ -164,7 +160,7 @@ function cancelSubscription(subscription: SubscriptionRow) {
                                 {{ t('account.tx_per_interval', { amount: formatMoney(s.amount, s.currency), interval: s.interval }) }}
                             </span>
                             <span v-if="s.current_period_end">
-                                {{ t(s.cancel_at_period_end ? 'account.tx_ends_on' : 'account.tx_renews_on', { date: formatDate(s.current_period_end) }) }}
+                                {{ t(s.cancel_at_period_end ? 'account.tx_ends_on' : 'account.tx_renews_on', { date: formatDate(s.current_period_end, DATE_FORMAT) }) }}
                             </span>
                         </div>
                     </div>
@@ -221,7 +217,7 @@ function cancelSubscription(subscription: SubscriptionRow) {
                             {{ p.description }}
                         </p>
                         <div class="flex items-center gap-3 mt-1 flex-wrap text-[11.5px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
-                            <span>{{ formatDate(p.created_at) }}</span>
+                            <span>{{ formatDate(p.created_at, DATE_FORMAT) }}</span>
                             <span class="capitalize">{{ p.gateway }}</span>
                         </div>
                     </div>
@@ -253,13 +249,15 @@ function cancelSubscription(subscription: SubscriptionRow) {
 
             <div v-if="payments.links.length > 3" class="flex justify-center gap-1 px-5 py-4 flex-wrap border-t"
                 :class="dark ? 'border-zinc-800/60' : 'border-zinc-200'">
-                <Link v-for="(link, i) in payments.links" :key="i" :href="link.url ?? '#'"
+                <component :is="link.url ? Link : 'span'" v-for="(link, i) in payments.links" :key="i" :href="link.url ?? undefined"
                     class="px-3 py-1.5 rounded-lg border text-[12px] font-semibold transition"
+                    :aria-disabled="!link.url ? 'true' : undefined"
+                    :aria-current="link.active ? 'page' : undefined"
                     :class="link.active
                         ? (dark ? 'border-blue-500/40 bg-blue-500/10 text-blue-400' : 'border-blue-300 bg-blue-50 text-blue-700')
                         : link.url
                             ? (dark ? 'border-zinc-800/70 text-zinc-500 hover:text-zinc-200 hover:border-zinc-600' : 'border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400')
-                            : (dark ? 'border-zinc-800/40 text-zinc-800 pointer-events-none' : 'border-zinc-100 text-zinc-300 pointer-events-none')"
+                            : (dark ? 'border-zinc-800/40 text-zinc-800' : 'border-zinc-100 text-zinc-300')"
                     v-html="link.label" />
             </div>
         </div>

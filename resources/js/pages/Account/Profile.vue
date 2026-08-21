@@ -99,6 +99,8 @@ function onBannerPick(e: Event) {
 }
 
 function deleteAvatar() {
+    if (!window.confirm(t('account.pf_remove_avatar_confirm'))) return;
+
     router.delete(route('account.avatar.delete'), {
         onSuccess: () => {
             avatarPreview.value = null;
@@ -107,6 +109,8 @@ function deleteAvatar() {
 }
 
 function deleteBanner() {
+    if (!window.confirm(t('account.pf_remove_banner_confirm'))) return;
+
     router.delete(route('account.banner.delete'), {
         onSuccess: () => {
             bannerPreview.value = null;
@@ -409,7 +413,8 @@ const dangerBtn = computed(() =>
                             class="resize-none"
                             :class="input"
                         />
-                        <p id="pf_bio_counter" class="text-right" :class="hint">
+                        <p id="pf_bio_counter" class="text-right"
+                            :class="form.bio.length > BIO_MAX - 50 ? (dark ? 'text-amber-400' : 'text-amber-600') : hint">
                             {{ t('account.pf_bio_counter', { count: form.bio.length, max: BIO_MAX }) }}
                         </p>
                     </div>

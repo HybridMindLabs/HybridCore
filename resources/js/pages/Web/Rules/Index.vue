@@ -24,18 +24,11 @@ interface Seo {
 const props = defineProps<{ rules: Rule[]; seo: Seo }>();
 
 const { theme } = useTheme();
-const { t, currentLocale } = useLocale();
+const { t, currentLocale, formatDate } = useLocale();
 const dark = computed(() => theme.value === 'dark');
 const page = usePage<{ app: { name: string } }>();
 
-/** Was pinned to 'en-GB', so every visitor saw British dates. */
-function formatDate(value: string): string {
-    return new Date(value).toLocaleDateString(currentLocale.value, {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-    });
-}
+const RULE_DATE_FORMAT: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
 
 const countLabel = computed(() => props.rules.length === 1
     ? t('rules.rules_count_one')
@@ -241,7 +234,7 @@ const heroStats = computed(() => [
                                 <span class="relative flex items-center justify-between gap-3 mt-4 pt-3 border-t"
                                     :class="dark ? 'border-zinc-800/60' : 'border-zinc-200'">
                                     <span class="text-[11px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
-                                        {{ t('rules.updated', { date: formatDate(rule.updated_at) }) }}
+                                        {{ t('rules.updated', { date: formatDate(rule.updated_at, RULE_DATE_FORMAT) }) }}
                                     </span>
                                     <span class="inline-flex items-center gap-1.5 text-[12px] font-bold transition-colors"
                                         :class="dark ? 'text-zinc-500 group-hover:text-blue-400' : 'text-zinc-500 group-hover:text-blue-700'">
