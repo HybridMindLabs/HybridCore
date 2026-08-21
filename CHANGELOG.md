@@ -7,6 +7,14 @@ conventions and [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.4.3] — 2026-08-21
+
+### Changed
+
+- Chore/lint cleanup (#80)
+
+---
+
 ## [0.4.2] — 2026-08-21
 
 ### Changed
