@@ -134,8 +134,7 @@ function pageLink(page: number) {
                                 class="w-full rounded-xl border pl-10 pr-10 py-3 text-[14px] font-medium transition focus:outline-none focus:ring-2"
                                 :class="dark
                                     ? 'border-zinc-800 bg-zinc-900/60 text-zinc-100 placeholder:text-zinc-500 focus:border-blue-500/50 focus:ring-blue-500/10'
-                                    : 'border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400 focus:border-blue-400/60 focus:ring-blue-500/10'"
-                                @keydown.enter="doSearch" />
+                                    : 'border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400 focus:border-blue-400/60 focus:ring-blue-500/10'" />
                             <button v-if="search" type="button" :aria-label="t('news.clear_search')" :title="t('news.clear_search')"
                                 class="absolute right-3 top-1/2 -translate-y-1/2 transition"
                                 :class="dark ? 'text-zinc-500 hover:text-zinc-300' : 'text-zinc-400 hover:text-zinc-500'"
@@ -226,7 +225,8 @@ function pageLink(page: number) {
                     :class="dark ? 'text-zinc-500' : 'text-zinc-400'">{{ t('news.browse_categories') }}</h2>
                 <div class="flex flex-wrap gap-2">
                     <Link :href="route('news.index')"
-                        class="px-3 py-1.5 rounded-full border text-[12px] font-semibold transition"
+                        class="px-3 py-1.5 rounded-full border text-[12px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                        :aria-current="!currentCategory ? 'page' : undefined"
                         :class="!currentCategory
                             ? (dark ? 'border-blue-500/40 bg-blue-500/10 text-blue-400' : 'border-blue-300 bg-blue-50 text-blue-600')
                             : (dark ? 'border-zinc-800/70 text-zinc-500 hover:text-zinc-200 hover:border-zinc-600' : 'border-zinc-200 bg-white text-zinc-500 hover:text-zinc-800 hover:border-zinc-300')">
@@ -234,7 +234,8 @@ function pageLink(page: number) {
                     </Link>
                     <Link v-for="c in categories" :key="c.id"
                         :href="route('news.category', c.slug)"
-                        class="px-3 py-1.5 rounded-full border text-[12px] font-semibold transition"
+                        class="px-3 py-1.5 rounded-full border text-[12px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                        :aria-current="currentCategory === c.slug ? 'page' : undefined"
                         :class="currentCategory === c.slug
                             ? ''
                             : (dark ? 'border-zinc-800/70 text-zinc-500 hover:text-zinc-200 hover:border-zinc-600' : 'border-zinc-200 bg-white text-zinc-500 hover:text-zinc-800 hover:border-zinc-300')"

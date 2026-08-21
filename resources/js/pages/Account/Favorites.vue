@@ -4,7 +4,7 @@ import { Star, Wifi, WifiOff, Users, Play, Map } from '@lucide/vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
 import AccountPage from '@/components/Account/AccountPage.vue';
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive } from 'vue';
 
 interface Server {
     id: number; name: string; game: string | null; game_slug: string | null; game_icon: string | null;
@@ -27,14 +27,17 @@ const failedMapImages = reactive(new Set<number>());
  * Rows disappear optimistically and come back if the request fails.
  */
 const removed = reactive(new Set<number>());
-const pending = ref<number | null>(null);
+// Per-server, not a single ref — a single "pending" value locked every other
+// row's button while one removal was in flight, even though each request is
+// independent.
+const pending = reactive(new Set<number>());
 
 const visibleServers = computed(() => props.servers.filter(s => !removed.has(s.id)));
 
 async function removeFavourite(server: Server) {
-    if (pending.value) return;
+    if (pending.has(server.id)) return;
 
-    pending.value = server.id;
+    pending.add(server.id);
     removed.add(server.id);
 
     try {
@@ -49,7 +52,7 @@ async function removeFavourite(server: Server) {
     } catch {
         removed.delete(server.id);
     } finally {
-        pending.value = null;
+        pending.delete(server.id);
     }
 }
 </script>
@@ -175,7 +178,7 @@ async function removeFavourite(server: Server) {
                         <button type="button"
                             class="w-9 h-9 flex items-center justify-center rounded-lg text-amber-400 transition disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
                             :class="dark ? 'hover:bg-white/[0.06] hover:text-zinc-400' : 'hover:bg-zinc-200/70 hover:text-zinc-500'"
-                            :disabled="pending === s.id"
+                            :disabled="pending.has(s.id)"
                             :aria-label="t('account.fav_remove', { name: s.name })"
                             :title="t('account.fav_remove', { name: s.name })"
                             @click="removeFavourite(s)">

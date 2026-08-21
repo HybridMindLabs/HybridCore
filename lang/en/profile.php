@@ -28,6 +28,7 @@ return [
     'no_followers' => 'No followers yet.',
     'not_following' => 'Not following anyone yet.',
     'close' => 'Close',
+    'more_count' => '+:count more',
 
     /* ── Activity / status ── */
     'recent_activity' => 'Recent Activity',
@@ -41,9 +42,15 @@ return [
     /* ── Sections ── */
     'badges_title' => 'Badges & Achievements',
     'favourite_servers_title' => 'Favourite Servers',
+    'reviews_title' => 'Reviews Written',
+    'nothing_here_yet' => 'Nothing here yet',
+    'nothing_here_yet_hint' => 'No badges, favourite servers or reviews yet.',
     'connect' => 'Connect',
     'earned' => 'Earned :date',
     'edit_profile' => 'Edit profile',
+    'share_profile' => 'Share',
+    'link_copied' => 'Copied!',
+    'rating_stars' => ':rating out of 5 stars',
     'stat_days_hint' => 'Days since they joined the community',
     'stat_favorites_hint' => 'Servers they saved as favourites',
     'stat_badges_hint' => 'Achievements they have earned',

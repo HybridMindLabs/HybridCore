@@ -30,6 +30,7 @@ const LAST_TAB_KEY = 'hc-account-last-tab';
 const routableTabs: Record<string, string> = {
     favorites: 'account.favorites',
     messages: 'account.messages.index',
+    activity: 'account.activity',
 };
 
 function selectTab(tabId: string) {

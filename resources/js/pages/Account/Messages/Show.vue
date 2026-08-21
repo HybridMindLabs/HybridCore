@@ -4,14 +4,19 @@ import { Send, Trash2, ArrowLeft } from '@lucide/vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
 import AccountPage from '@/components/Account/AccountPage.vue';
-import { computed, ref, nextTick, onMounted, onUnmounted } from 'vue';
+import { computed, ref, nextTick, onMounted, onUnmounted, watch } from 'vue';
 
 interface Other { id: number; username: string; display_name: string; avatar: string | null }
 interface Msg { id: number; body: string | null; deleted: boolean; is_mine: boolean; at: string; at_human: string }
 
 const props = defineProps<{
     conversation: { id: number; other: Other };
-    messages: { data: Msg[]; meta: any };
+    /**
+     * The controller passes a cursor paginator straight to Inertia, which
+     * serializes it flat — next_cursor/next_page_url/prev_cursor sit at the
+     * top level, there is no separate "meta" object.
+     */
+    messages: { data: Msg[]; meta: unknown; next_page_url?: string | null; prev_cursor?: string | null };
     unreadNotifications?: number;
     unreadMessages?: number;
 }>();
@@ -25,6 +30,42 @@ const otherName = computed(() =>
 
 const sendForm = useForm({ body: '' });
 const messagesEnd = ref<HTMLElement | null>(null);
+
+// ── Older messages ──────────────────────────────────────────────────────
+// Only the newest 40 messages load with the page. `messages` is newest-first
+// (matches the server's `latest()` order); "older" pages get appended to the
+// end of this list, so `[...loadedMessages].reverse()` still reads oldest to
+// newest with the newly-loaded batch landing at the top.
+const loadedMessages = ref<Msg[]>([...props.messages.data]);
+const nextPageUrl = ref<string | null>(props.messages.next_page_url ?? null);
+const loadingOlder = ref(false);
+
+// A response with no prev_cursor is page one — a real reload (send, delete,
+// an Echo-driven refresh), not the continuation loadOlder() just fetched.
+// Only those reset the list; a "load older" response is merged in place by
+// loadOlder()'s own onSuccess below.
+watch(() => props.messages, (next) => {
+    if (!next.prev_cursor) {
+        loadedMessages.value = [...next.data];
+        nextPageUrl.value = next.next_page_url ?? null;
+    }
+});
+
+function loadOlder() {
+    if (!nextPageUrl.value || loadingOlder.value) return;
+    loadingOlder.value = true;
+
+    router.get(nextPageUrl.value, {}, {
+        preserveState: true,
+        preserveScroll: true,
+        only: ['messages'],
+        onSuccess: () => {
+            loadedMessages.value.push(...props.messages.data);
+            nextPageUrl.value = props.messages.next_page_url ?? null;
+        },
+        onFinish: () => { loadingOlder.value = false; },
+    });
+}
 
 // ── Typing indicator (Reverb whisper — no server round-trip) ──────────────
 const otherTyping = ref(false);
@@ -55,6 +96,8 @@ function send() {
 }
 
 function deleteMessage(msgId: number) {
+    if (!window.confirm(t('account.msg_delete_confirm'))) return;
+
     router.delete(route('account.messages.delete', { conversation: props.conversation.id, message: msgId }), {
         preserveScroll: true,
     });
@@ -115,7 +158,15 @@ onUnmounted(() => {
         <div class="flex-1 overflow-y-auto p-5 min-h-[300px] max-h-[500px]"
             role="log" aria-live="polite" :aria-label="t('account.msg_thread_label')">
             <div class="flex flex-col justify-end min-h-full gap-2">
-                <div v-for="msg in [...messages.data].reverse()" :key="msg.id"
+                <div v-if="nextPageUrl" class="flex justify-center pb-2">
+                    <button type="button" :disabled="loadingOlder"
+                        class="text-[12px] font-semibold rounded-lg px-3 py-1.5 transition disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                        :class="dark ? 'text-blue-400 hover:text-blue-300 hover:bg-white/[0.04]' : 'text-blue-600 hover:text-blue-700 hover:bg-zinc-100'"
+                        @click="loadOlder">
+                        {{ loadingOlder ? t('account.msg_loading_older') : t('account.msg_load_older') }}
+                    </button>
+                </div>
+                <div v-for="msg in [...loadedMessages].reverse()" :key="msg.id"
                     class="flex gap-2" :class="msg.is_mine ? 'justify-end' : 'justify-start'">
                     <div class="group relative max-w-[75%]">
                         <div class="px-4 py-2.5 rounded-2xl text-[13px] leading-relaxed"

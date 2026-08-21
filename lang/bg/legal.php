@@ -16,4 +16,6 @@ return [
     'jump_first' => 'Започни четене',
     'ask_us' => 'Питай за това',
     'switcher_title' => 'Другите документи',
+    'reading_progress' => 'Прогрес на четене',
+    'back_to_top' => 'Обратно горе',
 ];

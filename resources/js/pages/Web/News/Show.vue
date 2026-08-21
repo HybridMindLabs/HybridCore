@@ -1,6 +1,6 @@
 ﻿<script setup lang="ts">
 import { Head, Link, useForm, usePage, router } from '@inertiajs/vue3';
-import { Check, ChevronLeft, ChevronRight, Clock, Copy, Eye, MessageSquare, Tag, Trash2 } from '@lucide/vue';
+import { ArrowUp, Check, ChevronLeft, ChevronRight, Clock, Copy, Eye, MessageSquare, Newspaper, Tag, Trash2 } from '@lucide/vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
@@ -101,6 +101,7 @@ function submitComment() {
 }
 
 function deleteComment(commentId: number) {
+    if (!window.confirm(t('news.delete_comment_confirm'))) return;
     router.delete(route('news.comments.destroy', { article: props.article.slug, comment: commentId }), {
         preserveScroll: true,
     });
@@ -180,6 +181,10 @@ const heroLink = computed(() =>
 const readingProgress = ref(0);
 const articleEl = ref<HTMLElement | null>(null);
 
+// Shown once the reader has scrolled far enough that "scroll up manually"
+// stops being the fastest way back — roughly one viewport in.
+const showBackToTop = ref(false);
+
 function updateProgress() {
     const el = articleEl.value;
     if (!el) return;
@@ -195,10 +200,16 @@ function updateProgress() {
 
     const passed = window.scrollY - start;
     readingProgress.value = Math.min(100, Math.max(0, Math.round((passed / scrollable) * 100)));
+    showBackToTop.value = window.scrollY > window.innerHeight;
 }
 
 onMounted(() => window.addEventListener('scroll', updateProgress, { passive: true }));
 onBeforeUnmount(() => window.removeEventListener('scroll', updateProgress));
+
+function backToTop() {
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
+}
 
 // Copy link
 const copied = ref(false);
@@ -243,6 +254,24 @@ const initials = computed(() => {
                 aria-valuemax="100"
                 :style="{ width: readingProgress + '%' }" />
         </div>
+
+        <Transition
+            enter-active-class="transition-all duration-200 ease-out"
+            enter-from-class="opacity-0 translate-y-2"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition-all duration-150 ease-in"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 translate-y-2"
+        >
+            <button v-if="showBackToTop" type="button" @click="backToTop"
+                class="fixed bottom-6 right-6 z-40 w-10 h-10 rounded-full border flex items-center justify-center shadow-lg backdrop-blur-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                :class="dark
+                    ? 'border-zinc-700/70 bg-zinc-900/85 text-zinc-300 hover:text-white hover:border-zinc-600'
+                    : 'border-zinc-200 bg-white/90 text-zinc-500 hover:text-zinc-900 hover:border-zinc-300'"
+                :aria-label="t('news.back_to_top')" :title="t('news.back_to_top')">
+                <ArrowUp :size="16" :stroke-width="2.2" aria-hidden="true" />
+            </button>
+        </Transition>
 
         <!-- ══════════════════════════════════════════════ HERO -->
         <div class="relative overflow-hidden border-b"
@@ -458,7 +487,7 @@ const initials = computed(() => {
                                         : 'border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400 focus:border-blue-400'"
                                 />
                                 <p v-if="commentForm.errors.body" class="text-[12px] text-red-400">{{ commentForm.errors.body }}</p>
-                                <div>
+                                <div class="flex items-center justify-between gap-3">
                                     <button
                                         type="submit"
                                         :disabled="commentForm.processing || commentForm.body.trim().length < 2"
@@ -466,6 +495,12 @@ const initials = computed(() => {
                                     >
                                         {{ commentForm.processing ? t('news.posting') : t('news.post_comment') }}
                                     </button>
+                                    <span class="text-[11px] tabular-nums shrink-0"
+                                        :class="commentForm.body.length > 900
+                                            ? (dark ? 'text-amber-400' : 'text-amber-600')
+                                            : (dark ? 'text-zinc-500' : 'text-zinc-400')">
+                                        {{ commentForm.body.length }}/1000
+                                    </span>
                                 </div>
                             </form>
                         </div>
@@ -582,7 +617,10 @@ const initials = computed(() => {
                             <h2 class="text-[12px] font-bold uppercase tracking-widest"
                                 :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ t('news.sidebar_author') }}</h2>
                         </div>
-                        <div class="p-4 flex items-center gap-3">
+                        <component :is="article.author.username ? Link : 'div'"
+                            :href="article.author.username ? route('profile.show', article.author.username) : undefined"
+                            class="p-4 flex items-center gap-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50"
+                            :class="article.author.username ? (dark ? 'hover:bg-white/[0.03]' : 'hover:bg-zinc-50') : ''">
                             <div class="w-10 h-10 rounded-full overflow-hidden border shrink-0 flex items-center justify-center font-bold text-[13px]"
                                 :class="dark ? 'border-zinc-700 bg-zinc-800 text-zinc-400' : 'border-zinc-200 bg-zinc-100 text-zinc-500'">
                                 <img v-if="article.author.avatar" :src="article.author.avatar" class="w-full h-full object-cover"
@@ -595,7 +633,7 @@ const initials = computed(() => {
                                 <p v-if="article.author.username" class="text-[12px]"
                                     :class="dark ? 'text-zinc-500' : 'text-zinc-400'">@{{ article.author.username }}</p>
                             </div>
-                        </div>
+                        </component>
                     </div>
 
                     <!-- Share -->
@@ -651,10 +689,12 @@ const initials = computed(() => {
                                 :href="route('news.show', a.slug)"
                                 class="flex gap-3 items-center p-2 rounded-xl transition group"
                                 :class="dark ? 'hover:bg-white/[0.03]' : 'hover:bg-zinc-50'">
-                                <div class="w-12 h-12 rounded-lg overflow-hidden border shrink-0"
+                                <div class="w-12 h-12 rounded-lg overflow-hidden border shrink-0 flex items-center justify-center"
                                     :class="dark ? 'border-zinc-800/70 bg-zinc-900' : 'border-zinc-200 bg-zinc-100'">
                                     <img v-if="a.featured_image_url" :src="a.featured_image_url" class="w-full h-full object-cover"
                                         :alt="t('news.article_image_alt', { title: a.title })" />
+                                    <Newspaper v-else :size="14" :stroke-width="1.5" aria-hidden="true"
+                                        :class="dark ? 'text-zinc-600' : 'text-zinc-300'" />
                                 </div>
                                 <div class="min-w-0">
                                     <p class="text-[12px] font-semibold line-clamp-2 transition-colors"

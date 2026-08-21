@@ -278,6 +278,32 @@ const nextRule = computed(() => ruleIndex.value < props.allRules.length - 1 ? pr
 
                 <!-- Content -->
                 <div class="flex-1 min-w-0">
+                    <!-- Mobile "on this page" — the desktop sidebar TOC is
+                         `hidden lg:flex`, so without this a phone reader has no
+                         way to jump between sections in a long rule at all. -->
+                    <nav v-if="toc.length" class="lg:hidden mb-4 rounded-2xl border overflow-hidden"
+                        :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-sm'"
+                        :aria-label="t('rules.on_this_page')">
+                        <p class="px-4 py-3 border-b text-[11px] font-black uppercase tracking-widest"
+                            :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e] text-zinc-500' : 'border-zinc-100 bg-zinc-50 text-zinc-400'"
+                        >{{ t('rules.on_this_page') }}</p>
+                        <div class="flex flex-col p-2 gap-0.5">
+                            <a
+                                v-for="entry in toc"
+                                :key="entry.id"
+                                :href="`#${entry.id}`"
+                                class="text-left text-[13px] py-1.5 transition-colors truncate border-l-2 px-3 rounded-r focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                                :class="[
+                                    entry.level === 3 ? 'pl-6 text-[12px]' : '',
+                                    activeId === entry.id
+                                        ? (dark ? 'border-blue-500 text-blue-400' : 'border-blue-500 text-blue-700')
+                                        : (dark ? 'border-transparent text-zinc-500 hover:text-zinc-200' : 'border-transparent text-zinc-500 hover:text-zinc-900'),
+                                ]"
+                                :aria-current="activeId === entry.id ? 'location' : undefined"
+                            >{{ entry.text }}</a>
+                        </div>
+                    </nav>
+
                     <article class="rounded-2xl border overflow-hidden"
                         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]'">
                         <!-- eslint-disable-next-line vue/no-v-html -->

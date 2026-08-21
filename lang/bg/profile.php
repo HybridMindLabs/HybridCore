@@ -28,6 +28,7 @@ return [
     'no_followers' => 'Все още няма последователи.',
     'not_following' => 'Все още не следва никого.',
     'close' => 'Затвори',
+    'more_count' => '+:count още',
 
     /* ── Activity / status ── */
     'recent_activity' => 'Скорошна активност',
@@ -41,9 +42,15 @@ return [
     /* ── Sections ── */
     'badges_title' => 'Баджове и постижения',
     'favourite_servers_title' => 'Любими сървъри',
+    'reviews_title' => 'Написани ревюта',
+    'nothing_here_yet' => 'Все още няма нищо тук',
+    'nothing_here_yet_hint' => 'Няма спечелени баджове, любими сървъри или ревюта.',
     'connect' => 'Свържи се',
     'earned' => 'Спечелен :date',
     'edit_profile' => 'Редактирай профила',
+    'share_profile' => 'Сподели',
+    'link_copied' => 'Копирано!',
+    'rating_stars' => ':rating от 5 звезди',
     'stat_days_hint' => 'Дни, откакто се е присъединил',
     'stat_favorites_hint' => 'Сървъри, запазени като любими',
     'stat_badges_hint' => 'Спечелени постижения',

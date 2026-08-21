@@ -86,10 +86,15 @@ const heroStats = computed(() => [
 
 // ── Search ─────────────────────────────────────────────────────────────────
 const search = ref(props.filters.search);
+// Guards the empty-state message: without it, `allMembers` cleared to []
+// synchronously below while the debounced request was still in flight, so
+// the "No members found" message flashed on every keystroke.
+const searching = ref(false);
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
 watch(search, (value) => {
     if (searchTimeout) clearTimeout(searchTimeout);
+    searching.value = true;
     // reset infinite scroll on new search
     allMembers.value = [];
     currentPage.value = 0;
@@ -99,7 +104,9 @@ watch(search, (value) => {
             onSuccess: () => {
                 allMembers.value = props.members.data;
                 currentPage.value = props.members.current_page;
+                searching.value = false;
             },
+            onError: () => { searching.value = false; },
         });
     }, 350);
 });
@@ -137,8 +144,6 @@ async function loadMore() {
     loadingMore.value = false;
 }
 
-let presenceChannel: ReturnType<typeof window.Echo.join> | null = null;
-
 onMounted(() => {
     if (!('IntersectionObserver' in window)) return;
     observer = new IntersectionObserver(
@@ -150,7 +155,7 @@ onMounted(() => {
     // Join presence channel to track live online count
     const Echo = (window as Record<string, unknown>).Echo as typeof window.Echo | undefined;
     if (Echo) {
-        presenceChannel = Echo.join('online-users')
+        Echo.join('online-users')
             .here((users: unknown[]) => { liveOnlineCount.value = users.length; })
             .joining(() => { liveOnlineCount.value++; })
             .leaving(() => { liveOnlineCount.value = Math.max(0, liveOnlineCount.value - 1); });
@@ -295,7 +300,7 @@ function accentColor(member: Member): string {
         <div class="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
 
             <!-- Empty state -->
-            <div v-if="allMembers.length === 0 && !loadingMore"
+            <div v-if="allMembers.length === 0 && !loadingMore && !searching"
                 class="flex flex-col items-center justify-center rounded-xl border py-20"
                 :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]'">
                 <Users :size="32" :stroke-width="1.4" class="mb-3" :class="dark ? 'text-zinc-500' : 'text-zinc-300'" />
@@ -307,9 +312,10 @@ function accentColor(member: Member): string {
             <!-- Grid -->
             <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 <Link
-                    v-for="member in allMembers" :key="member.id"
+                    v-for="(member, i) in allMembers" :key="member.id"
                     :href="member.username ? route('profile.show', member.username) : '#'"
-                    class="group flex flex-col rounded-2xl border overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
+                    class="hc-reveal group flex flex-col rounded-2xl border overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
+                    :style="{ animationDelay: (i % 12) * 0.04 + 's' }"
                     :class="dark
                         ? 'border-zinc-800/70 bg-[#111113] hover:border-zinc-700/70 hover:shadow-lg hover:shadow-black/30'
                         : 'border-zinc-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)] hover:shadow-md hover:shadow-zinc-200/60 hover:border-zinc-300'"
@@ -399,7 +405,7 @@ function accentColor(member: Member): string {
                 </Link>
 
                 <!-- Skeleton cards while loading -->
-                <template v-if="loadingMore">
+                <template v-if="loadingMore || searching">
                     <div v-for="n in 5" :key="`sk-${n}`"
                         class="flex flex-col rounded-2xl border overflow-hidden animate-pulse"
                         :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white'">
@@ -424,7 +430,7 @@ function accentColor(member: Member): string {
             <!-- End of list -->
             <p v-if="!hasMore && allMembers.length > 0" class="text-center text-[12px] mt-2"
                 :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
-                All {{ total.toLocaleString() }} members loaded
+                {{ t('members.all_loaded').replace(':count', total.toLocaleString()) }}
             </p>
 
         </div>

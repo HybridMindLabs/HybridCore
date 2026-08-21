@@ -6,7 +6,7 @@ import {
     Activity as ActivityIcon,
     Trophy, Sprout, Medal, CircleCheck, Gamepad2,
     Lock, FileText, Mail, Puzzle,
-    PenLine, Flame, Compass, MessagesSquare, Heart,
+    PenLine, Flame, Compass, MessagesSquare, Heart, Sparkles, Share2, Check, ExternalLink,
 } from '@lucide/vue';
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import ExtensionSlot from '@/components/Core/ExtensionSlot.vue';
@@ -23,6 +23,7 @@ interface FavServer {
     players: number | null; max_players: number | null; online: boolean;
     connect_url: string | null; show_route: string | null;
 }
+interface ConnectedAccountLink { provider: string; username: string | null; url: string }
 interface Profile {
     id: number; username: string; display_name: string; avatar: string | null; banner: string | null;
     bio: string | null; location: string | null; website: string | null;
@@ -32,25 +33,54 @@ interface Profile {
     stats: { joined_days_ago: number; favourite_servers_count: number };
     is_online: boolean; last_seen_at: string | null;
     followers_count: number; following_count: number; is_following: boolean;
+    connected_accounts: ConnectedAccountLink[];
 }
 interface ActivityItem { type: string; params: Record<string, string | number>; at: string; url: string | null }
 interface MiniUser { username: string | null; name: string; avatar: string | null }
+interface ReviewItem {
+    id: number; server_name: string; game_slug: string; rating: number;
+    body: string | null; created_at: string; show_route: string;
+}
 
 interface ExtensionPanel { key: string; label: string; icon: string; component: string; props: Record<string, unknown> }
 
 const props = defineProps<{
     profile: Profile;
     activity: ActivityItem[];
+    reviews: ReviewItem[];
     followers: MiniUser[];
     following: MiniUser[];
     extensionPanels?: ExtensionPanel[];
 }>();
+
+const connectedAccountMeta: Record<string, { icon: unknown; label: string }> = {
+    steam: { icon: Gamepad2, label: 'Steam' },
+    discord: { icon: MessageSquare, label: 'Discord' },
+};
+
+const shareCopied = ref(false);
+async function shareProfile() {
+    try {
+        await navigator.clipboard.writeText(window.location.href);
+    } catch {
+        return;
+    }
+    shareCopied.value = true;
+    setTimeout(() => (shareCopied.value = false), 1600);
+}
 
 const openFollowList = ref<'followers' | 'following' | null>(null);
 
 function toggleFollowList(which: 'followers' | 'following') {
     openFollowList.value = openFollowList.value === which ? null : which;
 }
+
+/** miniUsers() caps the list at 24 server-side; the real total can be higher. */
+const followListOverflow = computed(() => {
+    if (openFollowList.value === 'followers') return Math.max(0, props.profile.followers_count - props.followers.length);
+    if (openFollowList.value === 'following') return Math.max(0, props.profile.following_count - props.following.length);
+    return 0;
+});
 const { theme } = useTheme();
 const { t, currentLocale } = useLocale();
 const dark = computed(() => theme.value === 'dark');
@@ -168,10 +198,18 @@ function toggleBlock() {
                         <div class="absolute inset-0" :style="`background:radial-gradient(ellipse at 80% 50%,${accentColor}18 0%,transparent 60%)`" />
                         <div v-if="dark" class="absolute inset-0 opacity-40" style="background-image:radial-gradient(circle,rgba(255,255,255,0.04) 1px,transparent 1px);background-size:22px 22px" />
                     </template>
-                    <div class="absolute bottom-0 left-0 right-0 h-20" :class="dark ? 'bg-gradient-to-t from-[#111113] to-transparent' : 'bg-gradient-to-t from-white to-transparent'" />
+                    <div class="absolute bottom-0 left-0 right-0 h-28"
+                        :style="{ background: `linear-gradient(to top, ${dark ? '#111113' : '#ffffff'} 20%, transparent)` }" />
 
                     <!-- Edit / action buttons -->
                     <div class="absolute top-4 right-4 left-4 flex items-center justify-end gap-2 flex-wrap">
+                        <button type="button" @click="shareProfile"
+                            class="flex items-center gap-1.5 text-[12px] font-semibold rounded-xl border px-3 py-2 transition backdrop-blur-sm"
+                            :class="dark ? 'border-zinc-700/60 bg-zinc-900/70 text-zinc-300 hover:text-white' : 'border-zinc-200/80 bg-white/80 text-zinc-500 hover:text-zinc-900'"
+                            :title="t('profile.share_profile')">
+                            <component :is="shareCopied ? Check : Share2" :size="12" :stroke-width="1.8" aria-hidden="true" />
+                            {{ shareCopied ? t('profile.link_copied') : t('profile.share_profile') }}
+                        </button>
                         <Link v-if="profile.is_self" :href="route('account.index')"
                             class="flex items-center gap-1.5 text-[12px] font-semibold rounded-xl border px-3 py-2 transition backdrop-blur-sm"
                             :class="dark ? 'border-zinc-700/60 bg-zinc-900/70 text-zinc-300 hover:text-white' : 'border-zinc-200/80 bg-white/80 text-zinc-500 hover:text-zinc-900'">
@@ -220,7 +258,11 @@ function toggleBlock() {
                                 :class="dark ? 'ring-[#111113]' : 'ring-white'"
                                 role="img" :aria-label="t('profile.active_now')" :title="t('profile.active_now')" />
                         </div>
-                        <div class="flex-1 min-w-0 pb-1.5">
+                        <!-- Own backdrop chip, not just the banner fade above — a
+                             bright or busy custom banner must never be able to
+                             swallow the name, no matter where it sits. -->
+                        <div class="flex-1 min-w-0 pb-1.5 rounded-xl px-3 py-2 -ml-3"
+                            :class="dark ? 'bg-[#111113]/80' : 'bg-white/85'">
                             <div class="flex items-center gap-2.5 flex-wrap">
                                 <h1 class="text-[26px] font-black tracking-tight leading-none" :class="dark ? 'text-zinc-100' : 'text-zinc-900'">
                                     {{ profile.display_name || profile.username }}
@@ -286,6 +328,14 @@ function toggleBlock() {
                         <span class="flex items-center gap-2 text-[13px]" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
                             <Calendar :size="14" :stroke-width="1.8" :class="dark ? 'text-zinc-500' : 'text-zinc-400'" /> {{ t('profile.joined') }} {{ profile.joined_at }}
                         </span>
+                        <a v-for="acc in profile.connected_accounts" :key="acc.provider"
+                            :href="acc.url" target="_blank" rel="noopener noreferrer"
+                            class="flex items-center gap-2 text-[13px] transition-colors group"
+                            :class="dark ? 'text-zinc-500 hover:text-zinc-200' : 'text-zinc-500 hover:text-zinc-800'">
+                            <component :is="connectedAccountMeta[acc.provider]?.icon ?? Globe" :size="14" :stroke-width="1.8" />
+                            {{ acc.username ?? connectedAccountMeta[acc.provider]?.label ?? acc.provider }}
+                            <ExternalLink :size="10" :stroke-width="2" class="opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+                        </a>
                     </div>
                 </div>
             </div>
@@ -323,6 +373,14 @@ function toggleBlock() {
                         </span>
                         {{ mini.username ?? mini.name }}
                     </component>
+                    <!-- The list is capped server-side (24); without this, a
+                         popular user's follower list silently looked complete
+                         when it was just truncated. -->
+                    <span v-if="followListOverflow"
+                        class="flex items-center px-2.5 py-1.5 rounded-full border border-dashed text-[12px] font-bold tabular-nums"
+                        :class="dark ? 'border-zinc-700 text-zinc-400' : 'border-zinc-300 text-zinc-500'">
+                        {{ t('profile.more_count', { count: followListOverflow }) }}
+                    </span>
                 </div>
                 <div v-else class="px-5 py-8 text-center text-[13px]" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
                     {{ openFollowList === 'followers' ? t('profile.no_followers') : t('profile.not_following') }}
@@ -330,7 +388,8 @@ function toggleBlock() {
             </div>
 
             <!-- Achievements + Favorite servers row -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div v-if="profile.achievements.length > 0 || profile.favourite_servers.length > 0 || reviews.length > 0"
+                class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
                 <!-- Achievements -->
                 <div v-if="profile.achievements.length > 0" class="rounded-2xl border overflow-hidden"
@@ -401,6 +460,51 @@ function toggleBlock() {
                     </div>
                 </div>
 
+            </div>
+
+            <!-- Reviews this user has written -->
+            <div v-if="reviews.length > 0" class="rounded-2xl border overflow-hidden mt-4"
+                :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-sm'">
+                <div class="px-5 py-3.5 border-b flex items-center gap-2" :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e]' : 'border-zinc-100 bg-zinc-50'">
+                    <PenLine :size="14" :stroke-width="1.8" :class="dark ? 'text-violet-400' : 'text-violet-500'" />
+                    <p class="text-[13px] font-black" :class="dark ? 'text-zinc-100' : 'text-zinc-900'">{{ t('profile.reviews_title') }}</p>
+                </div>
+                <div class="divide-y" :class="dark ? 'divide-zinc-800/60' : 'divide-zinc-100'">
+                    <Link v-for="r in reviews" :key="r.id" :href="r.show_route"
+                        class="group flex flex-col gap-1 px-5 py-3.5 transition-colors"
+                        :class="dark ? 'hover:bg-white/[0.02]' : 'hover:bg-zinc-50/80'">
+                        <div class="flex items-center gap-2.5 flex-wrap">
+                            <p class="text-[13px] font-bold transition-colors"
+                                :class="dark ? 'text-zinc-100 group-hover:text-blue-400' : 'text-zinc-900 group-hover:text-blue-600'">
+                                {{ r.server_name }}
+                            </p>
+                            <span class="flex items-center gap-0.5" :aria-label="t('profile.rating_stars', { rating: r.rating })">
+                                <Star v-for="n in 5" :key="n" :size="11" :stroke-width="1.5"
+                                    :class="n <= r.rating ? 'text-amber-400' : (dark ? 'text-zinc-700' : 'text-zinc-300')"
+                                    :fill="n <= r.rating ? 'currentColor' : 'none'" aria-hidden="true" />
+                            </span>
+                            <span class="text-[11px] ml-auto shrink-0" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">{{ r.created_at }}</span>
+                        </div>
+                        <p v-if="r.body" class="text-[12.5px] leading-relaxed line-clamp-2" :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
+                            {{ r.body }}
+                        </p>
+                    </Link>
+                </div>
+            </div>
+
+            <div v-if="!profile.achievements.length && !profile.favourite_servers.length && !reviews.length"
+                class="rounded-2xl border px-6 py-10 text-center"
+                :class="dark ? 'border-zinc-800/70 bg-[#111113]' : 'border-zinc-200 bg-white shadow-sm'">
+                <span class="mx-auto mb-3 w-11 h-11 rounded-2xl flex items-center justify-center"
+                    :class="dark ? 'bg-zinc-900 text-zinc-500' : 'bg-zinc-100 text-zinc-400'" aria-hidden="true">
+                    <Sparkles :size="20" :stroke-width="1.5" />
+                </span>
+                <p class="text-[13px] font-bold" :class="dark ? 'text-zinc-300' : 'text-zinc-500'">
+                    {{ t('profile.nothing_here_yet') }}
+                </p>
+                <p class="text-[11.5px] mt-1" :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
+                    {{ t('profile.nothing_here_yet_hint') }}
+                </p>
             </div>
 
             <!-- Extension-registered profile panels -->

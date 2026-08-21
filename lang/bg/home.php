@@ -146,9 +146,12 @@ return [
     'users_count' => ':count потребителя',
     'no_active_users' => 'Няма активни потребители.',
     'presence_more' => '+:count още',
+    'recently_joined' => 'Нови потребители',
+    'recently_joined_hint' => 'Най-новите хора, присъединили се към общността',
 
     /* ── Sidebar ── */
     'sidebar_online' => 'Онлайн',
+    'member_since' => 'Член от :date',
     'sidebar_badges' => 'Значки',
     'sidebar_messages' => 'Съобщения',
     'sidebar_alerts' => 'Известия',

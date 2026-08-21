@@ -16,4 +16,6 @@ return [
     'jump_first' => 'Start reading',
     'ask_us' => 'Ask about this',
     'switcher_title' => 'The other policies',
+    'reading_progress' => 'Reading progress',
+    'back_to_top' => 'Back to top',
 ];

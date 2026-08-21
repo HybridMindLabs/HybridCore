@@ -345,6 +345,11 @@ function userInitials(name: string) {
                                         <Trash2 :size="13" :stroke-width="1.75" />
                                     </button>
                                 </Tooltip>
+                                <Tooltip v-else text="You can't delete your own account">
+                                    <span class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-800 cursor-not-allowed">
+                                        <Trash2 :size="13" :stroke-width="1.75" />
+                                    </span>
+                                </Tooltip>
                             </div>
                         </td>
                     </tr>

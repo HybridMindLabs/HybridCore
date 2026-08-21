@@ -70,6 +70,8 @@ async function send(url: string, body?: Record<string, unknown>): Promise<boolea
 }
 
 async function revoke(id: string) {
+    if (!window.confirm(t('account.sessions_revoke_confirm'))) return;
+
     revoking.value = id;
     const done = await send(route('account.sessions.destroy', id));
     revoking.value = null;

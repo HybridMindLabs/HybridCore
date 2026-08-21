@@ -146,9 +146,12 @@ return [
     'users_count' => ':count users',
     'no_active_users' => 'No active users.',
     'presence_more' => '+:count more',
+    'recently_joined' => 'New Members',
+    'recently_joined_hint' => 'The newest people to join the community',
 
     /* ── Sidebar ── */
     'sidebar_online' => 'Online',
+    'member_since' => 'Member since :date',
     'sidebar_badges' => 'Badges',
     'sidebar_messages' => 'Messages',
     'sidebar_alerts' => 'Alerts',
