@@ -7,6 +7,14 @@ conventions and [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.4.2] — 2026-08-21
+
+### Changed
+
+- UX pass across public pages and account settings (#79)
+
+---
+
 ## [0.4.1] — 2026-08-20
 
 ### Fixed
