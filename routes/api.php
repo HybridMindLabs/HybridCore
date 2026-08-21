@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::prefix('auth')->controller(AuthController::class)->group(function () {
-        Route::post('login', 'login')->middleware(['throttle:5,1', 'throttle:login-by-account']);
-        Route::post('register', 'register')->middleware('throttle:5,1');
+        Route::post('login', 'login')->middleware(['throttle:5,1,api-login', 'throttle:login-by-account']);
+        Route::post('register', 'register')->middleware('throttle:5,1,api-register');
         Route::middleware('auth:sanctum')->group(function () {
             Route::post('logout', 'logout');
             Route::get('me', 'me');
@@ -46,5 +46,5 @@ Route::prefix('bridge')
 // ── Payments ─────────────────────────────────────────────────────
 // Inbound webhook delivery from a payment gateway (Stripe, etc.).
 Route::post('payments/webhook/{gateway}', PaymentWebhookController::class)
-    ->middleware('throttle:120,1')
+    ->middleware('throttle:120,1,payments-webhook')
     ->name('api.payments.webhook');

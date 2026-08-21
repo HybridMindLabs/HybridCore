@@ -55,9 +55,9 @@ Route::middleware([EnsureAppIsInstalled::class, EnsureNotInMaintenance::class])
 
         // ---- 2FA challenge (between login and full auth) ----
         Route::get('/two-factor-challenge', [TwoFactorController::class, 'showChallenge'])->name('auth.2fa.challenge');
-        Route::post('/two-factor-challenge', [TwoFactorController::class, 'challenge'])->middleware('throttle:10,1')->name('auth.2fa.verify');
-        Route::post('/two-factor-challenge/webauthn/options', [TwoFactorController::class, 'webauthnChallengeOptions'])->middleware('throttle:10,1')->name('auth.2fa.webauthn.options');
-        Route::post('/two-factor-challenge/webauthn/verify', [TwoFactorController::class, 'webauthnChallengeVerify'])->middleware('throttle:10,1')->name('auth.2fa.webauthn.verify');
+        Route::post('/two-factor-challenge', [TwoFactorController::class, 'challenge'])->middleware('throttle:10,1,2fa-challenge')->name('auth.2fa.verify');
+        Route::post('/two-factor-challenge/webauthn/options', [TwoFactorController::class, 'webauthnChallengeOptions'])->middleware('throttle:10,1,2fa-webauthn-options')->name('auth.2fa.webauthn.options');
+        Route::post('/two-factor-challenge/webauthn/verify', [TwoFactorController::class, 'webauthnChallengeVerify'])->middleware('throttle:10,1,2fa-webauthn-verify')->name('auth.2fa.webauthn.verify');
 
         // ---- Public authentication (guests) ----
         Route::middleware('guest')->group(function (): void {
@@ -69,9 +69,9 @@ Route::middleware([EnsureAppIsInstalled::class, EnsureNotInMaintenance::class])
             Route::post('/login', [LoginController::class, 'store'])->middleware(['throttle:login', 'throttle:login-by-account'])->name('login.store');
 
             Route::get('/forgot-password', [PasswordResetController::class, 'request'])->name('password.request');
-            Route::post('/forgot-password', [PasswordResetController::class, 'email'])->middleware('throttle:5,1')->name('password.email');
+            Route::post('/forgot-password', [PasswordResetController::class, 'email'])->middleware('throttle:5,1,password-email')->name('password.email');
             Route::get('/reset-password/{token}', [PasswordResetController::class, 'reset'])->name('password.reset');
-            Route::post('/reset-password', [PasswordResetController::class, 'update'])->middleware('throttle:5,1')->name('password.update');
+            Route::post('/reset-password', [PasswordResetController::class, 'update'])->middleware('throttle:5,1,password-update')->name('password.update');
         });
 
         // ---- Authenticated ----
@@ -83,9 +83,9 @@ Route::middleware([EnsureAppIsInstalled::class, EnsureNotInMaintenance::class])
             // Email verification
             Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
             Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
-                ->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
+                ->middleware(['signed', 'throttle:6,1,verification-verify'])->name('verification.verify');
             Route::post('/email/verification-notification', [EmailVerificationController::class, 'send'])
-                ->middleware('throttle:3,1')->name('verification.send');
+                ->middleware('throttle:3,1,verification-send')->name('verification.send');
 
             // Account
             Route::get('/account', [AccountController::class, 'index'])->name('account.index');
@@ -114,19 +114,19 @@ Route::middleware([EnsureAppIsInstalled::class, EnsureNotInMaintenance::class])
             Route::post('/account/two-factor/setup', [TwoFactorController::class, 'setup'])->name('account.2fa.setup');
             // Throttled like the login challenge is: a 6-digit code is only a
             // million guesses, and confirm() had no limit at all.
-            Route::post('/account/two-factor/confirm', [TwoFactorController::class, 'confirm'])->middleware('throttle:10,1')->name('account.2fa.confirm');
+            Route::post('/account/two-factor/confirm', [TwoFactorController::class, 'confirm'])->middleware('throttle:10,1,account-2fa-confirm')->name('account.2fa.confirm');
             Route::delete('/account/two-factor', [TwoFactorController::class, 'disable'])->name('account.2fa.disable');
             Route::post('/account/two-factor/recovery-codes', [TwoFactorController::class, 'regenerateCodes'])->name('account.2fa.recovery-codes');
 
             // Passkeys (WebAuthn) — an additional/alternative second factor.
             Route::post('/account/two-factor/webauthn/options', [TwoFactorController::class, 'webauthnRegisterOptions'])->name('account.2fa.webauthn.options');
-            Route::post('/account/two-factor/webauthn', [TwoFactorController::class, 'webauthnRegister'])->middleware('throttle:10,1')->name('account.2fa.webauthn.register');
+            Route::post('/account/two-factor/webauthn', [TwoFactorController::class, 'webauthnRegister'])->middleware('throttle:10,1,account-2fa-webauthn')->name('account.2fa.webauthn.register');
             Route::delete('/account/two-factor/webauthn/{credential}', [TwoFactorController::class, 'webauthnDestroy'])->name('account.2fa.webauthn.destroy');
 
             // Avatar & banner
-            Route::post('/account/avatar', [MediaController::class, 'uploadAvatar'])->name('account.avatar.upload')->middleware('throttle:10,1');
+            Route::post('/account/avatar', [MediaController::class, 'uploadAvatar'])->name('account.avatar.upload')->middleware('throttle:10,1,account-avatar-upload');
             Route::delete('/account/avatar', [MediaController::class, 'deleteAvatar'])->name('account.avatar.delete');
-            Route::post('/account/banner', [MediaController::class, 'uploadBanner'])->name('account.banner.upload')->middleware('throttle:10,1');
+            Route::post('/account/banner', [MediaController::class, 'uploadBanner'])->name('account.banner.upload')->middleware('throttle:10,1,account-banner-upload');
             Route::delete('/account/banner', [MediaController::class, 'deleteBanner'])->name('account.banner.delete');
 
             // Notifications
@@ -142,14 +142,14 @@ Route::middleware([EnsureAppIsInstalled::class, EnsureNotInMaintenance::class])
             // Messages (DM)
             Route::get('/account/messages', [MessageController::class, 'index'])->name('account.messages.index');
             Route::get('/account/messages/{conversation}', [MessageController::class, 'show'])->name('account.messages.show');
-            Route::post('/account/messages', [MessageController::class, 'start'])->name('account.messages.start')->middleware('throttle:10,1');
-            Route::post('/account/messages/{conversation}', [MessageController::class, 'send'])->name('account.messages.send')->middleware('throttle:30,1');
+            Route::post('/account/messages', [MessageController::class, 'start'])->name('account.messages.start')->middleware('throttle:10,1,account-messages-start');
+            Route::post('/account/messages/{conversation}', [MessageController::class, 'send'])->name('account.messages.send')->middleware('throttle:30,1,account-messages-send');
             Route::delete('/account/messages/{conversation}/messages/{message}', [MessageController::class, 'deleteMessage'])->name('account.messages.delete');
 
             // Blocks
             Route::get('/account/blocked', [BlockController::class, 'index'])->name('account.blocked');
-            Route::post('/account/block/{user}', [BlockController::class, 'block'])->name('account.block')->middleware('throttle:20,1');
-            Route::delete('/account/block/{user}', [BlockController::class, 'unblock'])->name('account.unblock')->middleware('throttle:20,1');
+            Route::post('/account/block/{user}', [BlockController::class, 'block'])->name('account.block')->middleware('throttle:20,1,account-block');
+            Route::delete('/account/block/{user}', [BlockController::class, 'unblock'])->name('account.unblock')->middleware('throttle:20,1,account-unblock');
 
             // Favorites
             Route::get('/account/favorites', [AccountController::class, 'favorites'])->name('account.favorites');
@@ -160,18 +160,18 @@ Route::middleware([EnsureAppIsInstalled::class, EnsureNotInMaintenance::class])
 
             // Account danger zone
             Route::post('/account/delete', [AccountController::class, 'deleteAccount'])->name('account.delete');
-            Route::post('/account/export', [AccountController::class, 'exportData'])->name('account.export')->middleware('throttle:3,10');
+            Route::post('/account/export', [AccountController::class, 'exportData'])->name('account.export')->middleware('throttle:3,10,account-export');
             Route::get('/account/export/{filename}', [AccountController::class, 'downloadExport'])->name('account.export.download');
         });
 
         // ---- Generic OAuth entry points (extensions provide implementations) ----
-        Route::middleware('throttle:10,1')->group(function (): void {
+        Route::middleware('throttle:10,1,oauth-generic')->group(function (): void {
             Route::get('/auth/{provider}/redirect', [OAuthController::class, 'redirect'])->name('oauth.redirect');
             Route::get('/auth/{provider}/callback', [OAuthController::class, 'callback'])->name('oauth.callback');
         });
 
         // ---- Core OAuth providers: Discord, Steam ----
-        Route::middleware('throttle:10,1')->group(function (): void {
+        Route::middleware('throttle:10,1,oauth-provider')->group(function (): void {
             Route::get('/auth/discord/redirect', [SocialAuthController::class, 'redirect'])
                 ->name('oauth.discord.redirect')->defaults('provider', 'discord');
             Route::get('/auth/discord/callback', [SocialAuthController::class, 'callback'])
@@ -193,16 +193,16 @@ Route::middleware([EnsureAppIsInstalled::class, EnsureNotInMaintenance::class])
             Route::get('/auth/complete-profile', [SocialAuthController::class, 'showCompleteProfile'])
                 ->name('oauth.complete-profile');
             Route::post('/auth/complete-profile', [SocialAuthController::class, 'storeCompleteProfile'])
-                ->middleware('throttle:5,1')->name('oauth.complete-profile.store');
+                ->middleware('throttle:5,1,oauth-complete-profile')->name('oauth.complete-profile.store');
         });
 
         // ---- Public community pages ----
         Route::get('/members', [MembersController::class, 'index'])->name('members.index');
         Route::get('/u/{username}', [ProfileController::class, 'show'])->name('profile.show');
         Route::middleware('auth')->group(function (): void {
-            Route::post('/u/{user}/follow', [FollowController::class, 'store'])->name('profile.follow')->middleware('throttle:30,1');
-            Route::delete('/u/{user}/follow', [FollowController::class, 'destroy'])->name('profile.unfollow')->middleware('throttle:30,1');
-            Route::post('/report', [ContentReportController::class, 'store'])->name('report.store')->middleware('throttle:10,1');
+            Route::post('/u/{user}/follow', [FollowController::class, 'store'])->name('profile.follow')->middleware('throttle:30,1,profile-follow');
+            Route::delete('/u/{user}/follow', [FollowController::class, 'destroy'])->name('profile.unfollow')->middleware('throttle:30,1,profile-unfollow');
+            Route::post('/report', [ContentReportController::class, 'store'])->name('report.store')->middleware('throttle:10,1,content-report');
         });
 
         // ---- Server browser ----
@@ -210,11 +210,11 @@ Route::middleware([EnsureAppIsInstalled::class, EnsureNotInMaintenance::class])
         Route::get('/servers/{game:slug}', [GameServerController::class, 'game'])->name('servers.game');
         Route::get('/servers/{game:slug}/{ip}/{port}', [GameServerController::class, 'show'])->name('servers.show');
         Route::get('/servers/{game:slug}/connect/{ip}/{port}', [GameServerController::class, 'connect'])->name('servers.connect');
-        Route::post('/servers/{server}/favourite', [GameServerController::class, 'favourite'])->middleware(['auth', 'throttle:30,1'])->name('servers.favourite');
+        Route::post('/servers/{server}/favourite', [GameServerController::class, 'favourite'])->middleware(['auth', 'throttle:30,1,server-favourite'])->name('servers.favourite');
 
         Route::middleware('auth')->group(function (): void {
-            Route::post('/servers/{server}/reviews', [ServerReviewController::class, 'store'])->name('servers.reviews.store')->middleware('throttle:10,1');
-            Route::delete('/servers/{server}/reviews/{review}', [ServerReviewController::class, 'destroy'])->name('servers.reviews.destroy')->middleware('throttle:20,1');
+            Route::post('/servers/{server}/reviews', [ServerReviewController::class, 'store'])->name('servers.reviews.store')->middleware('throttle:10,1,server-review-store');
+            Route::delete('/servers/{server}/reviews/{review}', [ServerReviewController::class, 'destroy'])->name('servers.reviews.destroy')->middleware('throttle:20,1,server-review-destroy');
         });
         // ---- News ----
         Route::get('/news', [NewsController::class, 'index'])->name('news.index');
@@ -223,18 +223,18 @@ Route::middleware([EnsureAppIsInstalled::class, EnsureNotInMaintenance::class])
         Route::get('/news/tag/{tag:slug}', [NewsController::class, 'tag'])->name('news.tag');
         Route::get('/news/{article:slug}', [NewsController::class, 'show'])->name('news.show');
         Route::middleware('auth')->group(function (): void {
-            Route::post('/news/{article:slug}/comments', [NewsCommentController::class, 'store'])->name('news.comments.store')->middleware('throttle:10,1');
-            Route::delete('/news/{article:slug}/comments/{comment}', [NewsCommentController::class, 'destroy'])->name('news.comments.destroy')->middleware('throttle:20,1');
+            Route::post('/news/{article:slug}/comments', [NewsCommentController::class, 'store'])->name('news.comments.store')->middleware('throttle:10,1,news-comment-store');
+            Route::delete('/news/{article:slug}/comments/{comment}', [NewsCommentController::class, 'destroy'])->name('news.comments.destroy')->middleware('throttle:20,1,news-comment-destroy');
         });
 
         // ---- Global search API ----
         Route::get('/api/search', SearchController::class)
             ->name('api.search')
-            ->middleware('throttle:60,1');
+            ->middleware('throttle:60,1,api-search');
 
         // ---- Locale switching ----
         Route::post('/locale', [LocaleController::class, 'update'])
-            ->middleware('throttle:20,1')->name('locale.update');
+            ->middleware('throttle:20,1,locale-update')->name('locale.update');
 
         // ---- SEO ----
         Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('seo.sitemap');
