@@ -41,10 +41,19 @@ class ContentReport extends Model
 {
     public const REASONS = ['spam', 'abuse', 'off_topic', 'other'];
 
-    /** Report target types exposed to the frontend, mapped to model classes. */
+    /**
+     * Report target types exposed to the frontend, mapped to model classes.
+     *
+     * `forum_post` is a plain string, not `::class` — extension classes are
+     * loaded at runtime via `ExtensionAutoloader`, not Composer's static
+     * autoload map, so core can't hold a real class reference to one
+     * without breaking static analysis. The controller resolves it with
+     * `$modelClass::findOrFail()`, which works identically either way.
+     */
     public const TYPES = [
         'comment' => NewsComment::class,
         'review' => ServerReview::class,
+        'forum_post' => 'Hybridcore\Forum\Models\ForumPost',
     ];
 
     protected $fillable = [
