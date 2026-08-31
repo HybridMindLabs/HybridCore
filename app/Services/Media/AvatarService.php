@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Encoders\WebpEncoder;
 use Intervention\Image\ImageManager;
 
 class AvatarService
@@ -32,13 +33,13 @@ class AvatarService
         $this->assertFileValid($file);
 
         $manager = new ImageManager(new Driver);
-        $image = $manager->read($file->getRealPath());
+        $image = $manager->decodePath($file->getRealPath());
 
         // Strip EXIF and resize/crop to square
         $image->cover(self::OUTPUT_SIZE, self::OUTPUT_SIZE);
 
         $filename = 'avatars/'.$user->id.'.webp';
-        Storage::disk('public')->put($filename, $image->toWebp(85));
+        Storage::disk('public')->put($filename, (string) $image->encode(new WebpEncoder(quality: 85)));
 
         $this->incrementRateLimit($user);
 

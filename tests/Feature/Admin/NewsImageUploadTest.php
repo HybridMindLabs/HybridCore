@@ -64,7 +64,7 @@ class NewsImageUploadTest extends TestCase
         $path = collect(Storage::disk('public')->files(NewsImageService::DIRECTORY))->first();
 
         $image = (new ImageManager(new Driver))
-            ->read(Storage::disk('public')->get($path));
+            ->decode(Storage::disk('public')->get($path));
 
         $this->assertSame(NewsImageService::MAX_WIDTH, $image->width());
         // Aspect ratio has to survive the downscale — 4000x2000 is 2:1.
@@ -84,7 +84,7 @@ class NewsImageUploadTest extends TestCase
         $path = collect(Storage::disk('public')->files(NewsImageService::DIRECTORY))->first();
 
         $image = (new ImageManager(new Driver))
-            ->read(Storage::disk('public')->get($path));
+            ->decode(Storage::disk('public')->get($path));
 
         $this->assertSame(400, $image->width());
     }

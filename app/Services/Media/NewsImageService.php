@@ -6,6 +6,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Encoders\WebpEncoder;
 use Intervention\Image\ImageManager;
 
 /**
@@ -56,7 +57,7 @@ class NewsImageService
 
     private function encode(string $absolutePath): string
     {
-        $image = (new ImageManager(new Driver))->read($absolutePath);
+        $image = (new ImageManager(new Driver))->decodePath($absolutePath);
 
         // scaleDown rather than scale: it never enlarges, so an image that is
         // already small is re-encoded but not stretched.
@@ -64,6 +65,6 @@ class NewsImageService
 
         // Encoding drops EXIF along the way, which also takes any GPS
         // coordinates the uploader did not know were in the file.
-        return (string) $image->toWebp(self::QUALITY);
+        return (string) $image->encode(new WebpEncoder(quality: self::QUALITY));
     }
 }
