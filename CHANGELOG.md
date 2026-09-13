@@ -7,6 +7,14 @@ conventions and [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.4.5] — 2026-09-13
+
+### Fixed
+
+- install MaxMind GeoIP runtime
+
+---
+
 ## [0.4.4] — 2026-08-21
 
 ### Fixed
