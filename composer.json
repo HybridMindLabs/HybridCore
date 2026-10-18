@@ -4,7 +4,7 @@
     "type": "project",
     "description": "HybridCore — a modular self-hosted platform for gaming communities.",
     "keywords": ["hybridcore", "gaming", "community", "laravel", "self-hosted", "game-servers"],
-    "license": "proprietary",
+    "license": "PolyForm-Noncommercial-1.0.0",
     "homepage": "https://github.com/HybridMindLabs/HybridCore",
     "authors": [
         {
