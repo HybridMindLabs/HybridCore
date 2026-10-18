@@ -74,6 +74,22 @@ class AdminAuthTest extends TestCase
         $this->assertAuthenticatedAs($admin);
     }
 
+    public function test_admin_user_can_login_with_username(): void
+    {
+        $admin = User::factory()->create([
+            'is_admin' => true,
+            'username' => 'superadmin123',
+        ]);
+
+        $response = $this->post('/admin/login', [
+            'email' => 'superadmin123',
+            'password' => 'password',
+        ]);
+
+        $response->assertRedirect('/admin');
+        $this->assertAuthenticatedAs($admin);
+    }
+
     public function test_admin_with_2fa_enabled_is_challenged_not_logged_in(): void
     {
         $admin = User::factory()->create([

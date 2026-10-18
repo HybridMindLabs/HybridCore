@@ -116,8 +116,10 @@ class AppServiceProvider extends ServiceProvider
         // (shared office NAT, an E2E run hammering one seeded account) drives
         // up per-account volume identically, so they need to scale together.
         RateLimiter::for('login-by-account', function (Request $request) {
+            $account = (string) ($request->input('login') ?? $request->input('email'));
+
             return Limit::perMinute((int) config('hybridcore.login_rate_limit', 5))
-                ->by('login-account:'.mb_strtolower((string) $request->input('email')));
+                ->by('login-account:'.mb_strtolower($account));
         });
 
         // Same split for the public contact form (real submits: 5 per 10 min).

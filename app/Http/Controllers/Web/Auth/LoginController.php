@@ -29,25 +29,33 @@ class LoginController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $inputKey = $request->has('login') ? 'login' : 'email';
+
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            $inputKey => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
 
-        $existing = User::where('email', $credentials['email'])->first();
+        $login = trim((string) $credentials[$inputKey]);
+        $existing = User::findForAuth($login);
 
         if ($existing && $existing->isLockedOut()) {
             throw ValidationException::withMessages([
-                'email' => __('auth.locked', ['minutes' => $this->security->lockoutRemainingMinutes($existing)]),
+                $inputKey => __('auth.locked', ['minutes' => $this->security->lockoutRemainingMinutes($existing)]),
             ]);
         }
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+        $attemptCredentials = [
+            'email' => $existing ? $existing->email : $login,
+            'password' => $credentials['password'],
+        ];
+
+        if (! Auth::attempt($attemptCredentials, $request->boolean('remember'))) {
             if ($existing) {
                 $this->security->recordFailedAttempt($existing);
             }
 
-            throw ValidationException::withMessages(['email' => __('auth.failed')]);
+            throw ValidationException::withMessages([$inputKey => __('auth.failed')]);
         }
 
         $user = Auth::user();
@@ -56,7 +64,7 @@ class LoginController extends Controller
             Auth::logout();
             $request->session()->invalidate();
 
-            throw ValidationException::withMessages(['email' => __('auth.suspended')]);
+            throw ValidationException::withMessages([$inputKey => __('auth.suspended')]);
         }
 
         $request->session()->regenerate();

@@ -191,6 +191,21 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->password_set_at !== null;
     }
 
+    /** Find a user by their email address, username, or display name. */
+    public static function findForAuth(string $login): ?self
+    {
+        $login = trim($login);
+
+        if ($login === '') {
+            return null;
+        }
+
+        return static::where('email', $login)
+            ->orWhere('username', $login)
+            ->orWhere('name', $login)
+            ->first();
+    }
+
     // ── Display ──────────────────────────────────────────────────────────────
 
     /** The visible name: display_name if set, otherwise username. */

@@ -77,6 +77,19 @@ class PublicAuthTest extends TestCase
         $this->assertNotNull($user->fresh()->last_login_ip);
     }
 
+    public function test_user_can_login_with_username(): void
+    {
+        $user = User::factory()->create([
+            'username' => 'testplayer123',
+            'password' => Hash::make('sup3rsecret9'),
+        ]);
+
+        $this->post('/login', ['email' => 'testplayer123', 'password' => 'sup3rsecret9'])
+            ->assertRedirect(route('account.index'));
+
+        $this->assertAuthenticatedAs($user);
+    }
+
     public function test_banned_user_cannot_login(): void
     {
         $user = User::factory()->create([

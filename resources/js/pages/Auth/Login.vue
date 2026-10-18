@@ -21,8 +21,8 @@ function submit() {
     <AuthCard :title="t('auth.login.title')" :subtitle="t('auth.login.subtitle')">
         <form class="flex flex-col gap-4" @submit.prevent="submit">
             <div>
-                <label for="email" class="mb-2 block text-[11px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500">{{ t('auth.login.email') }}</label>
-                <Input id="email" v-model="form.email" type="email" placeholder="you@example.com" autocomplete="email" :error="form.errors.email" />
+                <label for="email" class="mb-2 block text-[11px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500">{{ t('auth.login.identifier') || t('auth.login.email') }}</label>
+                <Input id="email" v-model="form.email" type="text" placeholder="you@example.com / username" autocomplete="username" :error="form.errors.email" />
             </div>
             <div>
                 <div class="mb-2 flex items-center justify-end">

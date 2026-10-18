@@ -27,28 +27,36 @@ class LoginController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $inputKey = $request->has('login') ? 'login' : 'email';
+
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            $inputKey => ['required', 'string'],
             'password' => ['required'],
         ]);
 
+        $login = trim((string) $credentials[$inputKey]);
         $remember = $request->boolean('remember');
 
-        $existing = User::where('email', $credentials['email'])->first();
+        $existing = User::findForAuth($login);
 
         if ($existing && $existing->isLockedOut()) {
             throw ValidationException::withMessages([
-                'email' => __('auth.locked', ['minutes' => $this->security->lockoutRemainingMinutes($existing)]),
+                $inputKey => __('auth.locked', ['minutes' => $this->security->lockoutRemainingMinutes($existing)]),
             ]);
         }
 
-        if (! Auth::attempt($credentials, $remember)) {
+        $attemptCredentials = [
+            'email' => $existing ? $existing->email : $login,
+            'password' => $credentials['password'],
+        ];
+
+        if (! Auth::attempt($attemptCredentials, $remember)) {
             if ($existing) {
                 $this->security->recordFailedAttempt($existing);
             }
 
             throw ValidationException::withMessages([
-                'email' => __('auth.failed'),
+                $inputKey => __('auth.failed'),
             ]);
         }
 
@@ -59,7 +67,7 @@ class LoginController extends Controller
             $request->session()->invalidate();
 
             throw ValidationException::withMessages([
-                'email' => __('auth.suspended'),
+                $inputKey => __('auth.suspended'),
             ]);
         }
 
@@ -68,7 +76,7 @@ class LoginController extends Controller
             $request->session()->invalidate();
 
             throw ValidationException::withMessages([
-                'email' => __('auth.no_admin_access'),
+                $inputKey => __('auth.no_admin_access'),
             ]);
         }
 

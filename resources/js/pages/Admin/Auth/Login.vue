@@ -59,12 +59,12 @@ function submit() {
                 <form @submit.prevent="submit" class="flex flex-col gap-4">
 
                     <div class="flex flex-col gap-1.5">
-                        <label class="text-zinc-400 text-xs font-medium">{{ t('auth.email') }}</label>
+                        <label class="text-zinc-400 text-xs font-medium">{{ t('auth.login_identifier') || t('auth.email') }}</label>
                         <input
                             v-model="form.email"
-                            type="email"
-                            autocomplete="email"
-                            placeholder="admin@example.com"
+                            type="text"
+                            autocomplete="username"
+                            placeholder="admin@example.com / username"
                             class="bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 rounded-lg px-3 py-2 text-sm
                                    focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20
                                    placeholder:text-zinc-600"
