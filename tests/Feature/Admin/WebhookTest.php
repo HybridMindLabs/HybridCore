@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Jobs\DeliverWebhookJob;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -244,5 +245,32 @@ class WebhookTest extends TestCase
         $this->actingAs($this->admin)
             ->post(route('admin.webhooks.deliveries.retry', [$endpoint, $delivery]))
             ->assertNotFound();
+    }
+
+    public function test_discord_webhook_delivers_embed_format(): void
+    {
+        Http::fake(['discord.com/*' => Http::response([], 204)]);
+
+        $endpoint = WebhookEndpoint::factory()->create([
+            'url' => 'https://discord.com/api/webhooks/12345/abcdef',
+        ]);
+
+        DeliverWebhookJob::dispatchSync($endpoint->id, Hooks::ARTICLE_PUBLISHED, [
+            'title' => 'Community Update',
+            'summary' => 'Big announcements this week!',
+            'author' => 'Enriko',
+        ]);
+
+        Http::assertSent(function ($request) {
+            $data = json_decode($request->body(), true);
+
+            return str_contains($request->url(), 'discord.com/api/webhooks')
+                && isset($data['embeds'])
+                && str_contains($data['embeds'][0]['title'], 'Community Update')
+                && $data['embeds'][0]['color'] === 0x3498DB;
+        });
+
+        $this->assertSame(1, $endpoint->deliveries()->count());
+        $this->assertTrue($endpoint->deliveries()->first()->success);
     }
 }

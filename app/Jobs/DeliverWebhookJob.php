@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\WebhookEndpoint;
+use App\Services\Webhooks\DiscordWebhookFormatter;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -43,20 +44,28 @@ class DeliverWebhookJob implements ShouldQueue
             return;
         }
 
-        $body = json_encode([
-            'event' => $this->event,
-            'data' => $this->payload,
-            'timestamp' => now()->toIso8601String(),
-        ]);
+        $isDiscord = DiscordWebhookFormatter::isDiscord($endpoint->url);
 
-        $signature = hash_hmac('sha256', $body, $endpoint->secret);
+        if ($isDiscord) {
+            $formattedData = app(DiscordWebhookFormatter::class)->format($this->event, $this->payload);
+            $body = (string) json_encode($formattedData);
+            $headers = ['Content-Type' => 'application/json'];
+        } else {
+            $body = (string) json_encode([
+                'event' => $this->event,
+                'data' => $this->payload,
+                'timestamp' => now()->toIso8601String(),
+            ]);
+            $signature = hash_hmac('sha256', $body, $endpoint->secret);
+            $headers = [
+                'X-HybridCore-Event' => $this->event,
+                'X-HybridCore-Signature' => $signature,
+            ];
+        }
 
         try {
             $response = Http::withBody($body, 'application/json')
-                ->withHeaders([
-                    'X-HybridCore-Event' => $this->event,
-                    'X-HybridCore-Signature' => $signature,
-                ])
+                ->withHeaders($headers)
                 ->timeout(10)
                 ->post($endpoint->url);
         } catch (ConnectionException $e) {
