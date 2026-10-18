@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\NewsArticle;
 use App\Models\NewsComment;
 use App\Services\ActivityLogService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -34,7 +35,13 @@ class TrashController extends Controller
                     'purge_at' => $a->deleted_at->addDays(NewsArticle::TRASH_RETENTION_DAYS)->toDateString(),
                 ]),
             'comments' => NewsComment::onlyTrashed()
-                ->with(['user:id,name,username', 'article' => fn ($q) => $q->withTrashed()->select('id', 'title')])
+                ->with([
+                    'user:id,name,username',
+                    'article' => function ($q) {
+                        /** @var Builder<NewsArticle> $q */
+                        $q->withTrashed()->select('id', 'title');
+                    },
+                ])
                 ->orderByDesc('deleted_at')
                 ->paginate(15, ['*'], 'comments_page')
                 ->withQueryString()

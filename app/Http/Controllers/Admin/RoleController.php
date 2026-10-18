@@ -130,11 +130,11 @@ class RoleController extends Controller
         return Permission::orderBy('group')->orderBy('name')->get()
             ->groupBy('group')
             ->map(fn ($items, $group) => [
-                'group' => $group,
+                'group' => (string) $group,
                 'permissions' => $items->map(fn (Permission $p) => [
                     'slug' => $p->slug,
                     'name' => $p->name,
-                ])->values(),
+                ])->values()->all(),
             ])
             ->values()
             ->all();

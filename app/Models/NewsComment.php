@@ -52,6 +52,9 @@ class NewsComment extends Model
             ->where('deleted_at', '<=', now()->subDays(self::TRASH_RETENTION_DAYS));
     }
 
+    /**
+     * @return BelongsTo<NewsArticle, $this>
+     */
     public function article(): BelongsTo
     {
         return $this->belongsTo(NewsArticle::class, 'article_id');

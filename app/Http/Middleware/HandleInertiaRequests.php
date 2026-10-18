@@ -99,7 +99,7 @@ class HandleInertiaRequests extends Middleware
                 'slug' => $g->slug,
             ])->values(),
             'servers' => $servers->map(fn (Server $s) => [
-                'name' => $s->latestSnapshot?->name ?? $s->name,
+                'name' => (string) ($s->latestSnapshot?->name ?? $s->name),
                 'map' => $s->latestSnapshot?->map ?? '—',
                 'players' => ($s->latestSnapshot?->players_online ?? 0).' / '.($s->latestSnapshot?->players_max ?? 0),
                 'ping' => $s->latestSnapshot?->ping ? $s->latestSnapshot->ping.'ms' : '—',
