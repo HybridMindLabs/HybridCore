@@ -329,12 +329,22 @@ class GameServerController extends Controller
     public function connect(Game $game, string $ip, int $port): RedirectResponse
     {
         $server = Server::where('ip', $ip)->where('port', $port)->firstOrFail();
+        $clientIp = request()->ip();
 
-        ServerConnectionClick::create([
-            'server_id' => $server->id,
-            'user_id' => auth()->id(),
-            'ip_address' => request()->ip(),
-        ]);
+        // Anti-abuse: Deduplicate connection clicks per IP/server within a 1-hour window
+        // to prevent click-farming and artificial metric inflation.
+        $recentClick = ServerConnectionClick::where('server_id', $server->id)
+            ->where('ip_address', $clientIp)
+            ->where('created_at', '>=', now()->subHour())
+            ->exists();
+
+        if (! $recentClick) {
+            ServerConnectionClick::create([
+                'server_id' => $server->id,
+                'user_id' => auth()->id(),
+                'ip_address' => $clientIp,
+            ]);
+        }
 
         $url = match ($game->query_driver) {
             'fivem' => "fivem://connect/{$ip}:{$port}",

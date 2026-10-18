@@ -209,7 +209,7 @@ Route::middleware([EnsureAppIsInstalled::class, EnsureNotInMaintenance::class])
         Route::get('/servers', [GameServerController::class, 'index'])->name('servers.index');
         Route::get('/servers/{game:slug}', [GameServerController::class, 'game'])->name('servers.game');
         Route::get('/servers/{game:slug}/{ip}/{port}', [GameServerController::class, 'show'])->name('servers.show');
-        Route::get('/servers/{game:slug}/connect/{ip}/{port}', [GameServerController::class, 'connect'])->name('servers.connect');
+        Route::get('/servers/{game:slug}/connect/{ip}/{port}', [GameServerController::class, 'connect'])->middleware('throttle:60,1,server-connect')->name('servers.connect');
         Route::post('/servers/{server}/favourite', [GameServerController::class, 'favourite'])->middleware(['auth', 'throttle:30,1,server-favourite'])->name('servers.favourite');
 
         Route::middleware('auth')->group(function (): void {
