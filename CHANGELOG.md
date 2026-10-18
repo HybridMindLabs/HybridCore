@@ -7,6 +7,14 @@ conventions and [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.9.0] — 2026-10-18
+
+### Added
+
+- refine base UI components and add StatusDot
+
+---
+
 ## [0.8.0] — 2026-10-18
 
 ### Added
