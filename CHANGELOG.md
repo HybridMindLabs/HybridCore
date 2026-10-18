@@ -7,6 +7,17 @@ conventions and [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.7.0] — 2026-10-18
+
+### Added
+
+- add rate limiting and deduplication shield to server connect clicks
+- extract SystemHealthService and add core:health diagnostic command
+- add global announcement banner system to admin settings and layout
+- enhance audit and activity logging with ip, user agent, and eloqent event tracking
+
+---
+
 ## [0.6.0] — 2026-10-18
 
 ### Added
