@@ -7,6 +7,20 @@ conventions and [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.6.0] — 2026-10-18
+
+### Added
+
+- add bridge command helpers and real-time status telemetry
+- format discord webhooks as rich embeds
+- broadcast real-time server status updates via reverb
+
+### Changed
+
+- perf: implement intelligent query backoff for persistently offline servers
+
+---
+
 ## [0.5.0] — 2026-10-18
 
 ### Added
