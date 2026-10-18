@@ -7,6 +7,14 @@ conventions and [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.8.0] — 2026-10-18
+
+### Added
+
+- allow sign in using either username or email address
+
+---
+
 ## [0.7.0] — 2026-10-18
 
 ### Added

@@ -17,7 +17,7 @@ use RuntimeException;
 
 class UpdateController extends Controller
 {
-    public const VERSION = '0.7.0';
+    public const VERSION = '0.8.0';
 
     public function __construct(
         private readonly ActivityLogService $activity,
