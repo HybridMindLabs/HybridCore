@@ -86,6 +86,10 @@ class SettingController extends Controller
                 'captcha_recaptcha_v2_secret_key_set' => filled($this->settings->get('captcha_recaptcha_v2_secret_key')),
                 'captcha_recaptcha_v3_site_key' => $this->settings->get('captcha_recaptcha_v3_site_key', ''),
                 'captcha_recaptcha_v3_secret_key_set' => filled($this->settings->get('captcha_recaptcha_v3_secret_key')),
+                'announcement_banner_enabled' => ($this->settings->get('announcement_banner_enabled', '0')) === '1',
+                'announcement_banner_text' => (string) ($this->settings->get('announcement_banner_text', '')),
+                'announcement_banner_type' => (string) ($this->settings->get('announcement_banner_type', 'info')),
+                'announcement_banner_link' => (string) ($this->settings->get('announcement_banner_link', '')),
             ],
             'localeCatalog' => app(LocaleService::class)->catalog(),
             'timezones' => timezone_identifiers_list(),
@@ -155,6 +159,10 @@ class SettingController extends Controller
             'captcha_recaptcha_v2_secret_key' => $data['captcha_recaptcha_v2_secret_key'] ?? '',
             'captcha_recaptcha_v3_site_key' => $data['captcha_recaptcha_v3_site_key'] ?? '',
             'captcha_recaptcha_v3_secret_key' => $data['captcha_recaptcha_v3_secret_key'] ?? '',
+            'announcement_banner_enabled' => ($data['announcement_banner_enabled'] ?? false) ? '1' : '0',
+            'announcement_banner_text' => $data['announcement_banner_text'] ?? '',
+            'announcement_banner_type' => $data['announcement_banner_type'] ?? 'info',
+            'announcement_banner_link' => $data['announcement_banner_link'] ?? '',
         ]);
 
         $this->activity->log('settings.updated', 'Updated platform settings');

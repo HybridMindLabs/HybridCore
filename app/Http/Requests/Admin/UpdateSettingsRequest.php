@@ -70,6 +70,11 @@ class UpdateSettingsRequest extends FormRequest
             'captcha_recaptcha_v2_secret_key' => ['nullable', 'string', 'max:255'],
             'captcha_recaptcha_v3_site_key' => ['nullable', 'string', 'max:255'],
             'captcha_recaptcha_v3_secret_key' => ['nullable', 'string', 'max:255'],
+            // Announcement banner
+            'announcement_banner_enabled' => ['boolean'],
+            'announcement_banner_text' => ['nullable', 'string', 'max:500'],
+            'announcement_banner_type' => ['nullable', 'string', 'in:info,warning,danger,success'],
+            'announcement_banner_link' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

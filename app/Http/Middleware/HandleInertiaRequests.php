@@ -233,6 +233,11 @@ class HandleInertiaRequests extends Middleware
                 'version' => UpdateController::VERSION,
                 'theme' => fn () => $this->resolveThemeProps(),
             ],
+            'announcementBanner' => fn () => $this->settings->get('announcement_banner_enabled', '0') === '1' && filled($this->settings->get('announcement_banner_text')) ? [
+                'text' => (string) $this->settings->get('announcement_banner_text'),
+                'type' => (string) ($this->settings->get('announcement_banner_type') ?: 'info'),
+                'link' => (string) ($this->settings->get('announcement_banner_link') ?: ''),
+            ] : null,
             'socialLinks' => fn () => array_filter([
                 'discord' => $this->settings->get('social_discord', ''),
                 'steam' => $this->settings->get('social_steam', ''),

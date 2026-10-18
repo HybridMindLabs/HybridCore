@@ -251,6 +251,29 @@ const accountLinks = computed(() => page.props.auth?.user
             </button>
         </div>
 
+        <!-- ── Global Announcement banner ── -->
+        <div
+            v-if="page.props.announcementBanner"
+            class="text-xs sm:text-sm font-medium px-4 py-2.5 flex items-center justify-center gap-2 relative z-40 transition-colors"
+            :class="{
+                'bg-sky-500/15 text-sky-400 border-b border-sky-500/20': page.props.announcementBanner.type === 'info',
+                'bg-amber-500/15 text-amber-400 border-b border-amber-500/20': page.props.announcementBanner.type === 'warning',
+                'bg-rose-500/15 text-rose-400 border-b border-rose-500/20': page.props.announcementBanner.type === 'danger',
+                'bg-emerald-500/15 text-emerald-400 border-b border-emerald-500/20': page.props.announcementBanner.type === 'success',
+            }"
+        >
+            <span>{{ page.props.announcementBanner.text }}</span>
+            <a
+                v-if="page.props.announcementBanner.link"
+                :href="page.props.announcementBanner.link"
+                class="underline font-semibold hover:opacity-80 transition-opacity ml-1"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                {{ t('messages.read_more') || 'Learn more' }} &rarr;
+            </a>
+        </div>
+
         <!--
             First focusable element on the page. Without it a keyboard or
             screen-reader user tabbed through the whole navigation again on
