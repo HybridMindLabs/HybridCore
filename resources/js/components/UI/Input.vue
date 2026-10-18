@@ -43,7 +43,7 @@ const errorId = computed(() => `${props.id ?? fallbackId}-error`);
                    dark:bg-zinc-900/60 dark:text-zinc-100 dark:placeholder-zinc-600"
             :class="error
                 ? 'border-red-400/60 focus:border-red-400 focus:ring-red-400/15 dark:border-red-500/40'
-                : 'border-zinc-200 focus:border-blue-500/70 focus:ring-blue-500/15 dark:border-zinc-800 dark:focus:border-blue-500/50'"
+                : 'border-zinc-200 focus:border-cyan-500/70 focus:ring-cyan-500/15 dark:border-hc-border dark:focus:border-cyan-400/60 dark:focus:ring-cyan-400/20'"
             @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
         />
 

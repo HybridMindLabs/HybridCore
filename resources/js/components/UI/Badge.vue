@@ -1,5 +1,5 @@
 <script setup lang="ts">
-type Variant = 'default' | 'success' | 'warning' | 'danger' | 'info';
+type Variant = 'default' | 'success' | 'warning' | 'danger' | 'info' | 'accent';
 
 const props = withDefaults(
     defineProps<{ variant?: Variant }>(),
@@ -8,6 +8,7 @@ const props = withDefaults(
 
 const classes: Record<Variant, string> = {
     default: 'bg-zinc-900/60 text-zinc-400 border-zinc-800/70',
+    accent:  'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
     success: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
     warning: 'bg-[#f59e0b]/10 text-[#f59e0b] border-[#f59e0b]/20',
     danger:  'bg-red-500/10 text-red-400 border-red-500/20',
