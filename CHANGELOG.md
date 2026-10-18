@@ -7,6 +7,18 @@ conventions and [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.5.0] — 2026-10-18
+
+### Added
+
+- add forum_post as a reportable content type
+
+### Changed
+
+- Fix intervention/image v4: read() -> decode()/decodePath(), toWebp() -> encode(WebpEncoder)
+
+---
+
 ## [0.4.5] — 2026-09-13
 
 ### Fixed
