@@ -44,6 +44,7 @@
 /storage/app/extension-builds
 /storage/app/extension-imports
 /storage/pail
+/storage/parallel
 /test-results
 /playwright-report
 /vendor
