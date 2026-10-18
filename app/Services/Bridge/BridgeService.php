@@ -112,6 +112,55 @@ class BridgeService
         ]);
     }
 
+    public function queueConsoleCommand(Server $server, string $command, string $source = 'core'): ServerCommand
+    {
+        return $this->queue($server, $command, $source);
+    }
+
+    /** Broadcast a chat message in the game server. */
+    public function queueSay(Server $server, string $message, string $source = 'core'): ServerCommand
+    {
+        $sanitized = str_replace('"', '\"', trim($message));
+
+        return $this->queue($server, "say \"{$sanitized}\"", $source);
+    }
+
+    /** Kick a player from the game server by name, userid, or steamid. */
+    public function queueKick(Server $server, string $target, string $reason = '', string $source = 'core'): ServerCommand
+    {
+        $target = trim($target);
+        $reason = trim($reason);
+
+        $command = $reason !== ''
+            ? "kick \"{$target}\" \"{$reason}\""
+            : "kick \"{$target}\"";
+
+        return $this->queue($server, $command, $source);
+    }
+
+    /**
+     * Get real-time bridge status and command telemetry for a server.
+     *
+     * @return array<string, mixed>
+     */
+    public function getStatusSummary(Server $server): array
+    {
+        $lastSeen = $server->bridge_last_seen_at;
+
+        return [
+            'bridge_enabled' => (bool) $server->bridge_enabled,
+            'has_token' => $server->bridge_token_hash !== null,
+            'last_seen_at' => $lastSeen?->toIso8601String(),
+            'is_connected' => $lastSeen !== null && $lastSeen->diffInMinutes(now()) <= 5,
+            'pending_commands' => $server->bridgeCommands()->where('status', ServerCommand::STATUS_PENDING)->count(),
+            'delivered_commands' => $server->bridgeCommands()->where('status', ServerCommand::STATUS_DELIVERED)->count(),
+            'acked_today' => $server->bridgeCommands()
+                ->where('status', ServerCommand::STATUS_ACKED)
+                ->where('acked_at', '>=', now()->startOfDay())
+                ->count(),
+        ];
+    }
+
     // ── Polling protocol ─────────────────────────────────────────
 
     /**

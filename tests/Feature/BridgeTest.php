@@ -242,4 +242,40 @@ class BridgeTest extends TestCase
 
         $this->assertFalse($server->fresh()->bridge_enabled);
     }
+
+    public function test_bridge_command_helpers_queue_properly_formatted_commands(): void
+    {
+        $server = $this->server();
+
+        $say = $this->bridge()->queueSay($server, 'Hello players!');
+        $this->assertSame('say "Hello players!"', $say->command);
+
+        $kickWithoutReason = $this->bridge()->queueKick($server, 'Griefer');
+        $this->assertSame('kick "Griefer"', $kickWithoutReason->command);
+
+        $kickWithReason = $this->bridge()->queueKick($server, 'Spammer', 'Spamming mic');
+        $this->assertSame('kick "Spammer" "Spamming mic"', $kickWithReason->command);
+
+        $cmd = $this->bridge()->queueConsoleCommand($server, 'changelevel de_inferno');
+        $this->assertSame('changelevel de_inferno', $cmd->command);
+    }
+
+    public function test_get_status_summary_returns_telemetry(): void
+    {
+        $server = $this->server();
+        $this->bridge()->issueToken($server);
+        $server->forceFill(['bridge_last_seen_at' => now()->subMinute()])->save();
+
+        $this->bridge()->queueSay($server, 'Msg 1');
+        $cmd2 = $this->bridge()->queueSay($server, 'Msg 2');
+        $cmd2->update(['status' => ServerCommand::STATUS_ACKED, 'acked_at' => now()]);
+
+        $summary = $this->bridge()->getStatusSummary($server);
+
+        $this->assertTrue($summary['bridge_enabled']);
+        $this->assertTrue($summary['has_token']);
+        $this->assertTrue($summary['is_connected']);
+        $this->assertSame(1, $summary['pending_commands']);
+        $this->assertSame(1, $summary['acked_today']);
+    }
 }
