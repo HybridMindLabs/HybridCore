@@ -27,3 +27,5 @@ Broadcast::channel('online-users', function (User $user) {
         'avatar' => $user->avatar,
     ];
 });
+
+// Public channel for live server status, ping, and player counts: 'servers'.

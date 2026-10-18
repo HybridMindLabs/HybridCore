@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\ServerStatusUpdated;
 use App\Games\Data\QueryResult;
 use App\Games\GameDriverRegistry;
 use App\Models\Server;
@@ -89,6 +90,8 @@ class ServerQueryService
         }
 
         app(HookRegistry::class)->fire(Hooks::SERVER_QUERIED, $server, $snapshot);
+
+        ServerStatusUpdated::dispatch($server, $snapshot);
 
         return $snapshot;
     }
