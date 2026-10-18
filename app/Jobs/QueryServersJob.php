@@ -34,7 +34,10 @@ class QueryServersJob implements ShouldQueue
 
     public function handle(A2SBatch $batch, ServerQueryService $service): void
     {
-        $servers = Server::active()->with('game')->get();
+        $servers = Server::active()
+            ->with(['game', 'latestSnapshot'])
+            ->get()
+            ->filter(fn (Server $s) => $s->shouldQueryNow());
 
         // A2SBatch talks straight to the host over raw sockets, bypassing the
         // per-driver guard in ServerQueryService::run() — so unsafe hosts must

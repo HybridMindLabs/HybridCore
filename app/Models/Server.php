@@ -172,6 +172,48 @@ class Server extends Model
         return $this->latestSnapshot?->is_online ?? false;
     }
 
+    /**
+     * Determines whether this server should be queried in the current sweep.
+     * Online servers and newly added servers are always queried.
+     * Persistently offline servers (down > 15m) are backed off to every 10m
+     * to prevent wasting socket descriptors and worker time on dead hosts.
+     */
+    public function shouldQueryNow(): bool
+    {
+        $latest = $this->relationLoaded('latestSnapshot')
+            ? $this->latestSnapshot
+            : $this->latestSnapshot()->first();
+
+        if (! $latest || $latest->is_online) {
+            return true;
+        }
+
+        // Keep probing recent offline servers every cycle so recovery is quick.
+        /** @var ServerSnapshot|null $lastOnlineSnapshot */
+        $lastOnlineSnapshot = $this->snapshots()
+            ->where('is_online', true)
+            ->latest('recorded_at')
+            ->first();
+
+        /** @var ServerSnapshot|null $firstOfflineSnapshot */
+        $firstOfflineSnapshot = $this->snapshots()
+            ->where('is_online', false)
+            ->oldest('recorded_at')
+            ->first();
+
+        $wentOfflineAt = $lastOnlineSnapshot?->recorded_at
+            ?? $firstOfflineSnapshot?->recorded_at
+            ?? $this->created_at
+            ?? now();
+
+        if ($wentOfflineAt->diffInMinutes(now()) < 15) {
+            return true;
+        }
+
+        // For servers that have been dead longer, query every 10 minutes.
+        return $latest->recorded_at->diffInMinutes(now()) >= 10;
+    }
+
     public function getCachedSnapshotAttribute(): ?ServerSnapshot
     {
         // Caching a raw Eloquent model here collides with

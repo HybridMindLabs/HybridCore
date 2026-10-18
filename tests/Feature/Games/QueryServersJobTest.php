@@ -12,7 +12,7 @@ use App\Models\ServerSnapshot;
 use App\Services\ServerQueryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
-use Mockery;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 /**
@@ -39,7 +39,7 @@ class QueryServersJobTest extends TestCase
         $rust = $this->server('rust');
 
         // Stand in for the network: the batch returns canned results keyed by id.
-        $this->mock(A2SBatch::class, function (Mockery\MockInterface $m) use ($cs, $rust) {
+        $this->mock(A2SBatch::class, function (MockInterface $m) use ($cs, $rust) {
             $m->shouldReceive('run')
                 ->once()
                 ->andReturn([
@@ -70,7 +70,7 @@ class QueryServersJobTest extends TestCase
         $fivem = $this->server('fivem');
 
         // The batch is still asked to run, with an empty target set.
-        $this->mock(A2SBatch::class, function (Mockery\MockInterface $m) {
+        $this->mock(A2SBatch::class, function (MockInterface $m) {
             $m->shouldReceive('run')->andReturn([]);
         });
 
@@ -86,7 +86,7 @@ class QueryServersJobTest extends TestCase
         $game = Game::factory()->create(['query_driver' => 'cs16']);
         Server::factory()->create(['game_id' => $game->id, 'is_active' => false]);
 
-        $this->mock(A2SBatch::class, function (Mockery\MockInterface $m) {
+        $this->mock(A2SBatch::class, function (MockInterface $m) {
             // An empty target set means no active A2S servers were included.
             $m->shouldReceive('run')->with([])->andReturn([]);
         });
@@ -94,5 +94,35 @@ class QueryServersJobTest extends TestCase
         (new QueryServersJob)->handle(app(A2SBatch::class), app(ServerQueryService::class));
 
         $this->assertSame(0, ServerSnapshot::count());
+    }
+
+    public function test_persistently_offline_servers_are_backed_off_to_sparse_query_interval(): void
+    {
+        Queue::fake();
+
+        $cs = $this->server('cs16');
+
+        // Initial offline snapshot 20 minutes ago, and latest 2 minutes ago
+        ServerSnapshot::create([
+            'server_id' => $cs->id,
+            'is_online' => false,
+            'failure_reason' => 'Timeout',
+            'recorded_at' => now()->subMinutes(20),
+        ]);
+        ServerSnapshot::create([
+            'server_id' => $cs->id,
+            'is_online' => false,
+            'failure_reason' => 'Timeout',
+            'recorded_at' => now()->subMinutes(2),
+        ]);
+
+        $this->assertFalse($cs->shouldQueryNow());
+
+        // In the batch run, targets should be empty because $cs was backed off
+        $this->mock(A2SBatch::class, function (MockInterface $m) {
+            $m->shouldReceive('run')->with([])->andReturn([]);
+        });
+
+        (new QueryServersJob)->handle(app(A2SBatch::class), app(ServerQueryService::class));
     }
 }
