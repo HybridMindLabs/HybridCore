@@ -35,7 +35,7 @@ class RuleController extends Controller
 
         $rule = Rule::create(array_merge($data, ['is_system' => false]));
 
-        $this->activity->log('rules.created', "Created rule: {$rule->title}");
+        $this->activity->log('rules.created', "Created rule: {$rule->title}", $rule);
 
         return redirect()->route('admin.rules.edit', $rule->slug)
             ->with('success', 'Rule created.');

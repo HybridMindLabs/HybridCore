@@ -58,6 +58,8 @@ class ActivityLogController extends Controller
                 'causer' => $log->causer instanceof User
                     ? ['name' => $log->causer->name, 'email' => $log->causer->email]
                     : null,
+                'ip_address' => $log->ip_address,
+                'user_agent' => $log->user_agent,
                 'created_at' => $log->created_at?->toDateTimeString(),
             ]);
 

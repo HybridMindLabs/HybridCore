@@ -30,6 +30,7 @@ class ActivityLogService
         }
 
         $user = Auth::user();
+        $request = request();
 
         ActivityLog::create([
             'event' => $event,
@@ -39,6 +40,8 @@ class ActivityLogService
             'subject_type' => $subject ? get_class($subject) : null,
             'subject_id' => $subject?->getKey(),
             'properties' => $properties !== null ? $this->scrub($properties) : null,
+            'ip_address' => $request->ip(),
+            'user_agent' => substr((string) $request->userAgent(), 0, 500),
         ]);
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -38,6 +39,8 @@ use Illuminate\Support\Str;
  */
 class Rule extends Model
 {
+    use LogsActivity;
+
     public const LIST_CACHE_KEY = 'rules.published_list';
 
     protected static function booted(): void

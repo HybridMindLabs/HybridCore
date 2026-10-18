@@ -40,7 +40,10 @@ class ActivityLog extends Model
 {
     protected $table = 'activity_log';
 
-    protected $fillable = ['event', 'description', 'causer_type', 'causer_id', 'subject_type', 'subject_id', 'properties'];
+    protected $fillable = [
+        'event', 'description', 'causer_type', 'causer_id',
+        'subject_type', 'subject_id', 'properties', 'ip_address', 'user_agent',
+    ];
 
     protected function casts(): array
     {
