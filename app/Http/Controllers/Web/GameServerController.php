@@ -30,8 +30,8 @@ class GameServerController extends Controller
         // data refreshes every ~2 min, so 60s staleness is invisible.
         ['games' => $games, 'totals' => $totals] = Cache::remember('servers.index_overview', 60, function () {
             $games = Game::active()
-                ->withCount(['activeServers as servers_count'])
-                ->with(['activeServers' => fn ($q) => $q->with('latestSnapshot')])
+                ->withCount(['activeServers as servers_count' => fn ($q) => $q->visible()])
+                ->with(['activeServers' => fn ($q) => $q->visible()->with('latestSnapshot')])
                 ->get()
                 ->map(fn (Game $g) => [
                     'id' => $g->id,
@@ -69,6 +69,7 @@ class GameServerController extends Controller
     public function game(Game $game): Response
     {
         $servers = Server::active()
+            ->visible()
             ->where('game_id', $game->id)
             // `game` is eager loaded because formatServer() reads its slug for
             // the row artwork — without it every row fires its own query.
@@ -113,7 +114,7 @@ class GameServerController extends Controller
     private function gameInsights(Game $game): array
     {
         return Cache::remember("servers.game_insights.{$game->id}", 300, function () use ($game) {
-            $serverIds = Server::active()->where('game_id', $game->id)->pluck('id');
+            $serverIds = Server::active()->visible()->where('game_id', $game->id)->pluck('id');
 
             $ranges = [];
             foreach (array_keys(self::INSIGHT_RANGES) as $key) {
@@ -379,13 +380,14 @@ class GameServerController extends Controller
     private function formatServer(Server $server, ?ServerSnapshot $snapshot = null): array
     {
         $snapshot = $snapshot ?? $server->latestSnapshot;
+        $address = $server->display_address ?: $server->address;
 
         return [
             'id' => $server->id,
             'ip' => $server->ip,
             'port' => $server->port,
-            'address' => $server->address,
-            'name' => $server->name ?? $snapshot?->name ?? $server->address,
+            'address' => $address,
+            'name' => $server->name ?? $snapshot?->name ?? $address,
             'country_code' => $server->country_code,
             'row_image' => Game::rowImageUrl($server->game->slug, $snapshot?->map),
             'tags' => $server->tags ?? [],

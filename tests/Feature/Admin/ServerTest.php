@@ -161,6 +161,53 @@ class ServerTest extends TestCase
         $this->assertDatabaseHas('servers', ['id' => $server->id, 'ip' => '10.0.0.1', 'port' => 27016]);
     }
 
+    public function test_store_accepts_is_visible_and_display_address(): void
+    {
+        $this->actingAs($this->admin)
+            ->post(route('admin.servers.store'), [
+                'game_id' => $this->game->id,
+                'ip' => '10.10.10.10',
+                'port' => 25565,
+                'is_visible' => false,
+                'display_address' => 'play.custom-domain.com',
+            ])
+            ->assertRedirect()
+            ->assertSessionDoesntHaveErrors();
+
+        $this->assertDatabaseHas('servers', [
+            'ip' => '10.10.10.10',
+            'port' => 25565,
+            'is_visible' => false,
+            'display_address' => 'play.custom-domain.com',
+        ]);
+    }
+
+    public function test_update_accepts_is_visible_and_display_address(): void
+    {
+        $server = Server::factory()->create([
+            'game_id' => $this->game->id,
+            'is_visible' => true,
+            'display_address' => null,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->put(route('admin.servers.update', $server), [
+                'game_id' => $this->game->id,
+                'ip' => $server->ip,
+                'port' => $server->port,
+                'is_visible' => false,
+                'display_address' => 'mc.hub.proxy',
+            ])
+            ->assertRedirect()
+            ->assertSessionDoesntHaveErrors();
+
+        $this->assertDatabaseHas('servers', [
+            'id' => $server->id,
+            'is_visible' => false,
+            'display_address' => 'mc.hub.proxy',
+        ]);
+    }
+
     public function test_destroy_deletes_server(): void
     {
         $server = Server::factory()->create(['game_id' => $this->game->id]);

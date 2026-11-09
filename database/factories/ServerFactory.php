@@ -19,7 +19,16 @@ class ServerFactory extends Factory
             'port' => $this->faker->numberBetween(1024, 65535),
             'name' => $this->faker->words(3, true).' Server',
             'is_active' => true,
+            'is_visible' => true,
+            'display_address' => null,
         ];
+    }
+
+    public function hidden(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_visible' => false,
+        ]);
     }
 
     /**

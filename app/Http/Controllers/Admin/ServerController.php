@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreServerRequest;
+use App\Http\Requests\Admin\UpdateServerRequest;
 use App\Jobs\QueryServerJob;
 use App\Models\Game;
 use App\Models\Server;
@@ -57,10 +59,12 @@ class ServerController extends Controller
                 'port' => $s->port,
                 'query_port' => $s->query_port,
                 'address' => $s->address,
+                'display_address' => $s->display_address,
                 'name' => $s->name,
                 'country_code' => $s->country_code,
                 'tags' => $s->tags ?? [],
                 'is_active' => $s->is_active,
+                'is_visible' => (bool) $s->is_visible,
                 'last_queried_at' => $s->last_queried_at?->diffForHumans(),
                 'bridge' => [
                     'enabled' => $s->bridge_enabled,
@@ -137,22 +141,10 @@ class ServerController extends Controller
         return back()->with('success', 'Bridge token revoked — the game server can no longer connect.');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreServerRequest $request): RedirectResponse
     {
-        $data = $request->validate([
-            'game_id' => ['required', 'exists:games,id'],
-            'ip' => [
-                'required', 'string', 'max:45',
-                Rule::unique('servers')->where(fn ($q) => $q->where('port', $request->input('port'))),
-            ],
-            'port' => ['required', 'integer', 'min:1', 'max:65535'],
-            'query_port' => ['nullable', 'integer', 'min:1', 'max:65535'],
-            'tags' => ['nullable', 'array'],
-            'tags.*' => ['string', 'max:30'],
-        ], [
-            'ip.unique' => 'A server with this IP and port already exists.',
-        ]);
-
+        $data = $request->validated();
+        $data['is_visible'] = $request->boolean('is_visible', true);
         $data['added_by'] = auth()->id();
 
         try {
@@ -172,23 +164,12 @@ class ServerController extends Controller
         return back()->with('success', 'Server added. First query dispatched.');
     }
 
-    public function update(Request $request, Server $server): RedirectResponse
+    public function update(UpdateServerRequest $request, Server $server): RedirectResponse
     {
-        $data = $request->validate([
-            'game_id' => ['required', 'exists:games,id'],
-            'ip' => [
-                'required', 'string', 'max:45',
-                Rule::unique('servers')->ignore($server->id)->where(fn ($q) => $q->where('port', $request->input('port'))),
-            ],
-            'port' => ['required', 'integer', 'min:1', 'max:65535'],
-            'query_port' => ['nullable', 'integer', 'min:1', 'max:65535'],
-            'name' => ['nullable', 'string', 'max:100'],
-            'tags' => ['nullable', 'array'],
-            'tags.*' => ['string', 'max:30'],
-            'is_active' => ['boolean'],
-        ], [
-            'ip.unique' => 'A server with this IP and port already exists.',
-        ]);
+        $data = $request->validated();
+        if ($request->has('is_visible')) {
+            $data['is_visible'] = $request->boolean('is_visible');
+        }
 
         $server->update($data);
 

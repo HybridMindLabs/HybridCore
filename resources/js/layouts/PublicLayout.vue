@@ -14,6 +14,7 @@ import { useDesktopNotifications } from '@/composables/useDesktopNotifications';
 import ToastManager from '@/components/UI/ToastManager.vue';
 import FlagIcon from '@/components/UI/FlagIcon.vue';
 import SocialLinks from '@/components/UI/SocialLinks.vue';
+import StatusDot from '@/components/UI/StatusDot.vue';
 import { useFlashToast } from '@/composables/useFlashToast';
 
 const { t, currentLocale, supportedLocales, localeDirection, switcherEnabled, isCurrentLocale, switchLocale } = useLocale();
@@ -290,7 +291,7 @@ const accountLinks = computed(() => page.props.auth?.user
         <!-- ── Navbar ── -->
         <header
             class="sticky top-0 z-50 border-b backdrop-blur-xl transition-colors duration-200"
-            :class="dark ? 'border-zinc-800/60 bg-[#09090b]/80' : 'border-zinc-200/70 bg-white/80'"
+            :class="dark ? 'border-hc-border bg-hc-base/85' : 'border-zinc-200/70 bg-white/80'"
         >
             <div class="max-w-[1600px] mx-auto px-4 sm:px-6 h-16 flex items-center gap-6">
 
@@ -698,14 +699,14 @@ const accountLinks = computed(() => page.props.auth?.user
         </main>
 
         <!-- Footer -->
-        <footer class="border-t transition-colors" :class="dark ? 'border-zinc-800/60 bg-[#09090b]' : 'border-zinc-200/70 bg-zinc-100'">
+        <footer class="border-t transition-colors" :class="dark ? 'border-hc-border bg-hc-base' : 'border-zinc-200/70 bg-zinc-100'">
             <!-- Live strip. The footer is on every public page; most of them
                  have no other indication that anything is running. -->
-            <div v-if="footerData" class="border-b" :class="dark ? 'border-zinc-800/60' : 'border-zinc-200'">
+            <div v-if="footerData" class="border-b" :class="dark ? 'border-hc-border/80 bg-hc-surface/40' : 'border-zinc-200 bg-white/40'">
                 <div class="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex items-center gap-x-5 gap-y-1.5 flex-wrap text-[12px]">
                     <span class="inline-flex items-center gap-2 font-bold"
                         :class="dark ? 'text-emerald-400' : 'text-emerald-800'">
-                        <span class="hc-live-dot" aria-hidden="true" />
+                        <StatusDot status="online" size="sm" />
                         {{ t('home.servers_live', { online: footerData.servers_online, total: footerData.servers_total }) }}
                     </span>
                     <span :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
@@ -807,7 +808,7 @@ const accountLinks = computed(() => page.props.auth?.user
             </div>
 
             <!-- Bottom bar -->
-            <div class="border-t px-4 sm:px-6 py-4" :class="dark ? 'border-zinc-800/70' : 'border-zinc-200'">
+            <div class="border-t px-4 sm:px-6 py-4" :class="dark ? 'border-hc-border' : 'border-zinc-200'">
                 <div class="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
                     <p class="text-[12px]" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">
                         {{ t('home.footer_copyright').replace(':year', new Date().getFullYear().toString()) }}

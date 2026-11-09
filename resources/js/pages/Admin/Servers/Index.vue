@@ -21,8 +21,8 @@ interface CommandRow {
     created_at: string | null; delivered_at: string | null; acked_at: string | null; expires_at: string | null;
 }
 interface ServerRow {
-    id: number; ip: string; port: number; query_port: number | null; address: string; name: string | null;
-    country_code: string | null; tags: string[]; is_active: boolean;
+    id: number; ip: string; port: number; query_port: number | null; address: string; display_address: string | null; name: string | null;
+    country_code: string | null; tags: string[]; is_active: boolean; is_visible: boolean;
     last_queried_at: string | null;
     bridge: { enabled: boolean; last_seen: string | null; online: boolean; pending_count: number };
     game: { id: number; name: string; slug: string; color: string; icon: string };
@@ -140,7 +140,14 @@ function runBulk(action: BulkAction) {
 
 // Add server form
 const showAdd = ref(false);
-const addForm = useForm({ game_id: '', address: '', query_port: '', tags: '' });
+const addForm = useForm({
+    game_id: '',
+    address: '',
+    query_port: '',
+    display_address: '',
+    is_visible: true,
+    tags: '',
+});
 const addFormError = ref('');
 
 // When a game is picked, offer its default ports so the operator doesn't have
@@ -170,6 +177,8 @@ function submitAdd() {
         ip: parts[0].trim(),
         port: Number(parts[1]),
         query_port: d.query_port ? Number(d.query_port) : null,
+        display_address: d.display_address ? d.display_address.trim() : null,
+        is_visible: Boolean(d.is_visible),
         tags: d.tags ? d.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
     })).post(route('admin.servers.store'), {
         onSuccess: () => { addForm.reset(); showAdd.value = false; },
@@ -178,17 +187,28 @@ function submitAdd() {
 
 // Inline edit
 const editing = ref<number | null>(null);
-const editForm = useForm({ game_id: '', address: '', query_port: '', name: '', is_active: true, tags: '' });
+const editForm = useForm({
+    game_id: '',
+    address: '',
+    query_port: '',
+    display_address: '',
+    name: '',
+    is_active: true,
+    is_visible: true,
+    tags: '',
+});
 const editFormError = ref('');
 
 function startEdit(s: ServerRow) {
     editing.value = s.id;
     editFormError.value = '';
     editForm.game_id = String(s.game.id);
-    editForm.address = s.address;
+    editForm.address = `${s.ip}:${s.port}`;
     editForm.query_port = s.query_port ? String(s.query_port) : '';
+    editForm.display_address = s.display_address ?? '';
     editForm.name = s.name ?? '';
     editForm.is_active = s.is_active;
+    editForm.is_visible = s.is_visible ?? true;
     editForm.tags = s.tags.join(', ');
 }
 
@@ -204,8 +224,10 @@ function submitEdit(id: number) {
         ip: parts[0].trim(),
         port: Number(parts[1]),
         query_port: d.query_port ? Number(d.query_port) : null,
+        display_address: d.display_address ? d.display_address.trim() : null,
         name: d.name || null,
         is_active: d.is_active,
+        is_visible: Boolean(d.is_visible),
         tags: d.tags ? d.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
     })).put(route('admin.servers.update', id), {
         onSuccess: () => { editing.value = null; },
@@ -317,6 +339,26 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 round
                 <div class="flex flex-col gap-1.5">
                     <label class="text-zinc-500 text-xs font-medium">Tags <span class="text-zinc-700 font-normal">comma separated</span></label>
                     <input v-model="addForm.tags" type="text" placeholder="competitive, ranked" :class="inputClass" />
+                </div>
+                <div class="flex flex-col gap-1.5 sm:col-span-2">
+                    <label class="text-zinc-500 text-xs font-medium">
+                        Public connection address (optional)
+                        <span class="text-zinc-700 font-normal ml-1">e.g. play.myserver.com — useful if the server is behind BungeeCord/Velocity or NAT</span>
+                    </label>
+                    <input
+                        v-model="addForm.display_address"
+                        type="text"
+                        placeholder="play.myserver.com"
+                        :class="inputClass"
+                    />
+                    <p v-if="addForm.errors.display_address" class="text-red-400 text-xs">{{ addForm.errors.display_address }}</p>
+                </div>
+                <div class="flex flex-col gap-1.5 justify-end">
+                    <label class="flex items-center gap-2 cursor-pointer py-2">
+                        <input v-model="addForm.is_visible" type="checkbox" class="w-4 h-4 rounded accent-blue-500" />
+                        <span class="text-zinc-300 text-xs font-medium">Show in public server list</span>
+                    </label>
+                    <p v-if="addForm.errors.is_visible" class="text-red-400 text-xs">{{ addForm.errors.is_visible }}</p>
                 </div>
                 <div class="flex items-end gap-2">
                     <button
@@ -430,6 +472,20 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 round
                                             <label class="text-zinc-600 text-[11px]">Tags</label>
                                             <input v-model="editForm.tags" type="text" placeholder="tag1, tag2" :class="inputClass + ' !py-1.5 !text-xs'" />
                                         </div>
+                                        <div class="flex flex-col gap-1 sm:col-span-2">
+                                            <label class="text-zinc-600 text-[11px]">
+                                                Public connection address (optional)
+                                                <span class="text-zinc-700 font-normal ml-1">e.g. play.myserver.com</span>
+                                            </label>
+                                            <input v-model="editForm.display_address" type="text" placeholder="play.myserver.com" :class="inputClass + ' !py-1.5 !text-xs'" />
+                                        </div>
+                                        <div class="flex flex-col gap-1">
+                                            <label class="text-zinc-600 text-[11px]">Visibility</label>
+                                            <label class="flex items-center gap-2 cursor-pointer mt-1.5">
+                                                <input v-model="editForm.is_visible" type="checkbox" class="w-4 h-4 rounded accent-blue-500" />
+                                                <span class="text-zinc-400 text-xs">Show in public server list</span>
+                                            </label>
+                                        </div>
                                         <div class="flex flex-col gap-1">
                                             <label class="text-zinc-600 text-[11px]">Active</label>
                                             <label class="flex items-center gap-2 cursor-pointer mt-1.5">
@@ -474,10 +530,24 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 round
                                 />
                             </td>
                             <td class="px-4 py-3">
-                                <p class="text-zinc-100 text-sm font-medium leading-tight">
-                                    {{ server.name ?? server.address }}
+                                <div class="flex items-center gap-2">
+                                    <p class="text-zinc-100 text-sm font-medium leading-tight">
+                                        {{ server.name ?? server.address }}
+                                    </p>
+                                    <span
+                                        v-if="!server.is_visible"
+                                        class="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                        title="Hidden from public server browser"
+                                    >
+                                        Hidden
+                                    </span>
+                                </div>
+                                <p class="text-zinc-600 text-xs font-mono mt-0.5">
+                                    {{ server.address }}
+                                    <span v-if="server.display_address && server.display_address !== `${server.ip}:${server.port}`" class="text-zinc-500 ml-1">
+                                        ({{ server.ip }}:{{ server.port }})
+                                    </span>
                                 </p>
-                                <p class="text-zinc-600 text-xs font-mono mt-0.5">{{ server.address }}</p>
                                 <div v-if="server.tags.length" class="flex flex-wrap gap-1 mt-1.5">
                                     <span
                                         v-for="tag in server.tags"

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,6 +24,8 @@ use Laravel\Scout\Searchable;
  * @property string|null $country_code
  * @property array<array-key, mixed>|null $tags
  * @property bool $is_active
+ * @property bool $is_visible
+ * @property string|null $display_address
  * @property int|null $added_by
  * @property Carbon|null $last_queried_at
  * @property Carbon|null $created_at
@@ -50,6 +53,7 @@ use Laravel\Scout\Searchable;
  * @property-read int|null $snapshots_count
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Server active()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Server visible()
  * @method static \Database\Factories\ServerFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Server newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Server newQuery()
@@ -90,12 +94,12 @@ class Server extends Model
 
     public function shouldBeSearchable(): bool
     {
-        return (bool) $this->is_active;
+        return (bool) $this->is_active && (bool) $this->is_visible;
     }
 
     protected $fillable = [
         'game_id', 'ip', 'port', 'query_port', 'name', 'country_code',
-        'tags', 'is_active', 'added_by', 'last_queried_at',
+        'tags', 'is_active', 'is_visible', 'display_address', 'added_by', 'last_queried_at',
     ];
 
     // bridge_token_hash is intentionally NOT fillable — it is only ever set
@@ -103,6 +107,7 @@ class Server extends Model
     protected $casts = [
         'tags' => 'array',
         'is_active' => 'boolean',
+        'is_visible' => 'boolean',
         'port' => 'integer',
         'query_port' => 'integer',
         'last_queried_at' => 'datetime',
@@ -157,7 +162,7 @@ class Server extends Model
 
     public function getAddressAttribute(): string
     {
-        return "{$this->ip}:{$this->port}";
+        return $this->display_address ?: "{$this->ip}:{$this->port}";
     }
 
     public function getAverageRatingAttribute(): ?float
@@ -240,5 +245,10 @@ class Server extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopeVisible(Builder $query): Builder
+    {
+        return $query->where('is_visible', true);
     }
 }
