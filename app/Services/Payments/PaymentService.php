@@ -21,6 +21,43 @@ class PaymentService
 {
     public function __construct(private readonly PaymentManager $manager) {}
 
+    /** @return array<int, array{id: string, name: string, icon: string, description: string, is_default: bool}> */
+    public function availableGateways(): array
+    {
+        $all = config('payments.gateways', []);
+        $available = [];
+
+        foreach ($all as $key => $gw) {
+            if (($gw['enabled'] ?? true) === false) {
+                continue;
+            }
+
+            $icon = match ($key) {
+                'paypal' => 'PayPal',
+                'crypto' => 'Coins',
+                'revolut' => 'Zap',
+                default => 'CreditCard',
+            };
+
+            $desc = match ($key) {
+                'paypal' => 'PayPal balance or linked cards',
+                'crypto' => 'Bitcoin, USDT, Ethereum, Litecoin',
+                'revolut' => 'Revolut Pay (Instant mobile checkout)',
+                default => 'Credit / Debit card, Apple Pay, Google Pay',
+            };
+
+            $available[] = [
+                'id' => $key,
+                'name' => $gw['name'] ?? ucfirst($key),
+                'icon' => $icon,
+                'description' => $desc,
+                'is_default' => $key === config('payments.default'),
+            ];
+        }
+
+        return $available;
+    }
+
     /** Creates a pending Payment for $payable and returns the checkout redirect URL. $buyer is null for guest checkout. */
     public function checkout(
         Model $payable,

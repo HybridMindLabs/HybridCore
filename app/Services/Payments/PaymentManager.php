@@ -2,6 +2,9 @@
 
 namespace App\Services\Payments;
 
+use App\Services\Payments\Drivers\CryptoGateway;
+use App\Services\Payments\Drivers\PayPalGateway;
+use App\Services\Payments\Drivers\RevolutGateway;
 use App\Services\Payments\Drivers\StripeGateway;
 use Illuminate\Support\Manager;
 
@@ -21,5 +24,20 @@ class PaymentManager extends Manager
     protected function createStripeDriver(): StripeGateway
     {
         return new StripeGateway($this->container->make('config')->get('payments.gateways.stripe', []));
+    }
+
+    protected function createPaypalDriver(): PayPalGateway
+    {
+        return new PayPalGateway($this->container->make('config')->get('payments.gateways.paypal', []));
+    }
+
+    protected function createCryptoDriver(): CryptoGateway
+    {
+        return new CryptoGateway($this->container->make('config')->get('payments.gateways.crypto', []));
+    }
+
+    protected function createRevolutDriver(): RevolutGateway
+    {
+        return new RevolutGateway($this->container->make('config')->get('payments.gateways.revolut', []));
     }
 }
