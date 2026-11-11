@@ -10,7 +10,7 @@ export default defineConfig({
         // Runs before tailwindcss(): expands the marker in app.css into one
         // @source line per installed extension, so installing an extension
         // never requires editing the core's stylesheet.
-        extensionTailwindSources(__dirname),
+        extensionTailwindSources(import.meta.dirname),
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.ts'],
             ssr: 'resources/js/ssr.ts',
@@ -28,7 +28,7 @@ export default defineConfig({
     ],
     resolve: {
         alias: {
-            '@': resolve(__dirname, 'resources/js'),
+            '@': resolve(import.meta.dirname, 'resources/js'),
         },
         dedupe: [
             '@codemirror/state',
