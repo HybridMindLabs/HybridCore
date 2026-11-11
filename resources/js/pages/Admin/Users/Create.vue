@@ -56,7 +56,7 @@ const errorInputClass = 'border-red-500';
             <div class="flex flex-col gap-5 min-w-0">
 
                 <!-- Profile -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-6">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-6">
                     <h2 class="text-zinc-100 text-base font-semibold mb-1">Profile</h2>
                     <p class="text-zinc-500 text-xs mb-5">Basic account details visible across the platform.</p>
 
@@ -76,7 +76,7 @@ const errorInputClass = 'border-red-500';
                 </div>
 
                 <!-- Password -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-6">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-6">
                     <div class="flex items-center gap-2 mb-1">
                         <KeyRound :size="15" :stroke-width="1.75" class="text-zinc-600" />
                         <h2 class="text-zinc-100 text-base font-semibold">Password</h2>
@@ -103,7 +103,7 @@ const errorInputClass = 'border-red-500';
                 </div>
 
                 <!-- Roles & access -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-6">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-6">
                     <div class="flex items-center gap-2 mb-1">
                         <UserCog :size="15" :stroke-width="1.75" class="text-zinc-600" />
                         <h2 class="text-zinc-100 text-base font-semibold">Roles &amp; Access</h2>
@@ -148,7 +148,7 @@ const errorInputClass = 'border-red-500';
 
             <!-- Sidebar -->
             <div class="flex flex-col gap-5">
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-6 text-center">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-6 text-center">
                     <div
                         class="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-xl font-bold mb-3"
                         :style="primaryRole

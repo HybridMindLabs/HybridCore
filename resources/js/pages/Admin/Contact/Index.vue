@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Mail, Eye, Trash2, Circle, CheckCircle2, Search, X } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -42,8 +43,8 @@ watch(search, (value) => {
     }, 350);
 });
 
-function del(id: number) {
-    if (!confirm('Delete this message? This cannot be undone.')) return;
+async function del(id: number) {
+    if (!await confirm('Delete this message? This cannot be undone.')) return;
     router.delete(route('admin.contact.destroy', id));
 }
 
@@ -72,14 +73,14 @@ function formatDate(d: string) {
                 v-model="search"
                 type="text"
                 placeholder="Search by name, email or subject…"
-                class="w-full bg-[#111113] border border-zinc-800/70 text-zinc-100 rounded-lg pl-9 pr-9 py-2 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                class="w-full bg-admin-surface border border-zinc-800/70 text-zinc-100 rounded-lg pl-9 pr-9 py-2 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
             />
             <button v-if="search" type="button" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-400" @click="search = ''">
                 <X :size="14" :stroke-width="1.75" />
             </button>
         </div>
 
-        <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden transition-opacity" :class="searching ? 'opacity-50' : ''">
+        <div class="bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden transition-opacity" :class="searching ? 'opacity-50' : ''">
             <EmptyState
                 v-if="messages.data.length === 0"
                 :icon="Mail"

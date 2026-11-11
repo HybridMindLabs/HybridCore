@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Flag, CheckCircle, Trash2, ExternalLink } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -28,8 +29,8 @@ function resolve(id: number) {
     router.post(route('admin.reports.resolve', id), {}, { preserveScroll: true });
 }
 
-function destroyContent(id: number) {
-    if (!confirm('Delete the reported content? This also resolves all reports pointing at it.')) return;
+async function destroyContent(id: number) {
+    if (!await confirm('Delete the reported content? This also resolves all reports pointing at it.')) return;
     router.delete(route('admin.reports.destroy-content', id), { preserveScroll: true });
 }
 </script>
@@ -52,7 +53,7 @@ function destroyContent(id: number) {
             </div>
         </div>
 
-        <div class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+        <div class="rounded-xl border border-zinc-800/70 bg-admin-surface overflow-hidden">
             <div v-if="!reports.data.length" class="flex flex-col items-center justify-center py-16 text-center">
                 <Flag :size="24" :stroke-width="1.5" class="text-zinc-700 mb-3" />
                 <p class="text-[13px] text-zinc-600">No reports — all clear.</p>

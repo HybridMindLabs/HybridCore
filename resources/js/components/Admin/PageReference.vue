@@ -59,7 +59,7 @@ const LAYOUTS = [
 </script>
 
 <template>
-    <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden text-xs">
+    <div class="bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden text-xs">
         <div class="px-4 py-3 border-b border-zinc-800/70">
             <span class="font-semibold text-zinc-100">Reference</span>
             <span class="text-zinc-600 ml-2">— available tools & syntax</span>
@@ -69,7 +69,7 @@ const LAYOUTS = [
         <div class="border-b border-[#1a2236]">
             <button
                 type="button"
-                class="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-[#0d0d0f] transition-colors"
+                class="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-admin-sunken transition-colors"
                 @click="sections.placeholders = !sections.placeholders"
             >
                 <span class="font-medium text-zinc-400">Placeholders</span>
@@ -83,7 +83,7 @@ const LAYOUTS = [
                     class="flex items-start justify-between gap-2 group"
                 >
                     <div>
-                        <code class="text-blue-400 bg-[#09090b] px-1.5 py-0.5 rounded font-mono">{{ p.tag }}</code>
+                        <code class="text-blue-400 bg-admin-bg px-1.5 py-0.5 rounded font-mono">{{ p.tag }}</code>
                         <span class="text-zinc-600 ml-2">{{ p.desc }}</span>
                     </div>
                     <button
@@ -101,7 +101,7 @@ const LAYOUTS = [
         <div v-if="format === 'markdown'" class="border-b border-[#1a2236]">
             <button
                 type="button"
-                class="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-[#0d0d0f] transition-colors"
+                class="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-admin-sunken transition-colors"
                 @click="sections.markdown = !sections.markdown"
             >
                 <span class="font-medium text-zinc-400">Markdown Syntax</span>
@@ -130,7 +130,7 @@ const LAYOUTS = [
         <div v-if="format === 'html'" class="border-b border-[#1a2236]">
             <button
                 type="button"
-                class="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-[#0d0d0f] transition-colors"
+                class="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-admin-sunken transition-colors"
                 @click="sections.html = !sections.html"
             >
                 <span class="font-medium text-zinc-400">HTML Snippets</span>
@@ -141,7 +141,7 @@ const LAYOUTS = [
                 <div
                     v-for="snippet in HTML_SNIPPETS"
                     :key="snippet.label"
-                    class="flex items-center justify-between gap-2 p-2 rounded bg-[#09090b] border border-zinc-800/70 group cursor-pointer hover:border-blue-500/30 transition-colors"
+                    class="flex items-center justify-between gap-2 p-2 rounded bg-admin-bg border border-zinc-800/70 group cursor-pointer hover:border-blue-500/30 transition-colors"
                     @click="copy(snippet.code)"
                 >
                     <span class="text-zinc-400">{{ snippet.label }}</span>
@@ -154,7 +154,7 @@ const LAYOUTS = [
         <div>
             <button
                 type="button"
-                class="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-[#0d0d0f] transition-colors"
+                class="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-admin-sunken transition-colors"
                 @click="sections.layouts = !sections.layouts"
             >
                 <span class="font-medium text-zinc-400">Page Layouts</span>

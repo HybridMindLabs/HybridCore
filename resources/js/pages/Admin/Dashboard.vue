@@ -33,8 +33,21 @@ interface Stats {
     };
 }
 interface Widget { id: string; title: string; component: string; permission: string | null; props: Record<string, unknown> }
+interface Revenue {
+    range: number; currency: string; today: number; month: number; period: number;
+    paid_count: number; average: number; failed_count: number; refunded_count: number; refunded_amount: number;
+    series: { date: string; amount: number }[];
+}
 
-const props = defineProps<{ widgets: Widget[]; stats?: Stats; maintenance_mode?: boolean }>();
+const props = defineProps<{ widgets: Widget[]; stats?: Stats; maintenance_mode?: boolean; revenue?: Revenue | null }>();
+
+function money(amount: number): string {
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency: props.revenue?.currency ?? 'USD', maximumFractionDigits: 2 }).format(amount);
+}
+
+function setRevenueRange(range: number) {
+    router.get(route('admin.dashboard'), { range }, { only: ['revenue'], preserveScroll: true, preserveState: true, replace: true });
+}
 
 function toggleMaintenance() {
     const route_name = props.maintenance_mode ? 'admin.maintenance.disable' : 'admin.maintenance.enable';
@@ -340,6 +353,48 @@ function colOptions(): Highcharts.Options {
     };
 }
 
+// ── Chart: revenue ────────────────────────────────────────────────────────────
+const revenueRef = ref<HTMLElement | null>(null);
+let revenueChart: Highcharts.Chart | null = null;
+
+function revenueOptions(): Highcharts.Options {
+    const series = props.revenue?.series ?? [];
+
+    return {
+        chart: { type: 'area', backgroundColor: C.bg(), height: 220, animation: { duration: 500 }, style: { fontFamily: 'inherit' } },
+        title: { text: undefined },
+        credits: { enabled: false },
+        legend: { enabled: false },
+        xAxis: {
+            categories: series.map((d) => { const [, m, day] = d.date.split('-'); return `${day}/${m}`; }),
+            tickInterval: series.length > 31 ? 14 : series.length > 7 ? 5 : 1,
+            labels: { style: { color: C.label(), fontSize: '11px' } },
+            lineColor: C.grid(), tickColor: 'transparent',
+        },
+        yAxis: {
+            min: 0, title: { text: undefined }, gridLineColor: C.grid(),
+            labels: { style: { color: C.label(), fontSize: '11px' } },
+        },
+        tooltip: {
+            ...tooltipStyle(),
+            pointFormatter() { return `<b>${money((this as unknown as { y: number }).y)}</b>`; },
+        },
+        plotOptions: { area: { marker: { enabled: false, states: { hover: { enabled: true, radius: 4 } } }, lineWidth: 2 } },
+        series: [{
+            type: 'area',
+            name: 'Revenue',
+            data: series.map((d) => d.amount),
+            color: C.emerald,
+            fillColor: { linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 }, stops: [[0, 'rgba(16,185,129,0.25)'], [1, 'rgba(16,185,129,0)']] },
+        }],
+    };
+}
+
+watch(() => props.revenue, () => {
+    revenueChart?.destroy();
+    revenueChart = props.revenue ? mkChart(revenueRef.value, revenueOptions()) : null;
+}, { flush: 'post' });
+
 // ── Init / destroy / reactivity ───────────────────────────────────────────────
 let HC: typeof Highcharts | null = null;
 
@@ -362,6 +417,9 @@ function rebuildAll() {
         barChart?.destroy(); barChart = mkChart(barRef.value, barOptions());
     }
     colChart?.destroy();  colChart = mkChart(colRef.value, colOptions());
+    if (props.revenue) {
+        revenueChart?.destroy(); revenueChart = mkChart(revenueRef.value, revenueOptions());
+    }
 }
 
 onMounted(async () => {
@@ -374,6 +432,7 @@ onUnmounted(() => {
     donutChart?.destroy();
     barChart?.destroy();
     colChart?.destroy();
+    revenueChart?.destroy();
 });
 
 watch(dark, () => rebuildAll());
@@ -420,7 +479,7 @@ const quickLinks = [
         <!-- KPI grid -->
         <div v-if="kpis.length" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-6">
             <div v-for="(k, i) in kpis" :key="k.label"
-                class="hc-hero-in rounded-xl border border-zinc-800/70 bg-[#111113] px-4 py-3.5 flex items-center gap-3.5
+                class="hc-hero-in rounded-xl border border-zinc-800/70 bg-admin-surface px-4 py-3.5 flex items-center gap-3.5
                        transition-[border-color,transform] duration-200 hover:border-zinc-700/70 hover:-translate-y-0.5"
                 :style="{ animationDelay: `${i * 40}ms` }"
             >
@@ -440,11 +499,49 @@ const quickLinks = [
             </div>
         </div>
 
+        <!-- Revenue (payments.view only) -->
+        <div v-if="revenue" class="hc-hero-in rounded-xl border border-zinc-800/70 bg-admin-surface p-5 mb-4" style="animation-delay: 80ms">
+            <div class="flex flex-wrap items-center gap-2 mb-4">
+                <div class="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                    <TrendingUp :size="13" :stroke-width="2" class="text-emerald-400" />
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-[13px] font-black text-zinc-100">Revenue</p>
+                    <p class="text-[11px] text-zinc-500">Paid payments in {{ revenue.currency }}</p>
+                </div>
+                <div class="flex items-center gap-1" role="group" aria-label="Revenue period">
+                    <button v-for="r in [7, 30, 90]" :key="r" type="button"
+                        class="px-2.5 py-1 rounded-md text-xs font-medium transition-colors"
+                        :class="revenue.range === r ? 'bg-emerald-500/15 text-emerald-300' : 'text-zinc-500 hover:text-zinc-200 hover:bg-admin-elevated'"
+                        :aria-pressed="revenue.range === r"
+                        @click="setRevenueRange(r)">{{ r }}d</button>
+                </div>
+                <Link :href="route('admin.payments.index')" class="text-xs text-zinc-500 hover:text-zinc-200 ml-1">View payments →</Link>
+            </div>
+
+            <dl class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+                <div v-for="m in [
+                    { label: 'Today', value: money(revenue.today) },
+                    { label: 'This month', value: money(revenue.month) },
+                    { label: `Last ${revenue.range} days`, value: money(revenue.period) },
+                    { label: 'Average order', value: money(revenue.average) },
+                    { label: 'Failed', value: revenue.failed_count.toLocaleString(), warn: revenue.failed_count > 0 },
+                    { label: 'Refunded', value: `${revenue.refunded_count} · ${money(revenue.refunded_amount)}`, warn: revenue.refunded_count > 0 },
+                ]" :key="m.label" class="rounded-lg bg-admin-sunken border border-zinc-800/60 px-3 py-2.5">
+                    <dt class="text-[11px] text-zinc-500">{{ m.label }}</dt>
+                    <dd class="text-[15px] font-bold tabular-nums mt-0.5" :class="m.warn ? 'text-amber-300' : 'text-zinc-100'">{{ m.value }}</dd>
+                </div>
+            </dl>
+
+            <div v-if="revenue.period > 0" ref="revenueRef" />
+            <p v-else class="py-10 text-center text-[12px] text-zinc-500">No paid payments in the last {{ revenue.range }} days.</p>
+        </div>
+
         <!-- Main chart + column chart row -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
 
             <!-- Registrations / logins area chart -->
-            <div class="hc-hero-in lg:col-span-2 rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 120ms">
+            <div class="hc-hero-in lg:col-span-2 rounded-xl border border-zinc-800/70 bg-admin-surface p-5" style="animation-delay: 120ms">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
                         <Activity :size="13" :stroke-width="2" class="text-blue-400" />
@@ -470,7 +567,7 @@ const quickLinks = [
             </div>
 
             <!-- User breakdown column chart -->
-            <div class="hc-hero-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 160ms">
+            <div class="hc-hero-in rounded-xl border border-zinc-800/70 bg-admin-surface p-5" style="animation-delay: 160ms">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center">
                         <BarChart2 :size="13" :stroke-width="2" class="text-violet-400" />
@@ -491,7 +588,7 @@ const quickLinks = [
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
 
             <!-- Role distribution donut -->
-            <div class="hc-hero-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 200ms">
+            <div class="hc-hero-in rounded-xl border border-zinc-800/70 bg-admin-surface p-5" style="animation-delay: 200ms">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center">
                         <PieChart :size="13" :stroke-width="2" class="text-amber-400" />
@@ -512,7 +609,7 @@ const quickLinks = [
             </div>
 
             <!-- Top games bar -->
-            <div class="hc-hero-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 240ms">
+            <div class="hc-hero-in rounded-xl border border-zinc-800/70 bg-admin-surface p-5" style="animation-delay: 240ms">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                         <Server :size="13" :stroke-width="2" class="text-emerald-400" />
@@ -538,7 +635,7 @@ const quickLinks = [
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
 
             <!-- Engagement counters -->
-            <div class="hc-hero-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 280ms">
+            <div class="hc-hero-in rounded-xl border border-zinc-800/70 bg-admin-surface p-5" style="animation-delay: 280ms">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center">
                         <Activity :size="13" :stroke-width="2" class="text-violet-400" />
@@ -570,7 +667,7 @@ const quickLinks = [
             </div>
 
             <!-- Most clicked servers -->
-            <div class="hc-hero-in rounded-xl border border-zinc-800/70 bg-[#111113] p-5" style="animation-delay: 320ms">
+            <div class="hc-hero-in rounded-xl border border-zinc-800/70 bg-admin-surface p-5" style="animation-delay: 320ms">
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center">
                         <MousePointerClick :size="13" :stroke-width="2" class="text-amber-400" />
@@ -607,7 +704,7 @@ const quickLinks = [
             <p class="text-zinc-400 text-[11px] uppercase tracking-widest font-bold mb-2">Quick links</p>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <Link v-for="link in quickLinks" :key="link.route" :href="route(link.route)"
-                    class="group flex items-center gap-3 rounded-xl border border-zinc-800/70 bg-[#111113] p-4 hover:border-zinc-700/70 transition-colors">
+                    class="group flex items-center gap-3 rounded-xl border border-zinc-800/70 bg-admin-surface p-4 hover:border-zinc-700/70 transition-colors">
                     <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" :style="{ backgroundColor: link.bg }">
                         <component :is="link.icon" :size="16" :stroke-width="1.75" :style="{ color: link.color }" />
                     </div>

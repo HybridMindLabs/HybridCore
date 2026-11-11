@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { HeartPulse, CheckCircle2, AlertTriangle, XCircle, Eraser, Construction, Cpu, HardDrive, X, RefreshCw, Info } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -82,8 +83,8 @@ const cacheActions = [
     { label: 'Clear Route Cache',  route: 'admin.system-health.clear-routes'  },
 ];
 
-function runAction(routeName: string, label: string) {
-    if (confirm(`Run "${label}"?`)) {
+async function runAction(routeName: string, label: string) {
+    if (await confirm(`Run "${label}"?`)) {
         router.post(route(routeName));
     }
 }
@@ -106,8 +107,8 @@ function confirmEnable() {
     });
 }
 
-function disableMaintenance() {
-    if (confirm('Disable maintenance mode and restore public access?')) {
+async function disableMaintenance() {
+    if (await confirm('Disable maintenance mode and restore public access?')) {
         router.post(route('admin.maintenance.disable'));
     }
 }
@@ -193,7 +194,7 @@ const inputClass = 'w-full bg-zinc-900/60 border border-zinc-800/70 text-zinc-10
         <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_280px] gap-4 items-start">
 
             <!-- Checks list -->
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 120ms">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 120ms">
                 <div class="px-4 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                     <HeartPulse :size="13" :stroke-width="1.75" class="text-zinc-600" />
                     <span class="text-sm font-semibold text-zinc-100">Diagnostics</span>
@@ -201,7 +202,7 @@ const inputClass = 'w-full bg-zinc-900/60 border border-zinc-800/70 text-zinc-10
                 </div>
 
                 <div v-for="group in groupedChecks" :key="group.category">
-                    <div class="px-4 py-1.5 bg-[#1a1a1e] text-[10px] font-bold uppercase tracking-wider text-zinc-600">
+                    <div class="px-4 py-1.5 bg-admin-elevated text-[10px] font-bold uppercase tracking-wider text-zinc-600">
                         {{ group.category }}
                     </div>
                     <div
@@ -231,7 +232,7 @@ const inputClass = 'w-full bg-zinc-900/60 border border-zinc-800/70 text-zinc-10
             <div class="flex flex-col gap-4">
 
                 <!-- Environment info -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 160ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 160ms">
                     <div class="px-4 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                         <Cpu :size="13" :stroke-width="1.75" class="text-zinc-600" />
                         <span class="text-sm font-semibold text-zinc-100">Environment</span>
@@ -258,7 +259,7 @@ const inputClass = 'w-full bg-zinc-900/60 border border-zinc-800/70 text-zinc-10
                 </div>
 
                 <!-- Maintenance mode -->
-                <div class="hc-hero-in bg-[#111113] border rounded-xl overflow-hidden" style="animation-delay: 200ms" :class="maintenance.enabled ? 'border-amber-500/30' : 'border-zinc-800/70'">
+                <div class="hc-hero-in bg-admin-surface border rounded-xl overflow-hidden" style="animation-delay: 200ms" :class="maintenance.enabled ? 'border-amber-500/30' : 'border-zinc-800/70'">
                     <div class="px-4 py-3 border-b flex items-center gap-2" :class="maintenance.enabled ? 'border-amber-500/20 bg-amber-500/5' : 'border-zinc-800/70'">
                         <Construction :size="13" :stroke-width="1.75" :class="maintenance.enabled ? 'text-amber-400' : 'text-zinc-600'" />
                         <span class="text-sm font-semibold text-zinc-100">Maintenance</span>
@@ -296,7 +297,7 @@ const inputClass = 'w-full bg-zinc-900/60 border border-zinc-800/70 text-zinc-10
                 </div>
 
                 <!-- Cache -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 240ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 240ms">
                     <div class="px-4 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                         <HardDrive :size="13" :stroke-width="1.75" class="text-zinc-600" />
                         <span class="text-sm font-semibold text-zinc-100">Cache</span>
@@ -329,7 +330,7 @@ const inputClass = 'w-full bg-zinc-900/60 border border-zinc-800/70 text-zinc-10
                 style="background:rgba(0,0,0,0.7);backdrop-filter:blur(4px)"
                 @click.self="showModal = false"
             >
-                <div class="bg-[#111113] border border-zinc-800 rounded-2xl w-full max-w-md shadow-2xl">
+                <div class="bg-admin-surface border border-zinc-800 rounded-2xl w-full max-w-md shadow-2xl">
                     <!-- Header -->
                     <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
                         <div class="flex items-center gap-2.5">

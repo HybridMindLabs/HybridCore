@@ -51,8 +51,6 @@ class RoleController extends Controller
             Permission::whereIn('slug', $data['permissions'] ?? [])->pluck('id'),
         );
 
-        $this->activity->log('roles.created', "Created role \"{$role->name}\"", $role);
-
         return redirect()->route('admin.roles.index')->with('success', __('roles.created'));
     }
 
@@ -81,13 +79,23 @@ class RoleController extends Controller
             'icon' => $data['icon'],
         ]);
 
+        $before = $role->permissions()->pluck('slug')->sort()->values()->all();
+
         $role->permissions()->sync(
             Permission::whereIn('slug', $data['permissions'] ?? [])->pluck('id'),
         );
 
         $role->forgetPermissionCache();
 
-        $this->activity->log('roles.updated', "Updated role \"{$role->name}\"", $role);
+        $after = $role->permissions()->pluck('slug')->sort()->values()->all();
+
+        // Permissions are a pivot the model audit can't see — log the diff explicitly.
+        if ($before !== $after) {
+            $this->activity->log('role.permissions_changed', "Changed permissions of role \"{$role->name}\"", $role, [
+                'added' => array_values(array_diff($after, $before)),
+                'removed' => array_values(array_diff($before, $after)),
+            ]);
+        }
 
         return redirect()->route('admin.roles.index')->with('success', __('roles.updated'));
     }
@@ -101,8 +109,6 @@ class RoleController extends Controller
         $name = $role->name;
         $role->forgetPermissionCache();
         $role->delete();
-
-        $this->activity->log('roles.deleted', "Deleted role \"{$name}\"");
 
         return redirect()->route('admin.roles.index')->with('success', __('roles.deleted'));
     }

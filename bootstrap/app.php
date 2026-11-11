@@ -8,6 +8,7 @@ use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\EnsureTwoFactorEnabled;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RedirectIfInstalled;
+use App\Http\Middleware\RequireRecentPassword;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\TrackLastSeen;
@@ -112,6 +113,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => EnsureIsAdmin::class,
             'perm' => EnsurePermission::class,
             'abilities' => CheckAbilities::class,
+            'sudo' => RequireRecentPassword::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Flag, CheckCircle, Trash2, ExternalLink, MessageSquare, Star } from '@lucide/vue';
 import { ref } from 'vue';
@@ -52,18 +53,18 @@ function resolveReport(id: number) {
     router.post(route('admin.reports.resolve', id), {}, { preserveScroll: true });
 }
 
-function destroyReportedContent(id: number) {
-    if (!confirm('Delete the reported content? This also resolves all reports pointing at it.')) return;
+async function destroyReportedContent(id: number) {
+    if (!await confirm('Delete the reported content? This also resolves all reports pointing at it.')) return;
     router.delete(route('admin.reports.destroy-content', id), { preserveScroll: true });
 }
 
-function destroyComment(id: number) {
-    if (!confirm('Delete this comment?')) return;
+async function destroyComment(id: number) {
+    if (!await confirm('Delete this comment?')) return;
     router.delete(route('admin.news.comments.destroy', id), { preserveScroll: true });
 }
 
-function destroyReview(id: number) {
-    if (!confirm('Delete this review?')) return;
+async function destroyReview(id: number) {
+    if (!await confirm('Delete this review?')) return;
     router.delete(route('admin.servers.reviews.destroy', id), { preserveScroll: true });
 }
 </script>
@@ -113,7 +114,7 @@ function destroyReview(id: number) {
         <template v-if="activeTab === 'reports'">
             <EmptyState v-if="!reports.data.length" :icon="Flag" title="No reports" description="All clear — nothing waiting on review." />
 
-            <div v-else class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+            <div v-else class="rounded-xl border border-zinc-800/70 bg-admin-surface overflow-hidden">
                 <div v-for="(report, i) in reports.data" :key="report.id"
                     class="hc-hero-in px-5 py-4 border-b border-zinc-800/50 last:border-0 hover:bg-white/[0.02]"
                     :style="{ animationDelay: `${Math.min(i, 10) * 25}ms` }">
@@ -171,7 +172,7 @@ function destroyReview(id: number) {
         <template v-if="activeTab === 'comments'">
             <EmptyState v-if="!comments.data.length" :icon="MessageSquare" title="No comments yet" description="News comments will appear here." />
 
-            <div v-else class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+            <div v-else class="rounded-xl border border-zinc-800/70 bg-admin-surface overflow-hidden">
                 <div v-for="(comment, i) in comments.data" :key="comment.id"
                     class="hc-hero-in flex items-start gap-3 px-5 py-3.5 border-b border-zinc-800/50 last:border-0 hover:bg-white/[0.02]"
                     :style="{ animationDelay: `${Math.min(i, 10) * 25}ms` }">
@@ -207,7 +208,7 @@ function destroyReview(id: number) {
         <template v-if="activeTab === 'reviews'">
             <EmptyState v-if="!reviews.data.length" :icon="Star" title="No reviews yet" description="Server reviews will appear here." />
 
-            <div v-else class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+            <div v-else class="rounded-xl border border-zinc-800/70 bg-admin-surface overflow-hidden">
                 <div v-for="(review, i) in reviews.data" :key="review.id"
                     class="hc-hero-in flex items-start gap-3 px-5 py-3.5 border-b border-zinc-800/50 last:border-0 hover:bg-white/[0.02]"
                     :style="{ animationDelay: `${Math.min(i, 10) * 25}ms` }">

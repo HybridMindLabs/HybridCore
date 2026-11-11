@@ -29,7 +29,7 @@ function submit() {
 <template>
     <Head title="Admin Login" />
 
-    <div class="hc-texture min-h-screen bg-[#09090b] flex items-center justify-center px-4">
+    <div class="hc-texture min-h-screen bg-admin-bg flex items-center justify-center px-4">
         <div class="w-full max-w-sm">
 
             <!-- Logo -->
@@ -44,7 +44,7 @@ function submit() {
             </div>
 
             <!-- Card -->
-            <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-6 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+            <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-6 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
                 <h1 class="text-zinc-100 text-lg font-semibold mb-1">{{ t('auth.sign_in') }}</h1>
                 <p class="text-zinc-400 text-sm mb-6">Access the admin panel</p>
 

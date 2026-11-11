@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
+use App\Support\Csv;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InvoiceController extends Controller
 {
@@ -15,10 +17,15 @@ class InvoiceController extends Controller
     {
         $search = $request->string('q')->toString();
 
+        $from = $request->date('from');
+        $to = $request->date('to');
+
         $invoices = Invoice::with('user:id,username')
-            ->when($search !== '', fn ($q) => $q
+            ->when($search !== '', fn ($q) => $q->where(fn ($w) => $w
                 ->where('id', 'like', "%{$search}%")
-                ->orWhereHas('user', fn ($u) => $u->where('username', 'like', "%{$search}%")))
+                ->orWhereHas('user', fn ($u) => $u->where('username', 'like', "%{$search}%"))))
+            ->when($from, fn ($q) => $q->whereDate('issued_at', '>=', $from))
+            ->when($to, fn ($q) => $q->whereDate('issued_at', '<=', $to))
             ->latest('issued_at')
             ->paginate(25)
             ->withQueryString()
@@ -49,7 +56,11 @@ class InvoiceController extends Controller
 
         return Inertia::render('Admin/Invoices/Index', [
             'invoices' => $invoices,
-            'filters' => ['q' => $search],
+            'filters' => [
+                'q' => $search,
+                'from' => $from?->toDateString() ?? '',
+                'to' => $to?->toDateString() ?? '',
+            ],
             'stats' => [
                 'total' => (int) $agg->total,
                 'totalAmount' => ((int) $agg->total_amount) / 100.0,
@@ -58,5 +69,37 @@ class InvoiceController extends Controller
                 'currency' => $currency,
             ],
         ]);
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $search = $request->string('q')->toString();
+        $from = $request->date('from');
+        $to = $request->date('to');
+
+        $rows = Invoice::with(['user:id,username,email', 'payment'])
+            ->when($search !== '', fn ($q) => $q->where(fn ($w) => $w
+                ->where('id', 'like', "%{$search}%")
+                ->orWhereHas('user', fn ($u) => $u->where('username', 'like', "%{$search}%"))))
+            ->when($from, fn ($q) => $q->whereDate('issued_at', '>=', $from))
+            ->when($to, fn ($q) => $q->whereDate('issued_at', '<=', $to))
+            ->orderBy('issued_at')
+            ->lazy()
+            ->map(fn (Invoice $i) => [
+                $i->number(),
+                $i->issued_at->toDateString(),
+                $i->user?->username ?? 'Guest',
+                $i->user?->email ?? '',
+                number_format($i->amount / 100, 2, '.', ''),
+                strtoupper($i->currency),
+                $i->payment_id,
+                $i->payment->gateway,
+            ]);
+
+        return Csv::download(
+            'invoices-'.now()->format('Y-m-d').'.csv',
+            ['number', 'issued_at', 'username', 'email', 'amount', 'currency', 'payment_id', 'gateway'],
+            $rows,
+        );
     }
 }

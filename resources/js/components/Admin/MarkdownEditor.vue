@@ -142,9 +142,9 @@ async function handleUpload(e: Event) {
 </script>
 
 <template>
-    <div class="rounded-2xl border border-zinc-800/70 bg-[#111113] overflow-hidden flex flex-col" style="min-height: 520px;">
+    <div class="rounded-2xl border border-zinc-800/70 bg-admin-surface overflow-hidden flex flex-col" style="min-height: 520px;">
         <!-- Toolbar -->
-        <div class="flex items-center gap-0.5 px-3 py-2 border-b border-zinc-800/60 bg-[#1a1a1e] flex-wrap">
+        <div class="flex items-center gap-0.5 px-3 py-2 border-b border-zinc-800/60 bg-admin-elevated flex-wrap">
             <button v-for="t in tools" :key="t.title" type="button" :title="t.title" @click="t.action"
                 class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-zinc-200 hover:bg-white/5 transition">
                 <component :is="t.icon" :size="13" :stroke-width="2" />

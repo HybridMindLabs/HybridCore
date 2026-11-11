@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import {
     DatabaseBackup, Download, Upload, Trash2, AlertTriangle,
@@ -39,8 +40,8 @@ function generateFullBackup() {
 }
 
 const dbBacking = ref(false);
-function runDatabaseBackup() {
-    if (!confirm('Run mysqldump now? This may take a moment for large databases.')) return;
+async function runDatabaseBackup() {
+    if (!await confirm('Run mysqldump now? This may take a moment for large databases.')) return;
     dbBacking.value = true;
     router.post(route('admin.backup.database'), {}, {
         onFinish: () => { dbBacking.value = false; },
@@ -66,8 +67,8 @@ function submitImport() {
     });
 }
 
-function deleteBackup(filename: string) {
-    if (confirm(`Delete backup "${filename}"? This cannot be undone.`)) {
+async function deleteBackup(filename: string) {
+    if (await confirm(`Delete backup "${filename}"? This cannot be undone.`)) {
         router.delete(route('admin.backup.delete', filename));
     }
 }
@@ -104,7 +105,7 @@ const exports = [
             <div class="flex flex-col gap-5">
 
                 <!-- Full backup hero card -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 0ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 0ms">
                     <div class="flex items-start gap-4">
                         <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
                             <PackageOpen :size="18" :stroke-width="1.5" class="text-blue-400" />
@@ -131,7 +132,7 @@ const exports = [
                 </div>
 
                 <!-- MySQL Backup -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 40ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 40ms">
                     <div class="flex items-start gap-4">
                         <div
                             class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border"
@@ -174,7 +175,7 @@ const exports = [
                 </div>
 
                 <!-- Automatic backup schedule -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 80ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 80ms">
                     <div class="flex items-start gap-4">
                         <div class="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
                             <CalendarClock :size="18" :stroke-width="1.5" class="text-violet-400" />
@@ -241,7 +242,7 @@ const exports = [
                 </div>
 
                 <!-- Section exports -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 120ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 120ms">
                     <div class="px-5 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                         <FileJson :size="13" :stroke-width="1.75" class="text-zinc-600" />
                         <span class="text-sm font-semibold text-zinc-100">Section Exports</span>
@@ -275,7 +276,7 @@ const exports = [
                 </div>
 
                 <!-- Stored backups -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 160ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 160ms">
                     <div class="px-5 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                         <HardDrive :size="13" :stroke-width="1.75" class="text-zinc-600" />
                         <span class="text-sm font-semibold text-zinc-100">Stored Backups</span>
@@ -338,7 +339,7 @@ const exports = [
                 </div>
 
                 <!-- Import backup -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 200ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 200ms">
                     <div class="px-5 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                         <Upload :size="13" :stroke-width="1.75" class="text-zinc-600" />
                         <span class="text-sm font-semibold text-zinc-100">Import Backup</span>
@@ -409,7 +410,7 @@ const exports = [
                 </div>
 
                 <!-- What's included in full backup -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 100ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 100ms">
                     <div class="px-4 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                         <Server :size="13" :stroke-width="1.75" class="text-zinc-600" />
                         <span class="text-sm font-semibold text-zinc-100">Full backup includes</span>
@@ -426,7 +427,7 @@ const exports = [
                 </div>
 
                 <!-- Import notes -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 140ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 140ms">
                     <div class="px-4 py-3 border-b border-zinc-800/70">
                         <p class="text-sm font-semibold text-zinc-100">Import notes</p>
                     </div>
@@ -448,7 +449,7 @@ const exports = [
                 </div>
 
                 <!-- Server-side backup -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 180ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 180ms">
                     <div class="px-4 py-3 border-b border-zinc-800/70">
                         <p class="text-sm font-semibold text-zinc-100">Server-side backup</p>
                         <p class="text-xs text-zinc-600 mt-0.5">Run on a schedule via cron</p>

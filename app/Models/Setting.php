@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
@@ -27,5 +28,23 @@ use Illuminate\Support\Carbon;
  */
 class Setting extends Model
 {
+    use LogsActivity;
+
     protected $fillable = ['key', 'value', 'group'];
+
+    protected static function getActivityLogEventPrefix(): string
+    {
+        return 'setting';
+    }
+
+    protected static function getActivityLogIdentifier(Model $model): string
+    {
+        return (string) $model->getAttribute('key');
+    }
+
+    /** Stored secrets (OAuth, captcha, SMTP, payment keys) never reach the log. */
+    protected static function shouldRedactActivityValues(Model $model): bool
+    {
+        return (bool) preg_match('/secret|password|token|_key$|api_key|private/i', (string) $model->getAttribute('key'));
+    }
 }

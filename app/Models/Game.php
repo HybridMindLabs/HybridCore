@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -54,7 +55,7 @@ use Illuminate\Support\Carbon;
  */
 class Game extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'name', 'slug', 'icon', 'color', 'query_driver',
@@ -176,5 +177,10 @@ class Game extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true)->orderBy('sort_order');
+    }
+
+    protected static function getActivityLogEventPrefix(): string
+    {
+        return 'server.game';
     }
 }

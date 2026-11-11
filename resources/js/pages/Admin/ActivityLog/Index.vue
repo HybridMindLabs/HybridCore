@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import ListControls from '@/components/Admin/ListControls.vue';
 import { Head, router } from '@inertiajs/vue3';
-import { Activity, Search, X } from '@lucide/vue';
+import { Activity, ChevronRight, Search, X } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
 import EmptyState from '@/components/UI/EmptyState.vue';
@@ -12,8 +13,11 @@ interface LogEntry {
     event: string;
     description: string;
     causer: { name: string; email: string } | null;
+    properties: Record<string, unknown> | null;
     created_at: string;
 }
+
+interface Change { field: string; old: string; new: string }
 interface PageLink { url: string | null; label: string; active: boolean }
 interface Paginator {
     data: LogEntry[]; links: PageLink[]; total: number;
@@ -23,6 +27,36 @@ interface Paginator {
 interface Filters { search: string; category: string }
 
 const props = defineProps<{ logs: Paginator; filters: Filters }>();
+
+const expanded = ref<Set<number>>(new Set());
+
+function toggleExpanded(id: number) {
+    const next = new Set(expanded.value);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    expanded.value = next;
+}
+
+function show(value: unknown): string {
+    if (value === null || value === undefined || value === '') return '—';
+    if (Array.isArray(value)) return value.length ? value.join(', ') : '—';
+    if (typeof value === 'object') return JSON.stringify(value);
+    return String(value);
+}
+
+/** Field-level old → new pairs, or added/removed lists for pivot changes. */
+function changesOf(log: LogEntry): Change[] {
+    const p = log.properties ?? {};
+    const oldValues = (p.old ?? {}) as Record<string, unknown>;
+    const newValues = (p.new ?? {}) as Record<string, unknown>;
+    const fields = [...new Set([...Object.keys(oldValues), ...Object.keys(newValues)])];
+    const changes = fields.map((field) => ({ field, old: show(oldValues[field]), new: show(newValues[field]) }));
+
+    if (Array.isArray(p.added) || Array.isArray(p.removed)) {
+        changes.push({ field: 'permissions', old: `− ${show(p.removed)}`, new: `+ ${show(p.added)}` });
+    }
+
+    return changes;
+}
 
 // Event metadata: label + color. Must stay in sync with every activity()->log()
 // call site — see ActivityLogController::CATEGORIES for the matching backend map.
@@ -145,6 +179,7 @@ function applyFilters() {
     router.get(route('admin.activity-log.index'), {
         search: search.value || undefined,
         category: category.value || undefined,
+        per_page: new URLSearchParams(window.location.search).get('per_page') || undefined,
     }, { preserveState: true, preserveScroll: true, replace: true, onFinish: () => { searching.value = false; } });
 }
 
@@ -183,13 +218,13 @@ function causerInitials(name: string): string {
                     v-model="search"
                     type="text"
                     placeholder="Search events, descriptions, admins…"
-                    class="w-full bg-[#111113] border border-zinc-800/70 rounded-lg pl-8 pr-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                    class="w-full bg-admin-surface border border-zinc-800/70 rounded-lg pl-8 pr-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
                 />
             </div>
 
             <select
                 v-model="category"
-                class="bg-[#111113] border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-blue-500"
+                class="bg-admin-surface border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-blue-500"
             >
                 <option value="">All categories</option>
                 <option v-for="cat in CATEGORIES" :key="cat.key" :value="cat.key">{{ cat.label }}</option>
@@ -205,8 +240,10 @@ function causerInitials(name: string): string {
             </button>
         </div>
 
+        <ListControls :per-page="logs.per_page" class="mb-3" />
+
         <!-- Table -->
-        <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden transition-opacity" :class="searching ? 'opacity-50' : ''">
+        <div class="bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden transition-opacity" :class="searching ? 'opacity-50' : ''">
             <EmptyState
                 v-if="logs.data.length === 0"
                 :icon="Activity"
@@ -214,13 +251,13 @@ function causerInitials(name: string): string {
                 :description="search || category ? 'Try adjusting the filters.' : 'Admin actions will be recorded here as they happen.'"
             />
 
-            <table v-else class="w-full text-sm">
+            <table v-else class="admin-table w-full text-sm">
                 <thead>
-                    <tr class="border-b border-zinc-800/70">
-                        <th class="text-left text-zinc-600 text-xs font-semibold uppercase tracking-wide px-4 py-3">Event</th>
-                        <th class="text-left text-zinc-600 text-xs font-semibold uppercase tracking-wide px-4 py-3 hidden sm:table-cell">Description</th>
-                        <th class="text-left text-zinc-600 text-xs font-semibold uppercase tracking-wide px-4 py-3 hidden md:table-cell">By</th>
-                        <th class="text-left text-zinc-600 text-xs font-semibold uppercase tracking-wide px-4 py-3">When</th>
+                    <tr>
+                        <th>Event</th>
+                        <th class="hidden sm:table-cell">Description</th>
+                        <th class="hidden md:table-cell">By</th>
+                        <th>When</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -238,8 +275,28 @@ function causerInitials(name: string): string {
                                 {{ eventMeta(log.event).label }}
                             </span>
                         </td>
-                        <td class="px-4 py-3 text-zinc-400 text-sm hidden sm:table-cell max-w-xs truncate">
-                            {{ log.description }}
+                        <td class="px-4 py-3 text-zinc-400 text-sm hidden sm:table-cell max-w-md">
+                            <span class="block truncate">{{ log.description }}</span>
+                            <button
+                                v-if="changesOf(log).length"
+                                type="button"
+                                class="mt-1 inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300"
+                                :aria-expanded="expanded.has(log.id)"
+                                @click="toggleExpanded(log.id)"
+                            >
+                                <ChevronRight :size="12" class="transition-transform" :class="expanded.has(log.id) ? 'rotate-90' : ''" />
+                                {{ changesOf(log).length }} {{ changesOf(log).length === 1 ? 'change' : 'changes' }}
+                            </button>
+                            <dl v-if="expanded.has(log.id)" class="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-xs">
+                                <template v-for="c in changesOf(log)" :key="c.field">
+                                    <dt class="text-zinc-500 font-mono">{{ c.field }}</dt>
+                                    <dd class="min-w-0 break-words">
+                                        <span class="text-red-300/80 line-through decoration-red-500/40">{{ c.old }}</span>
+                                        <span class="text-zinc-600 mx-1">→</span>
+                                        <span class="text-emerald-300">{{ c.new }}</span>
+                                    </dd>
+                                </template>
+                            </dl>
                         </td>
                         <td class="px-4 py-3 hidden md:table-cell">
                             <div v-if="log.causer" class="flex items-center gap-2">

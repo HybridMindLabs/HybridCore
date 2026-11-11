@@ -107,7 +107,7 @@ class ExtensionRegistry
         return $this->footerLinks;
     }
 
-    /** Admin command-palette (Ctrl/Cmd+K) quick actions. */
+    /** Admin search (Ctrl/Cmd+K) quick actions. */
     public function quickActions(): QuickActionRegistry
     {
         return $this->quickActions;

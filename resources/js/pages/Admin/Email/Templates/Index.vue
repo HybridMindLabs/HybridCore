@@ -40,15 +40,15 @@ const breadcrumbs = [
             </div>
         </div>
 
-        <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
-            <table class="w-full text-sm">
+        <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden">
+            <table class="admin-table w-full text-sm">
                 <thead>
-                    <tr class="border-b border-zinc-800">
-                        <th class="text-left text-zinc-500 text-[11px] font-semibold uppercase tracking-wide px-4 py-3">Name</th>
-                        <th class="text-left text-zinc-500 text-[11px] font-semibold uppercase tracking-wide px-4 py-3">Slug</th>
-                        <th class="text-left text-zinc-500 text-[11px] font-semibold uppercase tracking-wide px-4 py-3">Subject</th>
-                        <th class="text-left text-zinc-500 text-[11px] font-semibold uppercase tracking-wide px-4 py-3">Status</th>
-                        <th class="px-4 py-3"></th>
+                    <tr class="border-zinc-800">
+                        <th>Name</th>
+                        <th>Slug</th>
+                        <th>Subject</th>
+                        <th>Status</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>

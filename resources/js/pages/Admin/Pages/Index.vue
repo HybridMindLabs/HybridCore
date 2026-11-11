@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { FileText, Plus, Pencil, Trash2, ExternalLink, Globe, FileX, Search, X } from '@lucide/vue';
 import { ref, computed } from 'vue';
@@ -26,8 +27,8 @@ const filteredPages = computed(() => {
         && (!q || p.title.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q)));
 });
 
-function destroy(page: PageRow) {
-    if (confirm(`Delete page "${page.title}"?`)) {
+async function destroy(page: PageRow) {
+    if (await confirm(`Delete page "${page.title}"?`)) {
         router.delete(route('admin.pages.destroy', page.id));
     }
 }
@@ -73,13 +74,13 @@ function destroy(page: PageRow) {
                         v-model="search"
                         type="text"
                         placeholder="Search by title or slug…"
-                        class="w-full bg-[#111113] border border-zinc-800/70 text-zinc-100 rounded-lg pl-9 pr-9 py-2 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                        class="w-full bg-admin-surface border border-zinc-800/70 text-zinc-100 rounded-lg pl-9 pr-9 py-2 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
                     />
                     <button v-if="search" type="button" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-400" @click="search = ''">
                         <X :size="14" :stroke-width="1.75" />
                     </button>
                 </div>
-                <select v-model="statusFilter" class="bg-[#111113] border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-blue-500">
+                <select v-model="statusFilter" class="bg-admin-surface border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-blue-500">
                     <option value="all">All statuses</option>
                     <option value="published">Published</option>
                     <option value="draft">Draft</option>
@@ -88,15 +89,15 @@ function destroy(page: PageRow) {
 
             <EmptyState v-if="filteredPages.length === 0" :icon="Search" title="No matches" description="Try a different search term or status filter." />
 
-        <div v-else class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
-            <table class="w-full text-sm">
+        <div v-else class="bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden">
+            <table class="admin-table w-full text-sm">
                 <thead>
-                    <tr class="border-b border-zinc-800/70">
-                        <th class="text-left px-4 py-3 text-zinc-600 text-xs font-semibold uppercase tracking-wide">Title</th>
-                        <th class="text-left px-4 py-3 text-zinc-600 text-xs font-semibold uppercase tracking-wide hidden sm:table-cell">Slug</th>
-                        <th class="text-left px-4 py-3 text-zinc-600 text-xs font-semibold uppercase tracking-wide">Status</th>
-                        <th class="text-left px-4 py-3 text-zinc-600 text-xs font-semibold uppercase tracking-wide hidden md:table-cell">Updated</th>
-                        <th class="px-4 py-3 w-28" />
+                    <tr>
+                        <th>Title</th>
+                        <th class="hidden sm:table-cell">Slug</th>
+                        <th>Status</th>
+                        <th class="hidden md:table-cell">Updated</th>
+                        <th class="w-28" />
                     </tr>
                 </thead>
                 <tbody>

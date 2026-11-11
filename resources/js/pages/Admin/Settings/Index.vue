@@ -232,7 +232,7 @@ function goToSetting(result: { tab: string; label: string }) {
             />
             <div
                 v-if="searchResults.length"
-                class="absolute z-30 mt-1.5 w-full bg-[#16161a] border border-zinc-800 rounded-xl shadow-xl overflow-hidden"
+                class="absolute z-30 mt-1.5 w-full bg-admin-hover border border-zinc-800 rounded-xl shadow-xl overflow-hidden"
             >
                 <button
                     v-for="(result, i) in searchResults"
@@ -248,7 +248,7 @@ function goToSetting(result: { tab: string; label: string }) {
             </div>
             <div
                 v-else-if="settingsSearch.trim().length >= 2"
-                class="absolute z-30 mt-1.5 w-full bg-[#16161a] border border-zinc-800 rounded-xl shadow-xl px-3.5 py-2.5"
+                class="absolute z-30 mt-1.5 w-full bg-admin-hover border border-zinc-800 rounded-xl shadow-xl px-3.5 py-2.5"
             >
                 <span class="text-[12px] text-zinc-600">No settings match "{{ settingsSearch }}".</span>
             </div>
@@ -258,7 +258,7 @@ function goToSetting(result: { tab: string; label: string }) {
             <div class="flex gap-5 items-start">
 
                 <!-- Vertical tab sidebar -->
-                <div class="w-44 shrink-0 bg-[#111113] border border-zinc-800/70 rounded-xl p-1.5 sticky top-6">
+                <div class="w-44 shrink-0 bg-admin-surface border border-zinc-800/70 rounded-xl p-1.5 sticky top-6">
                     <button
                         v-for="tab in tabs"
                         :key="tab.id"
@@ -280,7 +280,7 @@ function goToSetting(result: { tab: string; label: string }) {
             <!-- General -->
             <div v-show="activeTab === 'general'" data-tab="general" class="flex flex-col gap-4">
 
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
                     <h3 class="text-zinc-100 text-sm font-semibold">Application</h3>
 
                     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -328,7 +328,7 @@ function goToSetting(result: { tab: string; label: string }) {
                     </div>
                 </div>
 
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
                     <h3 class="text-zinc-100 text-sm font-semibold">Theme & Availability</h3>
 
                     <div class="flex flex-col gap-1.5">
@@ -370,7 +370,7 @@ function goToSetting(result: { tab: string; label: string }) {
 
             <!-- Localization -->
             <div v-show="activeTab === 'localization'" data-tab="localization" class="flex flex-col gap-4">
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
                     <h3 class="text-zinc-100 text-sm font-semibold">Language Settings</h3>
 
                     <div class="grid grid-cols-2 gap-4">
@@ -406,7 +406,7 @@ function goToSetting(result: { tab: string; label: string }) {
                     </div>
                 </div>
 
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
                     <h3 class="text-zinc-100 text-sm font-semibold">Language Switcher</h3>
 
                     <div class="flex items-center justify-between py-2">
@@ -443,7 +443,7 @@ function goToSetting(result: { tab: string; label: string }) {
 
             <!-- SEO -->
             <div v-show="activeTab === 'seo'" data-tab="seo" class="flex flex-col gap-4">
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
                     <h3 class="text-zinc-100 text-sm font-semibold">Search Engine Optimization</h3>
                     <p class="text-zinc-600 text-xs -mt-2">These values are used as fallbacks when a page doesn't define its own metadata.</p>
 
@@ -466,7 +466,7 @@ function goToSetting(result: { tab: string; label: string }) {
                     </div>
                 </div>
 
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
                     <h3 class="text-zinc-100 text-sm font-semibold">Social links</h3>
                     <p class="text-zinc-600 text-xs -mt-2">Shown in the site header, footer and quick links. Leave a field empty to hide that platform.</p>
 
@@ -493,7 +493,7 @@ function goToSetting(result: { tab: string; label: string }) {
 
             <!-- Users & Access -->
             <div v-show="activeTab === 'users'" data-tab="users" class="flex flex-col gap-4">
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
                     <h3 class="text-zinc-100 text-sm font-semibold">Registration</h3>
                     <p class="text-zinc-600 text-xs mt-1 mb-3">Controls how visitors turn into accounts on the public site.</p>
 
@@ -528,7 +528,7 @@ function goToSetting(result: { tab: string; label: string }) {
                     </div>
                 </div>
 
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
                     <h3 class="text-zinc-100 text-sm font-semibold">Defaults</h3>
 
                     <div class="flex flex-col gap-1.5">
@@ -549,7 +549,7 @@ function goToSetting(result: { tab: string; label: string }) {
                 </div>
 
                 <!-- Avatars & Banners -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
                     <h3 class="text-zinc-100 text-sm font-semibold mb-4">Avatars & Banners</h3>
 
                     <div class="flex items-center justify-between py-3 border-t border-zinc-800/70">
@@ -590,7 +590,7 @@ function goToSetting(result: { tab: string; label: string }) {
                 </div>
 
                 <!-- Private Messages -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
                     <h3 class="text-zinc-100 text-sm font-semibold mb-4">Private Messages</h3>
 
                     <div class="flex items-center justify-between py-3 border-t border-zinc-800/70">
@@ -619,7 +619,7 @@ function goToSetting(result: { tab: string; label: string }) {
                 </div>
 
                 <!-- Notifications -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
                     <h3 class="text-zinc-100 text-sm font-semibold mb-4">Notifications</h3>
 
                     <div class="flex items-center justify-between py-3 border-t border-zinc-800/70">
@@ -635,7 +635,7 @@ function goToSetting(result: { tab: string; label: string }) {
 
             <!-- Security -->
             <div v-show="activeTab === 'security'" data-tab="security" class="flex flex-col gap-4">
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
                     <h3 class="text-zinc-100 text-sm font-semibold">Password Requirements</h3>
                     <p class="text-zinc-600 text-xs -mt-2">Applied when users register or change their password.</p>
 
@@ -683,7 +683,7 @@ function goToSetting(result: { tab: string; label: string }) {
                     </div>
                 </div>
 
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
                     <h3 class="text-zinc-100 text-sm font-semibold">Two-Factor Authentication</h3>
                     <p class="text-zinc-600 text-xs -mt-2">Require every admin-panel user to set up 2FA, with a per-admin grace period instead of a hard cutover.</p>
 
@@ -720,7 +720,7 @@ function goToSetting(result: { tab: string; label: string }) {
             <!-- OAuth -->
             <div v-show="activeTab === 'oauth'" data-tab="oauth" class="flex flex-col gap-4">
 
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5">
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-zinc-100 text-sm font-semibold">Enable OAuth sign-in</p>
@@ -738,7 +738,7 @@ function goToSetting(result: { tab: string; label: string }) {
                 </div>
 
                 <!-- Discord -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4" :class="!form.oauth_enabled ? 'opacity-50 pointer-events-none' : ''">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4" :class="!form.oauth_enabled ? 'opacity-50 pointer-events-none' : ''">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <span class="w-7 h-7 rounded-lg bg-[#5865f2]/15 flex items-center justify-center">
@@ -773,7 +773,7 @@ function goToSetting(result: { tab: string; label: string }) {
                 </div>
 
                 <!-- Steam -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4" :class="!form.oauth_enabled ? 'opacity-50 pointer-events-none' : ''">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4" :class="!form.oauth_enabled ? 'opacity-50 pointer-events-none' : ''">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <span class="w-7 h-7 rounded-lg bg-[#1b2838]/80 border border-[#2a475e] flex items-center justify-center">
@@ -805,7 +805,7 @@ function goToSetting(result: { tab: string; label: string }) {
                 </div>
 
                 <!-- Google -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4" :class="!form.oauth_enabled ? 'opacity-50 pointer-events-none' : ''">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4" :class="!form.oauth_enabled ? 'opacity-50 pointer-events-none' : ''">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <span class="w-7 h-7 rounded-lg bg-white/90 border border-zinc-300/40 flex items-center justify-center">
@@ -844,7 +844,7 @@ function goToSetting(result: { tab: string; label: string }) {
             <div v-show="activeTab === 'legal'" data-tab="legal" class="max-w-lg">
                 <Link
                     :href="route('admin.legal.index')"
-                    class="flex items-center justify-between px-5 py-4 bg-[#111113] border border-zinc-800/70 rounded-xl hover:border-blue-500/40 hover:bg-blue-500/5 transition-colors group"
+                    class="flex items-center justify-between px-5 py-4 bg-admin-surface border border-zinc-800/70 rounded-xl hover:border-blue-500/40 hover:bg-blue-500/5 transition-colors group"
                 >
                     <div class="flex items-center gap-3">
                         <div class="w-9 h-9 rounded-lg bg-zinc-800/60 border border-zinc-700/50 flex items-center justify-center shrink-0">
@@ -861,7 +861,7 @@ function goToSetting(result: { tab: string; label: string }) {
 
             <!-- Contact -->
             <div v-show="activeTab === 'contact'" data-tab="contact" class="flex flex-col gap-5">
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
                     <h3 class="text-zinc-100 text-sm font-semibold mb-4">Contact Form</h3>
 
                     <div class="flex flex-col gap-1.5 py-3 border-t border-zinc-800/70">
@@ -878,7 +878,7 @@ function goToSetting(result: { tab: string; label: string }) {
                 </div>
 
                 <!-- SMTP Test -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5">
                     <h3 class="text-zinc-100 text-sm font-semibold mb-1">Test Email Delivery</h3>
                     <p class="text-zinc-600 text-xs mb-4">Send a test email to verify your SMTP configuration is working correctly.</p>
                     <div class="flex gap-2">
@@ -905,7 +905,7 @@ function goToSetting(result: { tab: string; label: string }) {
             <!-- Captcha -->
             <div v-show="activeTab === 'captcha'" data-tab="captcha" class="flex flex-col gap-5">
                 <!-- Provider selector -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
                     <h3 class="text-zinc-100 text-sm font-semibold mb-4">Captcha Provider</h3>
 
                     <div class="flex flex-col gap-2 py-3 border-t border-zinc-800/70">
@@ -935,7 +935,7 @@ function goToSetting(result: { tab: string; label: string }) {
                 </div>
 
                 <!-- Turnstile -->
-                <div v-if="form.captcha_provider === 'turnstile'" class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
+                <div v-if="form.captcha_provider === 'turnstile'" class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
                     <h3 class="text-zinc-100 text-sm font-semibold mb-4">Cloudflare Turnstile Keys</h3>
                     <div class="flex flex-col gap-1.5 py-3 border-t border-zinc-800/70">
                         <label class="text-zinc-400 text-xs font-medium">Site Key</label>
@@ -951,7 +951,7 @@ function goToSetting(result: { tab: string; label: string }) {
                 </div>
 
                 <!-- hCaptcha -->
-                <div v-if="form.captcha_provider === 'hcaptcha'" class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
+                <div v-if="form.captcha_provider === 'hcaptcha'" class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
                     <h3 class="text-zinc-100 text-sm font-semibold mb-4">hCaptcha Keys</h3>
                     <div class="flex flex-col gap-1.5 py-3 border-t border-zinc-800/70">
                         <label class="text-zinc-400 text-xs font-medium">Site Key</label>
@@ -967,7 +967,7 @@ function goToSetting(result: { tab: string; label: string }) {
                 </div>
 
                 <!-- reCAPTCHA v2 -->
-                <div v-if="form.captcha_provider === 'recaptcha_v2'" class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
+                <div v-if="form.captcha_provider === 'recaptcha_v2'" class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
                     <h3 class="text-zinc-100 text-sm font-semibold mb-4">Google reCAPTCHA v2 Keys</h3>
                     <div class="flex flex-col gap-1.5 py-3 border-t border-zinc-800/70">
                         <label class="text-zinc-400 text-xs font-medium">Site Key</label>
@@ -983,7 +983,7 @@ function goToSetting(result: { tab: string; label: string }) {
                 </div>
 
                 <!-- reCAPTCHA v3 -->
-                <div v-if="form.captcha_provider === 'recaptcha_v3'" class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
+                <div v-if="form.captcha_provider === 'recaptcha_v3'" class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-0">
                     <h3 class="text-zinc-100 text-sm font-semibold mb-4">Google reCAPTCHA v3 Keys</h3>
                     <div class="flex flex-col gap-1.5 py-3 border-t border-zinc-800/70">
                         <label class="text-zinc-400 text-xs font-medium">Site Key</label>
@@ -1001,8 +1001,8 @@ function goToSetting(result: { tab: string; label: string }) {
 
             <!-- Extensions -->
             <div v-show="activeTab === 'extensions'" data-tab="extensions" class="">
-                <div v-if="extensionSettings.length" class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
-                    <div class="px-5 py-3 border-b border-zinc-800/60 bg-[#1a1a1e]">
+                <div v-if="extensionSettings.length" class="bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden">
+                    <div class="px-5 py-3 border-b border-zinc-800/60 bg-admin-elevated">
                         <h3 class="text-zinc-100 text-sm font-semibold">Installed Extension Settings</h3>
                         <p class="text-zinc-500 text-xs mt-0.5">Each enabled extension that provides settings has its own dedicated page.</p>
                     </div>
@@ -1027,7 +1027,7 @@ function goToSetting(result: { tab: string; label: string }) {
                     </div>
                 </div>
 
-                <div v-else class="bg-[#111113] border border-zinc-800/70 rounded-xl p-10 text-center">
+                <div v-else class="bg-admin-surface border border-zinc-800/70 rounded-xl p-10 text-center">
                     <WrenchIcon :size="22" :stroke-width="1.5" class="mx-auto mb-2 text-zinc-700" />
                     <p class="text-zinc-500 text-sm">No extensions with settings are currently enabled.</p>
                 </div>
@@ -1037,7 +1037,7 @@ function goToSetting(result: { tab: string; label: string }) {
             </div> <!-- end flex row -->
 
             <!-- Sticky save bar — hidden on tabs with no form fields -->
-            <div v-show="activeTab !== 'extensions' && activeTab !== 'legal'" class="sticky bottom-0 mt-6 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-[#09090b]/90 backdrop-blur border-t border-zinc-800/70 flex items-center gap-4">
+            <div v-show="activeTab !== 'extensions' && activeTab !== 'legal'" class="sticky bottom-0 mt-6 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-admin-bg/90 backdrop-blur border-t border-zinc-800/70 flex items-center gap-4">
                 <button
                     type="submit"
                     :disabled="form.processing"

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Mail, ArrowLeft, Trash2, Send, CheckCircle2 } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -26,8 +27,8 @@ function sendReply() {
     });
 }
 
-function del() {
-    if (!confirm('Delete this message?')) return;
+async function del() {
+    if (!await confirm('Delete this message?')) return;
     router.delete(route('admin.contact.destroy', props.message.id));
 }
 
@@ -67,7 +68,7 @@ const inputClass = 'w-full bg-zinc-900/60 border border-zinc-800/70 text-zinc-10
         <div class="max-w-2xl flex flex-col gap-5">
 
             <!-- Header card -->
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 0ms">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 0ms">
                 <div class="flex items-start gap-4">
                     <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
                         <Mail :size="18" class="text-blue-400" :stroke-width="1.5" />
@@ -89,13 +90,13 @@ const inputClass = 'w-full bg-zinc-900/60 border border-zinc-800/70 text-zinc-10
             </div>
 
             <!-- Message body -->
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 40ms">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 40ms">
                 <p class="text-xs text-zinc-600 uppercase tracking-wider font-medium mb-3">Message</p>
                 <div class="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">{{ message.message }}</div>
             </div>
 
             <!-- Previous reply (if any) -->
-            <div v-if="message.replied_at" class="hc-hero-in bg-[#111113] border border-emerald-500/20 rounded-xl p-5" style="animation-delay: 80ms">
+            <div v-if="message.replied_at" class="hc-hero-in bg-admin-surface border border-emerald-500/20 rounded-xl p-5" style="animation-delay: 80ms">
                 <div class="flex items-center gap-2 mb-3">
                     <CheckCircle2 :size="14" :stroke-width="1.75" class="text-emerald-400" />
                     <p class="text-xs text-emerald-400 font-medium uppercase tracking-wider">
@@ -106,7 +107,7 @@ const inputClass = 'w-full bg-zinc-900/60 border border-zinc-800/70 text-zinc-10
             </div>
 
             <!-- Reply form -->
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 120ms">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 120ms">
                 <p class="text-xs text-zinc-600 uppercase tracking-wider font-medium mb-3">
                     {{ message.replied_at ? 'Send another reply' : 'Reply' }} to {{ message.email }}
                 </p>

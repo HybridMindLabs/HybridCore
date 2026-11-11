@@ -3,10 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Http\Controllers\Admin\UpdateController;
-use App\Services\GitUpdateVerifier;
+use App\Services\CoreUpdater;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Artisan;
-use Symfony\Component\Process\Process;
 
 /**
  * Safe, one-shot core update for self-hosted installations.
@@ -27,58 +25,43 @@ class CoreUpdateCommand extends Command
 
     protected $description = 'Update the HybridCore installation to the latest version';
 
-    public function handle(): int
+    public function handle(CoreUpdater $updater): int
     {
-        $this->components->info('Starting HybridCore update…');
+        $pull = ! $this->option('local');
 
-        Artisan::call('down', ['--retry' => 30]);
-        $this->components->task('Maintenance mode enabled', fn () => true);
+        $problems = $updater->preflight($pull);
+        if ($problems !== []) {
+            $this->components->error('The update was not started:');
+            $this->components->bulletList($problems);
 
-        $failed = null;
-
-        try {
-            if (! $this->option('local')) {
-                if (! is_dir(base_path('.git'))) {
-                    $this->components->error('This is not a git installation. Replace the files manually, then run: php artisan hybridcore:update --local');
-
-                    return self::FAILURE;
-                }
-
-                $this->step('git fetch', ['git', 'fetch', 'origin']);
-                app(GitUpdateVerifier::class)->assertIncomingCommitsAreSigned(base_path());
-                $this->step('git pull', ['git', 'pull', '--ff-only']);
-            }
-
-            if (! $this->option('no-composer')) {
-                $this->step('composer install', [
-                    'composer', 'install', '--no-interaction', '--no-dev', '--optimize-autoloader',
-                ]);
-            }
-
-            $this->artisanStep('migrate', ['--force' => true]);
-            // A release can ship an edited theme.json — new settings_schema
-            // fields, a changed requires_license flag. Those only reach the
-            // database through a sync, so without this the admin panel keeps
-            // showing the manifest that shipped with the previous version.
-            $this->artisanStep('hybridcore:themes:sync');
-            $this->artisanStep('optimize:clear');
-            $this->artisanStep('queue:restart');
-        } catch (\Throwable $e) {
-            $failed = $e;
-        } finally {
-            Artisan::call('up');
-            $this->components->task('Maintenance mode lifted', fn () => true);
+            return self::FAILURE;
         }
 
-        if ($failed !== null) {
-            $this->components->error('Update failed: '.$failed->getMessage());
-            $this->components->warn('The site is back online but may be in a mixed state — review the output above.');
+        $this->components->info('Starting HybridCore update…');
+
+        $printed = 0;
+        $result = $updater->run(
+            pull: $pull,
+            composer: ! $this->option('no-composer'),
+            build: false,
+            onStep: function (array $log) use (&$printed) {
+                foreach (array_slice($log, $printed) as $entry) {
+                    $this->line(($entry['ok'] ? '<info>✓</info> ' : '<error>✗</error> ')."<comment>{$entry['step']}</comment>");
+                    if ($entry['output'] !== '') {
+                        $this->line($entry['output']);
+                    }
+                }
+                $printed = count($log);
+            },
+        );
+
+        if (! $result['success']) {
+            $this->components->error('Update failed: '.$result['message']);
 
             return self::FAILURE;
         }
 
         $this->components->info('Update complete. Current version: '.UpdateController::VERSION);
-
         $this->remainingSteps();
 
         return self::SUCCESS;
@@ -113,27 +96,5 @@ class CoreUpdateCommand extends Command
         $this->newLine();
         $this->components->warn('Still to do by hand:');
         $this->components->bulletList($steps);
-    }
-
-    /** @param array<int, string> $command */
-    private function step(string $label, array $command): void
-    {
-        $process = new Process($command, base_path(), null, null, 600);
-        $process->run();
-
-        $this->line("<comment>{$label}</comment>");
-        $this->line(trim($process->getOutput().$process->getErrorOutput()));
-
-        if (! $process->isSuccessful()) {
-            throw new \RuntimeException("{$label} failed");
-        }
-    }
-
-    /** @param array<string, mixed> $arguments */
-    private function artisanStep(string $command, array $arguments = []): void
-    {
-        Artisan::call($command, $arguments);
-        $this->line("<comment>php artisan {$command}</comment>");
-        $this->line(trim(Artisan::output()));
     }
 }

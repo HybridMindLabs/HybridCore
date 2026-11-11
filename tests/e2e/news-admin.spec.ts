@@ -35,8 +35,8 @@ test.describe('Admin news article CRUD', () => {
         await expect(page.locator('body')).toContainText(title);
 
         const row = page.locator('div', { hasText: title }).last();
-        page.on('dialog', (d) => d.accept());
         await row.locator('button').last().click();
+        await page.getByRole('alertdialog').getByRole('button', { name: 'Delete' }).click();
 
         await expect(page.locator('body')).not.toContainText(title);
     });

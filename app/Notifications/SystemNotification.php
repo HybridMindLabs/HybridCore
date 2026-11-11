@@ -17,9 +17,21 @@ class SystemNotification extends Notification
         private readonly ?string $actionLabel = null,
     ) {}
 
+    /** @var array<int, string> */
+    private array $channels = ['database'];
+
+    /** @param  array<int, string>  $channels */
+    public function onChannels(array $channels): static
+    {
+        $copy = clone $this;
+        $copy->channels = $channels;
+
+        return $copy;
+    }
+
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return $this->channels;
     }
 
     public function toDatabase(object $notifiable): array

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -35,7 +36,7 @@ use Illuminate\Support\Carbon;
  */
 class IpBan extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = ['ip', 'reason', 'banned_by', 'expires_at'];
 
@@ -51,5 +52,15 @@ class IpBan extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()));
+    }
+
+    protected static function getActivityLogEventPrefix(): string
+    {
+        return 'user.ip_ban';
+    }
+
+    protected static function getActivityLogIdentifier(Model $model): string
+    {
+        return (string) $model->getAttribute('ip');
     }
 }

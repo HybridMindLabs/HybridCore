@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Plus, Lock, Users, KeySquare, Pencil, Trash2, ShieldCheck, ShieldAlert, Search, X } from '@lucide/vue';
 import { ref, computed } from 'vue';
@@ -32,8 +33,8 @@ const filteredRoles = computed(() => {
         || (r.description?.toLowerCase().includes(q) ?? false));
 });
 
-function deleteRole(role: RoleItem) {
-    if (!confirm(`Delete role "${role.name}"? Users assigned to it will lose any permissions granted only by this role.`)) return;
+async function deleteRole(role: RoleItem) {
+    if (!await confirm(`Delete role "${role.name}"? Users assigned to it will lose any permissions granted only by this role.`)) return;
     router.delete(route('admin.roles.destroy', role.id));
 }
 </script>
@@ -89,7 +90,7 @@ function deleteRole(role: RoleItem) {
                     v-model="search"
                     type="text"
                     placeholder="Search roles by name or description…"
-                    class="w-full bg-[#111113] border border-zinc-800/70 text-zinc-100 rounded-lg pl-9 pr-9 py-2 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                    class="w-full bg-admin-surface border border-zinc-800/70 text-zinc-100 rounded-lg pl-9 pr-9 py-2 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
                 />
                 <button v-if="search" type="button" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-400" @click="search = ''">
                     <X :size="14" :stroke-width="1.75" />
@@ -102,7 +103,7 @@ function deleteRole(role: RoleItem) {
             <div
                 v-for="(role, i) in filteredRoles"
                 :key="role.id"
-                class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden flex flex-col hover:border-zinc-700/60 transition-colors"
+                class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden flex flex-col hover:border-zinc-700/60 transition-colors"
                 :style="{ animationDelay: `${i * 40}ms` }"
             >
                 <!-- Color accent bar -->

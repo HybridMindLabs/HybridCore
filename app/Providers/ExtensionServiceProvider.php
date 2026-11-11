@@ -37,10 +37,12 @@ use App\Support\CorePermissions;
 use App\Support\CoreWebhookBridge;
 use App\Support\CoreWebhookEvents;
 use App\Support\CoreWidgets;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Throwable;
 
 /**
@@ -58,6 +60,9 @@ use Throwable;
  */
 class ExtensionServiceProvider extends ServiceProvider
 {
+    /** path => {message, at} for enabled extensions that failed to boot. */
+    public const BOOT_ERRORS_KEY = 'extensions.boot_errors';
+
     public function register(): void
     {
         $this->app->singleton(NavigationRegistry::class);
@@ -162,10 +167,15 @@ class ExtensionServiceProvider extends ServiceProvider
             return; // No DB during install — extensions simply don't load.
         }
 
+        $bootErrors = Cache::get(self::BOOT_ERRORS_KEY, []);
+        $before = $bootErrors;
+
         foreach ($enabled as $extension) {
             $base = base_path('extensions/'.$extension->path);
 
             if (! is_dir($base)) {
+                $bootErrors[$extension->path] = ['message' => 'Extension folder is missing on disk.', 'at' => now()->toIso8601String()];
+
                 continue;
             }
 
@@ -181,6 +191,7 @@ class ExtensionServiceProvider extends ServiceProvider
                 $this->loadExtensionSchedule($base, $manifest);
                 $this->registerExtensionCommands($manifest);
                 $this->registerExtensionProvider($base, $manifest);
+                unset($bootErrors[$extension->path]);
             } catch (Throwable $e) {
                 // A broken extension must never take down the platform.
                 // Log class + message only — never manifest values.
@@ -190,8 +201,21 @@ class ExtensionServiceProvider extends ServiceProvider
                     'message' => $e->getMessage(),
                 ]);
 
+                // Surfaced on Admin > Extensions so a broken extension isn't silent.
+                $bootErrors[$extension->path] = [
+                    'message' => $e::class.': '.Str::limit($e->getMessage(), 300),
+                    'at' => now()->toIso8601String(),
+                ];
+
                 continue;
             }
+        }
+
+        $stillEnabled = $enabled->pluck('path')->all();
+        $bootErrors = array_intersect_key($bootErrors, array_flip($stillEnabled));
+
+        if (array_keys($bootErrors) !== array_keys($before)) {
+            Cache::forever(self::BOOT_ERRORS_KEY, $bootErrors);
         }
 
         // Route names are assigned fluently after add(); refresh the lookup

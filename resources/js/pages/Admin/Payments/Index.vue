@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import ListControls from '@/components/Admin/ListControls.vue';
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Receipt, Undo2, Download } from '@lucide/vue';
+import { Receipt, Undo2, Download, Search, X } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
+import { computed, ref } from 'vue';
 
 interface PaymentRow {
     id: number;
@@ -16,13 +19,46 @@ interface PaymentRow {
     invoice_url: string | null;
 }
 interface PageLink { url: string | null; label: string; active: boolean }
-interface Paginator { data: PaymentRow[]; links: PageLink[]; total: number }
+interface Paginator { data: PaymentRow[]; links: PageLink[]; total: number; per_page: number }
 
-defineProps<{
+interface Filters { status: string; search: string; from: string; to: string; sort: string; dir: string; per_page?: string }
+
+const props = defineProps<{
     payments: Paginator;
-    filters: { status: string };
+    filters: Filters;
     totals: { paid: number; refunded: number; failed: number };
 }>();
+
+const search = ref(props.filters.search);
+const from = ref(props.filters.from);
+const to = ref(props.filters.to);
+const sort = ref(`${props.filters.sort}:${props.filters.dir}`);
+
+const sortOptions = [
+    { value: 'created_at:desc', label: 'Newest first' },
+    { value: 'created_at:asc', label: 'Oldest first' },
+    { value: 'amount:desc', label: 'Highest amount' },
+    { value: 'amount:asc', label: 'Lowest amount' },
+    { value: 'status:asc', label: 'Status' },
+];
+
+function params(overrides: Partial<Filters> = {}): Record<string, string> {
+    const [sortBy, dir] = sort.value.split(':');
+    const all: Filters = { status: props.filters.status, search: search.value, from: from.value, to: to.value, sort: sortBy, dir, per_page: new URLSearchParams(window.location.search).get('per_page') ?? '', ...overrides };
+    return Object.fromEntries(Object.entries(all).filter(([k, v]) => v && !(k === 'status' && v === 'all')
+        && !(k === 'sort' && v === 'created_at') && !(k === 'dir' && v === 'desc')));
+}
+
+const exportUrl = computed(() => route('admin.payments.export', params()));
+
+function apply(overrides: Partial<Filters> = {}) {
+    router.get(route('admin.payments.index'), params(overrides), { preserveState: true, replace: true });
+}
+
+function clearSearch() {
+    search.value = '';
+    apply();
+}
 
 const statusColors: Record<string, string> = {
     pending: 'text-amber-400 border-amber-500/30 bg-amber-500/10',
@@ -36,11 +72,11 @@ function formatMoney(amount: number, currency: string): string {
 }
 
 function setStatus(status: string) {
-    router.get(route('admin.payments.index'), status === 'all' ? {} : { status }, { preserveState: true, replace: true });
+    apply({ status });
 }
 
-function refund(payment: PaymentRow) {
-    if (!confirm(`Refund ${formatMoney(payment.amount, payment.currency)} to ${payment.user?.username ?? 'this buyer'}?`)) return;
+async function refund(payment: PaymentRow) {
+    if (!await confirm(`Refund ${formatMoney(payment.amount, payment.currency)} to ${payment.user?.username ?? 'this buyer'}?`)) return;
     router.post(route('admin.payments.refund', payment.id), {}, { preserveScroll: true });
 }
 </script>
@@ -65,7 +101,33 @@ function refund(payment: PaymentRow) {
             </div>
         </div>
 
-        <div class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+        <form class="flex flex-wrap items-center gap-2 mb-4" @submit.prevent="apply()">
+            <div class="relative w-full sm:w-72">
+                <Search :size="14" :stroke-width="2" class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" />
+                <input v-model="search" type="text" placeholder="Search #id, username, email or gateway ref…"
+                    class="w-full pl-9 pr-9 py-2 rounded-lg border border-zinc-800/70 bg-admin-bg text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-zinc-600" />
+                <button v-if="search" type="button" aria-label="Clear search" @click="clearSearch"
+                    class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-300 transition-colors">
+                    <X :size="14" :stroke-width="2" />
+                </button>
+            </div>
+            <label class="sr-only" for="payments-from">From</label>
+            <input id="payments-from" v-model="from" type="date" class="px-3 py-2 rounded-lg border border-zinc-800/70 bg-admin-bg text-sm text-zinc-100 outline-none focus:border-zinc-600" @change="apply()" />
+            <span class="text-zinc-600 text-sm">–</span>
+            <label class="sr-only" for="payments-to">To</label>
+            <input id="payments-to" v-model="to" type="date" class="px-3 py-2 rounded-lg border border-zinc-800/70 bg-admin-bg text-sm text-zinc-100 outline-none focus:border-zinc-600" @change="apply()" />
+            <label class="sr-only" for="payments-sort">Sort</label>
+            <select id="payments-sort" v-model="sort" class="px-3 py-2 rounded-lg border border-zinc-800/70 bg-admin-bg text-sm text-zinc-100 outline-none focus:border-zinc-600" @change="apply()">
+                <option v-for="o in sortOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
+            </select>
+            <a :href="exportUrl" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-zinc-800/70 text-sm font-medium text-zinc-300 hover:text-white hover:border-zinc-600 transition-colors sm:ml-auto">
+                <Download :size="14" :stroke-width="2" /> Export CSV
+            </a>
+        </form>
+
+        <ListControls :per-page="payments.per_page" class="mb-3" />
+
+        <div class="rounded-xl border border-zinc-800/70 bg-admin-surface overflow-hidden">
             <div v-if="!payments.data.length" class="flex flex-col items-center justify-center py-16 text-center">
                 <Receipt :size="24" :stroke-width="1.5" class="text-zinc-700 mb-3" />
                 <p class="text-[13px] text-zinc-600">No payments here.</p>

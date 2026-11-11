@@ -18,12 +18,20 @@ interface PageLink { url: string | null; label: string; active: boolean }
 interface Paginator { data: InvoiceRow[]; links: PageLink[]; total: number }
 interface Stats { total: number; totalAmount: number; monthCount: number; monthAmount: number; currency: string }
 
-const props = defineProps<{ invoices: Paginator; filters: { q: string }; stats: Stats }>();
+const props = defineProps<{ invoices: Paginator; filters: { q: string; from: string; to: string }; stats: Stats }>();
 
 const search = ref(props.filters.q);
+const from = ref(props.filters.from);
+const to = ref(props.filters.to);
+
+function params(): Record<string, string> {
+    return Object.fromEntries(Object.entries({ q: search.value, from: from.value, to: to.value }).filter(([, v]) => v));
+}
+
+const exportUrl = computed(() => route('admin.invoices.export', params()));
 
 function submitSearch() {
-    router.get(route('admin.invoices.index'), search.value ? { q: search.value } : {}, { preserveState: true, replace: true });
+    router.get(route('admin.invoices.index'), params(), { preserveState: true, replace: true });
 }
 
 function clearSearch() {
@@ -51,7 +59,7 @@ const kpis = computed(() => [
              reads as part of the same admin, not a bolted-on afterthought. -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
             <div v-for="(k, i) in kpis" :key="k.label"
-                class="hc-hero-in rounded-xl border border-zinc-800/70 bg-[#111113] px-4 py-3.5 flex items-center gap-3.5 transition-[border-color,transform] duration-200 hover:border-zinc-700/70 hover:-translate-y-0.5"
+                class="hc-hero-in rounded-xl border border-zinc-800/70 bg-admin-surface px-4 py-3.5 flex items-center gap-3.5 transition-[border-color,transform] duration-200 hover:border-zinc-700/70 hover:-translate-y-0.5"
                 :style="{ animationDelay: `${i * 40}ms` }">
                 <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" :style="{ backgroundColor: k.bg }">
                     <component :is="k.icon" :size="16" :stroke-width="1.8" :style="{ color: k.color }" />
@@ -63,30 +71,40 @@ const kpis = computed(() => [
             </div>
         </div>
 
-        <form @submit.prevent="submitSearch" class="relative mb-4 max-w-sm">
-            <Search :size="14" :stroke-width="2" class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" />
-            <input v-model="search" type="text" placeholder="Search invoice # or username…"
-                class="w-full pl-9 pr-9 py-2 rounded-lg border border-zinc-800/70 bg-[#09090b] text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-zinc-600" />
-            <button v-if="search" type="button" @click="clearSearch"
-                class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-300 transition-colors">
-                <X :size="14" :stroke-width="2" />
-            </button>
+        <form @submit.prevent="submitSearch" class="flex flex-wrap items-center gap-2 mb-4">
+            <div class="relative w-full sm:w-72">
+                <Search :size="14" :stroke-width="2" class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" />
+                <input v-model="search" type="text" placeholder="Search invoice # or username…"
+                    class="w-full pl-9 pr-9 py-2 rounded-lg border border-zinc-800/70 bg-admin-bg text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-zinc-600" />
+                <button v-if="search" type="button" @click="clearSearch"
+                    class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-300 transition-colors">
+                    <X :size="14" :stroke-width="2" />
+                </button>
+            </div>
+            <label class="sr-only" for="invoices-from">From</label>
+            <input id="invoices-from" v-model="from" type="date" class="px-3 py-2 rounded-lg border border-zinc-800/70 bg-admin-bg text-sm text-zinc-100 outline-none focus:border-zinc-600" @change="submitSearch" />
+            <span class="text-zinc-600 text-sm">–</span>
+            <label class="sr-only" for="invoices-to">To</label>
+            <input id="invoices-to" v-model="to" type="date" class="px-3 py-2 rounded-lg border border-zinc-800/70 bg-admin-bg text-sm text-zinc-100 outline-none focus:border-zinc-600" @change="submitSearch" />
+            <a :href="exportUrl" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-zinc-800/70 text-sm font-medium text-zinc-300 hover:text-white hover:border-zinc-600 transition-colors sm:ml-auto">
+                <Download :size="14" :stroke-width="2" /> Export CSV
+            </a>
         </form>
 
-        <div class="hc-hero-in rounded-2xl border border-zinc-800/70 bg-[#111113] overflow-hidden" style="animation-delay: 100ms">
+        <div class="hc-hero-in rounded-2xl border border-zinc-800/70 bg-admin-surface overflow-hidden" style="animation-delay: 100ms">
             <div v-if="!invoices.data.length" class="flex flex-col items-center justify-center py-16 text-center">
                 <Receipt :size="24" :stroke-width="1.5" class="text-zinc-700 mb-3" />
                 <p class="text-[13px] text-zinc-600">{{ filters.q ? `No invoices match "${filters.q}".` : 'No invoices yet — one is generated automatically the moment a payment is marked paid.' }}</p>
             </div>
 
-            <table v-else class="w-full text-sm">
+            <table v-else class="admin-table w-full text-sm">
                 <thead>
-                    <tr class="border-b border-zinc-800/70 bg-[#17171a] text-zinc-500 text-[11px] font-bold uppercase tracking-wide">
-                        <th class="text-left px-4 py-3">Invoice</th>
-                        <th class="text-left px-4 py-3">Member</th>
-                        <th class="text-left px-4 py-3">Amount</th>
-                        <th class="text-left px-4 py-3">Issued</th>
-                        <th class="text-right px-4 py-3">Actions</th>
+                    <tr class="bg-[#17171a] text-zinc-500 text-[11px] font-bold uppercase tracking-wide">
+                        <th>Invoice</th>
+                        <th>Member</th>
+                        <th>Amount</th>
+                        <th>Issued</th>
+                        <th class="text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody>

@@ -5,6 +5,7 @@ namespace Tests\Feature\Admin;
 use App\Console\Commands\ReleaseBuildCommand;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Models\User;
+use App\Services\SettingsService;
 use App\Services\UpdateService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -44,6 +45,25 @@ class UpdateSystemTest extends TestCase
 
         $this->assertSame('99.0.0', $release['version']);
         $this->assertTrue($release['is_newer']);
+    }
+
+    public function test_the_beta_channel_offers_pre_releases_and_stable_does_not(): void
+    {
+        Http::fake([
+            'api.github.com/*/releases/latest' => Http::response(['tag_name' => 'v98.0.0', 'name' => 'Stable', 'prerelease' => false]),
+            'api.github.com/*/releases?*' => Http::response([
+                ['tag_name' => 'v99.0.0-beta.1', 'name' => 'Draft', 'draft' => true, 'prerelease' => true],
+                ['tag_name' => 'v98.1.0-beta.2', 'name' => 'Beta', 'draft' => false, 'prerelease' => true],
+            ]),
+        ]);
+
+        $this->assertSame('98.0.0', app(UpdateService::class)->latestRelease(fresh: true)['version']);
+
+        app(SettingsService::class)->set('update_channel', 'beta');
+        $beta = app(UpdateService::class)->latestRelease(fresh: true);
+
+        $this->assertSame('98.1.0-beta.2', $beta['version']);
+        $this->assertTrue($beta['prerelease']);
     }
 
     public function test_current_version_is_not_flagged_as_newer(): void

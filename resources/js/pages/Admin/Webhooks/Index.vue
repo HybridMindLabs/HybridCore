@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { Webhook, Trash2, Plus, Copy, CheckCircle2, RefreshCw, Send, ChevronDown, Redo2, Info } from '@lucide/vue';
 import { computed, ref } from 'vue';
@@ -91,8 +92,8 @@ function submitEdit(id: number) {
     editForm.put(route('admin.webhooks.update', id), { preserveScroll: true, onSuccess: () => (editingId.value = null) });
 }
 
-function regenerateSecret(id: number) {
-    if (!confirm('Regenerate this webhook\'s secret? The old one stops verifying immediately.')) return;
+async function regenerateSecret(id: number) {
+    if (!await confirm('Regenerate this webhook\'s secret? The old one stops verifying immediately.')) return;
     router.post(route('admin.webhooks.regenerate-secret', id), {}, { preserveScroll: true });
 }
 
@@ -116,8 +117,8 @@ function toggleLog(id: number) {
     expandedLog.value = expandedLog.value === id ? null : id;
 }
 
-function destroyEndpoint(endpoint: EndpointRow) {
-    if (!confirm(`Delete "${endpoint.name}"? This cannot be undone.`)) return;
+async function destroyEndpoint(endpoint: EndpointRow) {
+    if (!await confirm(`Delete "${endpoint.name}"? This cannot be undone.`)) return;
     router.delete(route('admin.webhooks.destroy', endpoint.id));
 }
 </script>
@@ -169,7 +170,7 @@ function destroyEndpoint(endpoint: EndpointRow) {
                     Endpoints <span class="text-zinc-700">({{ endpoints.length }})</span>
                 </h2>
 
-                <div v-if="endpoints.length === 0" class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl">
+                <div v-if="endpoints.length === 0" class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl">
                     <EmptyState
                         title="No webhook endpoints yet"
                         description="Add one to start receiving events."
@@ -180,7 +181,7 @@ function destroyEndpoint(endpoint: EndpointRow) {
                 <div
                     v-for="(endpoint, i) in endpoints"
                     :key="endpoint.id"
-                    class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5"
+                    class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5"
                     :style="{ animationDelay: `${Math.min(i, 5) * 40}ms` }"
                 >
                     <div class="flex items-center justify-between mb-3">
@@ -269,7 +270,7 @@ function destroyEndpoint(endpoint: EndpointRow) {
             </div>
 
             <!-- Create new endpoint -->
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 40ms">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 40ms">
                 <h3 class="text-zinc-100 text-sm font-semibold mb-3">New Webhook</h3>
                 <form class="flex flex-col gap-3" @submit.prevent="submitCreate">
                     <div>

@@ -5,18 +5,20 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ContactMessage;
 use App\Models\Message;
+use App\Models\Payment;
 use App\Models\Role;
 use App\Models\Server;
 use App\Models\User;
 use App\Services\Extensions\Registries\WidgetRegistry;
 use App\Services\SettingsService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index(WidgetRegistry $widgets, SettingsService $settings): Response
+    public function index(Request $request, WidgetRegistry $widgets, SettingsService $settings): Response
     {
         $maintenanceMode = (bool) $settings->get('maintenance_mode', false);
         $serversTotal = null;
@@ -140,6 +142,7 @@ class DashboardController extends Controller
 
         return Inertia::render('Admin/Dashboard', [
             'widgets' => $widgets->compose(),
+            'revenue' => $request->user()->can('payments.view') ? $this->revenue((int) $request->query('range', 30)) : null,
             'maintenance_mode' => $maintenanceMode,
             'stats' => [
                 'total_users' => User::count(),
@@ -160,5 +163,54 @@ class DashboardController extends Controller
                 'engagement' => $engagement,
             ],
         ]);
+    }
+
+    /**
+     * Paid revenue for the dashboard. Totals are in the site's main currency —
+     * the one most payments use — since mixing currencies in one sum is wrong.
+     *
+     * @return array<string, mixed>
+     */
+    private function revenue(int $range): array
+    {
+        $range = in_array($range, [7, 30, 90], true) ? $range : 30;
+        $since = now()->subDays($range - 1)->startOfDay();
+
+        $currency = Payment::select('currency')
+            ->groupBy('currency')
+            ->orderByRaw('COUNT(*) DESC')
+            ->value('currency') ?? 'usd';
+
+        $paid = fn () => Payment::where('status', Payment::STATUS_PAID)->where('currency', $currency);
+
+        $daily = $paid()
+            ->where('created_at', '>=', $since)
+            ->selectRaw('DATE(created_at) as date, SUM(amount) as total')
+            ->groupBy('date')
+            ->toBase()
+            ->pluck('total', 'date');
+
+        $series = collect(range($range - 1, 0))->map(function (int $daysAgo) use ($daily) {
+            $date = now()->subDays($daysAgo)->toDateString();
+
+            return ['date' => $date, 'amount' => ((int) ($daily[$date] ?? 0)) / 100];
+        })->values();
+
+        $inRange = Payment::where('created_at', '>=', $since);
+        $paidCount = (clone $inRange)->where('status', Payment::STATUS_PAID)->where('currency', $currency)->count();
+
+        return [
+            'range' => $range,
+            'currency' => strtoupper($currency),
+            'today' => ((int) $paid()->whereDate('created_at', today())->sum('amount')) / 100,
+            'month' => ((int) $paid()->where('created_at', '>=', now()->startOfMonth())->sum('amount')) / 100,
+            'period' => $series->sum('amount'),
+            'paid_count' => $paidCount,
+            'average' => $paidCount > 0 ? round($series->sum('amount') / $paidCount, 2) : 0,
+            'failed_count' => (clone $inRange)->where('status', Payment::STATUS_FAILED)->count(),
+            'refunded_count' => (clone $inRange)->where('status', Payment::STATUS_REFUNDED)->count(),
+            'refunded_amount' => ((int) (clone $inRange)->where('status', Payment::STATUS_REFUNDED)->where('currency', $currency)->sum('amount')) / 100,
+            'series' => $series,
+        ];
     }
 }

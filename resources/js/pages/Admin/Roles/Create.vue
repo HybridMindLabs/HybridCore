@@ -59,7 +59,7 @@ function submit() {
                 <div class="w-full xl:w-80 shrink-0 flex flex-col gap-4 xl:sticky xl:top-6">
 
                     <!-- Preview card -->
-                    <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-4">
+                    <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-4">
                         <p class="text-zinc-600 text-[11px] uppercase tracking-wide font-medium mb-3">Preview</p>
                         <div class="flex items-center gap-3">
                             <span
@@ -88,7 +88,7 @@ function submit() {
                     </div>
 
                     <!-- Identity fields -->
-                    <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-4 flex flex-col gap-4" style="animation-delay: 40ms">
+                    <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-4 flex flex-col gap-4" style="animation-delay: 40ms">
                         <p class="text-zinc-600 text-[11px] uppercase tracking-wide font-medium">Identity</p>
 
                         <div class="flex flex-col gap-1.5">
@@ -131,7 +131,7 @@ function submit() {
                     </div>
 
                     <!-- Appearance -->
-                    <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-4 flex flex-col gap-4" style="animation-delay: 80ms">
+                    <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-4 flex flex-col gap-4" style="animation-delay: 80ms">
                         <p class="text-zinc-600 text-[11px] uppercase tracking-wide font-medium">Appearance</p>
 
                         <div class="flex flex-col gap-1.5">
@@ -187,7 +187,7 @@ function submit() {
 
                 <!-- Right: permissions -->
                 <div class="hc-hero-in flex-1 min-w-0" style="animation-delay: 60ms">
-                    <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-4">
+                    <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-4">
                         <div class="flex items-center justify-between mb-4">
                             <p class="text-zinc-100 text-sm font-semibold">Permissions</p>
                             <p class="text-zinc-600 text-xs">Grant which actions this role can perform.</p>

@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import ListControls from '@/components/Admin/ListControls.vue';
+import SortHeader from '@/components/Admin/SortHeader.vue';
+import { useSelection } from '@/composables/useSelection';
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import {
     Users, UserPlus, Pencil, Trash2, Search, X, ChevronDown, Loader2,
@@ -9,7 +13,7 @@ import PageHeader from '@/components/UI/PageHeader.vue';
 import EmptyState from '@/components/UI/EmptyState.vue';
 import Tooltip from '@/components/UI/Tooltip.vue';
 import Pagination from '@/components/UI/Pagination.vue';
-import { ref, watch, computed } from 'vue';
+import { ref, watch } from 'vue';
 
 interface Role { name: string; slug: string; color: string; icon: string }
 interface UserRow {
@@ -35,7 +39,7 @@ interface SharedProps { auth: { user: { id: number } | null } }
 
 const props = defineProps<{
     users: Paginator;
-    filters: { search: string };
+    filters: { search: string; sort: string; dir: string };
     stats: { total: number; active: number; banned: number; admins: number; unverified: number };
 }>();
 const page = usePage<SharedProps>();
@@ -46,7 +50,7 @@ let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 watch(search, (value) => {
     if (searchTimeout) clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
-        router.get(route('admin.users.index'), value ? { search: value } : {}, {
+        router.get(route('admin.users.index'), { ...(value ? { search: value } : {}), sort: props.filters.sort, dir: props.filters.dir, per_page: new URLSearchParams(window.location.search).get('per_page') || undefined }, {
             preserveState: true, preserveScroll: true, replace: true,
             onStart: () => { searching.value = true; },
             onFinish: () => { searching.value = false; },
@@ -55,44 +59,24 @@ watch(search, (value) => {
 });
 function clearSearch() { search.value = ''; }
 
-function deleteUser(user: UserRow) {
-    if (!confirm(`Delete user "${user.name}"? This cannot be undone.`)) return;
+async function deleteUser(user: UserRow) {
+    if (!await confirm(`Delete user "${user.name}"? This cannot be undone.`)) return;
     router.delete(route('admin.users.destroy', user.id));
 }
 
 // ── Bulk actions ────────────────────────────────────────────
-const selected = ref<number[]>([]);
+// The signed-in admin can't bulk-act on their own account, so they're never selectable.
+const { selected, allSelected, toggleAll, toggleOne } = useSelection(() => props.users.data
+    .filter((u) => u.id !== page.props.auth?.user?.id)
+    .map((u) => u.id));
 const bulkMenuOpen = ref(false);
 const bulkPending = ref(false);
 
-const allSelected = computed(() =>
-    props.users.data.length > 0 &&
-    props.users.data.every((u) => selected.value.includes(u.id)),
-);
-
-function toggleAll() {
-    if (allSelected.value) {
-        selected.value = [];
-    } else {
-        selected.value = props.users.data
-            .filter((u) => u.id !== page.props.auth?.user?.id)
-            .map((u) => u.id);
-    }
-}
-
-function toggleOne(id: number) {
-    if (selected.value.includes(id)) {
-        selected.value = selected.value.filter((x) => x !== id);
-    } else {
-        selected.value = [...selected.value, id];
-    }
-}
-
-function runBulk(action: 'ban' | 'unban' | 'verify' | 'delete') {
+async function runBulk(action: 'ban' | 'unban' | 'verify' | 'delete') {
     bulkMenuOpen.value = false;
     if (selected.value.length === 0) return;
     const label = { ban: 'ban', unban: 'unban', verify: 'verify', delete: 'permanently delete' }[action];
-    if (!confirm(`${label} ${selected.value.length} selected user(s)?`)) return;
+    if (!await confirm(`${label} ${selected.value.length} selected user(s)?`)) return;
     bulkPending.value = true;
     router.post(route('admin.users.bulk'), { action, user_ids: selected.value }, {
         onFinish: () => { bulkPending.value = false; selected.value = []; },
@@ -129,23 +113,23 @@ function userInitials(name: string) {
 
         <!-- Stats bar -->
         <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3" style="animation-delay: 0ms">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl px-4 py-3" style="animation-delay: 0ms">
                 <p class="text-zinc-600 text-[11px] font-medium uppercase tracking-wider mb-0.5">Total</p>
                 <p class="text-zinc-100 text-xl font-bold tabular-nums">{{ stats.total.toLocaleString() }}</p>
             </div>
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3" style="animation-delay: 40ms">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl px-4 py-3" style="animation-delay: 40ms">
                 <p class="text-zinc-600 text-[11px] font-medium uppercase tracking-wider mb-0.5">Active</p>
                 <p class="text-emerald-400 text-xl font-bold tabular-nums">{{ stats.active.toLocaleString() }}</p>
             </div>
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3" style="animation-delay: 80ms">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl px-4 py-3" style="animation-delay: 80ms">
                 <p class="text-zinc-600 text-[11px] font-medium uppercase tracking-wider mb-0.5">Banned</p>
                 <p class="text-red-400 text-xl font-bold tabular-nums">{{ stats.banned.toLocaleString() }}</p>
             </div>
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3" style="animation-delay: 120ms">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl px-4 py-3" style="animation-delay: 120ms">
                 <p class="text-zinc-600 text-[11px] font-medium uppercase tracking-wider mb-0.5">Admins</p>
                 <p class="text-blue-400 text-xl font-bold tabular-nums">{{ stats.admins.toLocaleString() }}</p>
             </div>
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3" style="animation-delay: 160ms">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl px-4 py-3" style="animation-delay: 160ms">
                 <p class="text-zinc-600 text-[11px] font-medium uppercase tracking-wider mb-0.5">Unverified</p>
                 <p class="text-amber-400 text-xl font-bold tabular-nums">{{ stats.unverified.toLocaleString() }}</p>
             </div>
@@ -161,7 +145,7 @@ function userInitials(name: string) {
                     v-model="search"
                     type="text"
                     placeholder="Search by name, username, or email…"
-                    class="w-full bg-[#111113] border border-zinc-800/70 text-zinc-100 rounded-lg pl-9 pr-9 py-2 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                    class="w-full bg-admin-surface border border-zinc-800/70 text-zinc-100 rounded-lg pl-9 pr-9 py-2 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
                 />
                 <button v-if="search" type="button" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-400" @click="clearSearch">
                     <X :size="14" :stroke-width="1.75" />
@@ -201,6 +185,8 @@ function userInitials(name: string) {
         </div>
 
         <div :class="searching ? 'opacity-50 pointer-events-none transition-opacity' : 'transition-opacity'">
+        <ListControls :per-page="users.per_page" class="mb-3" />
+
         <EmptyState v-if="users.data.length === 0 && !filters.search" :icon="Users" title="No users yet" description="Create the first user account to get started.">
             <template #action>
                 <Link :href="route('admin.users.create')" class="flex items-center gap-1.5 bg-blue-500 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-blue-400 transition-colors">
@@ -211,23 +197,23 @@ function userInitials(name: string) {
 
         <EmptyState v-else-if="users.data.length === 0" :icon="Search" title="No matches" :description="`No users match &quot;${filters.search}&quot;. Try a different name or email.`" />
 
-        <div v-else class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
-            <table class="w-full text-sm">
+        <div v-else class="bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden">
+            <table class="admin-table w-full text-sm">
                 <thead>
-                    <tr class="border-b border-zinc-800/70 bg-[#0d0d0f]">
-                        <th class="px-4 py-3 w-8">
+                    <tr>
+                        <th class="w-8">
                             <input type="checkbox" :checked="allSelected" class="rounded border-zinc-700 bg-zinc-800 accent-blue-500 cursor-pointer" @change="toggleAll" />
                         </th>
-                        <th class="text-left text-zinc-500 text-[11px] font-semibold uppercase tracking-wider px-4 py-3">User</th>
-                        <th class="text-left text-zinc-500 text-[11px] font-semibold uppercase tracking-wider px-4 py-3 hidden sm:table-cell">
+                        <th><SortHeader label="User" column="name" :sort="filters.sort" :dir="filters.dir" route-name="admin.users.index" :params="{ search: filters.search }" /></th>
+                        <th class="hidden sm:table-cell">
                             <Tooltip text="Primary role is shown. A user may have multiple roles.">
                                 <span class="cursor-help border-b border-dotted border-zinc-700">Role</span>
                             </Tooltip>
                         </th>
-                        <th class="text-left text-zinc-500 text-[11px] font-semibold uppercase tracking-wider px-4 py-3 hidden lg:table-cell">Last seen</th>
-                        <th class="text-left text-zinc-500 text-[11px] font-semibold uppercase tracking-wider px-4 py-3 hidden md:table-cell">Joined</th>
-                        <th class="text-left text-zinc-500 text-[11px] font-semibold uppercase tracking-wider px-4 py-3">Status</th>
-                        <th class="px-4 py-3 w-20" />
+                        <th class="hidden lg:table-cell"><SortHeader label="Last seen" column="last_seen_at" :sort="filters.sort" :dir="filters.dir" route-name="admin.users.index" :params="{ search: filters.search }" /></th>
+                        <th class="hidden md:table-cell"><SortHeader label="Joined" column="created_at" :sort="filters.sort" :dir="filters.dir" route-name="admin.users.index" :params="{ search: filters.search }" /></th>
+                        <th>Status</th>
+                        <th class="w-20" />
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-zinc-800/40">

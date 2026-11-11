@@ -1,4 +1,5 @@
 ﻿<script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Plus, Pencil, Trash2, Tag } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -9,8 +10,8 @@ interface Category {
 }
 defineProps<{ categories: Category[] }>();
 
-function destroy(id: number, name: string) {
-    if (!confirm(`Delete category "${name}"?`)) return;
+async function destroy(id: number, name: string) {
+    if (!await confirm(`Delete category "${name}"?`)) return;
     router.delete(route('admin.news.categories.destroy', id));
 }
 </script>
@@ -35,7 +36,7 @@ function destroy(id: number, name: string) {
             </template>
         </EmptyState>
 
-        <div v-else class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+        <div v-else class="rounded-xl border border-zinc-800/70 bg-admin-surface overflow-hidden">
             <div v-for="(cat, i) in categories" :key="cat.id"
                 class="hc-hero-in flex items-center gap-4 px-5 py-3.5 border-b border-zinc-800/50 last:border-0 hover:bg-white/[0.02]"
                 :style="{ animationDelay: `${i * 30}ms` }">

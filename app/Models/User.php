@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\SettingsService;
+use App\Traits\LogsActivity;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -139,7 +140,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public const EMAIL_PREFERENCE_KEYS = ['email_messages', 'email_digest'];
 
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, LogsActivity, Notifiable;
 
     use Searchable;
 
@@ -375,5 +376,14 @@ class User extends Authenticatable implements MustVerifyEmail
         $cooldownDays = (int) app(SettingsService::class)->get('username_change_cooldown_days', 30);
 
         return $this->username_changed_at->addDays($cooldownDays)->isPast();
+    }
+
+    protected static function getActivityLogIgnoredAttributes(): array
+    {
+        return [
+            'password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes',
+            'two_factor_required_since', 'last_seen_at', 'last_login_at', 'last_login_ip',
+            'failed_login_attempts', 'locked_until', 'onboarding_completed_at', 'password_set_at',
+        ];
     }
 }

@@ -14,9 +14,9 @@ class ActivityLogController extends Controller
     /** Category key => event prefixes it covers. Keep in sync with every activity()->log() call site. */
     private const CATEGORIES = [
         'users' => ['user.'],
-        'roles' => ['roles.'],
-        'rules' => ['rules.'],
-        'pages' => ['page.'],
+        'roles' => ['roles.', 'role.'],
+        'rules' => ['rules.', 'rule.'],
+        'pages' => ['page.', 'menu.'],
         'legal' => ['legal.'],
         'news' => ['news.'],
         'servers' => ['server.', 'servers.'],
@@ -27,7 +27,7 @@ class ActivityLogController extends Controller
         'reports' => ['report.'],
         'backups' => ['backup.'],
         'trash' => ['trash.'],
-        'system' => ['system.', 'settings.'],
+        'system' => ['system.', 'settings.', 'setting.'],
     ];
 
     public function index(Request $request): Response
@@ -49,7 +49,7 @@ class ActivityLogController extends Controller
                 });
             })
             ->orderByDesc('created_at')
-            ->paginate(30)
+            ->paginate($this->perPage($request, 30))
             ->withQueryString()
             ->through(fn (ActivityLog $log) => [
                 'id' => $log->id,
@@ -58,6 +58,7 @@ class ActivityLogController extends Controller
                 'causer' => $log->causer instanceof User
                     ? ['name' => $log->causer->name, 'email' => $log->causer->email]
                     : null,
+                'properties' => $log->properties,
                 'ip_address' => $log->ip_address,
                 'user_agent' => $log->user_agent,
                 'created_at' => $log->created_at?->toDateTimeString(),

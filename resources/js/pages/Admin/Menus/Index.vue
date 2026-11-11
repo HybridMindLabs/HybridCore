@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { List, Plus, Pencil, Trash2, MapPin, Hash } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -15,8 +16,8 @@ function createMenu() {
     menuForm.post(route('admin.menus.store'), { onSuccess: () => menuForm.reset() });
 }
 
-function deleteMenu(menu: MenuRow) {
-    if (confirm(`Delete menu "${menu.name}" and all its items?`)) {
+async function deleteMenu(menu: MenuRow) {
+    if (await confirm(`Delete menu "${menu.name}" and all its items?`)) {
         router.delete(route('admin.menus.destroy', menu.id));
     }
 }
@@ -54,7 +55,7 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 rounded-lg px-3 py-
                 <div
                     v-for="(menu, i) in menus"
                     :key="menu.id"
-                    class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-5 py-4 flex items-center justify-between hover:border-zinc-700/60 transition-colors group"
+                    class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl px-5 py-4 flex items-center justify-between hover:border-zinc-700/60 transition-colors group"
                     :style="{ animationDelay: `${i * 40}ms` }"
                 >
                     <div class="min-w-0 flex-1">
@@ -101,7 +102,7 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 rounded-lg px-3 py-
             </div>
 
             <!-- Right: create form (sticky) -->
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5 lg:sticky lg:top-6" style="animation-delay: 80ms">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5 lg:sticky lg:top-6" style="animation-delay: 80ms">
                 <h3 class="text-sm font-semibold text-zinc-100 mb-1 flex items-center gap-2">
                     <Plus :size="14" :stroke-width="2" class="text-blue-400" />
                     Create New Menu

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Star, Trash2, MessageSquare, Search, X } from '@lucide/vue';
 import { ref, watch } from 'vue';
@@ -38,8 +39,8 @@ watch(search, (value) => {
     }, 350);
 });
 
-function del(id: number) {
-    if (!confirm('Delete this review?')) return;
+async function del(id: number) {
+    if (!await confirm('Delete this review?')) return;
     router.delete(route('admin.servers.reviews.destroy', id));
 }
 
@@ -65,7 +66,7 @@ function stars(n: number) {
                 v-model="search"
                 type="text"
                 placeholder="Search by user, server, or review text…"
-                class="w-full bg-[#111113] border border-zinc-800/70 text-zinc-100 rounded-lg pl-9 pr-9 py-2 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                class="w-full bg-admin-surface border border-zinc-800/70 text-zinc-100 rounded-lg pl-9 pr-9 py-2 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
             />
             <button v-if="search" type="button" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-400" @click="search = ''">
                 <X :size="14" :stroke-width="1.75" />
@@ -81,16 +82,16 @@ function stars(n: number) {
         />
 
         <!-- Table -->
-        <div v-else class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden transition-opacity" :class="searching ? 'opacity-50 pointer-events-none' : ''">
-            <table class="w-full text-sm">
+        <div v-else class="bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden transition-opacity" :class="searching ? 'opacity-50 pointer-events-none' : ''">
+            <table class="admin-table w-full text-sm">
                 <thead>
-                    <tr class="border-b border-zinc-800/70">
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">User</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Server</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Rating</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Review</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Date</th>
-                        <th class="px-4 py-3"></th>
+                    <tr>
+                        <th>User</th>
+                        <th>Server</th>
+                        <th>Rating</th>
+                        <th>Review</th>
+                        <th>Date</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-zinc-800/40">

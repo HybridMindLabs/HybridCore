@@ -35,8 +35,8 @@ const lc = 'text-zinc-500 text-[11px] font-bold uppercase tracking-widest mb-1.5
         </div>
 
         <div class="max-w-2xl">
-            <div class="hc-hero-in rounded-2xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
-                <div class="border-b border-zinc-800/60 bg-[#1a1a1e] px-5 py-3.5">
+            <div class="hc-hero-in rounded-2xl border border-zinc-800/70 bg-admin-surface overflow-hidden">
+                <div class="border-b border-zinc-800/60 bg-admin-elevated px-5 py-3.5">
                     <h2 class="text-[14px] font-bold text-zinc-100">Category Details</h2>
                 </div>
                 <form class="p-5 flex flex-col gap-4" @submit.prevent="form.post(route('admin.news.categories.store'))">

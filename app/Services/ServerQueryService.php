@@ -8,12 +8,10 @@ use App\Games\GameDriverRegistry;
 use App\Models\Server;
 use App\Models\ServerPlayer;
 use App\Models\ServerSnapshot;
-use App\Models\User;
 use App\Notifications\SystemNotification;
 use App\Services\Extensions\Registries\HookRegistry;
 use App\Support\Hooks;
 use App\Support\HostSafety;
-use Illuminate\Support\Facades\Notification;
 
 class ServerQueryService
 {
@@ -79,8 +77,8 @@ class ServerQueryService
         }
 
         if ($wasOnline && ! $result->online) {
-            Notification::send(
-                User::where('is_admin', true)->get(),
+            app(AdminNotifier::class)->send(
+                'server_offline',
                 new SystemNotification(
                     message: "{$server->name} just went offline".($result->failureReason ? " ({$result->failureReason})" : '.'),
                     level: 'warning',

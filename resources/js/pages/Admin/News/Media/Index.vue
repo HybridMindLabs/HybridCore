@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, router } from '@inertiajs/vue3';
 import { Image, Trash2, Copy, ExternalLink } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -30,8 +31,8 @@ function copyUrl(url: string) {
     navigator.clipboard.writeText(url);
 }
 
-function del(filename: string) {
-    if (!confirm(`Delete "${filename}"? This cannot be undone.`)) return;
+async function del(filename: string) {
+    if (!await confirm(`Delete "${filename}"? This cannot be undone.`)) return;
     router.delete(route('admin.news.media.destroy', filename));
 }
 </script>
@@ -60,7 +61,7 @@ function del(filename: string) {
             <div
                 v-for="file in files"
                 :key="file.filename"
-                class="group bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden hover:border-zinc-700 transition-colors"
+                class="group bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden hover:border-zinc-700 transition-colors"
             >
                 <!-- Thumbnail -->
                 <div class="aspect-square relative overflow-hidden bg-zinc-900">

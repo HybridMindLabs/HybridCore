@@ -85,7 +85,7 @@ const breadcrumbs = [
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <!-- SMTP Config -->
-            <div class="hc-hero-in lg:col-span-2 bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 0ms">
+            <div class="hc-hero-in lg:col-span-2 bg-admin-surface border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 0ms">
                 <h2 class="text-zinc-300 text-sm font-bold mb-4">SMTP Configuration</h2>
                 <form @submit.prevent="save" class="space-y-4">
                     <div>
@@ -165,7 +165,7 @@ const breadcrumbs = [
             <!-- Test panel -->
             <div class="hc-hero-in space-y-4" style="animation-delay: 60ms">
                 <!-- Connection test -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-4">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-4">
                     <h2 class="text-zinc-300 text-sm font-bold mb-3">Test Connection</h2>
                     <button type="button" @click="testConnection" :disabled="connLoading"
                         class="w-full flex items-center justify-center gap-1.5 bg-zinc-800 border border-zinc-700 text-zinc-300 text-sm font-semibold rounded-lg px-3 py-2 hover:bg-zinc-700 transition-colors disabled:opacity-50">
@@ -178,7 +178,7 @@ const breadcrumbs = [
                 </div>
 
                 <!-- Send test email -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-4">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-4">
                     <h2 class="text-zinc-300 text-sm font-bold mb-3">Send Test Email</h2>
                     <input v-model="testEmail" type="email" placeholder="you@example.com"
                         class="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-500 mb-2" />

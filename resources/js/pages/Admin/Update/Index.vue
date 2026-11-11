@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
+import { requireSudo } from '@/composables/useSudo';
 import { Head } from '@inertiajs/vue3';
-import { ref } from 'vue';
-import { GitBranch, RefreshCw, ArrowDownToLine, CheckCircle2, AlertCircle, Circle, Clock, Terminal } from '@lucide/vue';
+import { onMounted, ref } from 'vue';
+import { GitBranch, RefreshCw, ArrowDownToLine, CheckCircle2, AlertCircle, Circle, Clock, Terminal, XCircle, History, ShieldAlert, Loader2 } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
 
@@ -15,21 +17,30 @@ interface Commit {
 interface StepLog {
     step: string;
     output: string;
+    ok?: boolean;
 }
+
+interface HistoryEntry { id: number; from: string | null; to: string | null; by: string | null; at: string | null }
+
+interface UpdateResult { success: boolean; message: string; log: StepLog[]; rolled_back: boolean; backup: string | null; commit?: Props['currentCommit'] }
 
 interface Release {
     version: string; name: string; url: string; notes: string;
-    published_at: string | null; is_newer: boolean;
+    published_at: string | null; is_newer: boolean; prerelease?: boolean;
 }
 
-const props = defineProps<{
+type Props = {
     currentCommit: { hash: string; subject: string; date: string };
     currentBranch: string;
     version: string;
     isGitInstall: boolean;
     panelUpdatesEnabled: boolean;
     latestRelease: Release | null;
-}>();
+    preflight: string[];
+    history: HistoryEntry[];
+};
+
+const props = defineProps<Props>();
 
 const checking  = ref(false);
 const applying  = ref(false);
@@ -39,7 +50,53 @@ const commits   = ref<Commit[]>([]);
 const applyLog  = ref<StepLog[]>([]);
 const applied   = ref(false);
 const error     = ref('');
+const rolledBack = ref(false);
+const backupFile = ref<string | null>(null);
+const problems  = ref<string[]>(props.preflight ?? []);
 const currentCommit = ref(props.currentCommit);
+const csrf = () => (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '';
+
+function showResult(data: UpdateResult) {
+    applyLog.value = data.log ?? [];
+    rolledBack.value = !!data.rolled_back;
+    backupFile.value = data.backup ?? null;
+
+    if (!data.success) {
+        error.value = data.message || 'Update failed. Check the log below.';
+        return;
+    }
+
+    if (data.commit) currentCommit.value = data.commit;
+    applied.value = true;
+    commits.value = [];
+    upToDate.value = true;
+}
+
+/** Follow an update whose own request was cut off by a proxy/PHP timeout. */
+async function followProgress() {
+    applying.value = true;
+    for (;;) {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        try {
+            const res = await fetch(route('admin.updates.status'), { headers: { Accept: 'application/json' } });
+            if (!res.ok) continue; // maintenance mode or a restart in progress
+            const progress = await res.json();
+            applyLog.value = progress.log ?? applyLog.value;
+            if (!progress.running) {
+                if (progress.result) showResult(progress.result);
+                break;
+            }
+        } catch {
+            // the server is busy swapping code; keep waiting
+        }
+    }
+    applying.value = false;
+}
+
+onMounted(async () => {
+    const res = await fetch(route('admin.updates.status'), { headers: { Accept: 'application/json' } }).catch(() => null);
+    if (res?.ok && (await res.json()).running) followProgress();
+});
 
 async function checkForUpdates() {
     checking.value = true;
@@ -58,28 +115,41 @@ async function checkForUpdates() {
 }
 
 async function applyUpdate() {
-    if (!confirm('Apply update? The site goes into maintenance mode while it pulls, rebuilds, and migrates — then comes back up automatically.')) return;
+    if (!await confirm('Apply update? The site goes into maintenance mode while it pulls, rebuilds, and migrates — then comes back up automatically.')) return;
     applying.value = true;
     applyLog.value = [];
     error.value = '';
+    rolledBack.value = false;
+    let following = false;
     try {
-        const res = await fetch(route('admin.updates.apply'), { method: 'POST', headers: { 'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '', 'Accept': 'application/json' } });
-        const data = await res.json();
-        applyLog.value = data.log ?? [];
+        const post = () => fetch(route('admin.updates.apply'), { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf(), 'Accept': 'application/json' } });
+        let res = await post();
+        if (res.status === 423) {
+            if (!await requireSudo()) return;
+            res = await post();
+        }
 
-        if (!res.ok || data.success === false) {
-            error.value = data.message || 'Update failed. Check the log below and the server logs.';
+        const data = await res.json().catch(() => null);
+
+        if (res.status === 409 && data?.problems) {
+            problems.value = data.problems;
+            error.value = data.message;
             return;
         }
 
-        if (data.commit) currentCommit.value = data.commit;
-        applied.value = true;
-        commits.value = [];
-        upToDate.value = true;
-    } catch (e) {
-        error.value = 'Update failed. Check server logs.';
+        if (!data) {
+            // Gateway timeout: the update keeps running server-side.
+            following = true;
+            followProgress();
+            return;
+        }
+
+        showResult(data);
+    } catch {
+        following = true;
+        followProgress();
     } finally {
-        applying.value = false;
+        if (!following) applying.value = false;
     }
 }
 </script>
@@ -103,6 +173,7 @@ async function applyUpdate() {
                     <div class="min-w-0 flex-1">
                         <p class="text-blue-300 text-sm font-bold">
                             HybridCore {{ latestRelease.version }} is available
+                            <span v-if="latestRelease.prerelease" class="ml-1 align-middle text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded border border-amber-500/40 text-amber-300">Pre-release</span>
                             <span class="text-blue-400/60 font-normal">— you run {{ version }}</span>
                         </p>
                         <p v-if="latestRelease.notes" class="text-zinc-400 text-xs mt-1.5 line-clamp-4 whitespace-pre-line">{{ latestRelease.notes }}</p>
@@ -122,7 +193,7 @@ async function applyUpdate() {
             </div>
             <div
                 v-else-if="latestRelease"
-                class="bg-[#111113] border border-zinc-800/70 rounded-xl px-5 py-3 flex items-center gap-2"
+                class="bg-admin-surface border border-zinc-800/70 rounded-xl px-5 py-3 flex items-center gap-2"
             >
                 <CheckCircle2 :size="14" :stroke-width="1.75" class="text-emerald-400" />
                 <span class="text-zinc-400 text-xs">You are on the latest release ({{ version }}).</span>
@@ -133,7 +204,7 @@ async function applyUpdate() {
             </div>
 
             <!-- Current version card -->
-            <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+            <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5">
                 <h3 class="text-zinc-400 text-xs font-semibold uppercase tracking-wider mb-4">Current Version</h3>
                 <div class="flex flex-col gap-3">
                     <div class="flex items-center gap-3">
@@ -165,7 +236,7 @@ async function applyUpdate() {
             </div>
 
             <!-- Check for updates -->
-            <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+            <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-zinc-400 text-xs font-semibold uppercase tracking-wider">Available Updates</h3>
                     <button
@@ -222,21 +293,50 @@ async function applyUpdate() {
                         class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-40 bg-blue-500 text-white hover:bg-blue-400"
                         @click="applyUpdate"
                     >
-                        <ArrowDownToLine :size="15" :stroke-width="2" :class="applying ? 'animate-bounce' : ''" />
+                        <Loader2 v-if="applying" :size="15" :stroke-width="2" class="animate-spin" />
+                        <ArrowDownToLine v-else :size="15" :stroke-width="2" />
                         {{ applying ? 'Applying update…' : `Apply ${commits.length} update${commits.length !== 1 ? 's' : ''}` }}
                     </button>
                 </div>
             </div>
 
+            <!-- Pre-flight problems -->
+            <div v-if="problems.length" class="bg-amber-500/10 border border-amber-500/30 rounded-xl px-5 py-4" role="alert">
+                <div class="flex items-start gap-3">
+                    <ShieldAlert :size="16" :stroke-width="2" class="text-amber-400 mt-0.5 shrink-0" />
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-amber-200">The update can't start yet</p>
+                        <ul class="mt-1.5 list-disc pl-4 space-y-1 text-xs text-amber-100/80">
+                            <li v-for="p in problems" :key="p">{{ p }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rolled back -->
+            <div v-if="rolledBack" class="bg-blue-500/10 border border-blue-500/30 rounded-xl px-5 py-4">
+                <p class="text-sm font-semibold text-blue-200">The previous version was restored</p>
+                <p class="text-xs text-blue-100/70 mt-1">The update failed partway, so its migrations and code were rolled back. The site is running exactly as before.<span v-if="backupFile"> A database backup was taken first: <code class="font-mono">{{ backupFile }}</code>.</span></p>
+            </div>
+
+            <!-- Following a long-running update -->
+            <div v-if="applying && applyLog.length" class="flex items-center gap-2 text-xs text-zinc-400">
+                <Loader2 :size="14" class="animate-spin" /> Updating… {{ applyLog[applyLog.length - 1]?.step }}
+            </div>
+
             <!-- Apply log -->
-            <div v-if="applyLog.length > 0" class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
-                <div class="flex items-center gap-2 px-5 py-3 border-b border-zinc-800/60 bg-[#0d0d0f]">
+            <div v-if="applyLog.length > 0" class="bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden">
+                <div class="flex items-center gap-2 px-5 py-3 border-b border-zinc-800/60 bg-admin-sunken">
                     <Terminal :size="14" :stroke-width="1.75" class="text-zinc-600" />
                     <h3 class="text-zinc-400 text-xs font-semibold">Update Log</h3>
                 </div>
                 <div class="divide-y divide-zinc-800/40">
-                    <div v-for="step in applyLog" :key="step.step" class="px-5 py-3">
-                        <p class="text-xs font-mono text-zinc-500 mb-1.5">$ {{ step.step }}</p>
+                    <div v-for="(step, i) in applyLog" :key="`${i}-${step.step}`" class="px-5 py-3">
+                        <p class="text-xs font-mono mb-1.5 flex items-center gap-1.5" :class="step.ok === false ? 'text-red-400' : 'text-zinc-500'">
+                            <XCircle v-if="step.ok === false" :size="12" />
+                            <CheckCircle2 v-else-if="step.ok" :size="12" class="text-emerald-500" />
+                            $ {{ step.step }}
+                        </p>
                         <pre v-if="step.output" class="text-[11px] font-mono text-zinc-600 whitespace-pre-wrap break-all">{{ step.output }}</pre>
                         <p v-else class="text-[11px] text-zinc-700 italic">No output</p>
                     </div>
@@ -249,7 +349,7 @@ async function applyUpdate() {
         <div class="flex flex-col gap-4">
 
             <!-- Branch / commit info -->
-            <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+            <div class="bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden">
                 <div class="px-4 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                     <GitBranch :size="13" :stroke-width="1.75" class="text-zinc-600" />
                     <span class="text-sm font-semibold text-zinc-100">Repository</span>
@@ -274,7 +374,7 @@ async function applyUpdate() {
             </div>
 
             <!-- What happens on update -->
-            <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+            <div class="bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden">
                 <div class="px-4 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                     <Terminal :size="13" :stroke-width="1.75" class="text-zinc-600" />
                     <span class="text-sm font-semibold text-zinc-100">What runs</span>
@@ -286,6 +386,7 @@ async function applyUpdate() {
                             'git pull --ff-only',
                             'fix folder permissions',
                             'composer install',
+                            'database backup (MySQL/MariaDB)',
                             'php artisan migrate',
                             'npm ci && npm run build',
                             'restart SSR renderer (if enabled)',
@@ -299,8 +400,23 @@ async function applyUpdate() {
                         <span class="w-4 h-4 rounded-full bg-zinc-800 border border-zinc-700/60 text-[9px] font-bold text-zinc-500 flex items-center justify-center shrink-0">{{ i + 1 }}</span>
                         <code class="text-xs font-mono text-zinc-400">{{ cmd }}</code>
                     </div>
-                    <p class="text-[11px] text-zinc-700 mt-1">If the asset rebuild fails, the previous working bundle is restored automatically — the site never comes back with broken or missing assets.</p>
+                    <p class="text-[11px] text-zinc-500 mt-1">If any step after the pull fails, this run's migrations are rolled back and the previous code is restored, so the site comes back on the version it had.</p>
                 </div>
+            </div>
+
+            <!-- Update history -->
+            <div class="bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden">
+                <div class="px-4 py-3 border-b border-zinc-800/70 flex items-center gap-2">
+                    <History :size="13" :stroke-width="1.75" class="text-zinc-600" />
+                    <span class="text-sm font-semibold text-zinc-100">Recent updates</span>
+                </div>
+                <ul v-if="history.length" class="divide-y divide-zinc-800/50">
+                    <li v-for="h in history" :key="h.id" class="px-4 py-2.5">
+                        <p class="text-xs font-mono text-zinc-300">{{ h.from || '—' }} → {{ h.to || '—' }}</p>
+                        <p class="text-[11px] text-zinc-500">{{ h.at }}<span v-if="h.by"> · {{ h.by }}</span></p>
+                    </li>
+                </ul>
+                <p v-else class="px-4 py-4 text-xs text-zinc-500">No updates applied from the panel yet.</p>
             </div>
 
         </div><!-- end right col -->

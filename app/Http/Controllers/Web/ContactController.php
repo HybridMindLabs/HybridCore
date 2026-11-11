@@ -6,13 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ContactRequest;
 use App\Mail\ContactMessageMail;
 use App\Models\ContactMessage;
-use App\Models\User;
 use App\Notifications\SystemNotification;
+use App\Services\AdminNotifier;
 use App\Services\CaptchaService;
 use App\Services\SettingsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -53,8 +52,8 @@ class ContactController extends Controller
             Mail::to($recipient)->queue(new ContactMessageMail($msg));
         }
 
-        Notification::send(
-            User::where('is_admin', true)->get(),
+        app(AdminNotifier::class)->send(
+            'contact_message',
             new SystemNotification(
                 message: "New contact message from {$msg->name}: {$msg->subject}",
                 level: 'info',

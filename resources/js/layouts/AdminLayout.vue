@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import AdminSidebar from '@/components/Admin/Sidebar.vue';
 import AdminTopbar from '@/components/Admin/Topbar.vue';
-import CommandPalette from '@/components/Admin/CommandPalette.vue';
+import AdminSearch from '@/components/Admin/AdminSearch.vue';
+import ConfirmDialog from '@/components/Admin/ConfirmDialog.vue';
+import ShortcutsHelp from '@/components/Admin/ShortcutsHelp.vue';
+import SudoDialog from '@/components/Admin/SudoDialog.vue';
+import { requireSudo } from '@/composables/useSudo';
+import { useAdminSearch } from '@/composables/useAdminSearch';
 import ToastManager from '@/components/UI/ToastManager.vue';
 import { useFlashToast } from '@/composables/useFlashToast';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 import { ShieldAlert } from '@lucide/vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+import type { PendingVisit } from '@inertiajs/core';
 
 withDefaults(defineProps<{ title?: string }>(), { title: 'Dashboard' });
 
@@ -16,18 +22,61 @@ useFlashToast();
 const page = usePage<{ twoFactorGraceDaysRemaining: number | null }>();
 const twoFactorGraceDaysRemaining = computed(() => page.props.twoFactorGraceDaysRemaining);
 
+const { open: searchOpen, show: showSearch, hide: hideSearch } = useAdminSearch();
+const shortcutsOpen = ref(false);
+
+// Sudo mode: a protected action answers 423 — ask for the password, then
+// replay the exact request that was refused.
+let lastVisit: PendingVisit | null = null;
+const stopListeners: (() => void)[] = [];
+
+onMounted(() => {
+    stopListeners.push(
+        // Only writes are sudo-protected; ignoring GETs keeps background
+        // prefetches and polls from overwriting the visit to replay.
+        router.on('before', (event) => {
+            if (event.detail.visit.method !== 'get') lastVisit = event.detail.visit;
+        }),
+        router.on('httpException', (event) => {
+            if (event.detail.response.status !== 423 || !lastVisit) return;
+            event.preventDefault();
+            const visit = lastVisit;
+            requireSudo().then((confirmed) => {
+                if (!confirmed) return;
+                router.visit(visit.url, {
+                    method: visit.method,
+                    data: visit.data,
+                    preserveScroll: visit.preserveScroll,
+                    preserveState: visit.preserveState,
+                    forceFormData: visit.forceFormData,
+                });
+            });
+        }),
+    );
+});
+onUnmounted(() => stopListeners.forEach((stop) => stop()));
+
 useKeyboardShortcuts({
-    'g+d': () => router.visit(route('admin.dashboard')),
-    'g+u': () => router.visit(route('admin.users.index')),
-    'g+s': () => router.visit(route('admin.settings.index')),
+    'ctrl+k': showSearch,
+    'meta+k': showSearch,
+    '?': () => { shortcutsOpen.value = true; },
+    'Escape': () => {
+        if (searchOpen.value) hideSearch();
+        shortcutsOpen.value = false;
+    },
+    'g d': () => router.visit(route('admin.dashboard')),
+    'g u': () => router.visit(route('admin.users.index')),
+    'g v': () => router.visit(route('admin.servers.index')),
+    'g p': () => router.visit(route('admin.payments.index')),
+    'g s': () => router.visit(route('admin.settings.index')),
 });
 </script>
 
 <template>
-    <div class="min-h-screen bg-[#09090b] flex overflow-x-hidden">
+    <div class="admin-shell min-h-screen bg-admin-bg flex overflow-x-hidden">
         <AdminSidebar />
 
-        <div class="flex flex-col flex-1 min-w-0 lg:ml-[220px]">
+        <div class="flex flex-col flex-1 min-w-0 lg:ml-64">
             <AdminTopbar :title="title" />
 
             <div
@@ -49,6 +98,9 @@ useKeyboardShortcuts({
         </div>
 
         <ToastManager />
-        <CommandPalette />
+        <AdminSearch />
+        <ShortcutsHelp :open="shortcutsOpen" @close="shortcutsOpen = false" />
+        <ConfirmDialog />
+        <SudoDialog />
     </div>
 </template>

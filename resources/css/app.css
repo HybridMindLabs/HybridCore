@@ -35,6 +35,13 @@
     --color-hc-warning: #f59e0b;
     --color-hc-danger:  #ef4444;
     --color-hc-info:    #3b82f6;
+
+    /* Admin panel (dark only) */
+    --color-admin-bg:       #09090b;
+    --color-admin-sunken:   #0d0d0f;
+    --color-admin-surface:  #111113;
+    --color-admin-hover:    #16161a;
+    --color-admin-elevated: #1a1a1e;
 }
 
 /*
@@ -303,4 +310,31 @@ html:not(.dark), html:not(.dark) body {
     border-color: rgba(34,211,238,0.2);
     box-shadow: 0 4px 24px rgba(0,0,0,0.4);
     transform: translateY(-1px);
+}
+
+/* Shared look for admin tables — cell content stays per page. */
+@layer components {
+    .admin-table thead tr {
+        @apply border-b border-zinc-800/70 bg-admin-sunken;
+    }
+
+    .admin-table th {
+        @apply px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-500;
+    }
+}
+
+/* Admin is dark-only: tell the browser so native scrollbars and form controls match. */
+html:has(.admin-shell) {
+    color-scheme: dark;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-zinc-800) var(--color-admin-bg);
+}
+
+.admin-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-zinc-800) transparent;
+}
+
+.admin-scroll:hover {
+    scrollbar-color: var(--color-zinc-700) transparent;
 }

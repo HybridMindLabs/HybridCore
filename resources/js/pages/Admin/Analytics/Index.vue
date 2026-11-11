@@ -264,7 +264,7 @@ watch(dark, () => rebuildAll());
         <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-4 mb-4">
 
             <!-- Visits trend -->
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 200ms">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 200ms">
                 <div class="flex items-center gap-1.5 mb-1">
                     <h2 class="text-sm font-semibold text-zinc-100">Visits — last 30 days</h2>
                     <Tooltip text="Human and bot page views per day, plus unique human sessions as a dotted overlay.">
@@ -276,7 +276,7 @@ watch(dark, () => rebuildAll());
             </div>
 
             <!-- Device breakdown -->
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 240ms">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 240ms">
                 <div class="flex items-center gap-1.5 mb-1">
                     <h2 class="text-sm font-semibold text-zinc-100">Devices · Today</h2>
                     <Tooltip text="Device type of every human page view recorded today.">
@@ -294,7 +294,7 @@ watch(dark, () => rebuildAll());
         </div>
 
         <!-- Top pages -->
-        <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 280ms">
+        <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 280ms">
             <div class="flex items-center gap-2 px-5 py-3 border-b border-zinc-800/70">
                 <FileText :size="14" :stroke-width="1.75" class="text-zinc-600" />
                 <h2 class="text-sm font-semibold text-zinc-100">Top Pages · Today</h2>

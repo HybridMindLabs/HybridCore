@@ -63,7 +63,7 @@ const LAYOUTS = [
             <!-- Main: editor (3/4) -->
             <div class="xl:col-span-3 flex flex-col gap-4">
 
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 0ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 0ms">
                     <label class="flex items-center gap-1.5 text-xs font-medium text-zinc-400 mb-2">
                         <FileText :size="12" :stroke-width="1.75" class="text-blue-400" />
                         Title <span class="text-red-400">*</span>
@@ -72,7 +72,7 @@ const LAYOUTS = [
                     <p v-if="form.errors.title" class="mt-1.5 text-xs text-red-400">{{ form.errors.title }}</p>
                 </div>
 
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 40ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 40ms">
                     <MarkdownEditor
                         v-model="form.body"
                         :format="form.format"
@@ -88,7 +88,7 @@ const LAYOUTS = [
             <div class="flex flex-col gap-4 xl:sticky xl:top-6 xl:self-start">
 
                 <!-- Publish settings -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4" style="animation-delay: 60ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4" style="animation-delay: 60ms">
                     <div class="flex flex-col gap-1.5">
                         <label class="text-zinc-500 text-xs font-medium">Status</label>
                         <select v-model="form.status" :class="inputClass">
@@ -106,7 +106,7 @@ const LAYOUTS = [
                 </div>
 
                 <!-- Layout picker -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 100ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 100ms">
                     <p class="text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-3">Layout</p>
                     <div class="flex flex-col gap-2">
                         <label
@@ -133,7 +133,7 @@ const LAYOUTS = [
                 </div>
 
                 <!-- SEO -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4" style="animation-delay: 140ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4" style="animation-delay: 140ms">
                     <p class="text-zinc-500 text-xs font-semibold uppercase tracking-wider">SEO</p>
                     <div class="flex flex-col gap-1.5">
                         <label class="text-zinc-500 text-xs font-medium">SEO Title</label>

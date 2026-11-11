@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Schema;
 class ActivityLogService
 {
     /** Property keys that must never be written to the activity log. */
-    private const SENSITIVE_KEYS = ['password', 'password_confirmation', 'secret', 'token', 'api_key', 'app_key', 'db_password', 'mail_password'];
+    private const SENSITIVE_KEYS = ['password', 'password_confirmation', 'secret', 'token', 'api_key', 'app_key', 'db_password', 'mail_password',
+        'remember_token', 'two_factor_secret', 'two_factor_recovery_codes', 'bridge_token_hash'];
 
     public function log(
         string $event,
@@ -45,12 +46,15 @@ class ActivityLogService
         ]);
     }
 
-    /** Recursively remove sensitive keys from logged properties. */
+    /**
+     * Recursively mask sensitive values in logged properties. The key stays so
+     * the log still shows that a secret changed — only its value is hidden.
+     */
     private function scrub(array $properties): array
     {
         foreach ($properties as $key => $value) {
             if (is_string($key) && in_array(strtolower($key), self::SENSITIVE_KEYS, true)) {
-                unset($properties[$key]);
+                $properties[$key] = '[redacted]';
 
                 continue;
             }

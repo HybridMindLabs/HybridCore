@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -79,7 +80,7 @@ use Laravel\Scout\Searchable;
  */
 class Server extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
     use Searchable;
 
     /** @return array<string, mixed> */
@@ -250,5 +251,15 @@ class Server extends Model
     public function scopeVisible(Builder $query): Builder
     {
         return $query->where('is_visible', true);
+    }
+
+    protected static function getActivityLogIgnoredAttributes(): array
+    {
+        return ['last_queried_at', 'bridge_last_seen_at', 'bridge_token_hash'];
+    }
+
+    protected static function getActivityLogIdentifier(Model $model): string
+    {
+        return (string) ($model->getAttribute('name') ?? $model->getAttribute('ip').':'.$model->getAttribute('port'));
     }
 }

@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import ListControls from '@/components/Admin/ListControls.vue';
+import SortHeader from '@/components/Admin/SortHeader.vue';
+import { useSelection } from '@/composables/useSelection';
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import {
     Server, Plus, RefreshCw, Search, Gamepad2,
@@ -31,9 +35,9 @@ interface ServerRow {
 }
 
 const props = defineProps<{
-    servers: { data: ServerRow[]; meta: any; links: any };
+    servers: { data: ServerRow[]; meta: any; links: any; per_page: number };
     games: GameData[];
-    filters: { search: string | null; game_id: string | null };
+    filters: { search: string | null; game_id: string | null; sort: string | null; dir: string };
     stats: { total: number; online: number; players: number };
 }>();
 
@@ -45,7 +49,7 @@ const searching = ref(false);
 watch([search, gameId], () => {
     router.get(
         route('admin.servers.index'),
-        { search: search.value || undefined, game_id: gameId.value || undefined },
+        { search: search.value || undefined, game_id: gameId.value || undefined, sort: props.filters.sort ?? undefined, dir: props.filters.sort ? props.filters.dir : undefined, per_page: new URLSearchParams(window.location.search).get('per_page') || undefined },
         {
             preserveState: true, replace: true,
             onStart: () => { searching.value = true; },
@@ -59,16 +63,16 @@ const page = usePage<{ flash: { bridge_token?: string | null } }>();
 const bridgeToken = computed(() => page.props.flash?.bridge_token ?? null);
 const tokenCopied = ref(false);
 
-function issueBridgeToken(server: ServerRow) {
+async function issueBridgeToken(server: ServerRow) {
     const message = server.bridge.enabled
         ? `Rotate the bridge token for "${server.address}"? The current token stops working immediately.`
         : `Generate a bridge token for "${server.address}"? The in-game plugin uses it to pull commands from the site.`;
-    if (!confirm(message)) return;
+    if (!await confirm(message)) return;
     router.post(route('admin.servers.bridge.issue', server.id), {}, { preserveScroll: true });
 }
 
-function revokeBridgeToken(server: ServerRow) {
-    if (!confirm(`Revoke the bridge token for "${server.address}"? The game server will be disconnected.`)) return;
+async function revokeBridgeToken(server: ServerRow) {
+    if (!await confirm(`Revoke the bridge token for "${server.address}"? The game server will be disconnected.`)) return;
     router.delete(route('admin.servers.bridge.revoke', server.id), { preserveScroll: true });
 }
 
@@ -99,39 +103,24 @@ const commandStatusStyle: Record<CommandRow['status'], { icon: typeof Clock; cla
     cancelled: { icon: Ban, class: 'text-zinc-600', label: 'Cancelled' },
 };
 
-function cancelCommand(server: ServerRow, command: CommandRow) {
-    if (!confirm(`Cancel queued command "${command.command}"? It will never be delivered.`)) return;
+async function cancelCommand(server: ServerRow, command: CommandRow) {
+    if (!await confirm(`Cancel queued command "${command.command}"? It will never be delivered.`, { confirmLabel: 'Cancel command', cancelLabel: 'Keep', danger: true })) return;
     router.post(route('admin.servers.commands.cancel', [server.id, command.id]), {}, { preserveScroll: true });
 }
 
 // ── Bulk actions ────────────────────────────────────────────
 type BulkAction = 'activate' | 'deactivate' | 'refresh' | 'delete';
-const selected = ref<number[]>([]);
+const { selected, allSelected, toggleAll, toggleOne } = useSelection(() => props.servers.data.map((s) => s.id));
 const bulkMenuOpen = ref(false);
 const bulkPending = ref(false);
 
-const allSelected = computed(() =>
-    props.servers.data.length > 0 &&
-    props.servers.data.every((s) => selected.value.includes(s.id)),
-);
-
-function toggleAll() {
-    selected.value = allSelected.value ? [] : props.servers.data.map((s) => s.id);
-}
-
-function toggleOne(id: number) {
-    selected.value = selected.value.includes(id)
-        ? selected.value.filter((x) => x !== id)
-        : [...selected.value, id];
-}
-
-function runBulk(action: BulkAction) {
+async function runBulk(action: BulkAction) {
     bulkMenuOpen.value = false;
     if (selected.value.length === 0) return;
     const labels: Record<BulkAction, string> = {
         activate: 'activate', deactivate: 'deactivate', refresh: 'query now', delete: 'permanently delete',
     };
-    if (!confirm(`${labels[action]} ${selected.value.length} selected server(s)?`)) return;
+    if (!await confirm(`${labels[action]} ${selected.value.length} selected server(s)?`)) return;
     bulkPending.value = true;
     router.post(route('admin.servers.bulk'), { action, server_ids: selected.value }, {
         onFinish: () => { bulkPending.value = false; selected.value = []; },
@@ -238,8 +227,8 @@ function refresh(id: number) {
     router.post(route('admin.servers.refresh', id));
 }
 
-function destroy(s: ServerRow) {
-    if (!confirm(`Delete server "${s.name ?? s.address}"?`)) return;
+async function destroy(s: ServerRow) {
+    if (!await confirm(`Delete server "${s.name ?? s.address}"?`)) return;
     router.delete(route('admin.servers.destroy', s.id));
 }
 
@@ -269,23 +258,25 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 round
             </template>
         </PageHeader>
 
+        <ListControls :per-page="servers.per_page" class="mb-3" />
+
         <!-- Stats bar — reflects every server matching the current filters, not just this page -->
         <div v-if="stats.total > 0" class="grid grid-cols-3 gap-4 mb-5">
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3">
                 <Server :size="16" :stroke-width="1.5" class="text-zinc-600 shrink-0" />
                 <div>
                     <p class="text-zinc-100 text-lg font-bold leading-none">{{ stats.total }}</p>
                     <p class="text-zinc-600 text-xs mt-0.5">Total servers</p>
                 </div>
             </div>
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3" style="animation-delay: 40ms">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3" style="animation-delay: 40ms">
                 <CheckCircle2 :size="16" :stroke-width="1.5" class="text-emerald-400 shrink-0" />
                 <div>
                     <p class="text-emerald-400 text-lg font-bold leading-none">{{ stats.online }}</p>
                     <p class="text-zinc-600 text-xs mt-0.5">Online now</p>
                 </div>
             </div>
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3" style="animation-delay: 80ms">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3" style="animation-delay: 80ms">
                 <Users :size="16" :stroke-width="1.5" class="text-blue-400 shrink-0" />
                 <div>
                     <p class="text-blue-400 text-lg font-bold leading-none">{{ stats.players }}</p>
@@ -295,7 +286,7 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 round
         </div>
 
         <!-- Add Server Panel -->
-        <div v-if="showAdd" class="hc-hero-in mb-5 bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+        <div v-if="showAdd" class="hc-hero-in mb-5 bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden">
             <div class="px-5 py-3 border-b border-zinc-800/50 flex items-center justify-between">
                 <h3 class="text-sm font-semibold text-zinc-100 flex items-center gap-2">
                     <Plus :size="14" :stroke-width="2" class="text-blue-400" /> Add New Server
@@ -380,12 +371,12 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 round
                     v-model="search"
                     type="text"
                     placeholder="Search by IP or name…"
-                    class="w-full bg-[#111113] border border-zinc-800/70 rounded-lg pl-8 pr-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                    class="w-full bg-admin-surface border border-zinc-800/70 rounded-lg pl-8 pr-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
                 />
             </div>
             <select
                 v-model="gameId"
-                class="bg-[#111113] border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-blue-500"
+                class="bg-admin-surface border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-blue-500"
             >
                 <option value="">All games</option>
                 <option v-for="g in games" :key="g.id" :value="g.id">{{ g.name }}</option>
@@ -421,20 +412,20 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 round
         </div>
 
         <!-- Table -->
-        <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden transition-opacity"
+        <div class="bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden transition-opacity"
             :class="searching ? 'opacity-50 pointer-events-none' : ''">
-            <table class="w-full text-sm">
+            <table class="admin-table w-full text-sm">
                 <thead>
-                    <tr class="border-b border-zinc-800/70">
-                        <th class="px-4 py-3 w-8">
+                    <tr>
+                        <th class="w-8">
                             <input type="checkbox" :checked="allSelected" class="rounded border-zinc-700 bg-zinc-800 accent-blue-500 cursor-pointer" @change="toggleAll" />
                         </th>
-                        <th class="text-left px-4 py-3 text-zinc-600 text-xs font-semibold uppercase tracking-wide">Server</th>
-                        <th class="text-left px-4 py-3 text-zinc-600 text-xs font-semibold uppercase tracking-wide hidden sm:table-cell">Game</th>
-                        <th class="text-left px-4 py-3 text-zinc-600 text-xs font-semibold uppercase tracking-wide">Status</th>
-                        <th class="text-left px-4 py-3 text-zinc-600 text-xs font-semibold uppercase tracking-wide hidden md:table-cell">Players</th>
-                        <th class="text-left px-4 py-3 text-zinc-600 text-xs font-semibold uppercase tracking-wide hidden lg:table-cell">Queried</th>
-                        <th class="px-4 py-3" />
+                        <th><SortHeader label="Server" column="name" :sort="filters.sort" :dir="filters.dir" route-name="admin.servers.index" :params="{ search: filters.search, game_id: filters.game_id }" /></th>
+                        <th class="hidden sm:table-cell">Game</th>
+                        <th>Status</th>
+                        <th class="hidden md:table-cell"><SortHeader label="Players" column="players" :sort="filters.sort" :dir="filters.dir" route-name="admin.servers.index" :params="{ search: filters.search, game_id: filters.game_id }" /></th>
+                        <th class="hidden lg:table-cell">Queried</th>
+                        <th />
                     </tr>
                 </thead>
                 <tbody>
@@ -739,7 +730,7 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 round
 
         <!-- One-time bridge token reveal -->
         <div v-if="bridgeToken" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-            <div class="w-full max-w-lg bg-[#111113] border border-zinc-800 rounded-2xl p-6">
+            <div class="w-full max-w-lg bg-admin-surface border border-zinc-800 rounded-2xl p-6">
                 <h3 class="text-zinc-100 text-base font-bold flex items-center gap-2">
                     <Plug :size="16" :stroke-width="1.75" class="text-emerald-400" /> Bridge token generated
                 </h3>

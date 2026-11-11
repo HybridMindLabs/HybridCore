@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { useSelection } from '@/composables/useSelection';
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Puzzle, RefreshCw, ToggleRight, ToggleLeft, Settings, CheckCircle2, XCircle, Loader2, AlertTriangle, Hammer, Upload, ChevronDown, ArrowUpCircle, KeyRound } from '@lucide/vue';
+import { Puzzle, RefreshCw, ToggleRight, ToggleLeft, Settings, CheckCircle2, XCircle, Loader2, AlertTriangle, Hammer, Upload, ChevronDown, ArrowUpCircle, KeyRound, Search, X } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
 import { computed, ref } from 'vue';
@@ -21,7 +23,11 @@ interface Extension {
     update: { version: string; url: string; notes: string } | null;
     requires_license: boolean;
     has_license: boolean;
+    /** Set when the extension is enabled but failed to load on the last request. */
+    boot_error: { message: string; at: string } | null;
 }
+
+type StatusFilter = 'all' | 'enabled' | 'disabled' | 'updates' | 'errors';
 
 interface RebuildInfo {
     status: 'pending' | 'building' | 'done' | 'failed';
@@ -41,6 +47,34 @@ function triggerRebuild() {
 
 const syncing = ref(false);
 const togglingId = ref<number | null>(null);
+
+const query = ref('');
+const status = ref<StatusFilter>('all');
+
+const visible = computed(() => {
+    const q = query.value.trim().toLowerCase();
+
+    return props.extensions.filter((e) => {
+        const matches = !q || [e.name, e.slug, e.author, e.description].some((v) => (v ?? '').toLowerCase().includes(q));
+        const inStatus = status.value === 'all'
+            || (status.value === 'enabled' && e.enabled)
+            || (status.value === 'disabled' && !e.enabled)
+            || (status.value === 'updates' && !!e.update)
+            || (status.value === 'errors' && !!e.boot_error);
+
+        return matches && inStatus;
+    });
+});
+
+const filters = computed<{ id: StatusFilter; label: string; count: number }[]>(() => [
+    { id: 'all', label: 'All', count: props.extensions.length },
+    { id: 'enabled', label: 'Enabled', count: props.extensions.filter((e) => e.enabled).length },
+    { id: 'disabled', label: 'Disabled', count: props.extensions.filter((e) => !e.enabled).length },
+    { id: 'updates', label: 'Updates', count: props.extensions.filter((e) => e.update).length },
+    { id: 'errors', label: 'Errors', count: props.extensions.filter((e) => e.boot_error).length },
+]);
+
+const brokenCount = computed(() => props.extensions.filter((e) => e.boot_error).length);
 
 const summary = computed(() => ({
     total:    props.extensions.length,
@@ -84,29 +118,15 @@ function applyUpdate(ext: Extension) {
     });
 }
 
-// ── Select-all for the table header ─────────────────────────
-const allSelected = computed(() =>
-    props.extensions.length > 0 && selected.value.length === props.extensions.length);
-
-function toggleAll() {
-    selected.value = allSelected.value ? [] : props.extensions.map((e) => e.id);
-}
-
 // ── Bulk actions ────────────────────────────────────────────
-const selected = ref<number[]>([]);
+const { selected, allSelected, toggleAll, toggleOne } = useSelection(() => visible.value.map((e) => e.id));
 const bulkMenuOpen = ref(false);
 const bulkPending = ref(false);
 
-function toggleOne(id: number) {
-    selected.value = selected.value.includes(id)
-        ? selected.value.filter((x) => x !== id)
-        : [...selected.value, id];
-}
-
-function runBulk(action: 'enable' | 'disable') {
+async function runBulk(action: 'enable' | 'disable') {
     bulkMenuOpen.value = false;
     if (selected.value.length === 0) return;
-    if (!confirm(`${action} ${selected.value.length} selected extension(s)?`)) return;
+    if (!await confirm(`${action} ${selected.value.length} selected extension(s)?`)) return;
     bulkPending.value = true;
     router.post(route('admin.extensions.bulk'), { action, extension_ids: selected.value }, {
         onFinish: () => { bulkPending.value = false; selected.value = []; },
@@ -272,8 +292,8 @@ function typeConf(type: string) {
 
         <!-- Import preview modal -->
         <div v-if="preview" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" @click.self="cancelImport">
-            <div class="w-full max-w-lg bg-[#111113] border border-zinc-800/70 rounded-2xl overflow-hidden shadow-2xl">
-                <div class="px-5 py-4 border-b border-zinc-800/60 bg-[#1a1a1e]">
+            <div class="w-full max-w-lg bg-admin-surface border border-zinc-800/70 rounded-2xl overflow-hidden shadow-2xl">
+                <div class="px-5 py-4 border-b border-zinc-800/60 bg-admin-elevated">
                     <h2 class="text-sm font-bold text-zinc-100">Review before installing</h2>
                     <p class="text-xs text-zinc-500 mt-0.5">Nothing has been extracted yet — confirm the details below.</p>
                 </div>
@@ -300,7 +320,7 @@ function typeConf(type: string) {
                         <p v-for="w in preview.warnings" :key="w" class="text-amber-300 text-xs">{{ w }}</p>
                     </div>
                 </div>
-                <div class="px-5 py-4 border-t border-zinc-800/60 bg-[#1a1a1e] flex items-center justify-end gap-2">
+                <div class="px-5 py-4 border-t border-zinc-800/60 bg-admin-elevated flex items-center justify-end gap-2">
                     <button type="button" class="px-3 py-2 rounded-lg text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition-colors" @click="cancelImport">
                         Cancel
                     </button>
@@ -337,7 +357,7 @@ function typeConf(type: string) {
 
         <!-- Summary bar -->
         <div v-if="extensions.length > 0" class="grid grid-cols-3 gap-3 mb-5">
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3">
                 <Puzzle :size="16" :stroke-width="1.75" class="text-zinc-500 shrink-0" />
                 <div>
                     <p class="text-2xl font-bold text-zinc-100 leading-none tabular-nums">{{ summary.total }}</p>
@@ -363,7 +383,7 @@ function typeConf(type: string) {
         <!-- Empty state -->
         <div
             v-if="extensions.length === 0"
-            class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-16 text-center"
+            class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-16 text-center"
         >
             <div class="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center border bg-zinc-800 border-zinc-700">
                 <Puzzle :size="22" :stroke-width="1.5" class="text-zinc-500" />
@@ -384,13 +404,45 @@ function typeConf(type: string) {
             </button>
         </div>
 
+        <div v-if="brokenCount > 0" class="mb-4 flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/[0.07] px-4 py-3" role="alert">
+            <AlertTriangle :size="16" :stroke-width="2" class="text-red-400 shrink-0 mt-0.5" />
+            <div class="min-w-0 text-sm">
+                <p class="font-semibold text-red-200">{{ brokenCount }} enabled {{ brokenCount === 1 ? 'extension failed' : 'extensions failed' }} to load</p>
+                <p class="text-red-200/70 text-xs mt-0.5">The rest of the site keeps working. Check the error below, then update or disable the extension.</p>
+            </div>
+            <button type="button" class="ml-auto shrink-0 text-xs font-medium text-red-200 underline hover:no-underline" @click="status = 'errors'">Show</button>
+        </div>
+
+        <div v-if="extensions.length" class="flex flex-wrap items-center gap-2 mb-3">
+            <div class="relative w-full sm:w-72">
+                <Search :size="14" :stroke-width="2" class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" />
+                <label for="extension-search" class="sr-only">Search extensions</label>
+                <input id="extension-search" v-model="query" type="text" placeholder="Search name, slug or author…"
+                    class="w-full pl-9 pr-9 py-2 rounded-lg border border-zinc-800/70 bg-admin-bg text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-zinc-600" />
+                <button v-if="query" type="button" aria-label="Clear search" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-300" @click="query = ''">
+                    <X :size="14" :stroke-width="2" />
+                </button>
+            </div>
+            <div class="flex items-center gap-1" role="group" aria-label="Filter extensions">
+                <button v-for="f in filters" :key="f.id" type="button"
+                    class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                    :class="status === f.id
+                        ? (f.id === 'errors' ? 'bg-red-500/15 text-red-300' : 'bg-blue-500/15 text-blue-300')
+                        : 'text-zinc-500 hover:text-zinc-200 hover:bg-admin-elevated'"
+                    :aria-pressed="status === f.id"
+                    @click="status = f.id">
+                    {{ f.label }} <span class="tabular-nums opacity-70">{{ f.count }}</span>
+                </button>
+            </div>
+        </div>
+
         <!-- Extension table — one row each, so 10-20 stay scannable -->
-        <div v-else class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 120ms">
+        <div v-if="extensions.length" class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 120ms">
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <table class="admin-table w-full text-left border-collapse">
                     <thead>
-                        <tr class="border-b border-zinc-800/70 bg-[#0d0d0f] text-[11px] uppercase tracking-wide text-zinc-500">
-                            <th class="w-10 px-4 py-2.5">
+                        <tr class="text-[11px] uppercase tracking-wide text-zinc-500">
+                            <th class="w-10 py-2.5">
                                 <input
                                     type="checkbox"
                                     :checked="allSelected"
@@ -398,16 +450,19 @@ function typeConf(type: string) {
                                     @change="toggleAll"
                                 />
                             </th>
-                            <th class="px-3 py-2.5 font-semibold">Extension</th>
-                            <th class="px-3 py-2.5 font-semibold">Version</th>
-                            <th class="px-3 py-2.5 font-semibold">Status</th>
-                            <th class="px-3 py-2.5 font-semibold hidden md:table-cell">Author</th>
-                            <th class="px-3 py-2.5 font-semibold text-right">Actions</th>
+                            <th class="px-3 py-2.5">Extension</th>
+                            <th class="px-3 py-2.5">Version</th>
+                            <th class="px-3 py-2.5">Status</th>
+                            <th class="px-3 py-2.5 hidden md:table-cell">Author</th>
+                            <th class="px-3 py-2.5 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
+                        <tr v-if="visible.length === 0">
+                            <td colspan="6" class="px-4 py-10 text-center text-sm text-zinc-500">No extensions match these filters.</td>
+                        </tr>
                         <tr
-                            v-for="ext in extensions"
+                            v-for="ext in visible"
                             :key="ext.id"
                             class="border-b border-zinc-800/40 last:border-0 transition-colors hover:bg-zinc-800/20"
                             :class="!ext.enabled ? 'opacity-60' : ''"
@@ -485,6 +540,10 @@ function typeConf(type: string) {
                                     <component :is="ext.enabled ? CheckCircle2 : XCircle" :size="9" :stroke-width="2.5" />
                                     {{ ext.enabled ? 'Enabled' : 'Disabled' }}
                                 </span>
+                                <p v-if="ext.boot_error" class="mt-1 flex items-start gap-1 text-[11px] text-red-300 max-w-xs" :title="ext.boot_error.message">
+                                    <AlertTriangle :size="11" :stroke-width="2.25" class="shrink-0 mt-px" />
+                                    <span class="line-clamp-2 break-words">Failed to load: {{ ext.boot_error.message }}</span>
+                                </p>
                             </td>
 
                             <!-- Author -->

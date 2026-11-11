@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use App\Http\Middleware\RequireRecentPassword;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\ParallelTesting;
 
@@ -61,5 +62,14 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
 
         $this->withoutVite();
+
+        // Admin feature tests act as an admin who has just confirmed their
+        // password; tests of sudo mode itself clear this with withSudoExpired().
+        $this->withSession([RequireRecentPassword::SESSION_KEY => time()]);
+    }
+
+    protected function withSudoExpired(): static
+    {
+        return $this->withSession([RequireRecentPassword::SESSION_KEY => 0]);
     }
 }

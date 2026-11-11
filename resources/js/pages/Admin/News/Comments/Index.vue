@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useSelection } from '@/composables/useSelection';
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Trash2, MessageSquare, Search, ExternalLink } from '@lucide/vue';
 import { ref, watch } from 'vue';
@@ -23,28 +25,16 @@ watch(search, (value) => {
     }, 350);
 });
 
-const selected = ref<number[]>([]);
+const { selected, allSelected, toggleAll, toggleOne } = useSelection(() => props.comments.data.map((c) => c.id));
 
-function toggleSelect(id: number) {
-    selected.value = selected.value.includes(id)
-        ? selected.value.filter(s => s !== id)
-        : [...selected.value, id];
-}
-
-function toggleSelectAll() {
-    selected.value = selected.value.length === props.comments.data.length
-        ? []
-        : props.comments.data.map(c => c.id);
-}
-
-function destroy(id: number) {
-    if (!confirm('Delete this comment?')) return;
+async function destroy(id: number) {
+    if (!await confirm('Delete this comment?')) return;
     router.delete(route('admin.news.comments.destroy', id), { preserveScroll: true });
 }
 
-function bulkDelete() {
+async function bulkDelete() {
     if (!selected.value.length) return;
-    if (!confirm(`Delete ${selected.value.length} comments?`)) return;
+    if (!await confirm(`Delete ${selected.value.length} comments?`)) return;
     router.post(route('admin.news.comments.bulk'), { ids: selected.value }, {
         preserveScroll: true,
         onSuccess: () => { selected.value = []; },
@@ -73,18 +63,18 @@ function bulkDelete() {
             </div>
         </div>
 
-        <div class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+        <div class="rounded-xl border border-zinc-800/70 bg-admin-surface overflow-hidden">
             <div v-if="!comments.data.length" class="flex flex-col items-center justify-center py-16 text-center">
                 <MessageSquare :size="24" :stroke-width="1.5" class="text-zinc-700 mb-3" />
                 <p class="text-[13px] text-zinc-600">No comments found.</p>
             </div>
 
             <template v-else>
-                <div class="flex items-center gap-3 px-5 py-2.5 border-b border-zinc-800/60 bg-[#1a1a1e]">
+                <div class="flex items-center gap-3 px-5 py-2.5 border-b border-zinc-800/60 bg-admin-elevated">
                     <input type="checkbox"
-                        :checked="selected.length === comments.data.length && comments.data.length > 0"
+                        :checked="allSelected"
                         class="h-4 w-4 rounded border-zinc-700 bg-zinc-900 accent-blue-500"
-                        @change="toggleSelectAll" />
+                        @change="toggleAll" />
                     <span class="text-[11px] font-semibold uppercase tracking-wider text-zinc-600">Select all on page</span>
                 </div>
 
@@ -92,7 +82,7 @@ function bulkDelete() {
                     class="flex items-start gap-3 px-5 py-3.5 border-b border-zinc-800/50 last:border-0 hover:bg-white/[0.02]">
                     <input type="checkbox" :checked="selected.includes(comment.id)"
                         class="h-4 w-4 mt-0.5 rounded border-zinc-700 bg-zinc-900 accent-blue-500 shrink-0"
-                        @change="toggleSelect(comment.id)" />
+                        @change="toggleOne(comment.id)" />
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 flex-wrap">
                             <span class="text-[13px] font-bold text-zinc-100">{{ comment.user.username ?? comment.user.name }}</span>

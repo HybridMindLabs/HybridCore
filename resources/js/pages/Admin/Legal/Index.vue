@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Scale, Plus, Pencil, Trash2, ExternalLink, Lock } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -17,8 +18,8 @@ interface LegalPage {
 
 defineProps<{ pages: LegalPage[] }>();
 
-function deletePage(slug: string) {
-    if (!confirm('Delete this page? This cannot be undone.')) return;
+async function deletePage(slug: string) {
+    if (!await confirm('Delete this page? This cannot be undone.')) return;
     router.delete(route('admin.legal.destroy', slug));
 }
 </script>
@@ -41,7 +42,7 @@ function deletePage(slug: string) {
             </Link>
         </PageHeader>
 
-        <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+        <div class="bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden">
             <div v-if="pages.length === 0" class="p-10 text-center">
                 <Scale :size="24" :stroke-width="1.5" class="mx-auto mb-3 text-zinc-700" />
                 <p class="text-zinc-500 text-sm">No legal pages yet.</p>

@@ -21,10 +21,12 @@ use App\Http\Controllers\Admin\NewsCategoryController;
 use App\Http\Controllers\Admin\NewsCommentController;
 use App\Http\Controllers\Admin\NewsMediaController;
 use App\Http\Controllers\Admin\PageController;
+use App\Http\Controllers\Admin\PasswordConfirmController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\RuleController;
+use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\ServerController as AdminServerController;
 use App\Http\Controllers\Admin\ServerReviewController;
 use App\Http\Controllers\Admin\SettingController;
@@ -55,9 +57,17 @@ Route::get('/', [DashboardController::class, 'index'])->name('admin.dashboard');
 Route::post('/locale', [LocaleController::class, 'update'])->name('admin.locale.update');
 
 // Profile — any authenticated admin
+// Sudo mode — re-enter the password before destructive actions
+Route::get('/confirm-password', [PasswordConfirmController::class, 'show'])->name('admin.password.confirm');
+Route::post('/confirm-password', [PasswordConfirmController::class, 'store'])->middleware('throttle:6,1,admin-password-confirm')->name('admin.password.confirm.store');
+
+// Admin-wide search — each result group checks its own permission
+Route::get('/search', SearchController::class)->middleware('throttle:60,1,admin-search')->name('admin.search');
+
 Route::get('/profile', [ProfileController::class, 'edit'])->name('admin.profile.edit');
 Route::put('/profile', [ProfileController::class, 'update'])->name('admin.profile.update');
 Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('admin.profile.password');
+Route::put('/profile/alerts', [ProfileController::class, 'updateAlerts'])->name('admin.profile.alerts');
 
 // Users
 Route::middleware('perm:users.view')->group(function (): void {
@@ -67,12 +77,12 @@ Route::middleware('perm:users.view')->group(function (): void {
 Route::middleware('perm:users.manage')->group(function (): void {
     Route::get('/users/create', [UserController::class, 'create'])->name('admin.users.create');
     Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
-    Route::post('/users/bulk', [UserController::class, 'bulkAction'])->name('admin.users.bulk');
+    Route::post('/users/bulk', [UserController::class, 'bulkAction'])->middleware('sudo')->name('admin.users.bulk');
     Route::get('/users/export', [UserController::class, 'export'])->name('admin.users.export');
     Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('admin.users.edit');
     Route::put('/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
-    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
-    Route::post('/users/{user}/impersonate', [ImpersonationController::class, 'start'])->name('admin.users.impersonate');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->middleware('sudo')->name('admin.users.destroy');
+    Route::post('/users/{user}/impersonate', [ImpersonationController::class, 'start'])->middleware('sudo')->name('admin.users.impersonate');
     Route::post('/users/{user}/unlock', [UserController::class, 'unlock'])->name('admin.users.unlock');
     Route::delete('/users/{user}/sessions/{session}', [UserController::class, 'revokeSession'])->name('admin.users.sessions.destroy');
     Route::post('/users/{user}/notes', [UserController::class, 'storeNote'])->name('admin.users.notes.store');
@@ -89,10 +99,10 @@ Route::middleware('perm:roles.view')->group(function (): void {
 });
 Route::middleware('perm:roles.manage')->group(function (): void {
     Route::get('/roles/create', [RoleController::class, 'create'])->name('admin.roles.create');
-    Route::post('/roles', [RoleController::class, 'store'])->name('admin.roles.store');
+    Route::post('/roles', [RoleController::class, 'store'])->middleware('sudo')->name('admin.roles.store');
     Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('admin.roles.edit');
-    Route::put('/roles/{role}', [RoleController::class, 'update'])->name('admin.roles.update');
-    Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('admin.roles.destroy');
+    Route::put('/roles/{role}', [RoleController::class, 'update'])->middleware('sudo')->name('admin.roles.update');
+    Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->middleware('sudo')->name('admin.roles.destroy');
 });
 
 // Settings
@@ -155,7 +165,8 @@ Route::middleware('perm:system.manage')->group(function (): void {
     Route::post('/system-health/clear-routes', [SystemHealthController::class, 'clearRouteCache'])->name('admin.system-health.clear-routes');
     Route::put('/updates/channel', [UpdateController::class, 'updateChannel'])->name('admin.updates.channel');
     Route::post('/updates/check', [UpdateController::class, 'check'])->name('admin.updates.check');
-    Route::post('/updates/apply', [UpdateController::class, 'apply'])->name('admin.updates.apply')->middleware('throttle:5,1,admin-updates-apply');
+    Route::get('/updates/status', [UpdateController::class, 'status'])->name('admin.updates.status');
+    Route::post('/updates/apply', [UpdateController::class, 'apply'])->middleware('sudo')->name('admin.updates.apply')->middleware('throttle:5,1,admin-updates-apply');
 
     // Maintenance mode
     Route::post('/maintenance/enable', [MaintenanceController::class, 'enable'])->name('admin.maintenance.enable');
@@ -163,16 +174,16 @@ Route::middleware('perm:system.manage')->group(function (): void {
 
     // Backup exports (rate limited — sensitive)
     Route::middleware('throttle:10,1,admin-backup')->group(function (): void {
-        Route::get('/backup/export/all', [BackupController::class, 'generateBackup'])->name('admin.backup.export.all');
-        Route::post('/backup/database', [BackupController::class, 'databaseBackup'])->name('admin.backup.database');
+        Route::get('/backup/export/all', [BackupController::class, 'generateBackup'])->middleware('sudo')->name('admin.backup.export.all');
+        Route::post('/backup/database', [BackupController::class, 'databaseBackup'])->middleware('sudo')->name('admin.backup.database');
         Route::put('/backup/schedule', [BackupController::class, 'updateSchedule'])->name('admin.backup.schedule');
-        Route::get('/backup/export/settings', [BackupController::class, 'exportSettings'])->name('admin.backup.export.settings');
-        Route::get('/backup/export/extensions', [BackupController::class, 'exportExtensions'])->name('admin.backup.export.extensions');
-        Route::get('/backup/export/themes', [BackupController::class, 'exportThemes'])->name('admin.backup.export.themes');
-        Route::get('/backup/export/content', [BackupController::class, 'exportContent'])->name('admin.backup.export.content');
-        Route::get('/backup/download/{filename}', [BackupController::class, 'downloadBackup'])->name('admin.backup.download');
-        Route::post('/backup/import', [BackupController::class, 'import'])->name('admin.backup.import');
-        Route::delete('/backup/{filename}', [BackupController::class, 'deleteBackup'])->name('admin.backup.delete');
+        Route::get('/backup/export/settings', [BackupController::class, 'exportSettings'])->middleware('sudo')->name('admin.backup.export.settings');
+        Route::get('/backup/export/extensions', [BackupController::class, 'exportExtensions'])->middleware('sudo')->name('admin.backup.export.extensions');
+        Route::get('/backup/export/themes', [BackupController::class, 'exportThemes'])->middleware('sudo')->name('admin.backup.export.themes');
+        Route::get('/backup/export/content', [BackupController::class, 'exportContent'])->middleware('sudo')->name('admin.backup.export.content');
+        Route::get('/backup/download/{filename}', [BackupController::class, 'downloadBackup'])->middleware('sudo')->name('admin.backup.download');
+        Route::post('/backup/import', [BackupController::class, 'import'])->middleware('sudo')->name('admin.backup.import');
+        Route::delete('/backup/{filename}', [BackupController::class, 'deleteBackup'])->middleware('sudo')->name('admin.backup.delete');
     });
 });
 
@@ -185,13 +196,13 @@ Route::middleware('perm:extensions.manage')->group(function (): void {
     Route::post('/extensions/sync', [ExtensionController::class, 'sync'])->name('admin.extensions.sync');
     Route::post('/extensions/rebuild', [ExtensionController::class, 'rebuild'])->name('admin.extensions.rebuild');
     Route::post('/extensions/import/preview', [ExtensionController::class, 'previewImport'])->name('admin.extensions.import.preview')->middleware('throttle:10,1,admin-extensions-import-preview');
-    Route::post('/extensions/import/confirm', [ExtensionController::class, 'confirmImport'])->name('admin.extensions.import.confirm')->middleware('throttle:10,1,admin-extensions-import-confirm');
+    Route::post('/extensions/import/confirm', [ExtensionController::class, 'confirmImport'])->middleware('sudo')->name('admin.extensions.import.confirm')->middleware('throttle:10,1,admin-extensions-import-confirm');
     Route::post('/extensions/bulk', [ExtensionController::class, 'bulkAction'])->name('admin.extensions.bulk');
     Route::post('/extensions/check-updates', [ExtensionController::class, 'checkUpdates'])->name('admin.extensions.check-updates');
     Route::post('/extensions/{extension}/update', [ExtensionController::class, 'update'])->name('admin.extensions.update');
     Route::post('/extensions/{extension}/license', [ExtensionController::class, 'license'])->name('admin.extensions.license');
     Route::post('/extensions/{extension}/settings', [ExtensionController::class, 'settings'])->name('admin.extensions.settings');
-    Route::delete('/extensions/{extension}', [ExtensionController::class, 'uninstall'])->name('admin.extensions.uninstall');
+    Route::delete('/extensions/{extension}', [ExtensionController::class, 'uninstall'])->middleware('sudo')->name('admin.extensions.uninstall');
     Route::post('/extensions/{extension}/enable', [ExtensionController::class, 'enable'])->name('admin.extensions.enable');
     Route::post('/extensions/{extension}/disable', [ExtensionController::class, 'disable'])->name('admin.extensions.disable');
 });
@@ -199,11 +210,11 @@ Route::middleware('perm:extensions.manage')->group(function (): void {
 // API Tokens
 Route::middleware('perm:api_tokens.manage')->group(function (): void {
     Route::get('/api-tokens', [ApiTokenController::class, 'index'])->name('admin.api-tokens.index');
-    Route::post('/api-tokens', [ApiTokenController::class, 'store'])->name('admin.api-tokens.store');
-    Route::post('/api-tokens/{serviceAccount}/tokens', [ApiTokenController::class, 'issueToken'])->name('admin.api-tokens.tokens.store');
-    Route::post('/api-tokens/tokens/{token}/rotate', [ApiTokenController::class, 'rotateToken'])->name('admin.api-tokens.tokens.rotate');
-    Route::delete('/api-tokens/tokens/{token}', [ApiTokenController::class, 'revokeToken'])->name('admin.api-tokens.tokens.destroy');
-    Route::delete('/api-tokens/{serviceAccount}', [ApiTokenController::class, 'destroy'])->name('admin.api-tokens.destroy');
+    Route::post('/api-tokens', [ApiTokenController::class, 'store'])->middleware('sudo')->name('admin.api-tokens.store');
+    Route::post('/api-tokens/{serviceAccount}/tokens', [ApiTokenController::class, 'issueToken'])->middleware('sudo')->name('admin.api-tokens.tokens.store');
+    Route::post('/api-tokens/tokens/{token}/rotate', [ApiTokenController::class, 'rotateToken'])->middleware('sudo')->name('admin.api-tokens.tokens.rotate');
+    Route::delete('/api-tokens/tokens/{token}', [ApiTokenController::class, 'revokeToken'])->middleware('sudo')->name('admin.api-tokens.tokens.destroy');
+    Route::delete('/api-tokens/{serviceAccount}', [ApiTokenController::class, 'destroy'])->middleware('sudo')->name('admin.api-tokens.destroy');
 });
 
 // Webhooks
@@ -211,7 +222,7 @@ Route::middleware('perm:webhooks.manage')->group(function (): void {
     Route::get('/webhooks', [WebhookController::class, 'index'])->name('admin.webhooks.index');
     Route::post('/webhooks', [WebhookController::class, 'store'])->name('admin.webhooks.store');
     Route::put('/webhooks/{webhook}', [WebhookController::class, 'update'])->name('admin.webhooks.update');
-    Route::post('/webhooks/{webhook}/regenerate-secret', [WebhookController::class, 'regenerateSecret'])->name('admin.webhooks.regenerate-secret');
+    Route::post('/webhooks/{webhook}/regenerate-secret', [WebhookController::class, 'regenerateSecret'])->middleware('sudo')->name('admin.webhooks.regenerate-secret');
     Route::post('/webhooks/{webhook}/test', [WebhookController::class, 'sendTest'])->name('admin.webhooks.test')->middleware('throttle:10,1,admin-webhooks-test');
     Route::post('/webhooks/{webhook}/deliveries/{delivery}/retry', [WebhookController::class, 'retryDelivery'])->name('admin.webhooks.deliveries.retry');
     Route::delete('/webhooks/{webhook}', [WebhookController::class, 'destroy'])->name('admin.webhooks.destroy');
@@ -255,7 +266,7 @@ Route::middleware('perm:servers.manage')->group(function (): void {
     Route::post('/servers', [AdminServerController::class, 'store'])->name('admin.servers.store');
     Route::put('/servers/{server}', [AdminServerController::class, 'update'])->name('admin.servers.update');
     Route::post('/servers/{server}/refresh', [AdminServerController::class, 'refresh'])->name('admin.servers.refresh');
-    Route::post('/servers/{server}/bridge-token', [AdminServerController::class, 'issueBridgeToken'])->name('admin.servers.bridge.issue');
+    Route::post('/servers/{server}/bridge-token', [AdminServerController::class, 'issueBridgeToken'])->middleware('sudo')->name('admin.servers.bridge.issue');
     Route::delete('/servers/{server}/bridge-token', [AdminServerController::class, 'revokeBridgeToken'])->name('admin.servers.bridge.revoke');
     Route::post('/servers/{server}/commands/{command}/cancel', [AdminServerController::class, 'cancelCommand'])->name('admin.servers.commands.cancel');
     Route::delete('/servers/{server}', [AdminServerController::class, 'destroy'])->name('admin.servers.destroy');
@@ -291,10 +302,12 @@ Route::middleware('perm:news.manage')->group(function (): void {
 // ── Payments ────────────────────────────────────────────────────
 Route::middleware('perm:payments.view')->group(function (): void {
     Route::get('/payments', [PaymentController::class, 'index'])->name('admin.payments.index');
+    Route::get('/payments/export', [PaymentController::class, 'export'])->middleware('throttle:10,1,admin-payments-export')->name('admin.payments.export');
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('admin.invoices.index');
+    Route::get('/invoices/export', [InvoiceController::class, 'export'])->middleware('throttle:10,1,admin-invoices-export')->name('admin.invoices.export');
 });
 Route::middleware('perm:payments.manage')->group(function (): void {
-    Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund'])->name('admin.payments.refund');
+    Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund'])->middleware('sudo')->name('admin.payments.refund');
 });
 
 // ── Content reports ────────────────────────────────────────────
@@ -306,9 +319,9 @@ Route::middleware('perm:content.view')->group(function (): void {
 Route::middleware('perm:content.manage')->group(function (): void {
     Route::post('/reports/{report}/resolve', [ContentReportController::class, 'resolve'])->name('admin.reports.resolve');
     Route::post('/trash/articles/{id}/restore', [TrashController::class, 'restoreArticle'])->name('admin.trash.articles.restore');
-    Route::delete('/trash/articles/{id}', [TrashController::class, 'forceDeleteArticle'])->name('admin.trash.articles.force-delete');
+    Route::delete('/trash/articles/{id}', [TrashController::class, 'forceDeleteArticle'])->middleware('sudo')->name('admin.trash.articles.force-delete');
     Route::post('/trash/comments/{id}/restore', [TrashController::class, 'restoreComment'])->name('admin.trash.comments.restore');
-    Route::delete('/trash/comments/{id}', [TrashController::class, 'forceDeleteComment'])->name('admin.trash.comments.force-delete');
+    Route::delete('/trash/comments/{id}', [TrashController::class, 'forceDeleteComment'])->middleware('sudo')->name('admin.trash.comments.force-delete');
     Route::delete('/reports/{report}/content', [ContentReportController::class, 'destroyContent'])->name('admin.reports.destroy-content');
 });
 Route::middleware('perm:news.manage')->group(function (): void {

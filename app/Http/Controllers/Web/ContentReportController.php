@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\ContentReport;
+use App\Notifications\SystemNotification;
+use App\Services\AdminNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -25,7 +27,7 @@ class ContentReportController extends Controller
         // Reporting your own content makes no sense.
         abort_if($reportable->user_id === $request->user()->id, 422);
 
-        ContentReport::firstOrCreate(
+        $report = ContentReport::firstOrCreate(
             [
                 'reporter_id' => $request->user()->id,
                 'reportable_type' => $modelClass,
@@ -36,6 +38,15 @@ class ContentReportController extends Controller
                 'details' => $data['details'] ?? null,
             ],
         );
+
+        if ($report->wasRecentlyCreated) {
+            app(AdminNotifier::class)->send('content_report', new SystemNotification(
+                message: 'New report: '.class_basename($modelClass)." #{$reportable->id} ({$data['reason']})",
+                level: 'warning',
+                actionUrl: route('admin.moderation.index'),
+                actionLabel: 'Open moderation',
+            ));
+        }
 
         return back()->with('success', __('report.submitted'));
     }

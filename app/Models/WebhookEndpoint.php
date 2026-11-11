@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -31,7 +32,7 @@ use Illuminate\Support\Carbon;
  */
 class WebhookEndpoint extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'name', 'url', 'secret', 'events', 'is_active', 'created_by',
@@ -59,5 +60,15 @@ class WebhookEndpoint extends Model
     public function deliveries(): HasMany
     {
         return $this->hasMany(WebhookDelivery::class);
+    }
+
+    protected static function getActivityLogEventPrefix(): string
+    {
+        return 'webhook';
+    }
+
+    protected static function getActivityLogIgnoredAttributes(): array
+    {
+        return ['last_triggered_at', 'last_status', 'last_response_code'];
     }
 }

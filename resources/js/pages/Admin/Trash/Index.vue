@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Trash2, Undo2, Newspaper, MessageSquare } from '@lucide/vue';
 import { ref } from 'vue';
@@ -27,8 +28,8 @@ function restoreArticle(id: number) {
     router.post(route('admin.trash.articles.restore', id), {}, { preserveScroll: true });
 }
 
-function purgeArticle(id: number, title: string) {
-    if (!confirm(`Permanently delete "${title}"? This cannot be undone.`)) return;
+async function purgeArticle(id: number, title: string) {
+    if (!await confirm(`Permanently delete "${title}"? This cannot be undone.`, { confirmLabel: 'Delete forever' })) return;
     router.delete(route('admin.trash.articles.force-delete', id), { preserveScroll: true });
 }
 
@@ -36,8 +37,8 @@ function restoreComment(id: number) {
     router.post(route('admin.trash.comments.restore', id), {}, { preserveScroll: true });
 }
 
-function purgeComment(id: number) {
-    if (!confirm('Permanently delete this comment? This cannot be undone.')) return;
+async function purgeComment(id: number) {
+    if (!await confirm('Permanently delete this comment? This cannot be undone.', { confirmLabel: 'Delete forever' })) return;
     router.delete(route('admin.trash.comments.force-delete', id), { preserveScroll: true });
 }
 </script>
@@ -77,7 +78,7 @@ function purgeComment(id: number) {
         <template v-if="activeTab === 'articles'">
             <EmptyState v-if="!articles.data.length" :icon="Trash2" title="No deleted articles" description="Deleted articles will land here before being purged." />
 
-            <div v-else class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+            <div v-else class="rounded-xl border border-zinc-800/70 bg-admin-surface overflow-hidden">
                 <div v-for="(article, i) in articles.data" :key="article.id"
                     class="hc-hero-in flex items-center gap-3 px-5 py-3.5 border-b border-zinc-800/50 last:border-0 hover:bg-white/[0.02]"
                     :style="{ animationDelay: `${Math.min(i, 10) * 25}ms` }">
@@ -113,7 +114,7 @@ function purgeComment(id: number) {
         <template v-if="activeTab === 'comments'">
             <EmptyState v-if="!comments.data.length" :icon="Trash2" title="No deleted comments" description="Deleted comments will land here before being purged." />
 
-            <div v-else class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden">
+            <div v-else class="rounded-xl border border-zinc-800/70 bg-admin-surface overflow-hidden">
                 <div v-for="(comment, i) in comments.data" :key="comment.id"
                     class="hc-hero-in flex items-start gap-3 px-5 py-3.5 border-b border-zinc-800/50 last:border-0 hover:bg-white/[0.02]"
                     :style="{ animationDelay: `${Math.min(i, 10) * 25}ms` }">

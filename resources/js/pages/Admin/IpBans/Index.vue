@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import Breadcrumb from '@/components/UI/Breadcrumb.vue';
@@ -20,8 +21,8 @@ function submit() {
         onSuccess: () => { form.reset(); showForm.value = false; },
     });
 }
-function remove(id: number) {
-    if (!confirm('Remove this IP ban?')) return;
+async function remove(id: number) {
+    if (!await confirm('Remove this IP ban?')) return;
     router.delete(route('admin.ip-bans.destroy', id));
 }
 
@@ -53,7 +54,7 @@ const breadcrumbs = [{ label: 'Admin', href: route('admin.dashboard') }, { label
         <!-- Add form -->
         <Transition name="slide">
             <form v-if="showForm" @submit.prevent="submit"
-                class="mb-4 p-4 bg-[#111113] border border-zinc-800/70 rounded-xl flex flex-wrap gap-3 items-end">
+                class="mb-4 p-4 bg-admin-surface border border-zinc-800/70 rounded-xl flex flex-wrap gap-3 items-end">
                 <div class="flex-1 min-w-[140px]">
                     <label class="text-zinc-500 text-[11px] font-semibold uppercase tracking-wide mb-1 block">IP Address <span class="text-zinc-700 normal-case">(or CIDR range)</span></label>
                     <input v-model="form.ip" type="text" placeholder="192.168.1.1 or 10.0.0.0/8"
@@ -77,19 +78,19 @@ const breadcrumbs = [{ label: 'Admin', href: route('admin.dashboard') }, { label
             </form>
         </Transition>
 
-        <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+        <div class="bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden">
             <div v-if="bans.data.length === 0" class="p-16 text-center">
                 <ShieldBan :size="28" :stroke-width="1.5" class="mx-auto mb-3 text-zinc-700" />
                 <p class="text-zinc-500 text-sm font-semibold">No IP bans yet</p>
             </div>
-            <table v-else class="w-full text-sm">
+            <table v-else class="admin-table w-full text-sm">
                 <thead>
-                    <tr class="border-b border-zinc-800/70">
-                        <th class="text-left text-zinc-600 text-xs font-medium uppercase tracking-wide px-4 py-3">IP Address</th>
-                        <th class="text-left text-zinc-600 text-xs font-medium uppercase tracking-wide px-4 py-3 hidden sm:table-cell">Reason</th>
-                        <th class="text-left text-zinc-600 text-xs font-medium uppercase tracking-wide px-4 py-3 hidden md:table-cell">Banned by</th>
-                        <th class="text-left text-zinc-600 text-xs font-medium uppercase tracking-wide px-4 py-3 hidden lg:table-cell">Expires</th>
-                        <th class="px-4 py-3 w-12"></th>
+                    <tr>
+                        <th>IP Address</th>
+                        <th class="hidden sm:table-cell">Reason</th>
+                        <th class="hidden md:table-cell">Banned by</th>
+                        <th class="hidden lg:table-cell">Expires</th>
+                        <th class="w-12"></th>
                     </tr>
                 </thead>
                 <tbody>

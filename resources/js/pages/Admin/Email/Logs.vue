@@ -86,16 +86,16 @@ const breadcrumbs = [
             </div>
         </div>
 
-        <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden transition-opacity"
+        <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden transition-opacity"
             :class="searching ? 'opacity-50 pointer-events-none' : ''">
-            <table class="w-full text-sm">
+            <table class="admin-table w-full text-sm">
                 <thead>
-                    <tr class="border-b border-zinc-800">
-                        <th class="text-left text-zinc-500 text-[11px] font-semibold uppercase tracking-wide px-4 py-3">To</th>
-                        <th class="text-left text-zinc-500 text-[11px] font-semibold uppercase tracking-wide px-4 py-3">Subject</th>
-                        <th class="text-left text-zinc-500 text-[11px] font-semibold uppercase tracking-wide px-4 py-3">Template</th>
-                        <th class="text-left text-zinc-500 text-[11px] font-semibold uppercase tracking-wide px-4 py-3">Status</th>
-                        <th class="text-left text-zinc-500 text-[11px] font-semibold uppercase tracking-wide px-4 py-3">Date</th>
+                    <tr class="border-zinc-800">
+                        <th>To</th>
+                        <th>Subject</th>
+                        <th>Template</th>
+                        <th>Status</th>
+                        <th>Date</th>
                     </tr>
                 </thead>
                 <tbody>

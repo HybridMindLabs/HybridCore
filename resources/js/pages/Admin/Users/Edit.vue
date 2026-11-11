@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import {
     ChevronLeft, ShieldAlert, Ban, Trash2, KeyRound, UserCog, IdCard,
@@ -64,17 +65,17 @@ function submit() {
     form.put(route('admin.users.update', props.user.id));
 }
 
-function deleteUser() {
-    if (!confirm(`Delete user "${props.user.name}"? This cannot be undone.`)) return;
+async function deleteUser() {
+    if (!await confirm(`Delete user "${props.user.name}"? This cannot be undone.`)) return;
     router.delete(route('admin.users.destroy', props.user.id));
 }
 
-function quickBan() {
+async function quickBan() {
     if (form.banned) {
-        if (!confirm(`Unban "${props.user.name}"?`)) return;
+        if (!await confirm(`Unban "${props.user.name}"?`)) return;
         form.banned = false;
     } else {
-        if (!confirm(`Ban "${props.user.name}"? They will be signed out immediately.`)) return;
+        if (!await confirm(`Ban "${props.user.name}"? They will be signed out immediately.`)) return;
         form.banned = true;
     }
     form.put(route('admin.users.update', props.user.id), { preserveScroll: true });
@@ -103,7 +104,7 @@ const errorInputClass = 'border-red-500';
             <!-- ── Main column ───────────────────────────────────── -->
             <div class="flex flex-col gap-5 min-w-0">
 
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden">
 
                     <!-- Tabs -->
                     <div class="flex items-center gap-0.5 px-4 pt-3 border-b border-zinc-800/70">
@@ -242,7 +243,7 @@ const errorInputClass = 'border-red-500';
             <div class="flex flex-col gap-4">
 
                 <!-- User card -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 60ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 60ms">
                     <!-- Avatar + name -->
                     <div class="flex items-center gap-3 mb-4">
                         <div class="w-12 h-12 rounded-xl shrink-0 overflow-hidden border border-zinc-800">
@@ -333,7 +334,7 @@ const errorInputClass = 'border-red-500';
                 </div>
 
                 <!-- Danger zone -->
-                <div class="hc-hero-in bg-[#111113] border border-red-500/20 rounded-xl p-5" style="animation-delay: 100ms">
+                <div class="hc-hero-in bg-admin-surface border border-red-500/20 rounded-xl p-5" style="animation-delay: 100ms">
                     <h3 class="text-red-400 text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5">
                         <Trash2 :size="13" :stroke-width="1.75" /> Danger Zone
                     </h3>

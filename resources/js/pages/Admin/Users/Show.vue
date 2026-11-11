@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import {
     ChevronLeft, ShieldAlert, Ban, Pencil, MessageSquare, Star, Users, UserPlus,
@@ -75,15 +76,15 @@ function addNote() {
     });
 }
 
-function deleteNote(id: number) {
-    if (!confirm('Delete this note?')) return;
+async function deleteNote(id: number) {
+    if (!await confirm('Delete this note?')) return;
     router.delete(route('admin.users.notes.destroy', [props.user.id, id]), { preserveScroll: true });
 }
 
 const canImpersonate = computed(() => !props.user.is_admin && !props.user.banned);
 
-function impersonate() {
-    if (!confirm(`Browse the site as "${props.user.name}"? You will be signed in as them until you click "Return to my account".`)) return;
+async function impersonate() {
+    if (!await confirm(`Browse the site as "${props.user.name}"? You will be signed in as them until you click "Return to my account".`)) return;
     router.post(route('admin.users.impersonate', props.user.id));
 }
 
@@ -93,8 +94,8 @@ function unlock() {
 
 const revokingSession = ref<string | null>(null);
 
-function revokeSession(sessionId: string) {
-    if (!confirm('Revoke this session? The device will be signed out immediately.')) return;
+async function revokeSession(sessionId: string) {
+    if (!await confirm('Revoke this session? The device will be signed out immediately.')) return;
     revokingSession.value = sessionId;
     router.delete(route('admin.users.sessions.destroy', [props.user.id, sessionId]), {
         preserveScroll: true,
@@ -150,15 +151,15 @@ function formatLastActivity(ts: number): string {
         </div>
 
         <!-- Header card -->
-        <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden mb-5">
+        <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden mb-5">
             <div class="h-24 bg-gradient-to-r from-blue-500/15 via-violet-500/10 to-transparent" :style="user.banner ? { backgroundImage: `url(${user.banner})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}" />
             <div class="px-6 pb-5 -mt-8 flex flex-wrap items-end gap-4">
                 <div class="relative">
-                    <div class="w-16 h-16 rounded-2xl overflow-hidden border-2 border-[#111113] bg-zinc-800">
+                    <div class="w-16 h-16 rounded-2xl overflow-hidden border-2 border-admin-surface bg-zinc-800">
                         <img v-if="user.avatar" :src="user.avatar" :alt="user.name" class="w-full h-full object-cover" />
                         <div v-else class="w-full h-full flex items-center justify-center text-lg font-bold text-zinc-400">{{ initials }}</div>
                     </div>
-                    <span v-if="user.online" class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#111113]" title="Online now" />
+                    <span v-if="user.online" class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-admin-surface" title="Online now" />
                 </div>
                 <div class="flex-1 min-w-0 pb-1">
                     <div class="flex flex-wrap items-center gap-2">
@@ -195,7 +196,7 @@ function formatLastActivity(ts: number): string {
             <div
                 v-for="(tile, i) in statTiles"
                 :key="tile.label"
-                class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-3 py-3 flex flex-col gap-1"
+                class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl px-3 py-3 flex flex-col gap-1"
                 :style="{ animationDelay: `${60 + i * 30}ms` }"
             >
                 <component :is="tile.icon" :size="14" :stroke-width="1.75" :class="tile.color" />
@@ -207,7 +208,7 @@ function formatLastActivity(ts: number): string {
         <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-5 items-start">
 
             <!-- ── Main column: tabs ─────────────────────────────── -->
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden min-w-0" style="animation-delay: 200ms">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden min-w-0" style="animation-delay: 200ms">
                 <div class="flex items-center gap-0.5 px-4 pt-3 border-b border-zinc-800/70">
                     <button
                         v-for="tab in tabs"
@@ -356,7 +357,7 @@ function formatLastActivity(ts: number): string {
             <div class="hc-hero-in flex flex-col gap-4" style="animation-delay: 260ms">
 
                 <!-- Admin notes -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5">
                     <h3 class="text-zinc-100 text-sm font-semibold mb-1 flex items-center gap-1.5">
                         <StickyNote :size="14" :stroke-width="1.75" class="text-amber-400" /> Admin notes
                     </h3>
@@ -401,7 +402,7 @@ function formatLastActivity(ts: number): string {
                 </div>
 
                 <!-- Account meta -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5">
                     <h3 class="text-zinc-100 text-sm font-semibold mb-3">Account</h3>
                     <div class="flex flex-col gap-2 text-xs">
                         <div class="flex items-center gap-2 text-zinc-500">
@@ -447,7 +448,7 @@ function formatLastActivity(ts: number): string {
                 </div>
 
                 <!-- Achievements -->
-                <div v-if="achievements.length" class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+                <div v-if="achievements.length" class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5">
                     <h3 class="text-zinc-100 text-sm font-semibold mb-3 flex items-center gap-1.5">
                         <Trophy :size="14" :stroke-width="1.75" class="text-emerald-400" /> Achievements
                     </h3>

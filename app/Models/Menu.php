@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -34,7 +35,7 @@ use Illuminate\Support\Facades\Cache;
  */
 class Menu extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = ['name', 'slug', 'location'];
 
@@ -49,5 +50,10 @@ class Menu extends Model
     public function items(): HasMany
     {
         return $this->hasMany(MenuItem::class)->orderBy('sort');
+    }
+
+    protected static function getActivityLogEventPrefix(): string
+    {
+        return 'menu';
     }
 }

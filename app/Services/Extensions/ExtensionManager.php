@@ -18,6 +18,11 @@ use ZipArchive;
 
 class ExtensionManager
 {
+    /** Ceilings on what an uploaded archive may expand to (zip-bomb guard). */
+    public const MAX_ARCHIVE_ENTRIES = 5000;
+
+    public const MAX_UNCOMPRESSED_BYTES = 100 * 1024 * 1024;
+
     public function __construct(
         private readonly ExtensionDiscoveryService $discovery,
         private readonly ExtensionManifestValidator $validator,
@@ -73,11 +78,18 @@ class ExtensionManager
             'disabled_at' => null,
         ]);
 
+        try {
+            $this->runMigrations($extension);
+            $this->runSeeder($extension);
+            $this->publishAssets($extension);
+        } catch (\Throwable $e) {
+            $extension->update(['enabled' => false, 'enabled_at' => null, 'disabled_at' => now()]);
+
+            throw new RuntimeException("Could not enable {$extension->name}: ".$e->getMessage(), 0, $e);
+        }
+
         $this->activity->log('extension.enabled', "Enabled extension: {$extension->name}", $extension);
 
-        $this->runMigrations($extension);
-        $this->runSeeder($extension);
-        $this->publishAssets($extension);
         $this->dispatchRebuild();
         $this->hooks->fire(Hooks::EXTENSION_ENABLED, $extension);
     }
@@ -195,10 +207,14 @@ class ExtensionManager
             return;
         }
 
-        Artisan::call('migrate', [
+        $exitCode = Artisan::call('migrate', [
             '--path' => $path,
             '--force' => true,
         ]);
+
+        if ($exitCode !== 0) {
+            throw new RuntimeException('Migrations failed: '.trim(Artisan::output()));
+        }
     }
 
     /** Roll back every migration the extension ever ran (drops its tables). */
@@ -420,7 +436,7 @@ class ExtensionManager
             throw new RuntimeException('Extension '.implode('; ', $requirementErrors).'.');
         }
 
-        $this->assertNoZipSlip($zip);
+        $this->assertSafeArchive($zip);
 
         $manifest['_manifest_entry'] = $manifestEntry;
 
@@ -456,21 +472,53 @@ class ExtensionManager
                 );
             }
 
-            if (is_dir($targetPath)) {
-                File::deleteDirectory($targetPath);
+            // Stage the new files and swap, so a failed extraction or migration
+            // puts the working version back instead of leaving the extension
+            // half-deleted. The swap area sits outside extensions/ on purpose:
+            // a copy there would be discovered by sync() as a second extension
+            // with the same slug and could overwrite the new version's record.
+            $swapDir = storage_path('app/extension-swap');
+            File::ensureDirectoryExists($swapDir);
+            $staging = $swapDir.'/incoming-'.Str::random(12);
+            $backup = $swapDir.'/previous-'.Str::random(12);
+
+            try {
+                $this->extractTo($zip, $root, $staging);
+            } catch (\Throwable $e) {
+                File::deleteDirectory($staging);
+                throw $e;
             }
 
-            $this->extractTo($zip, $root, $targetPath);
+            if (is_dir($targetPath) && ! rename($targetPath, $backup)) {
+                File::deleteDirectory($staging);
+                throw new RuntimeException("Could not move the current version of {$existing->name} aside.");
+            }
+
+            rename($staging, $targetPath);
 
             $oldVersion = $existing->version;
-            $this->sync();
-            $existing->refresh();
+            $oldMetadata = $existing->metadata;
 
-            if ($existing->enabled) {
-                $this->runMigrations($existing);
-                $this->runSeeder($existing);
-                $this->publishAssets($existing);
+            try {
+                $this->sync();
+                $existing->refresh();
+
+                if ($existing->enabled) {
+                    $this->runMigrations($existing);
+                    $this->runSeeder($existing);
+                    $this->publishAssets($existing);
+                }
+            } catch (\Throwable $e) {
+                File::deleteDirectory($targetPath);
+                if (is_dir($backup)) {
+                    rename($backup, $targetPath);
+                }
+                $existing->forceFill(['version' => $oldVersion, 'metadata' => $oldMetadata])->save();
+
+                throw new RuntimeException("Update of {$existing->name} to {$manifest['version']} failed and was rolled back: ".$e->getMessage(), 0, $e);
             }
+
+            File::deleteDirectory($backup);
 
             $this->activity->log('extension.updated', "Updated extension {$existing->name}: {$oldVersion} → {$manifest['version']}", $existing);
             $this->hooks->fire(Hooks::EXTENSION_UPDATED, $existing, $oldVersion);
@@ -495,17 +543,44 @@ class ExtensionManager
     }
 
     /** Reject any entry that would escape the extraction directory. */
-    private function assertNoZipSlip(ZipArchive $zip): void
+    /**
+     * Reject archives that could write outside the extension folder, plant a
+     * symlink, or expand into something far larger than they look.
+     */
+    private function assertSafeArchive(ZipArchive $zip): void
     {
-        for ($i = 0; $i < $zip->numFiles; $i++) {
-            $name = $zip->getNameIndex($i);
+        if ($zip->numFiles > self::MAX_ARCHIVE_ENTRIES) {
+            throw new RuntimeException('Archive has too many files ('.$zip->numFiles.'; the limit is '.self::MAX_ARCHIVE_ENTRIES.').');
+        }
 
-            if ($name === false) {
-                continue;
+        $total = 0;
+
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $stat = $zip->statIndex($i);
+
+            if ($stat === false) {
+                throw new RuntimeException('Archive contains an unreadable entry.');
             }
 
-            if (str_starts_with($name, '/') || str_contains($name, '..')) {
+            $name = $stat['name'];
+
+            if (str_starts_with($name, '/') || str_contains($name, '\\') || str_contains($name, '..')
+                || preg_match('/^[A-Za-z]:/', $name) === 1 || str_contains($name, "\0")) {
                 throw new RuntimeException('Archive contains an unsafe path: '.$name);
+            }
+
+            $opsys = 0;
+            $attributes = 0;
+            if ($zip->getExternalAttributesIndex($i, $opsys, $attributes)
+                && $opsys === ZipArchive::OPSYS_UNIX
+                && (($attributes >> 16) & 0170000) === 0120000) {
+                throw new RuntimeException('Archive contains a symbolic link: '.$name);
+            }
+
+            $total += (int) $stat['size'];
+
+            if ($total > self::MAX_UNCOMPRESSED_BYTES) {
+                throw new RuntimeException('Archive expands to more than '.(self::MAX_UNCOMPRESSED_BYTES / 1024 / 1024).' MB.');
             }
         }
     }

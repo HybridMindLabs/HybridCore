@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import {
     List, Plus, ChevronLeft, ChevronUp, ChevronDown,
@@ -59,8 +60,8 @@ function saveEdit(item: MenuItemRow & { depth: number }) {
     });
 }
 
-function deleteItem(item: MenuItemRow & { depth: number }) {
-    if (confirm(`Remove "${item.label}"?`)) {
+async function deleteItem(item: MenuItemRow & { depth: number }) {
+    if (await confirm(`Remove "${item.label}"?`)) {
         router.delete(route('admin.menus.items.destroy', [props.menu.id, item.id]), { preserveScroll: true });
     }
 }
@@ -141,7 +142,7 @@ const smallInputClass = 'bg-zinc-900/60 border border-zinc-800/70 rounded-lg px-
             <div class="xl:col-span-2 flex flex-col gap-4">
 
                 <!-- Items tree -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 0ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 0ms">
                     <div class="flex items-center gap-2 px-5 py-3 border-b border-zinc-800/70">
                         <List :size="14" :stroke-width="1.75" class="text-blue-400" />
                         <span class="text-sm font-semibold text-zinc-100">Menu Items</span>
@@ -211,7 +212,7 @@ const smallInputClass = 'bg-zinc-900/60 border border-zinc-800/70 rounded-lg px-
                 </div>
 
                 <!-- Add item -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 40ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 40ms">
                     <h3 class="text-sm font-semibold text-zinc-100 mb-4 flex items-center gap-2">
                         <Plus :size="14" :stroke-width="2" class="text-blue-400" /> Add Item
                     </h3>
@@ -259,7 +260,7 @@ const smallInputClass = 'bg-zinc-900/60 border border-zinc-800/70 rounded-lg px-
 
             <!-- Right: menu settings -->
             <div class="xl:sticky xl:top-6 xl:self-start">
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 80ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 80ms">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-sm font-semibold text-zinc-100">Menu Settings</h3>
                         <span v-if="settingsForm.isDirty" class="flex items-center gap-1.5 text-amber-400 text-xs font-medium">

@@ -161,7 +161,7 @@ const breadcrumbs = [
             </form>
 
             <!-- Preview pane -->
-            <div v-if="showPreview" class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+            <div v-if="showPreview" class="bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden">
                 <div class="px-4 py-3 border-b border-zinc-800 flex items-center gap-2">
                     <Eye :size="13" class="text-zinc-500" />
                     <span class="text-zinc-400 text-sm font-semibold">Preview</span>

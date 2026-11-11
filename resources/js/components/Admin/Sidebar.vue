@@ -2,13 +2,12 @@
 import { Link, router, usePage } from '@inertiajs/vue3';
 import {
     LayoutDashboard, Users, ShieldCheck, Settings, Activity, FileText,
-    Puzzle, Paintbrush, Server, UserCircle, LogOut, HeartPulse, Download,
+    Puzzle, Paintbrush, Server, HeartPulse, Download,
     ScrollText, List, Circle, Package, Globe, Newspaper, BarChart3, DatabaseBackup, BookOpen, Mail, TrendingUp, X,
-    KeyRound, Webhook, Search, ChevronDown, CreditCard, Receipt,
+    KeyRound, Webhook, ChevronDown, CreditCard, Receipt, Flag,
 } from '@lucide/vue';
 import { nextTick, onMounted, onUnmounted, reactive, watch } from 'vue';
 import { useAdminSidebar } from '@/composables/useAdminSidebar';
-import { useCommandPalette } from '@/composables/useCommandPalette';
 
 interface NavItem {
     label: string;
@@ -26,12 +25,13 @@ interface NavSection {
 interface SharedProps {
     adminNav: NavSection[];
     adminBadges: Record<string, number>;
-    app: { name: string };
+    app: { name: string; version: string };
     [key: string]: unknown;
 }
 
 const BADGE_MAP: Record<string, string> = {
     '/admin/contact': 'unread_contact',
+    '/admin/moderation': 'open_reports',
 };
 
 // Curated icon map — extensions should use one of these names in their
@@ -40,12 +40,11 @@ const iconMap: Record<string, unknown> = {
     LayoutDashboard, Users, ShieldCheck, Settings, Activity, FileText,
     Puzzle, Paintbrush, Server, HeartPulse, Download, ScrollText, List,
     Package, Globe, Newspaper, BarChart3, DatabaseBackup, BookOpen, Mail, TrendingUp,
-    KeyRound, Webhook, CreditCard, Receipt,
+    KeyRound, Webhook, CreditCard, Receipt, Flag,
 };
 
 const page = usePage<SharedProps>();
 const { mobileOpen, close } = useAdminSidebar();
-const { show: openPalette } = useCommandPalette();
 
 let stopListening: (() => void) | null = null;
 let stopOpenWatch: (() => void) | null = null;
@@ -123,10 +122,6 @@ function isActive(item: NavItem): boolean {
         || url.startsWith(item.activePattern + '/')
         || url.startsWith(item.activePattern + '?');
 }
-
-function logout() {
-    router.post(route('admin.logout'));
-}
 </script>
 
 <template>
@@ -141,20 +136,20 @@ function logout() {
     <aside
         id="admin-navigation"
         aria-label="Administration navigation"
-        class="fixed inset-y-0 left-0 z-50 flex h-dvh w-[min(19rem,88vw)] flex-col border-r border-zinc-800/60 bg-[#0d0d0f]
-               shadow-2xl shadow-black/50 transition-transform duration-200 ease-out lg:w-[220px] lg:translate-x-0 lg:shadow-none"
+        class="fixed inset-y-0 left-0 z-50 flex h-dvh w-[min(19rem,88vw)] flex-col border-r border-zinc-800/60 bg-admin-sunken
+               shadow-2xl shadow-black/50 transition-transform duration-200 ease-out lg:w-64 lg:translate-x-0 lg:shadow-none"
         :class="mobileOpen ? 'translate-x-0' : '-translate-x-full'"
     >
 
         <!-- Logo -->
         <div class="flex items-center gap-3 border-b border-zinc-800/60 px-4 py-4 lg:px-5">
             <Link :href="route('admin.dashboard')" class="flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0">
+                <div class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0">
                     <span class="text-blue-400 text-xs font-bold leading-none">HC</span>
                 </div>
                 <div class="leading-none">
                     <span class="text-zinc-100 text-sm font-semibold tracking-tight block">{{ page.props.app.name }}</span>
-                    <span class="text-zinc-600 text-[10px] mt-0.5 block">Admin Panel</span>
+                    <span class="text-zinc-500 text-[11px] mt-0.5 block">Admin Panel</span>
                 </div>
             </Link>
             <button
@@ -167,30 +162,17 @@ function logout() {
             </button>
         </div>
 
-        <!-- Search (opens the command palette — Ctrl/⌘+K) -->
-        <div class="px-3 pt-3">
-            <button
-                type="button"
-                class="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg border border-zinc-800/70 text-zinc-500 text-sm hover:text-zinc-100 hover:border-zinc-700 transition-colors"
-                @click="openPalette"
-            >
-                <Search :size="14" :stroke-width="1.75" class="shrink-0" />
-                <span class="flex-1 text-left">Search</span>
-                <kbd class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-600">Ctrl K</kbd>
-            </button>
-        </div>
-
         <!-- Navigation (composed from core + extension registrations) -->
-        <nav class="flex-1 overflow-y-auto py-3 px-3 flex flex-col gap-2">
+        <nav class="admin-scroll flex-1 overflow-y-auto py-3 px-3 flex flex-col gap-3">
             <div v-for="(section, si) in page.props.adminNav" :key="si">
                 <button
                     v-if="section.heading"
                     type="button"
-                    class="flex w-full items-center gap-1 px-3 mb-1.5 text-zinc-700 text-[9px] font-bold uppercase tracking-widest hover:text-zinc-500 transition-colors"
+                    class="flex w-full items-center gap-1 px-3 mb-1.5 text-zinc-500 text-[11px] font-semibold uppercase tracking-wider hover:text-zinc-300 transition-colors"
                     @click="toggleSection(section.heading)"
                 >
                     <span class="flex-1 text-left">{{ section.heading }}</span>
-                    <ChevronDown :size="11" :stroke-width="2.5" class="transition-transform" :class="sectionExpanded(section) ? '' : '-rotate-90'" />
+                    <ChevronDown :size="12" :stroke-width="2.25" class="transition-transform" :class="sectionExpanded(section) ? '' : '-rotate-90'" />
                 </button>
                 <div v-show="sectionExpanded(section)" class="flex flex-col gap-0.5">
                     <Link
@@ -216,31 +198,12 @@ function logout() {
             </div>
         </nav>
 
-        <!-- Footer: profile + logout -->
-        <div class="border-t border-zinc-800/60 px-3 py-3 flex flex-col gap-0.5">
-            <Link
-                :href="route('admin.profile.edit')"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
-                :class="page.url.startsWith('/admin/profile')
-                    ? 'text-blue-400 bg-blue-500/10 border-l-2 border-blue-500'
-                    : 'text-zinc-500 hover:text-zinc-100 hover:bg-zinc-900/60 border-l-2 border-transparent'"
-            >
-                <UserCircle :size="16" :stroke-width="1.75" class="shrink-0" />
-                Profile
-            </Link>
-            <button
-                type="button"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-500 hover:text-red-400 hover:bg-red-500/8 transition-colors w-full text-left"
-                @click="logout"
-            >
-                <LogOut :size="16" :stroke-width="1.75" class="shrink-0" />
-                Sign out
-            </button>
+        <div class="border-t border-zinc-800/60 px-5 py-3">
             <Link
                 :href="route('admin.updates.index')"
-                title="View updates &amp; changelog information"
-                class="text-zinc-600 hover:text-zinc-300 text-[10px] font-mono px-3 pt-1 transition-colors w-fit"
-            >v0.9.0-dev</Link>
+                title="Updates and changelog"
+                class="text-zinc-600 hover:text-zinc-300 text-[11px] font-mono transition-colors"
+            >v{{ page.props.app.version }}</Link>
         </div>
 
     </aside>

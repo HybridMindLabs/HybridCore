@@ -7,6 +7,8 @@ use App\Jobs\ProcessPaymentEvent;
 use App\Jobs\ProcessSubscriptionEvent;
 use App\Models\Payment;
 use App\Models\Subscription;
+use App\Notifications\SystemNotification;
+use App\Services\AdminNotifier;
 use App\Services\Payments\Contracts\PaymentWebhookEvent;
 use App\Services\Payments\PaymentManager;
 use Illuminate\Http\JsonResponse;
@@ -60,6 +62,15 @@ class PaymentWebhookController extends Controller
 
         if ($statusChanged) {
             ProcessPaymentEvent::dispatch($payment->id);
+        }
+
+        if ($statusChanged && $event->status === Payment::STATUS_FAILED) {
+            app(AdminNotifier::class)->send('payment_failed', new SystemNotification(
+                message: "Payment #{$payment->id} failed (".number_format($payment->amount / 100, 2).' '.strtoupper($payment->currency).", {$gateway})",
+                level: 'danger',
+                actionUrl: route('admin.payments.index', ['search' => '#'.$payment->id]),
+                actionLabel: 'View payment',
+            ));
         }
     }
 

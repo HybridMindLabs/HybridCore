@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -42,6 +43,8 @@ use Illuminate\Support\Facades\Cache;
  */
 class MenuItem extends Model
 {
+    use LogsActivity;
+
     protected $fillable = ['menu_id', 'parent_id', 'label', 'url', 'target', 'sort'];
 
     protected static function booted(): void
@@ -64,5 +67,15 @@ class MenuItem extends Model
     public function children(): HasMany
     {
         return $this->hasMany(MenuItem::class, 'parent_id')->orderBy('sort');
+    }
+
+    protected static function getActivityLogEventPrefix(): string
+    {
+        return 'menu.item';
+    }
+
+    protected static function getActivityLogIdentifier(Model $model): string
+    {
+        return (string) ($model->getAttribute('label') ?? $model->getKey());
     }
 }

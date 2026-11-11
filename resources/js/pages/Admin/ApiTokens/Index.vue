@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { KeyRound, Trash2, Plus, Copy, CheckCircle2, RefreshCw, Info } from '@lucide/vue';
 import { computed, ref } from 'vue';
@@ -77,18 +78,18 @@ function submitIssue(accountId: number) {
     });
 }
 
-function revokeToken(tokenId: number) {
-    if (!confirm('Revoke this token? Anything using it stops working immediately.')) return;
+async function revokeToken(tokenId: number) {
+    if (!await confirm('Revoke this token? Anything using it stops working immediately.')) return;
     router.delete(route('admin.api-tokens.tokens.destroy', tokenId), { preserveScroll: true });
 }
 
-function rotateToken(tokenId: number) {
-    if (!confirm('Rotate this token? The old credential stops working immediately — you\'ll get a new one to copy.')) return;
+async function rotateToken(tokenId: number) {
+    if (!await confirm('Rotate this token? The old credential stops working immediately — you\'ll get a new one to copy.')) return;
     router.post(route('admin.api-tokens.tokens.rotate', tokenId), {}, { preserveScroll: true });
 }
 
-function destroyAccount(account: AccountRow) {
-    if (!confirm(`Delete "${account.name}" and all ${account.tokens.length} of its token(s)? This cannot be undone.`)) return;
+async function destroyAccount(account: AccountRow) {
+    if (!await confirm(`Delete "${account.name}" and all ${account.tokens.length} of its token(s)? This cannot be undone.`)) return;
     router.delete(route('admin.api-tokens.destroy', account.id));
 }
 </script>
@@ -139,7 +140,7 @@ function destroyAccount(account: AccountRow) {
                     Service Accounts <span class="text-zinc-700">({{ accounts.length }})</span>
                 </h2>
 
-                <div v-if="accounts.length === 0" class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl">
+                <div v-if="accounts.length === 0" class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl">
                     <EmptyState
                         title="No service accounts yet"
                         description="Create one to issue your first token."
@@ -150,7 +151,7 @@ function destroyAccount(account: AccountRow) {
                 <div
                     v-for="(account, i) in accounts"
                     :key="account.id"
-                    class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5"
+                    class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5"
                     :style="{ animationDelay: `${Math.min(i, 5) * 40}ms` }"
                 >
                     <div class="flex items-center justify-between mb-3">
@@ -218,7 +219,7 @@ function destroyAccount(account: AccountRow) {
             </div>
 
             <!-- Create new account -->
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 40ms">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 40ms">
                 <h3 class="text-zinc-100 text-sm font-semibold mb-3">New Service Account</h3>
                 <form class="flex flex-col gap-3" @submit.prevent="submitCreate">
                     <div>

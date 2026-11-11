@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Extension;
 use App\Models\ExtensionSetting;
+use App\Providers\ExtensionServiceProvider;
 use App\Services\Extensions\ExtensionManager;
 use App\Services\Extensions\ExtensionSettingsResolver;
 use App\Services\Extensions\ExtensionUpdateService;
@@ -12,6 +13,7 @@ use App\Services\Extensions\Registries\SettingsRegistry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 use RuntimeException;
@@ -94,10 +96,12 @@ class ExtensionController extends Controller
         // Cached (hourly) — the page must not wait on every author's server.
         $available = $this->updates->checkAll();
 
+        $bootErrors = Cache::get(ExtensionServiceProvider::BOOT_ERRORS_KEY, []);
+
         $extensions = Extension::orderBy('name')
             ->get()
             ->filter(fn (Extension $ext) => is_dir(base_path('extensions/'.$ext->path)))
-            ->map(function (Extension $ext) use ($settingsMap, $available) {
+            ->map(function (Extension $ext) use ($settingsMap, $available, $bootErrors) {
                 $settingsSlug = str($ext->path)->afterLast('/')->toString();
                 $settingsPage = $settingsMap->get($settingsSlug);
 
@@ -114,6 +118,7 @@ class ExtensionController extends Controller
                     'installed_at' => $ext->installed_at?->toDateString(),
                     'enabled_at' => $ext->enabled_at?->toDateTimeString(),
                     'update' => $available[$ext->slug] ?? null,
+                    'boot_error' => $bootErrors[$ext->path] ?? null,
                     'requires_license' => (bool) ($ext->metadata['requires_license'] ?? false),
                     'has_license' => filled($ext->license_key),
                 ];
@@ -142,6 +147,7 @@ class ExtensionController extends Controller
                 'type' => $extension->type,
                 'path' => $extension->path,
                 'enabled' => $extension->enabled,
+                'boot_error' => Cache::get(ExtensionServiceProvider::BOOT_ERRORS_KEY, [])[$extension->path] ?? null,
                 'metadata' => $extension->metadata,
                 // Presence only — the key itself never leaves the server.
                 'has_license' => filled($extension->license_key),

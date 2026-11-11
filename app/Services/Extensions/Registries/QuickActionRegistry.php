@@ -3,8 +3,8 @@
 namespace App\Services\Extensions\Registries;
 
 /**
- * Collects admin command-palette / quick-action entries from extensions.
- * Rendered in the admin command palette (Ctrl/Cmd+K).
+ * Collects admin quick-action entries from extensions.
+ * Listed under Pages in the admin search (Ctrl/Cmd+K).
  *
  *   $registry->quickActions()->register(
  *       label: 'vote::messages.settings',

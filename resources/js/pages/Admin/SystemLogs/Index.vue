@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, router } from '@inertiajs/vue3';
 import { FileText, Download, Trash2, Terminal, HardDrive, Hash, AlertTriangle, Info, RefreshCw, Search } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -60,8 +61,8 @@ function refresh() {
     router.reload({ only: ['logSizeKb', 'logPath', 'lineCount', 'tail'], onFinish: () => { refreshing.value = false; } });
 }
 
-function clearLog() {
-    if (confirm('Clear the log file? This cannot be undone.')) {
+async function clearLog() {
+    if (await confirm('Clear the log file? This cannot be undone.')) {
         router.post(route('admin.system-logs.clear'));
     }
 }
@@ -94,7 +95,7 @@ function clearLog() {
         <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_260px] gap-5 items-start">
 
             <!-- Left: log tail -->
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden">
                 <div class="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-zinc-800/70">
                     <Terminal :size="13" :stroke-width="1.75" class="text-zinc-600" />
                     <span class="text-sm font-semibold text-zinc-100">Last 50 lines</span>
@@ -145,7 +146,7 @@ function clearLog() {
             <div class="flex flex-col gap-4">
 
                 <!-- File info -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 40ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 40ms">
                     <div class="px-4 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                         <HardDrive :size="13" :stroke-width="1.75" class="text-zinc-600" />
                         <span class="text-sm font-semibold text-zinc-100">File Info</span>
@@ -188,7 +189,7 @@ function clearLog() {
                 </div>
 
                 <!-- Actions -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 120ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 120ms">
                     <div class="px-4 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                         <FileText :size="13" :stroke-width="1.75" class="text-zinc-600" />
                         <span class="text-sm font-semibold text-zinc-100">Actions</span>

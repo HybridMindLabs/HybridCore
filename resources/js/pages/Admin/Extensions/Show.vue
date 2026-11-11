@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { Puzzle, ToggleRight, ToggleLeft, Tag, User, Calendar, FolderOpen, Info, ChevronLeft, Trash2, KeyRound, CheckCircle2 } from '@lucide/vue';
+import { Puzzle, ToggleRight, ToggleLeft, Tag, User, Calendar, FolderOpen, Info, ChevronLeft, Trash2, KeyRound, CheckCircle2, AlertTriangle } from '@lucide/vue';
 import { computed } from 'vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
@@ -24,6 +25,7 @@ interface ExtensionDetail {
     type: string;
     path: string;
     enabled: boolean;
+    boot_error: { message: string; at: string } | null;
     metadata: Record<string, unknown> | null;
     has_license: boolean;
     requires_license: boolean;
@@ -62,15 +64,19 @@ function saveLicense() {
     });
 }
 
-function removeLicense() {
-    if (!confirm('Remove the stored license key? Updates will stop until a new one is entered.')) return;
+async function removeLicense() {
+    if (!await confirm('Remove the stored license key? Updates will stop until a new one is entered.')) return;
     licenseForm.license_key = '';
     saveLicense();
 }
 
-function uninstall() {
-    if (!confirm(`Uninstall "${props.extension.name}"? Its files will be deleted.`)) return;
-    const dropData = confirm('Also delete its database tables and data?\n\nOK = delete data permanently · Cancel = keep the data for a future reinstall');
+async function uninstall() {
+    if (!await confirm(`Uninstall "${props.extension.name}"? Its files will be deleted.`)) return;
+    const dropData = await confirm('Also delete its database tables and data? Keeping them lets a future reinstall pick up where it left off.', {
+        title: 'Delete extension data?',
+        confirmLabel: 'Delete data',
+        cancelLabel: 'Keep data',
+    });
     router.delete(route('admin.extensions.uninstall', props.extension.id), { data: { drop_data: dropData } });
 }
 
@@ -133,13 +139,22 @@ function submitSettings() {
             </template>
         </PageHeader>
 
+        <div v-if="extension.boot_error" class="mb-4 flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/[0.07] px-4 py-3" role="alert">
+            <AlertTriangle :size="16" :stroke-width="2" class="text-red-400 shrink-0 mt-0.5" />
+            <div class="min-w-0">
+                <p class="text-sm font-semibold text-red-200">This extension failed to load</p>
+                <p class="mt-1 text-xs font-mono text-red-200/80 break-words">{{ extension.boot_error.message }}</p>
+                <p class="mt-1 text-xs text-red-200/60">Since {{ new Date(extension.boot_error.at).toLocaleString() }}. The rest of the site is unaffected — update the extension or disable it.</p>
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_260px] gap-5 items-start">
 
             <!-- Left: main info -->
             <div class="flex flex-col gap-4">
 
                 <!-- Description card -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5">
                     <div class="flex items-center gap-3 mb-4">
                         <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border"
                             :class="extension.enabled ? 'bg-blue-500/10 border-blue-500/20' : 'bg-zinc-800 border-zinc-700'">
@@ -171,7 +186,7 @@ function submitSettings() {
                 <!-- License — only for extensions that have an update channel -->
                 <div
                     v-if="extension.requires_license || extension.has_license || extension.update_url"
-                    class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5"
+                    class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5"
                     style="animation-delay: 40ms"
                 >
                     <div class="flex items-center gap-2 mb-1">
@@ -226,7 +241,7 @@ function submitSettings() {
                 </div>
 
                 <!-- Settings -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 80ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5" style="animation-delay: 80ms">
                     <h3 class="text-zinc-100 text-sm font-semibold mb-3">Extension Settings</h3>
 
                     <div v-if="extension.settings_schema.length === 0" class="flex items-start gap-3 bg-blue-500/5 border border-blue-500/20 rounded-lg px-3 py-3">
@@ -306,7 +321,7 @@ function submitSettings() {
             <div class="flex flex-col gap-4">
 
                 <!-- Meta -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 40ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 40ms">
                     <div class="px-4 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                         <Tag :size="13" :stroke-width="1.75" class="text-zinc-600" />
                         <span class="text-sm font-semibold text-zinc-100">Details</span>
@@ -354,7 +369,7 @@ function submitSettings() {
                 </div>
 
                 <!-- Path -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 80ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 80ms">
                     <div class="px-4 py-3 border-b border-zinc-800/70 flex items-center gap-2">
                         <FolderOpen :size="13" :stroke-width="1.75" class="text-zinc-600" />
                         <span class="text-sm font-semibold text-zinc-100">Path</span>

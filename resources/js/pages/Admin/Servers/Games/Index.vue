@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Gamepad2, Plus, Pencil, Trash2, Check, X } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -53,8 +54,8 @@ function submitEdit(id: number) {
     });
 }
 
-function destroy(g: GameRow) {
-    if (confirm(`Delete game "${g.name}"? This will also delete all its servers.`)) {
+async function destroy(g: GameRow) {
+    if (await confirm(`Delete game "${g.name}"? This will also delete all its servers.`)) {
         router.delete(route('admin.servers.games.destroy', g.id));
     }
 }
@@ -77,39 +78,39 @@ function destroy(g: GameRow) {
         </PageHeader>
 
         <!-- Add Game Panel -->
-        <div v-if="showAdd" class="hc-hero-in mb-6 bg-[#111113] border border-zinc-800/70 rounded-xl p-5">
+        <div v-if="showAdd" class="hc-hero-in mb-6 bg-admin-surface border border-zinc-800/70 rounded-xl p-5">
             <h3 class="text-sm font-semibold text-zinc-100 mb-4">Add New Game</h3>
             <form @submit.prevent="submitAdd" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 <div>
                     <label class="block text-xs text-zinc-500 mb-1">Name <span class="text-red-400">*</span></label>
-                    <input v-model="addForm.name" type="text" placeholder="Counter-Strike 2" class="w-full bg-[#09090b] border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-[#475569] focus:outline-none focus:border-blue-500/50" />
+                    <input v-model="addForm.name" type="text" placeholder="Counter-Strike 2" class="w-full bg-admin-bg border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-[#475569] focus:outline-none focus:border-blue-500/50" />
                     <p v-if="addForm.errors.name" class="mt-1 text-xs text-red-400">{{ addForm.errors.name }}</p>
                 </div>
                 <div>
                     <label class="block text-xs text-zinc-500 mb-1">Slug <span class="text-red-400">*</span></label>
-                    <input v-model="addForm.slug" type="text" placeholder="cs2" class="w-full bg-[#09090b] border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 font-mono placeholder-[#475569] focus:outline-none focus:border-blue-500/50" />
+                    <input v-model="addForm.slug" type="text" placeholder="cs2" class="w-full bg-admin-bg border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 font-mono placeholder-[#475569] focus:outline-none focus:border-blue-500/50" />
                     <p v-if="addForm.errors.slug" class="mt-1 text-xs text-red-400">{{ addForm.errors.slug }}</p>
                 </div>
                 <div>
                     <label class="block text-xs text-zinc-500 mb-1">Query Driver <span class="text-red-400">*</span></label>
-                    <select v-model="addForm.query_driver" class="w-full bg-[#09090b] border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-blue-500/50">
+                    <select v-model="addForm.query_driver" class="w-full bg-admin-bg border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-blue-500/50">
                         <option v-for="d in drivers" :key="d" :value="d">{{ d }}</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-xs text-zinc-500 mb-1">Default Port</label>
-                    <input v-model.number="addForm.default_port" type="number" min="1" max="65535" class="w-full bg-[#09090b] border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-blue-500/50" />
+                    <input v-model.number="addForm.default_port" type="number" min="1" max="65535" class="w-full bg-admin-bg border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-blue-500/50" />
                 </div>
                 <div>
                     <label class="block text-xs text-zinc-500 mb-1">Color</label>
                     <div class="flex items-center gap-2">
-                        <input v-model="addForm.color" type="color" class="w-10 h-9 rounded border border-zinc-800/70 bg-[#09090b] cursor-pointer" />
-                        <input v-model="addForm.color" type="text" class="flex-1 bg-[#09090b] border border-zinc-800/70 rounded-lg px-2 py-2 text-sm text-zinc-100 font-mono focus:outline-none focus:border-blue-500/50" />
+                        <input v-model="addForm.color" type="color" class="w-10 h-9 rounded border border-zinc-800/70 bg-admin-bg cursor-pointer" />
+                        <input v-model="addForm.color" type="text" class="flex-1 bg-admin-bg border border-zinc-800/70 rounded-lg px-2 py-2 text-sm text-zinc-100 font-mono focus:outline-none focus:border-blue-500/50" />
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs text-zinc-500 mb-1">Icon</label>
-                    <div class="flex items-center gap-3 bg-[#09090b] border border-zinc-800/70 rounded-lg px-3 py-2">
+                    <div class="flex items-center gap-3 bg-admin-bg border border-zinc-800/70 rounded-lg px-3 py-2">
                         <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border" :style="{ background: (addForm.color || '#3b82f6') + '14', borderColor: (addForm.color || '#3b82f6') + '33' }">
                             <GameIcon v-if="addForm.slug" :slug="addForm.slug" :alt="addForm.name" :size="64" img-class="w-7 h-7 object-contain" />
                             <Gamepad2 v-else :size="16" class="text-zinc-600" />
@@ -122,7 +123,7 @@ function destroy(g: GameRow) {
                 </div>
                 <div>
                     <label class="block text-xs text-zinc-500 mb-1">Sort Order</label>
-                    <input v-model.number="addForm.sort_order" type="number" min="0" class="w-full bg-[#09090b] border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-blue-500/50" />
+                    <input v-model.number="addForm.sort_order" type="number" min="0" class="w-full bg-admin-bg border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-blue-500/50" />
                 </div>
                 <div class="flex items-end gap-4">
                     <label class="flex items-center gap-2 text-sm text-zinc-400 pb-2">
@@ -138,16 +139,16 @@ function destroy(g: GameRow) {
         </div>
 
         <!-- Table -->
-        <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
-            <table class="w-full text-sm">
+        <div class="bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden">
+            <table class="admin-table w-full text-sm">
                 <thead>
-                    <tr class="border-b border-zinc-800/70 text-zinc-600 text-xs font-medium uppercase tracking-wide">
-                        <th class="text-left px-4 py-3">Game</th>
-                        <th class="text-left px-4 py-3 hidden sm:table-cell">Driver</th>
-                        <th class="text-left px-4 py-3 hidden md:table-cell">Port</th>
-                        <th class="text-left px-4 py-3 hidden md:table-cell">Servers</th>
-                        <th class="text-left px-4 py-3">Active</th>
-                        <th class="text-right px-4 py-3">Actions</th>
+                    <tr class="text-zinc-600 text-xs font-medium uppercase tracking-wide">
+                        <th>Game</th>
+                        <th class="hidden sm:table-cell">Driver</th>
+                        <th class="hidden md:table-cell">Port</th>
+                        <th class="hidden md:table-cell">Servers</th>
+                        <th>Active</th>
+                        <th class="text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -156,18 +157,18 @@ function destroy(g: GameRow) {
                         <tr v-if="editing === game.id" class="border-b border-zinc-800/70 bg-[#0f1929]">
                             <td colspan="6" class="px-4 py-4">
                                 <form @submit.prevent="submitEdit(game.id)" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                    <input v-model="editForm.name" type="text" placeholder="Name" class="bg-[#09090b] border border-zinc-800/70 rounded-lg px-2 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-blue-500/50" />
-                                    <input v-model="editForm.slug" type="text" placeholder="slug" class="bg-[#09090b] border border-zinc-800/70 rounded-lg px-2 py-1.5 text-sm text-zinc-100 font-mono focus:outline-none focus:border-blue-500/50" />
-                                    <select v-model="editForm.query_driver" class="bg-[#09090b] border border-zinc-800/70 rounded-lg px-2 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-blue-500/50">
+                                    <input v-model="editForm.name" type="text" placeholder="Name" class="bg-admin-bg border border-zinc-800/70 rounded-lg px-2 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-blue-500/50" />
+                                    <input v-model="editForm.slug" type="text" placeholder="slug" class="bg-admin-bg border border-zinc-800/70 rounded-lg px-2 py-1.5 text-sm text-zinc-100 font-mono focus:outline-none focus:border-blue-500/50" />
+                                    <select v-model="editForm.query_driver" class="bg-admin-bg border border-zinc-800/70 rounded-lg px-2 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-blue-500/50">
                                         <option v-for="d in drivers" :key="d" :value="d">{{ d }}</option>
                                     </select>
-                                    <input v-model.number="editForm.default_port" type="number" min="1" max="65535" class="bg-[#09090b] border border-zinc-800/70 rounded-lg px-2 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-blue-500/50" />
+                                    <input v-model.number="editForm.default_port" type="number" min="1" max="65535" class="bg-admin-bg border border-zinc-800/70 rounded-lg px-2 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-blue-500/50" />
                                     <div class="flex items-center gap-2">
-                                        <input v-model="editForm.color" type="color" class="w-9 h-9 rounded border border-zinc-800/70 bg-[#09090b] cursor-pointer" />
-                                        <input v-model="editForm.color" type="text" class="flex-1 bg-[#09090b] border border-zinc-800/70 rounded-lg px-2 py-1.5 text-sm text-zinc-100 font-mono focus:outline-none focus:border-blue-500/50" />
+                                        <input v-model="editForm.color" type="color" class="w-9 h-9 rounded border border-zinc-800/70 bg-admin-bg cursor-pointer" />
+                                        <input v-model="editForm.color" type="text" class="flex-1 bg-admin-bg border border-zinc-800/70 rounded-lg px-2 py-1.5 text-sm text-zinc-100 font-mono focus:outline-none focus:border-blue-500/50" />
                                     </div>
-                                    <input v-model="editForm.icon" type="text" placeholder="icon" class="bg-[#09090b] border border-zinc-800/70 rounded-lg px-2 py-1.5 text-sm text-zinc-100 font-mono focus:outline-none focus:border-blue-500/50" />
-                                    <input v-model.number="editForm.sort_order" type="number" min="0" placeholder="Order" class="bg-[#09090b] border border-zinc-800/70 rounded-lg px-2 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-blue-500/50" />
+                                    <input v-model="editForm.icon" type="text" placeholder="icon" class="bg-admin-bg border border-zinc-800/70 rounded-lg px-2 py-1.5 text-sm text-zinc-100 font-mono focus:outline-none focus:border-blue-500/50" />
+                                    <input v-model.number="editForm.sort_order" type="number" min="0" placeholder="Order" class="bg-admin-bg border border-zinc-800/70 rounded-lg px-2 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-blue-500/50" />
                                     <label class="flex items-center gap-2 text-sm text-zinc-400">
                                         <input v-model="editForm.is_active" type="checkbox" class="w-4 h-4 accent-blue-500" />
                                         Active

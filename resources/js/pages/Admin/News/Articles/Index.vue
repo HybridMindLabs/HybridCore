@@ -1,9 +1,11 @@
 ﻿<script setup lang="ts">
+import { useSelection } from '@/composables/useSelection';
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Plus, Pencil, Trash2, Eye, Pin, Star, Newspaper, ChevronDown, CheckCircle2, Archive, Search, X } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import EmptyState from '@/components/UI/EmptyState.vue';
-import { ref, computed, watch } from 'vue';
+import { ref, watch } from 'vue';
 
 interface Category { id: number; name: string; color: string }
 interface Article {
@@ -57,37 +59,22 @@ const statusColors: Record<string, string> = {
 
 const displayStatus = (a: Article) => (a.is_scheduled ? 'scheduled' : a.status);
 
-function destroy(id: number, title: string) {
-    if (!confirm(`Delete "${title}"?`)) return;
+async function destroy(id: number, title: string) {
+    if (!await confirm(`Delete "${title}"?`)) return;
     router.delete(route('admin.news.articles.destroy', id));
 }
 
 // ── Bulk actions ────────────────────────────────────────────
 type BulkAction = 'publish' | 'archive' | 'delete';
-const selected = ref<number[]>([]);
+const { selected, allSelected, toggleAll, toggleOne } = useSelection(() => props.articles.data.map((a) => a.id));
 const bulkMenuOpen = ref(false);
 const bulkPending = ref(false);
 
-const allSelected = computed(() =>
-    props.articles.data.length > 0 &&
-    props.articles.data.every((a) => selected.value.includes(a.id)),
-);
-
-function toggleAll() {
-    selected.value = allSelected.value ? [] : props.articles.data.map((a) => a.id);
-}
-
-function toggleOne(id: number) {
-    selected.value = selected.value.includes(id)
-        ? selected.value.filter((x) => x !== id)
-        : [...selected.value, id];
-}
-
-function runBulk(action: BulkAction) {
+async function runBulk(action: BulkAction) {
     bulkMenuOpen.value = false;
     if (selected.value.length === 0) return;
     const labels: Record<BulkAction, string> = { publish: 'publish', archive: 'archive', delete: 'permanently delete' };
-    if (!confirm(`${labels[action]} ${selected.value.length} selected article(s)?`)) return;
+    if (!await confirm(`${labels[action]} ${selected.value.length} selected article(s)?`)) return;
     bulkPending.value = true;
     router.post(route('admin.news.articles.bulk'), { action, article_ids: selected.value }, {
         onFinish: () => { bulkPending.value = false; selected.value = []; },
@@ -142,17 +129,17 @@ function runBulk(action: BulkAction) {
                     v-model="search"
                     type="text"
                     placeholder="Search by title…"
-                    class="w-full bg-[#111113] border border-zinc-800/70 text-zinc-100 rounded-xl pl-9 pr-8 py-2 text-[13px] placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition"
+                    class="w-full bg-admin-surface border border-zinc-800/70 text-zinc-100 rounded-xl pl-9 pr-8 py-2 text-[13px] placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition"
                 />
                 <button v-if="search" type="button" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-400" @click="search = ''">
                     <X :size="13" :stroke-width="1.75" />
                 </button>
             </div>
-            <select v-model="categoryFilter" class="bg-[#111113] border border-zinc-800/70 rounded-xl px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-blue-500/50">
+            <select v-model="categoryFilter" class="bg-admin-surface border border-zinc-800/70 rounded-xl px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-blue-500/50">
                 <option value="">All categories</option>
                 <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
             </select>
-            <select v-model="statusFilter" class="bg-[#111113] border border-zinc-800/70 rounded-xl px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-blue-500/50">
+            <select v-model="statusFilter" class="bg-admin-surface border border-zinc-800/70 rounded-xl px-3 py-2 text-[13px] text-zinc-100 focus:outline-none focus:border-blue-500/50">
                 <option value="">All statuses</option>
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
@@ -160,8 +147,8 @@ function runBulk(action: BulkAction) {
             </select>
         </div>
 
-        <div class="rounded-xl border border-zinc-800/70 bg-[#111113] overflow-hidden transition-opacity" :class="searching ? 'opacity-50' : ''">
-            <div class="hidden lg:grid grid-cols-[28px_minmax(0,1fr)_120px_100px_80px_70px_80px] gap-3 px-5 py-2.5 border-b border-zinc-800/60 bg-[#1a1a1e] text-[10px] uppercase tracking-wider font-bold text-zinc-600">
+        <div class="rounded-xl border border-zinc-800/70 bg-admin-surface overflow-hidden transition-opacity" :class="searching ? 'opacity-50' : ''">
+            <div class="hidden lg:grid grid-cols-[28px_minmax(0,1fr)_120px_100px_80px_70px_80px] gap-3 px-5 py-2.5 border-b border-zinc-800/60 bg-admin-elevated text-[10px] uppercase tracking-wider font-bold text-zinc-600">
                 <input type="checkbox" :checked="allSelected" class="rounded border-zinc-700 bg-zinc-800 accent-blue-500 cursor-pointer" @change="toggleAll" />
                 <span>Title</span><span>Category</span><span>Author</span><span>Views</span><span>Status</span><span />
             </div>

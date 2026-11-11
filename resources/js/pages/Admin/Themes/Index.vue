@@ -67,7 +67,7 @@ function deactivateTheme(theme: Theme) {
 
         <!-- Summary bar -->
         <div v-if="themes.length > 0" class="grid grid-cols-2 gap-3 mb-5 max-w-xs">
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3">
                 <Paintbrush :size="16" :stroke-width="1.75" class="text-zinc-500 shrink-0" />
                 <div>
                     <p class="text-2xl font-bold text-zinc-100 leading-none tabular-nums">{{ summary.total }}</p>
@@ -85,7 +85,7 @@ function deactivateTheme(theme: Theme) {
 
         <!-- Empty state -->
         <template v-if="themes.length === 0">
-            <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-16 text-center mb-4">
+            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-16 text-center mb-4">
                 <div class="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center border bg-zinc-800 border-zinc-700">
                     <Paintbrush :size="22" :stroke-width="1.5" class="text-zinc-500" />
                 </div>
@@ -124,7 +124,7 @@ function deactivateTheme(theme: Theme) {
             <div
                 v-for="(theme, i) in themes"
                 :key="theme.id"
-                class="hc-hero-in bg-[#111113] border rounded-xl overflow-hidden"
+                class="hc-hero-in bg-admin-surface border rounded-xl overflow-hidden"
                 :class="theme.active ? 'border-blue-500/40' : 'border-zinc-800/70'"
                 :style="{ animationDelay: `${Math.min(i, 5) * 40}ms` }"
             >

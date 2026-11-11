@@ -40,7 +40,7 @@ function submit() {
     }
 }
 
-const inputClass = 'w-full bg-[#09090b] border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-[#475569] focus:outline-none focus:border-blue-500/50';
+const inputClass = 'w-full bg-admin-bg border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-[#475569] focus:outline-none focus:border-blue-500/50';
 </script>
 
 <template>
@@ -84,7 +84,7 @@ const inputClass = 'w-full bg-[#09090b] border border-zinc-800/70 rounded-lg px-
             <div class="xl:col-span-3 flex flex-col gap-4">
 
                 <!-- Title + subtitle -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
                     <div class="flex flex-col gap-1.5">
                         <label class="text-xs font-medium text-zinc-400">Page title <span class="text-red-400">*</span></label>
                         <input v-model="form.title" type="text" :class="inputClass" placeholder="Terms of Service" />
@@ -105,7 +105,7 @@ const inputClass = 'w-full bg-[#09090b] border border-zinc-800/70 rounded-lg px-
                 </div>
 
                 <!-- Markdown editor -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden">
                     <MarkdownEditor v-model="form.content" :min-height="600" />
                     <p v-if="form.errors.content" class="px-5 pb-3 text-xs text-red-400">{{ form.errors.content }}</p>
                 </div>
@@ -116,7 +116,7 @@ const inputClass = 'w-full bg-[#09090b] border border-zinc-800/70 rounded-lg px-
             <div class="flex flex-col gap-4">
 
                 <!-- Meta -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4">
                     <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Page info</h3>
 
                     <!-- Slug — only for new pages -->
@@ -156,7 +156,7 @@ const inputClass = 'w-full bg-[#09090b] border border-zinc-800/70 rounded-lg px-
                 </div>
 
                 <!-- Other pages quick nav -->
-                <div class="bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-3">
+                <div class="bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-3">
                     <div class="flex items-center justify-between">
                         <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
                             <Scale :size="12" :stroke-width="1.75" />

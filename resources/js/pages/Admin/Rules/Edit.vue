@@ -51,7 +51,7 @@ function submit() {
     }
 }
 
-const inputClass = 'w-full bg-[#09090b] border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-[#475569] focus:outline-none focus:border-blue-500/50';
+const inputClass = 'w-full bg-admin-bg border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-[#475569] focus:outline-none focus:border-blue-500/50';
 </script>
 
 <template>
@@ -99,7 +99,7 @@ const inputClass = 'w-full bg-[#09090b] border border-zinc-800/70 rounded-lg px-
             <div class="xl:col-span-3 flex flex-col gap-4">
 
                 <!-- Title + excerpt -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4" style="animation-delay: 0ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4" style="animation-delay: 0ms">
                     <div class="flex flex-col gap-1.5">
                         <label class="text-xs font-medium text-zinc-400">
                             Rule title <span class="text-red-400">*</span>
@@ -133,7 +133,7 @@ const inputClass = 'w-full bg-[#09090b] border border-zinc-800/70 rounded-lg px-
                 </div>
 
                 <!-- Markdown editor -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 40ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden" style="animation-delay: 40ms">
                     <MarkdownEditor v-model="form.content" :min-height="600" />
                     <p v-if="form.errors.content" class="px-5 pb-3 text-xs text-red-400">{{ form.errors.content }}</p>
                 </div>
@@ -144,7 +144,7 @@ const inputClass = 'w-full bg-[#09090b] border border-zinc-800/70 rounded-lg px-
             <div class="flex flex-col gap-4 xl:sticky xl:top-6 xl:self-start">
 
                 <!-- Meta -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4" style="animation-delay: 80ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-4" style="animation-delay: 80ms">
                     <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Rule info</h3>
 
                     <!-- System badge -->
@@ -190,7 +190,7 @@ const inputClass = 'w-full bg-[#09090b] border border-zinc-800/70 rounded-lg px-
                 </div>
 
                 <!-- Quick nav -->
-                <div class="hc-hero-in bg-[#111113] border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-3" style="animation-delay: 120ms">
+                <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl p-5 flex flex-col gap-3" style="animation-delay: 120ms">
                     <div class="flex items-center justify-between">
                         <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
                             <BookOpen :size="12" :stroke-width="1.75" />

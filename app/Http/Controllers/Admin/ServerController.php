@@ -9,6 +9,7 @@ use App\Jobs\QueryServerJob;
 use App\Models\Game;
 use App\Models\Server;
 use App\Models\ServerCommand;
+use App\Models\ServerSnapshot;
 use App\Services\ActivityLogService;
 use App\Services\Bridge\BridgeService;
 use Illuminate\Http\RedirectResponse;
@@ -23,6 +24,8 @@ class ServerController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
         $gameId = $request->query('game_id');
+        $sort = in_array($request->query('sort'), ['name', 'players', 'created_at'], true) ? $request->query('sort') : null;
+        $dir = $request->query('dir') === 'asc' ? 'asc' : 'desc';
 
         $filter = fn ($q) => $q
             ->when($search !== '', fn ($q) => $q->where(function ($q) use ($search) {
@@ -48,9 +51,18 @@ class ServerController extends Controller
                 'bridgeCommands' => fn ($q) => $q->orderByDesc('created_at')->orderByDesc('id')->limit(10),
             ])
             ->withCount(['bridgeCommands as pending_command_count' => fn ($q) => $q->where('status', ServerCommand::STATUS_PENDING)])
-            ->orderBy('game_id')
-            ->orderBy('created_at', 'desc')
-            ->paginate(20)
+            ->when($sort === 'players', fn ($q) => $q->orderBy(
+                ServerSnapshot::select('players_online')
+                    ->whereColumn('server_id', 'servers.id')
+                    ->latest('recorded_at')
+                    ->limit(1),
+                $dir,
+            ))
+            ->when($sort === 'name', fn ($q) => $q->orderBy('name', $dir))
+            ->when($sort === 'created_at', fn ($q) => $q->orderBy('created_at', $dir))
+            ->when($sort === null, fn ($q) => $q->orderBy('game_id')->orderBy('created_at', 'desc'))
+            ->orderBy('id')
+            ->paginate($this->perPage($request, 20))
             ->withQueryString()
             ->through(fn (Server $s) => [
                 'id' => $s->id,
@@ -97,7 +109,7 @@ class ServerController extends Controller
         return Inertia::render('Admin/Servers/Index', [
             'servers' => $servers,
             'games' => $games,
-            'filters' => ['search' => $search, 'game_id' => $gameId],
+            'filters' => ['search' => $search, 'game_id' => $gameId, 'sort' => $sort, 'dir' => $dir],
             'stats' => $stats,
         ]);
     }

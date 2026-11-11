@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Http\Controllers\Admin\UpdateController;
 use App\Models\ContactMessage;
+use App\Models\ContentReport;
 use App\Models\Extension;
 use App\Models\Game;
 use App\Models\LegalPage;
@@ -285,7 +286,7 @@ class HandleInertiaRequests extends Middleware
                 fn (array $item) => $item['permission'] === null
                     || (bool) $request->user()?->can($item['permission']),
             )),
-            // Extension-registered admin command-palette actions (admins only).
+            // Extension-registered quick actions shown in admin search (admins only).
             'quickActions' => fn () => $request->user()?->is_admin ? array_values(array_filter(
                 $this->quickActions->compose(),
                 fn (array $item) => $item['permission'] === null
@@ -295,6 +296,7 @@ class HandleInertiaRequests extends Middleware
             'notificationTypes' => fn () => $request->user() ? $this->notificationTypes->compose() : [],
             'adminBadges' => fn () => $request->user()?->is_admin ? [
                 'unread_contact' => ContactMessage::whereNull('read_at')->count(),
+                'open_reports' => ContentReport::where('status', 'open')->count(),
             ] : [],
             // Days left in the mandatory-2FA grace window (Admin > Settings >
             // Security), or null when it doesn't apply — 2FA already on, the

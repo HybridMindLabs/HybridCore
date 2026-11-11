@@ -1,23 +1,21 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { Bell, ChevronDown, LogOut, Menu, UserCircle } from '@lucide/vue';
-import LanguageSwitcher from '@/components/UI/LanguageSwitcher.vue';
-import GlobalSearch from '@/components/GlobalSearch.vue';
-import { computed, ref } from 'vue';
+import { ChevronDown, ExternalLink, LogOut, Menu, Search, UserCircle } from '@lucide/vue';
+import NotificationsMenu from '@/components/Admin/NotificationsMenu.vue';
+import { ref } from 'vue';
 import { useAdminSidebar } from '@/composables/useAdminSidebar';
+import { useAdminSearch } from '@/composables/useAdminSearch';
 
 defineProps<{ title: string }>();
 
 interface SharedProps {
     auth: { user: { name: string; email: string } | null };
-    flash: { success: string | null; error: string | null };
-    adminBadges?: { unread_contact: number };
 }
 
 const page = usePage<SharedProps>();
 const menuOpen = ref(false);
-const unreadContact = computed(() => page.props.adminBadges?.unread_contact ?? 0);
 const { mobileOpen, toggle: toggleSidebar } = useAdminSidebar();
+const { show: openSearch } = useAdminSearch();
 
 function logout() {
     router.post(route('admin.logout'));
@@ -25,7 +23,7 @@ function logout() {
 </script>
 
 <template>
-    <header class="h-12 border-b border-zinc-800/70 bg-[#0d0d0f] flex items-center justify-between px-3 sm:px-5 shrink-0 sticky top-0 z-30">
+    <header class="h-14 border-b border-zinc-800/70 bg-admin-sunken flex items-center justify-between gap-3 px-3 sm:px-6 shrink-0 sticky top-0 z-30">
         <div class="flex items-center gap-3 min-w-0">
             <button
                 type="button"
@@ -37,69 +35,80 @@ function logout() {
             >
                 <Menu :size="20" :stroke-width="1.8" aria-hidden="true" />
             </button>
-            <h1 class="text-zinc-500 text-xs font-medium tracking-wide uppercase truncate">{{ title }}</h1>
+            <h1 class="text-zinc-100 text-[15px] font-semibold truncate">{{ title }}</h1>
         </div>
 
-        <!-- Right side -->
-        <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
-            <!-- Global Search -->
-            <GlobalSearch />
-
-            <LanguageSwitcher />
-
-            <!-- Contact notifications -->
-            <Link
-                :href="route('admin.contact.index')"
-                class="relative w-8 h-8 rounded-lg flex items-center justify-center text-zinc-600 hover:text-zinc-400 hover:bg-zinc-900/60 transition-colors"
-                :title="unreadContact > 0 ? `${unreadContact} unread messages` : 'Contact messages'"
+        <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+            <button
+                type="button"
+                class="flex items-center gap-2 h-9 px-2.5 sm:pl-3 sm:pr-2 rounded-lg border border-zinc-800/70 text-zinc-500 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
+                aria-label="Search the admin panel"
+                @click="openSearch"
             >
-                <Bell :size="15" :stroke-width="1.75" />
-                <span
-                    v-if="unreadContact > 0"
-                    class="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-red-500 text-white text-[9px] font-bold leading-[14px] text-center"
-                >{{ unreadContact > 99 ? '99+' : unreadContact }}</span>
-            </Link>
+                <Search :size="15" :stroke-width="1.75" class="shrink-0" />
+                <span class="hidden md:block text-sm pr-6">Search…</span>
+                <kbd class="hidden md:block text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-500">Ctrl K</kbd>
+            </button>
 
-            <!-- User menu -->
+            <a
+                :href="route('home')"
+                target="_blank"
+                rel="noopener"
+                class="flex items-center gap-1.5 h-9 px-2.5 rounded-lg text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900/60 transition-colors"
+                title="Open the public site in a new tab"
+            >
+                <ExternalLink :size="15" :stroke-width="1.75" />
+                <span class="hidden lg:block text-sm">View site</span>
+            </a>
+
+            <NotificationsMenu />
+
             <div class="relative">
                 <button
-                    class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-zinc-900/60 transition-colors"
+                    type="button"
+                    class="flex items-center gap-2 h-9 pl-1.5 pr-2 rounded-lg hover:bg-zinc-900/60 transition-colors"
+                    :aria-expanded="menuOpen"
                     @click="menuOpen = !menuOpen"
                 >
-                    <div class="w-6 h-6 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0">
-                        <span class="text-blue-400 text-[10px] font-bold uppercase leading-none">
+                    <div class="w-7 h-7 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0">
+                        <span class="text-blue-400 text-[11px] font-bold uppercase leading-none">
                             {{ page.props.auth?.user?.name?.charAt(0) ?? 'A' }}
                         </span>
                     </div>
-                    <span class="text-zinc-400 text-xs hidden sm:block">
+                    <span class="text-zinc-300 text-sm hidden sm:block max-w-32 truncate">
                         {{ page.props.auth?.user?.name ?? 'Admin' }}
                     </span>
-                    <ChevronDown :size="12" :stroke-width="2" class="text-zinc-600 hidden sm:block" />
+                    <ChevronDown :size="13" :stroke-width="2" class="text-zinc-500 hidden sm:block" />
                 </button>
 
-                <div
-                    v-if="menuOpen"
-                    class="absolute right-0 top-full mt-1 w-44 bg-[#111113] border border-zinc-800/70 rounded-xl shadow-xl shadow-black/40 py-1 z-50"
-                    @click="menuOpen = false"
-                >
-                    <Link
-                        :href="route('admin.profile.edit')"
-                        class="flex items-center gap-2.5 px-3 py-2 text-xs text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 transition-colors"
+                <template v-if="menuOpen">
+                    <div class="fixed inset-0 z-40" @click="menuOpen = false" />
+                    <div
+                        class="absolute right-0 top-full mt-1.5 w-56 bg-admin-surface border border-zinc-800/70 rounded-xl shadow-xl shadow-black/40 py-1 z-50"
+                        @click="menuOpen = false"
                     >
-                        <UserCircle :size="14" :stroke-width="1.75" />
-                        Profile
-                    </Link>
-                    <div class="border-t border-zinc-800/70 my-1" />
-                    <button
-                        class="flex items-center gap-2.5 px-3 py-2 text-xs text-zinc-400 hover:text-red-400 hover:bg-red-500/8 transition-colors w-full text-left"
-                        @click="logout"
-                    >
-                        <LogOut :size="14" :stroke-width="1.75" />
-                        Sign out
-                    </button>
-                </div>
-
-                <div v-if="menuOpen" class="fixed inset-0 z-40" @click="menuOpen = false" />
+                        <div class="px-3 py-2 border-b border-zinc-800/70 mb-1">
+                            <p class="text-sm text-zinc-100 truncate">{{ page.props.auth?.user?.name }}</p>
+                            <p class="text-xs text-zinc-500 truncate">{{ page.props.auth?.user?.email }}</p>
+                        </div>
+                        <Link
+                            :href="route('admin.profile.edit')"
+                            class="flex items-center gap-2.5 px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60 transition-colors"
+                        >
+                            <UserCircle :size="15" :stroke-width="1.75" />
+                            Profile
+                        </Link>
+                        <div class="border-t border-zinc-800/70 my-1" />
+                        <button
+                            type="button"
+                            class="flex items-center gap-2.5 px-3 py-2 text-sm text-zinc-400 hover:text-red-400 hover:bg-red-500/8 transition-colors w-full text-left"
+                            @click="logout"
+                        >
+                            <LogOut :size="15" :stroke-width="1.75" />
+                            Sign out
+                        </button>
+                    </div>
+                </template>
             </div>
         </div>
     </header>

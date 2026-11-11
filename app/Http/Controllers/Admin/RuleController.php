@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Rule;
-use App\Services\ActivityLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -12,8 +11,6 @@ use Inertia\Response;
 
 class RuleController extends Controller
 {
-    public function __construct(private readonly ActivityLogService $activity) {}
-
     public function index(): Response
     {
         return Inertia::render('Admin/Rules/Index', [
@@ -34,8 +31,6 @@ class RuleController extends Controller
         $data['slug'] = Rule::generateSlug($data['title']);
 
         $rule = Rule::create(array_merge($data, ['is_system' => false]));
-
-        $this->activity->log('rules.created', "Created rule: {$rule->title}", $rule);
 
         return redirect()->route('admin.rules.edit', $rule->slug)
             ->with('success', 'Rule created.');
@@ -61,8 +56,6 @@ class RuleController extends Controller
 
         $rule->update($data);
 
-        $this->activity->log('rules.updated', "Updated rule: {$rule->title}");
-
         return redirect()->route('admin.rules.edit', $rule->fresh()->slug)
             ->with('success', 'Rule saved.');
     }
@@ -72,8 +65,6 @@ class RuleController extends Controller
         $rule = Rule::where('slug', $slug)->firstOrFail();
 
         abort_if($rule->is_system, 403, 'System rules cannot be deleted.');
-
-        $this->activity->log('rules.deleted', "Deleted rule: {$rule->title}");
         $rule->delete();
 
         return redirect()->route('admin.rules.index')

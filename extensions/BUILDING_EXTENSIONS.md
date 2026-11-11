@@ -621,7 +621,7 @@ $registry->search()->register(
 );
 ```
 
-### Admin command palette (Ctrl/Cmd+K)
+### Admin search quick actions (Ctrl/Cmd+K)
 
 ```php
 $registry->quickActions()->register(

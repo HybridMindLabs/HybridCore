@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { BookOpen, Plus, Pencil, Trash2, ExternalLink, Lock } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -18,8 +19,8 @@ interface Rule {
 
 defineProps<{ rules: Rule[] }>();
 
-function deleteRule(slug: string) {
-    if (!confirm('Delete this rule? This cannot be undone.')) return;
+async function deleteRule(slug: string) {
+    if (!await confirm('Delete this rule? This cannot be undone.')) return;
     router.delete(route('admin.rules.destroy', slug));
 }
 </script>
@@ -60,7 +61,7 @@ function deleteRule(slug: string) {
             </template>
         </EmptyState>
 
-        <div v-else class="bg-[#111113] border border-zinc-800/70 rounded-xl overflow-hidden">
+        <div v-else class="bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden">
             <div class="divide-y divide-zinc-800/50">
                 <div
                     v-for="(rule, i) in rules"

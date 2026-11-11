@@ -17,16 +17,17 @@ use App\Models\UserAchievement;
 use App\Models\UserAdminNote;
 use App\Services\ActivityLogService;
 use App\Services\Extensions\Registries\HookRegistry;
+use App\Support\Csv;
 use App\Support\Hooks;
 use App\Support\UserAgent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UserController extends Controller
 {
@@ -35,16 +36,20 @@ class UserController extends Controller
     public function index(Request $request): Response
     {
         $search = trim((string) $request->query('search', ''));
+        $sort = in_array($request->query('sort'), ['name', 'created_at', 'last_seen_at'], true) ? $request->query('sort') : 'created_at';
+        $dir = $request->query('dir') === 'asc' ? 'asc' : 'desc';
 
         $users = User::with('roles')
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('username', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
                 });
             })
-            ->orderBy('created_at', 'desc')
-            ->paginate(15)
+            ->orderBy($sort, $dir)
+            ->orderBy('id', $dir)
+            ->paginate($this->perPage($request, 15))
             ->withQueryString()
             ->through(fn (User $user) => [
                 'id' => $user->id,
@@ -64,7 +69,7 @@ class UserController extends Controller
 
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
-            'filters' => ['search' => $search],
+            'filters' => ['search' => $search, 'sort' => $sort, 'dir' => $dir],
             'stats' => [
                 'total' => User::count(),
                 'active' => User::whereNull('banned_at')->count(),
@@ -254,8 +259,6 @@ class UserController extends Controller
 
         $this->syncRoles($user, $data['roles'] ?? [], $data['primary_role'] ?? null);
 
-        $this->activity->log('user.created', "Created user {$user->email}", $user);
-
         return redirect()->route('admin.users.index')
             ->with('success', "User {$user->name} created.");
     }
@@ -305,10 +308,18 @@ class UserController extends Controller
         }
 
         if (array_key_exists('roles', $data)) {
+            $before = $user->roles()->pluck('slug')->sort()->values()->all();
             $this->syncRoles($user, $data['roles'] ?? [], $data['primary_role'] ?? null);
-        }
+            $after = $user->roles()->pluck('slug')->sort()->values()->all();
 
-        $this->activity->log('user.updated', "Updated user {$user->email}", $user);
+            // Role assignments live in a pivot table the model audit can't see.
+            if ($before !== $after) {
+                $this->activity->log('user.roles_changed', "Changed roles of {$user->email}", $user, [
+                    'old' => ['roles' => $before],
+                    'new' => ['roles' => $after],
+                ]);
+            }
+        }
 
         return redirect()->route('admin.users.index')
             ->with('success', "User {$user->name} updated.");
@@ -318,8 +329,6 @@ class UserController extends Controller
     {
         $email = $user->email;
         $user->delete();
-
-        $this->activity->log('user.deleted', "Deleted user {$email}");
 
         return redirect()->route('admin.users.index')
             ->with('success', "User {$email} deleted.");
@@ -371,7 +380,7 @@ class UserController extends Controller
         app(HookRegistry::class)->fire(Hooks::USER_BANNED, $user, $reason);
     }
 
-    public function export(Request $request): HttpResponse
+    public function export(Request $request): StreamedResponse
     {
         $search = trim((string) $request->query('search', ''));
 
@@ -385,24 +394,20 @@ class UserController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $rows = $users->map(fn (User $u) => implode(',', [
-            $u->id,
-            '"'.str_replace('"', '""', $u->name).'"',
-            '"'.str_replace('"', '""', $u->email).'"',
-            '"'.str_replace('"', '""', (string) $u->username).'"',
-            '"'.str_replace('"', '""', $u->roles->pluck('name')->implode(', ')).'"',
-            $u->created_at?->toDateTimeString() ?? '',
-            $u->email_verified_at ? 'yes' : 'no',
-            $u->banned_at ? 'yes' : 'no',
-        ]));
-
-        $header = 'id,name,email,username,roles,registered_at,verified,banned';
-        $csv = $header."\n".$rows->implode("\n");
-
-        return response($csv, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="users-'.now()->format('Y-m-d').'.csv"',
-        ]);
+        return Csv::download(
+            'users-'.now()->format('Y-m-d').'.csv',
+            ['id', 'name', 'email', 'username', 'roles', 'registered_at', 'verified', 'banned'],
+            $users->map(fn (User $u) => [
+                $u->id,
+                $u->name,
+                $u->email,
+                (string) $u->username,
+                $u->roles->pluck('name')->implode(', '),
+                $u->created_at?->toDateTimeString() ?? '',
+                $u->email_verified_at ? 'yes' : 'no',
+                $u->banned_at ? 'yes' : 'no',
+            ]),
+        );
     }
 
     /**
