@@ -37,9 +37,9 @@ export function useLocale() {
 
     /**
      * Translate a shared key like "auth.sign_in" or "account.profile".
-     * Falls back to the key itself when missing — same as Laravel's __().
+     * Falls back to the optional fallback string or the key itself when missing — same as Laravel's __().
      */
-    function t(key: string, replace?: Record<string, string | number>): string {
+    function t(key: string, replaceOrFallback?: Record<string, string | number> | string, explicitFallback?: string): string {
         const [group, ...rest] = key.split('.');
         let node: unknown = page.props.translations?.[group];
         for (const part of rest) {
@@ -50,7 +50,9 @@ export function useLocale() {
                 break;
             }
         }
-        let result = typeof node === 'string' ? node : key;
+        const replace = typeof replaceOrFallback === 'object' && !Array.isArray(replaceOrFallback) ? replaceOrFallback : undefined;
+        const fallback = explicitFallback ?? (typeof replaceOrFallback === 'string' ? replaceOrFallback : key);
+        let result = typeof node === 'string' ? node : fallback;
         if (replace) {
             for (const [param, value] of Object.entries(replace)) {
                 result = result.replace(`:${param}`, String(value));
