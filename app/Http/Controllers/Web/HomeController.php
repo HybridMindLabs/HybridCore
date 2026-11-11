@@ -30,7 +30,7 @@ class HomeController extends Controller
         // 60s. Per-user favourites are overlaid after the cache read.
         $overview = Cache::remember('home.overview', 60, function () {
             $games = Game::active()
-                ->with(['activeServers' => fn ($q) => $q->visible()->with('latestSnapshot')])
+                ->with(['activeServers' => fn ($q) => $q->where('is_visible', true)->with('latestSnapshot')])
                 ->orderBy('sort_order')
                 ->get();
 

@@ -40,7 +40,7 @@ class UserController extends Controller
      */
     public function showByDiscord(Request $request, ConnectedAccountService $accounts, string $discordId): JsonResponse
     {
-        abort_unless($request->user() instanceof ServiceAccount, 403);
+        abort_unless(auth('sanctum')->user() instanceof ServiceAccount, 403);
 
         $user = $accounts->findUser('discord', $discordId);
 

@@ -31,7 +31,7 @@ class GameServerController extends Controller
         ['games' => $games, 'totals' => $totals] = Cache::remember('servers.index_overview', 60, function () {
             $games = Game::active()
                 ->withCount(['activeServers as servers_count' => fn ($q) => $q->visible()])
-                ->with(['activeServers' => fn ($q) => $q->visible()->with('latestSnapshot')])
+                ->with(['activeServers' => fn ($q) => $q->where('is_visible', true)->with('latestSnapshot')])
                 ->get()
                 ->map(fn (Game $g) => [
                     'id' => $g->id,

@@ -76,7 +76,7 @@ class HandleInertiaRequests extends Middleware
         return Cache::remember('inertia.auth_shell', 60, fn () => $this->buildAuthShellData());
     }
 
-    /** @return array{players_online: int, games: Collection<int, array{name: string, slug: string}>, servers: Collection<int, array{name: string, map: string, players: lowercase-string&non-falsy-string&uppercase-string, ping: lowercase-string&non-falsy-string, slug: string}>} */
+    /** @return array{players_online: int, games: Collection<int, array{name: string, slug: string}>, servers: Collection<int, array{name: string, map: string, players: string, ping: string, slug: string}>} */
     private function buildAuthShellData(): array
     {
         $games = Game::orderBy('name')->limit(6)->get(['name', 'slug']);
