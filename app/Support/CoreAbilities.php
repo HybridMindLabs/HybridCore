@@ -24,5 +24,10 @@ class CoreAbilities
             'group' => 'notifications',
             'description' => 'Mark notifications as read or delete them.',
         ],
+        'users:lookup' => [
+            'label' => 'Look Up Linked Users',
+            'group' => 'users',
+            'description' => 'Find a member by a linked account (e.g. Discord ID), including roles and ban status.',
+        ],
     ];
 }

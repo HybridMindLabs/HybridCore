@@ -40,7 +40,8 @@ class ServerQueryService
         // caches on the model after first access, so a $server reused across
         // multiple record() calls (as every batch path does) would keep
         // reading the pre-batch snapshot instead of the one just written.
-        $wasOnline = $server->latestSnapshot()->first()?->is_online ?? false;
+        $previous = $server->latestSnapshot()->first();
+        $wasOnline = $previous?->is_online ?? false;
 
         $snapshot = ServerSnapshot::create([
             'server_id' => $server->id,
@@ -89,7 +90,18 @@ class ServerQueryService
             );
         }
 
-        app(HookRegistry::class)->fire(Hooks::SERVER_QUERIED, $server, $snapshot);
+        $hooks = app(HookRegistry::class);
+
+        if ($wasOnline && ! $result->online) {
+            $hooks->fire(Hooks::SERVER_OFFLINE, $server, $snapshot);
+        }
+
+        // A server's first-ever query isn't a recovery, so it needs a previous snapshot.
+        if ($previous && ! $wasOnline && $result->online) {
+            $hooks->fire(Hooks::SERVER_ONLINE, $server, $snapshot);
+        }
+
+        $hooks->fire(Hooks::SERVER_QUERIED, $server, $snapshot);
 
         ServerStatusUpdated::dispatch($server, $snapshot);
 

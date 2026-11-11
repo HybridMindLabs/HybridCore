@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\User;
 use App\Services\Extensions\Registries\HookRegistry;
 use App\Services\Extensions\Registries\WebhookEventRegistry;
 use App\Services\WebhookDispatcher;
@@ -22,8 +23,8 @@ class CoreWebhookBridge
     {
         /** @var array<string, callable(mixed ...$args): array<string, mixed>> */
         $mappers = [
-            Hooks::USER_REGISTERED => fn ($user) => ['user_id' => $user->id],
-            Hooks::USER_BANNED => fn ($user, $reason = null) => ['user_id' => $user->id, 'reason' => $reason],
+            Hooks::USER_REGISTERED => fn ($user) => ['user_id' => $user->id, 'discord_id' => self::discordId($user)],
+            Hooks::USER_BANNED => fn ($user, $reason = null) => ['user_id' => $user->id, 'discord_id' => self::discordId($user), 'reason' => $reason],
             Hooks::USER_LOGIN => fn ($user) => ['user_id' => $user->id],
             Hooks::USER_FOLLOWED => fn ($follower, $followed) => ['follower_id' => $follower->id, 'followed_id' => $followed->id],
             Hooks::USER_ANONYMIZED => fn ($user) => ['user_id' => $user->id],
@@ -32,6 +33,20 @@ class CoreWebhookBridge
             Hooks::ARTICLE_PUBLISHED => fn ($article) => ['article_id' => $article->id],
             Hooks::MESSAGE_SENT => fn ($message) => ['message_id' => $message->id],
             Hooks::SERVER_QUERIED => fn ($server) => ['server_id' => $server->id],
+            Hooks::SERVER_OFFLINE => fn ($server, $snapshot) => [
+                'server_id' => $server->id,
+                'name' => $server->name,
+                'address' => $server->address,
+                'failure_reason' => $snapshot->failure_reason,
+            ],
+            Hooks::SERVER_ONLINE => fn ($server, $snapshot) => [
+                'server_id' => $server->id,
+                'name' => $server->name,
+                'address' => $server->address,
+                'map' => $snapshot->map,
+                'players_online' => $snapshot->players_online,
+                'players_max' => $snapshot->players_max,
+            ],
             Hooks::EXTENSION_ENABLED => fn ($extension) => ['extension_id' => $extension->id],
             Hooks::EXTENSION_DISABLED => fn ($extension) => ['extension_id' => $extension->id],
             Hooks::EXTENSION_UPDATED => fn ($extension, $oldVersion = null) => ['extension_id' => $extension->id, 'old_version' => $oldVersion],
@@ -54,11 +69,19 @@ class CoreWebhookBridge
      */
     public static function bridgeExtensionEvents(WebhookEventRegistry $events, HookRegistry $hooks): void
     {
-        foreach (array_keys($events->all()) as $key) {
+        // Core events already have a mapper in register(); bridging them here
+        // too would deliver every core event twice.
+        foreach (array_diff(array_keys($events->all()), array_keys(CoreWebhookEvents::ALL)) as $key) {
             $hooks->listen($key, function (...$args) use ($key): void {
                 app(WebhookDispatcher::class)->dispatch($key, self::genericPayload($args));
             });
         }
+    }
+
+    /** So a Discord bot can act on the member (roles, bans) without a lookup round-trip. */
+    private static function discordId(User $user): ?string
+    {
+        return $user->connectedAccounts()->where('provider', 'discord')->value('provider_user_id');
     }
 
     /**

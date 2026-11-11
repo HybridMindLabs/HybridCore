@@ -6,7 +6,9 @@ use App\Games\Data\QueryResult;
 use App\Models\Server;
 use App\Models\User;
 use App\Notifications\SystemNotification;
+use App\Services\Extensions\Registries\HookRegistry;
 use App\Services\ServerQueryService;
+use App\Support\Hooks;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -38,5 +40,31 @@ class ServerOfflineNotifiesAdminsTest extends TestCase
         // Still offline next cycle: no repeat notification.
         $service->record($server, QueryResult::offline('timeout'));
         Notification::assertSentToTimes($admin, SystemNotification::class, 1);
+    }
+
+    public function test_offline_and_online_hooks_fire_only_on_the_edge(): void
+    {
+        Notification::fake();
+
+        $fired = [];
+        $hooks = app(HookRegistry::class);
+        $hooks->listen(Hooks::SERVER_OFFLINE, function () use (&$fired) {
+            $fired[] = 'offline';
+        });
+        $hooks->listen(Hooks::SERVER_ONLINE, function () use (&$fired) {
+            $fired[] = 'online';
+        });
+
+        $server = Server::factory()->create();
+        $service = app(ServerQueryService::class);
+
+        // First-ever query is neither a drop nor a recovery.
+        $service->record($server, new QueryResult(online: true));
+        $service->record($server, new QueryResult(online: true));
+        $service->record($server, QueryResult::offline('timeout'));
+        $service->record($server, QueryResult::offline('timeout'));
+        $service->record($server, new QueryResult(online: true));
+
+        $this->assertSame(['offline', 'online'], $fired);
     }
 }

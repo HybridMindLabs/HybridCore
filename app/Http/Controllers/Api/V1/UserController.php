@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\UserResource;
+use App\Models\ServiceAccount;
 use App\Models\User;
+use App\Services\Auth\ConnectedAccountService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -28,5 +31,27 @@ class UserController extends Controller
         abort_if($privacy === 'members' && $viewer === null, 404);
 
         return new UserResource($user);
+    }
+
+    /**
+     * For integrations like the Discord bot. Admin-issued tokens only: a
+     * member's own token carries every ability, and must not be able to
+     * map Discord IDs to accounts.
+     */
+    public function showByDiscord(Request $request, ConnectedAccountService $accounts, string $discordId): JsonResponse
+    {
+        abort_unless($request->user() instanceof ServiceAccount, 403);
+
+        $user = $accounts->findUser('discord', $discordId);
+
+        abort_if($user === null, 404);
+
+        $user->load('roles');
+
+        return response()->json(['data' => [
+            ...(new UserResource($user))->resolve($request),
+            'roles' => $user->roles->map(fn ($role) => ['name' => $role->name, 'color' => $role->color])->values(),
+            'is_banned' => $user->isBanned(),
+        ]]);
     }
 }

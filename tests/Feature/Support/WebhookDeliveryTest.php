@@ -2,10 +2,15 @@
 
 namespace Tests\Feature\Support;
 
+use App\Games\Data\QueryResult;
 use App\Jobs\DeliverWebhookJob;
+use App\Models\ConnectedAccount;
+use App\Models\Server;
+use App\Models\User;
 use App\Models\WebhookEndpoint;
 use App\Services\Extensions\Registries\HookRegistry;
 use App\Services\Extensions\Registries\WebhookEventRegistry;
+use App\Services\ServerQueryService;
 use App\Services\WebhookDispatcher;
 use App\Support\CoreWebhookBridge;
 use App\Support\Hooks;
@@ -123,6 +128,75 @@ class WebhookDeliveryTest extends TestCase
             DeliverWebhookJob::class,
             fn (DeliverWebhookJob $job) => $job->event === 'store:order.paid' && $job->payload['arg0'] === 7,
         );
+    }
+
+    public function test_server_offline_hook_reaches_a_subscribed_endpoint_with_server_details(): void
+    {
+        Queue::fake();
+
+        WebhookEndpoint::factory()->create(['events' => [Hooks::SERVER_OFFLINE], 'is_active' => true]);
+        $server = Server::factory()->create(['name' => 'Public #1']);
+        $service = app(ServerQueryService::class);
+
+        $service->record($server, new QueryResult(online: true));
+        $service->record($server, QueryResult::offline('timeout'));
+
+        Queue::assertPushed(DeliverWebhookJob::class, 1);
+        Queue::assertPushed(DeliverWebhookJob::class, fn (DeliverWebhookJob $job) => $job->event === Hooks::SERVER_OFFLINE
+            && $job->payload['server_id'] === $server->id
+            && $job->payload['name'] === 'Public #1'
+            && $job->payload['failure_reason'] === 'timeout');
+    }
+
+    public function test_a_core_event_is_delivered_once_per_endpoint(): void
+    {
+        Queue::fake();
+
+        WebhookEndpoint::factory()->create(['events' => [Hooks::USER_REGISTERED], 'is_active' => true]);
+
+        $user = User::factory()->create();
+        app(HookRegistry::class)->fire(Hooks::USER_REGISTERED, $user);
+
+        Queue::assertPushed(DeliverWebhookJob::class, 1);
+        Queue::assertPushed(DeliverWebhookJob::class, fn (DeliverWebhookJob $job) => $job->payload === ['user_id' => $user->id, 'discord_id' => null]);
+    }
+
+    public function test_user_banned_payload_carries_the_linked_discord_id(): void
+    {
+        Queue::fake();
+
+        WebhookEndpoint::factory()->create(['events' => [Hooks::USER_BANNED], 'is_active' => true]);
+        $user = User::factory()->create();
+        ConnectedAccount::create(['user_id' => $user->id, 'provider' => 'discord', 'provider_user_id' => '4242']);
+
+        app(HookRegistry::class)->fire(Hooks::USER_BANNED, $user, 'cheating');
+
+        Queue::assertPushed(DeliverWebhookJob::class, fn (DeliverWebhookJob $job) => $job->payload === [
+            'user_id' => $user->id,
+            'discord_id' => '4242',
+            'reason' => 'cheating',
+        ]);
+    }
+
+    public function test_an_oauth_signup_fires_user_registered_with_the_discord_id(): void
+    {
+        Queue::fake();
+        file_put_contents(storage_path('installed.lock'), 'installed');
+
+        WebhookEndpoint::factory()->create(['events' => [Hooks::USER_REGISTERED], 'is_active' => true]);
+
+        $this->withSession(['oauth.pending' => [
+            'provider' => 'discord',
+            'provider_user_id' => '777',
+            'name' => 'Newbie',
+        ]])->post(route('oauth.complete-profile.store'), ['email' => 'newbie@example.com'])
+            ->assertRedirect(route('account.index'));
+
+        @unlink(storage_path('installed.lock'));
+
+        $user = User::where('email', 'newbie@example.com')->firstOrFail();
+        Queue::assertPushed(DeliverWebhookJob::class, fn (DeliverWebhookJob $job) => $job->event === Hooks::USER_REGISTERED
+            && $job->payload === ['user_id' => $user->id, 'discord_id' => '777']);
     }
 
     public function test_dispatcher_is_a_no_op_before_the_table_exists(): void

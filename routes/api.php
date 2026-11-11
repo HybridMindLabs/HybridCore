@@ -3,8 +3,10 @@
 use App\Http\Controllers\Api\BridgeController;
 use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\NewsController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ServerController;
+use App\Http\Controllers\Api\V1\StatsController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Middleware\AuthenticateBridgeServer;
 use Illuminate\Support\Facades\Route;
@@ -21,9 +23,15 @@ Route::prefix('v1')->group(function () {
 
     Route::get('servers', [ServerController::class, 'index']);
     Route::get('servers/{server}', [ServerController::class, 'show']);
+    Route::get('servers/{server}/players', [ServerController::class, 'players']);
+    Route::get('stats', StatsController::class);
+    Route::get('news', [NewsController::class, 'index']);
     Route::get('users/{username}', [UserController::class, 'show']);
 
     Route::middleware('auth:sanctum')->group(function () {
+        Route::middleware(['abilities:users:lookup', 'throttle:api-token'])
+            ->get('users/by-discord/{discordId}', [UserController::class, 'showByDiscord']);
+
         Route::middleware(['abilities:notifications:read', 'throttle:api-token'])
             ->get('notifications', [NotificationController::class, 'index']);
         Route::middleware(['abilities:notifications:write', 'throttle:api-token'])->group(function () {

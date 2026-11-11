@@ -52,6 +52,12 @@ final class Hooks
     /** Fired after a server query completes (online or offline). Args: (Server $server, ServerSnapshot $snapshot) */
     public const SERVER_QUERIED = 'server.queried';
 
+    /** Fired once when a server that was online fails its query. Args: (Server $server, ServerSnapshot $snapshot) */
+    public const SERVER_OFFLINE = 'server.offline';
+
+    /** Fired once when a server that was offline answers again. Args: (Server $server, ServerSnapshot $snapshot) */
+    public const SERVER_ONLINE = 'server.online';
+
     // ── Extensions ───────────────────────────────────────────────────────────
     /** Fired after an extension is enabled. Args: (Extension $extension) */
     public const EXTENSION_ENABLED = 'extension.enabled';

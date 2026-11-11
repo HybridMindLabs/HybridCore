@@ -23,6 +23,8 @@ class CoreWebhookEvents
         Hooks::ARTICLE_PUBLISHED => ['label' => 'News article published', 'group' => 'Content'],
         Hooks::MESSAGE_SENT => ['label' => 'Private message sent', 'group' => 'Content'],
         Hooks::SERVER_QUERIED => ['label' => 'Server query completed', 'group' => 'Servers'],
+        Hooks::SERVER_OFFLINE => ['label' => 'Server went offline', 'group' => 'Servers'],
+        Hooks::SERVER_ONLINE => ['label' => 'Server back online', 'group' => 'Servers'],
         Hooks::EXTENSION_ENABLED => ['label' => 'Extension enabled', 'group' => 'Extensions'],
         Hooks::EXTENSION_DISABLED => ['label' => 'Extension disabled', 'group' => 'Extensions'],
         Hooks::EXTENSION_UPDATED => ['label' => 'Extension updated', 'group' => 'Extensions'],

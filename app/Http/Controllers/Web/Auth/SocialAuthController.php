@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\Auth\ConnectedAccountService;
 use App\Services\Auth\OAuthProviderRegistry;
+use App\Services\Extensions\Registries\HookRegistry;
 use App\Services\SettingsService;
+use App\Support\Hooks;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -103,6 +105,11 @@ class SocialAuthController extends Controller
         );
 
         $this->accounts->connect($user, $provider, $this->profileData($socialUser));
+
+        if ($user->wasRecentlyCreated) {
+            app(HookRegistry::class)->fire(Hooks::USER_REGISTERED, $user);
+        }
+
         Auth::login($user, true);
 
         return redirect()->intended(route('account.index'));
@@ -147,6 +154,8 @@ class SocialAuthController extends Controller
             'avatar_url' => $pending['avatar'] ?? null,
             'raw_profile' => $pending['raw'] ?? null,
         ]);
+
+        app(HookRegistry::class)->fire(Hooks::USER_REGISTERED, $user);
 
         $request->session()->forget('oauth.pending');
         Auth::login($user, true);

@@ -42,6 +42,10 @@ class DiscordWebhookFormatter
 
             Hooks::SERVER_QUERIED => $this->formatServerQueried($payload, $timestamp),
 
+            Hooks::SERVER_OFFLINE => $this->formatServerQueried([...$payload, 'is_online' => false], $timestamp),
+
+            Hooks::SERVER_ONLINE => $this->formatServerQueried([...$payload, 'is_online' => true], $timestamp),
+
             Hooks::USER_REGISTERED => [
                 'username' => 'HybridCore',
                 'embeds' => [[

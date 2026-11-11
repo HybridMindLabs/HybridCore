@@ -237,7 +237,8 @@ integration points for other extensions.
 See `App\Support\Hooks` for the authoritative list. Currently fired:
 `user.registered`, `user.login`, `user.banned`, `user.followed`,
 `comment.created`, `review.created`, `article.published`, `message.sent`,
-`server.queried`, `extension.enabled/disabled/updated/uninstalled`.
+`server.queried`, `server.offline`, `server.online`,
+`extension.enabled/disabled/updated/uninstalled`.
 
 ## Frontend translations
 
