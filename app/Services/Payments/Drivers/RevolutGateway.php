@@ -41,22 +41,24 @@ class RevolutGateway implements PaymentGateway
 
                 if ($orderId && $checkoutUrl) {
                     $payment->forceFill(['external_id' => $orderId])->save();
+
                     return $checkoutUrl;
                 }
             }
         }
 
         // Demo / Fallback URL
-        $mockId = 'REV_' . Str::upper(Str::random(16));
+        $mockId = 'REV_'.Str::upper(Str::random(16));
         $payment->forceFill(['external_id' => $mockId])->save();
 
-        return $successUrl . (str_contains($successUrl, '?') ? '&' : '?') . 'gateway=revolut&order_id=' . $mockId;
+        return $successUrl.(str_contains($successUrl, '?') ? '&' : '?').'gateway=revolut&order_id='.$mockId;
     }
 
     public function createSubscriptionCheckout(Subscription $subscription, string $successUrl, string $cancelUrl): string
     {
-        $mockId = 'REV_SUB_' . Str::upper(Str::random(16));
-        return $successUrl . (str_contains($successUrl, '?') ? '&' : '?') . 'subscription_id=' . $mockId;
+        $mockId = 'REV_SUB_'.Str::upper(Str::random(16));
+
+        return $successUrl.(str_contains($successUrl, '?') ? '&' : '?').'subscription_id='.$mockId;
     }
 
     public function parseWebhook(Request $request): ?PaymentWebhookEvent
@@ -90,12 +92,10 @@ class RevolutGateway implements PaymentGateway
             Http::withToken($secretKey)
                 ->post("{$this->baseUrl()}/api/orders/{$payment->external_id}/refund", [
                     'amount' => $payment->amount,
-                    'description' => 'Refund for payment #' . $payment->id,
+                    'description' => 'Refund for payment #'.$payment->id,
                 ]);
         }
     }
 
-    public function cancelSubscription(Subscription $subscription): void
-    {
-    }
+    public function cancelSubscription(Subscription $subscription): void {}
 }

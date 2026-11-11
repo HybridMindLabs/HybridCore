@@ -13,7 +13,6 @@ use App\Services\ActivityLogService;
 use App\Services\Bridge\BridgeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Torann\GeoIP\Facades\GeoIP;

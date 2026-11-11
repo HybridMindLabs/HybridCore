@@ -76,16 +76,17 @@ class PayPalGateway implements PaymentGateway
         }
 
         // Demo / Fallback URL if credentials not yet configured
-        $mockId = 'PAYPAL_' . Str::upper(Str::random(16));
+        $mockId = 'PAYPAL_'.Str::upper(Str::random(16));
         $payment->forceFill(['external_id' => $mockId])->save();
 
-        return $successUrl . (str_contains($successUrl, '?') ? '&' : '?') . 'gateway=paypal&order_id=' . $mockId;
+        return $successUrl.(str_contains($successUrl, '?') ? '&' : '?').'gateway=paypal&order_id='.$mockId;
     }
 
     public function createSubscriptionCheckout(Subscription $subscription, string $successUrl, string $cancelUrl): string
     {
-        $mockId = 'PAYPAL_SUB_' . Str::upper(Str::random(16));
-        return $successUrl . (str_contains($successUrl, '?') ? '&' : '?') . 'subscription_id=' . $mockId;
+        $mockId = 'PAYPAL_SUB_'.Str::upper(Str::random(16));
+
+        return $successUrl.(str_contains($successUrl, '?') ? '&' : '?').'subscription_id='.$mockId;
     }
 
     public function parseWebhook(Request $request): ?PaymentWebhookEvent

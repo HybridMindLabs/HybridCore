@@ -27,7 +27,7 @@ class CryptoGateway implements PaymentGateway
                 'X-CC-Version' => '2018-03-22',
             ])->post('https://api.commerce.coinbase.com/charges', [
                 'name' => class_basename($payment->payable_type).' #'.$payment->payable_id,
-                'description' => 'Payment for order #' . $payment->id,
+                'description' => 'Payment for order #'.$payment->id,
                 'pricing_type' => 'fixed_price',
                 'local_price' => [
                     'amount' => $amount,
@@ -47,16 +47,17 @@ class CryptoGateway implements PaymentGateway
 
                 if ($code && $hostedUrl) {
                     $payment->forceFill(['external_id' => $code])->save();
+
                     return $hostedUrl;
                 }
             }
         }
 
         // Demo / Fallback URL if crypto gateway keys not yet set
-        $mockId = 'CRYPTO_' . Str::upper(Str::random(16));
+        $mockId = 'CRYPTO_'.Str::upper(Str::random(16));
         $payment->forceFill(['external_id' => $mockId])->save();
 
-        return $successUrl . (str_contains($successUrl, '?') ? '&' : '?') . 'gateway=crypto&charge=' . $mockId;
+        return $successUrl.(str_contains($successUrl, '?') ? '&' : '?').'gateway=crypto&charge='.$mockId;
     }
 
     public function createSubscriptionCheckout(Subscription $subscription, string $successUrl, string $cancelUrl): string
@@ -97,7 +98,5 @@ class CryptoGateway implements PaymentGateway
         // Crypto refunds are manual
     }
 
-    public function cancelSubscription(Subscription $subscription): void
-    {
-    }
+    public function cancelSubscription(Subscription $subscription): void {}
 }
