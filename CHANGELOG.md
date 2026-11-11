@@ -7,6 +7,14 @@ conventions and [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.11.0] — 2026-11-11
+
+### Added
+
+- overhaul admin panel, extension safety and core updates
+
+---
+
 ## [0.10.1] — 2026-11-11
 
 ### Fixed
