@@ -7,6 +7,35 @@ conventions and [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.10.1] — 2026-11-11
+
+### Fixed
+
+- override minimatch to 11 for the globparts advisory
+
+---
+
+## [0.10.0] — 2026-11-11
+
+### Added
+
+- add discord lookup, players, stats and news endpoints
+- add multi-gateway support for PayPal, Crypto, and Revolut
+- add is_visible and display_address support for hidden backend servers
+
+### Fixed
+
+- resolve phpstan errors in api and server queries
+- patch-level composer update for livewire and symfony advisories
+- keep hidden and inactive servers off public pages and the API
+- support optional fallback parameter and prevent placeholder corruption
+
+### Changed
+
+- revert(ui): restore original colors in PublicLayout
+
+---
+
 ## [0.9.0] — 2026-10-18
 
 ### Added
