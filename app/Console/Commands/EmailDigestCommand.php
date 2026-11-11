@@ -91,7 +91,7 @@ class EmailDigestCommand extends Command
         }
 
         if (Schema::hasTable('servers')) {
-            $servers = Server::active()
+            $servers = Server::active()->visible()
                 ->where('created_at', '>=', now()->subDays(7))
                 ->with('game')
                 ->limit(5)

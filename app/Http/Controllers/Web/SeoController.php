@@ -40,7 +40,7 @@ class SeoController extends Controller
                 $urls[] = ['loc' => Seo::canonical('/servers/'.$game->slug), 'priority' => '0.7'];
             }
 
-            foreach (Server::active()->with('game')->get() as $server) {
+            foreach (Server::active()->visible()->with('game')->get() as $server) {
                 $urls[] = [
                     'loc' => Seo::canonical("/servers/{$server->game->slug}/{$server->ip}/{$server->port}"),
                     'priority' => '0.6',

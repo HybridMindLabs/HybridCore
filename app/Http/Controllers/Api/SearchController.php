@@ -42,7 +42,7 @@ class SearchController extends Controller
             ->values();
 
         $servers = Server::search($q)
-            ->query(fn ($query) => $query->where('is_active', true))
+            ->query(fn ($query) => $query->where('is_active', true)->where('is_visible', true))
             ->take(6)
             ->get()
             ->load('game')

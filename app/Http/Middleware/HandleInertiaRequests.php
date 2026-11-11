@@ -81,7 +81,7 @@ class HandleInertiaRequests extends Middleware
     {
         $games = Game::orderBy('name')->limit(6)->get(['name', 'slug']);
 
-        $servers = Server::with(['latestSnapshot', 'game'])
+        $servers = Server::visible()->with(['latestSnapshot', 'game'])
             ->whereHas('latestSnapshot', fn ($q) => $q->where('is_online', true))
             ->inRandomOrder()
             ->limit(3)
@@ -90,7 +90,7 @@ class HandleInertiaRequests extends Middleware
         return [
             // A real figure for the badge beside the preview, which used to
             // repeat the same label as the heading above it.
-            'players_online' => (int) Server::whereHas(
+            'players_online' => (int) Server::visible()->whereHas(
                 'latestSnapshot',
                 fn ($q) => $q->where('is_online', true)
             )->with('latestSnapshot')->get()->sum(fn (Server $s) => $s->latestSnapshot?->players_online ?? 0),
@@ -160,6 +160,7 @@ class HandleInertiaRequests extends Middleware
     {
         $servers = Server::query()
             ->where('is_active', true)
+            ->where('is_visible', true)
             ->with(['latestSnapshot', 'game:id,slug,name'])
             ->get();
 

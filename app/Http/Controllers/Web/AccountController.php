@@ -241,7 +241,7 @@ class AccountController extends Controller
     public function favorites(Request $request): Response
     {
         $user = $request->user();
-        $servers = $user->favouriteServers()->with(['game', 'latestSnapshot'])->get()->map(fn (Server $s) => [
+        $servers = $user->favouriteServers()->visible()->with(['game', 'latestSnapshot'])->get()->map(fn (Server $s) => [
             'id' => $s->id,
             'name' => $s->name ?? $s->latestSnapshot?->name ?? $s->address,
             'game' => $s->game?->name,

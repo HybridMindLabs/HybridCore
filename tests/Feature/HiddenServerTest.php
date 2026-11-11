@@ -122,6 +122,75 @@ class HiddenServerTest extends TestCase
         );
     }
 
+    public function test_hidden_server_is_not_displayed_on_home_page(): void
+    {
+        $game = Game::factory()->create();
+
+        $visibleServer = Server::factory()->create([
+            'game_id' => $game->id,
+            'is_active' => true,
+            'is_visible' => true,
+        ]);
+        ServerSnapshot::create([
+            'server_id' => $visibleServer->id,
+            'is_online' => true,
+            'players_online' => 7,
+            'players_max' => 20,
+            'recorded_at' => now(),
+        ]);
+
+        $hiddenServer = Server::factory()->create([
+            'game_id' => $game->id,
+            'is_active' => true,
+            'is_visible' => false,
+        ]);
+        ServerSnapshot::create([
+            'server_id' => $hiddenServer->id,
+            'is_online' => true,
+            'players_online' => 30,
+            'players_max' => 64,
+            'recorded_at' => now(),
+        ]);
+
+        $response = $this->get(route('home'));
+        $response->assertOk();
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Web/Home')
+            ->has('servers', 1)
+            ->where('servers.0.id', $visibleServer->id)
+            ->where('totalPlayers', 7)
+            ->where('maxPlayers', 20)
+            ->where('stats.servers', 1)
+        );
+    }
+
+    public function test_hidden_server_is_not_reachable_by_direct_url_or_api(): void
+    {
+        $game = Game::factory()->create();
+
+        $visibleServer = Server::factory()->create([
+            'game_id' => $game->id,
+            'is_active' => true,
+            'is_visible' => true,
+        ]);
+
+        $hiddenServer = Server::factory()->create([
+            'game_id' => $game->id,
+            'is_active' => true,
+            'is_visible' => false,
+        ]);
+
+        $this->get(route('servers.show', [$game->slug, $hiddenServer->ip, $hiddenServer->port]))->assertNotFound();
+        $this->get(route('servers.connect', [$game->slug, $hiddenServer->ip, $hiddenServer->port]))->assertNotFound();
+        $this->getJson("/api/v1/servers/{$hiddenServer->id}")->assertNotFound();
+
+        $this->getJson('/api/v1/servers')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $visibleServer->id);
+    }
+
     public function test_hidden_server_authenticates_and_receives_commands_via_bridge(): void
     {
         $game = Game::factory()->create();

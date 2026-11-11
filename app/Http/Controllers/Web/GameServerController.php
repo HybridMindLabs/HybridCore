@@ -241,7 +241,7 @@ class GameServerController extends Controller
 
     public function show(Game $game, string $ip, int $port): Response
     {
-        $server = Server::where('game_id', $game->id)
+        $server = Server::visible()->where('game_id', $game->id)
             ->where('ip', $ip)
             ->where('port', $port)
             ->with('latestSnapshot.players')
@@ -329,7 +329,7 @@ class GameServerController extends Controller
 
     public function connect(Game $game, string $ip, int $port): RedirectResponse
     {
-        $server = Server::where('ip', $ip)->where('port', $port)->firstOrFail();
+        $server = Server::visible()->where('ip', $ip)->where('port', $port)->firstOrFail();
         $clientIp = request()->ip();
 
         // Anti-abuse: Deduplicate connection clicks per IP/server within a 1-hour window
