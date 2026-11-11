@@ -67,9 +67,8 @@ jobs:
       - name: Generate key
         run: php artisan key:generate
 
-      # Covers tests/ and whichever bundled extensions are in this repo — most
-      # live in their own repositories and are absent here, so CI runs fewer
-      # tests than a developer with them checked out.
+      # Covers tests/ and the demo extension only (see phpunit.xml). Other
+      # extensions live in their own repositories and run their suites there.
       #
       # Real CI figure (run #31035223160, 2026-08-05): 67.7%. Floored at 60 —
       # a few points of margin so one borderline PR doesn't redden the build,
