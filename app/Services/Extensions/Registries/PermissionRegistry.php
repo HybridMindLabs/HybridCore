@@ -34,10 +34,10 @@ class PermissionRegistry
     }
 
     /**
-     * Upsert all registered permissions into the database.
+     * Upsert registered permissions that are missing or changed.
      * Existing rows keep their id (role links stay intact).
      *
-     * @return int Number of permissions synced.
+     * @return int Number of permissions written.
      */
     public function sync(): int
     {
@@ -45,8 +45,15 @@ class PermissionRegistry
             return 0;
         }
 
+        $existing = Permission::query()->get(['slug', 'name', 'group'])->keyBy('slug');
+
         $count = 0;
         foreach ($this->permissions as $slug => $def) {
+            $row = $existing->get($slug);
+            if ($row && $row->name === $def['name'] && $row->group === $def['group']) {
+                continue;
+            }
+
             Permission::updateOrCreate(
                 ['slug' => $slug],
                 ['name' => $def['name'], 'group' => $def['group']],

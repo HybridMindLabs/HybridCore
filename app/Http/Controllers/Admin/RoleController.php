@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdateRoleRequest;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Services\ActivityLogService;
+use App\Services\Extensions\Registries\ExtensionRegistry;
 use App\Support\AvailableIcons;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -133,6 +134,9 @@ class RoleController extends Controller
     /** @return array<int, array{group: string, permissions: array<int, array<string, string>>}> */
     private function permissionGroups(): array
     {
+        // Extensions register permissions at boot; persist any new ones so they can be assigned.
+        app(ExtensionRegistry::class)->permissions()->sync();
+
         return Permission::orderBy('group')->orderBy('name')->get()
             ->groupBy('group')
             ->map(fn ($items, $group) => [
