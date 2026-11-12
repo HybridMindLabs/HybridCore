@@ -7,6 +7,14 @@ conventions and [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.11.1] — 2026-11-12
+
+### Fixed
+
+- persist permissions registered by extensions
+
+---
+
 ## [0.11.0] — 2026-11-11
 
 ### Added
