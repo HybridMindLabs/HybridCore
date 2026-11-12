@@ -387,8 +387,22 @@ php artisan hybridcore:update --local        # skips git pull
 
 Admins on a git install also see a **"new version available"** banner in
 **Admin → System → Updates** and can apply it from the panel (unless
-`HYBRIDCORE_PANEL_UPDATES=false`). The panel and CLI run the identical, safe
-sequence and always lift maintenance mode even if a step fails.
+`HYBRIDCORE_PANEL_UPDATES=false`). The panel and CLI run the identical
+sequence:
+
+- **Pre-flight** — nothing starts if tracked files were changed on the server,
+  less than 512 MB of disk is free, or another update is already running.
+- **Database backup** before migrating (MySQL/MariaDB, via `mysqldump`), saved
+  to `storage/app/backups/`.
+- **Rollback** — if any step after the pull fails, that run's migrations are
+  rolled back, the code is reset to the previous commit and dependencies are
+  reinstalled, so the site comes back on the version it had. Maintenance mode
+  is always lifted.
+- The panel update keeps running if the browser or proxy times out; the page
+  reconnects and follows its progress.
+
+Set **Update channel** to `beta` on the Updates page to be offered
+pre-releases.
 
 **Requiring signed commits (optional).** By default the update trusts
 whatever `git pull` fetches over HTTPS — that proves the bytes weren't

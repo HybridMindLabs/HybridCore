@@ -2,7 +2,8 @@
 
 > A modular, self-hosted platform for gaming communities, server owners and multiplayer projects.
 
-**Version 0.3.0** — feature-complete core with a full extension SDK. Production-ready for self-hosting.
+Feature-complete core with a full extension SDK, payments and a public API. Production-ready for self-hosting.
+See [CHANGELOG.md](CHANGELOG.md) for the current version and release history.
 
 ---
 
@@ -29,7 +30,7 @@ bloating the foundation.
 
 ---
 
-## Features (v0.3.0)
+## Features
 
 **Identity & accounts**
 - Registration, login, password reset, email verification, 2FA (TOTP + WebAuthn/passkeys)
@@ -50,16 +51,38 @@ bloating the foundation.
 **Servers**
 - Live server browser with real query drivers (A2S for CS1.6/CS2/Rust, Minecraft SLP, FiveM)
 - Player counts, maps, uptime history (7/30 days), reviews & ratings
+- Hidden servers (e.g. backends behind BungeeCord/Velocity) that stay manageable but never appear publicly,
+  plus a display address for servers reached through a proxy or domain
 - **Game-server bridge** — a secure, token-authenticated command queue so an
   in-game plugin can deliver rewards, purchases and bans
 
+**Payments**
+- Stripe, PayPal, crypto and Revolut gateways behind one driver interface
+- Payment ledger with refunds, automatic invoices, subscriptions and signed gateway webhooks
+- CSV export of payments and invoices for any date range
+
+**Public API**
+- REST API under `/api/v1`: servers, live player lists, site stats, news, member profiles, notifications
+- Admin-issued service tokens with scoped abilities — e.g. `users:lookup` lets a Discord bot
+  find the member linked to a Discord ID
+
 **Admin panel**
-- Dashboard with growth stats, analytics, activity & audit logs
-- Users (with a 360° detail view, admin notes and impersonation), IP bans, CSV export
+- Dashboard with growth stats, revenue (today, month, chosen period), analytics and activity
+- Search across users, servers, news, payments and admin pages (`Ctrl K`), with type filters
+- Users (360° detail view, admin notes, impersonation), IP bans, CSV export
+- Sortable lists, adjustable page sizes and saved filter views
+- **Sudo mode** — destructive actions (deleting users, refunds, tokens, backups, updates) ask for
+  the password again, once every 15 minutes
+- Full audit trail: who changed what, with old → new values and stored secrets redacted
+- Per-admin alerts (server offline, contact message, content report, failed payment) in the panel or by email,
+  sent to every staff member whose role can act on them
 - API tokens for external integrations — scoped abilities, per-token rate limiting, one-click rotation
-- Outbound webhooks — subscribe any core (or extension-declared) event, signed deliveries, delivery history, test-send
+- Outbound webhooks — any core or extension event (including `server.offline` / `server.online`),
+  signed deliveries, delivery history, test-send, Discord-formatted embeds
 - Settings, legal pages, menus, SEO + auto sitemap, email templates, maintenance mode
-- Extensions & themes management, system health, backups, one-command updates
+- Extensions & themes management, system health, scheduled backups
+- **Self-update** from the panel or CLI — pre-flight checks, a database backup before migrating,
+  and automatic rollback of code and migrations if any step fails
 
 **Platform**
 - **Extension SDK v2** — routes (web/admin/api), migrations, config, views, commands,
@@ -103,7 +126,7 @@ bloating the foundation.
 ### Prerequisites
 
 - PHP 8.3+ with the required extensions (see [DEPLOYMENT.md](DEPLOYMENT.md#1-server-requirements))
-- Composer 2.x and Node.js 20+
+- Composer 2.x and Node.js 20.19+
 - MySQL/MariaDB and Redis
 
 Use whatever local environment you prefer (Laravel Herd/Valet, Sail, a plain
@@ -139,6 +162,7 @@ php artisan serve      # or your local web server
 ```bash
 php artisan test               # PHP feature + unit tests
 ./vendor/bin/pint              # PHP lint (Laravel Pint)
+./vendor/bin/phpstan analyse   # Static analysis (Larastan)
 npm run type-check             # TypeScript type check
 npm run build                  # Production asset build
 php artisan optimize:clear     # Clear all caches
@@ -171,6 +195,11 @@ Inspect with `php artisan hybridcore:install-status`.
 - **Extensions** live in `extensions/{vendor}/{name}/` and are managed from
   **Admin → Extensions** (sync, enable, disable, uninstall, ZIP import/update).
   Scaffold a new one with `php artisan hybridcore:make-extension vendor/name`.
+  - ZIP imports are size- and path-checked; an update swaps files atomically and
+    rolls back if its migrations fail.
+  - An extension that fails to load is flagged in the admin instead of taking the site down.
+  - Each extension keeps its own test suite in its own repository — the core suite
+    only covers the bundled `hybridcore/demo` reference extension.
 - **Themes** live in `themes/{Name}/` and swap the public-facing UI (the admin
   panel is never themeable). Managed from **Admin → Themes**.
 
@@ -178,6 +207,24 @@ See [BUILDING_EXTENSIONS.md](extensions/BUILDING_EXTENSIONS.md) to build your ow
 
 ---
 
+## Updating
+
+```bash
+php artisan hybridcore:update          # git install: pull, composer, migrate
+php artisan hybridcore:update --local  # ZIP install: files already replaced
+```
+
+Or use **Admin → Update**, which also rebuilds the frontend assets. Updates stop before
+changing anything if there are local changes to tracked files or too little disk space,
+and roll back to the previous version if any step fails. Set the channel to **beta**
+to be offered pre-releases.
+
+---
+
 ## License
 
-Proprietary. All rights reserved. No redistribution or resale without explicit permission.
+[PolyForm Noncommercial 1.0.0](LICENSE) — free to run and self-host for your own communities
+and non-profit projects; selling or reselling HybridCore itself is not permitted.
+
+Extensions and themes are an explicit exception: their authors own them and may sell or
+license them however they like. See [LICENSE](LICENSE) for the full terms.
