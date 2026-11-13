@@ -10,6 +10,7 @@ use App\Models\Game;
 use App\Models\LegalPage;
 use App\Models\Menu;
 use App\Models\Server;
+use App\Models\User;
 use App\Services\Auth\OAuthProviderRegistry;
 use App\Services\Extensions\Registries\AccountTabRegistry;
 use App\Services\Extensions\Registries\FilterRegistry;
@@ -249,6 +250,9 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user() ? [
                     ...$request->user()->only('id', 'name', 'email', 'is_admin'),
+                    // Staff roles reach the panel through the admin.access permission,
+                    // not only the is_admin flag.
+                    'can_access_admin' => $request->user()->hasPermission('admin.access'),
                     'username' => $request->user()->username,
                     'avatar' => $request->user()->avatar,
                     'verified' => $request->user()->hasVerifiedEmail(),
@@ -258,9 +262,12 @@ class HandleInertiaRequests extends Middleware
             'impersonating' => $request->session()->has('impersonator_id') && $request->user()
                 ? ['name' => $request->user()->name]
                 : null,
-            'adminNav' => fn () => $request->user()?->is_admin
-                ? $this->navigation->compose()
+            // Admin sidebar for anyone allowed into the panel, limited to the
+            // sections their permissions open.
+            'adminNav' => fn () => $request->user()?->hasPermission('admin.access')
+                ? $this->adminNavFor($request->user())
                 : [],
+            'registrationEnabled' => fn () => $this->settings->get('registration_enabled', '1') === '1',
             // Public (site header) links registered by enabled extensions.
             // Items with a permission are only shown to users who hold it.
             'publicNav' => fn () => array_values(array_filter(
@@ -287,14 +294,14 @@ class HandleInertiaRequests extends Middleware
                     || (bool) $request->user()?->can($item['permission']),
             )),
             // Extension-registered quick actions shown in admin search (admins only).
-            'quickActions' => fn () => $request->user()?->is_admin ? array_values(array_filter(
+            'quickActions' => fn () => $request->user()?->hasPermission('admin.access') ? array_values(array_filter(
                 $this->quickActions->compose(),
                 fn (array $item) => $item['permission'] === null
                     || (bool) $request->user()->can($item['permission']),
             )) : [],
             // Extension notification-type styling (type => {icon, accent}).
             'notificationTypes' => fn () => $request->user() ? $this->notificationTypes->compose() : [],
-            'adminBadges' => fn () => $request->user()?->is_admin ? [
+            'adminBadges' => fn () => $request->user()?->hasPermission('admin.access') ? [
                 'unread_contact' => ContactMessage::whereNull('read_at')->count(),
                 'open_reports' => ContentReport::where('status', 'open')->count(),
             ] : [],
@@ -384,5 +391,27 @@ class HandleInertiaRequests extends Middleware
         // Extensions may add or reshape shared props via the filter chain.
         return app(FilterRegistry::class)
             ->apply(Filters::INERTIA_SHARED, $shared, $request);
+    }
+
+    /**
+     * Admin sidebar sections holding only the items this user may open.
+     * Super administrators keep everything through hasPermission().
+     *
+     * @return array<int, array{heading: ?string, items: array<int, array<string, mixed>>}>
+     */
+    private function adminNavFor(User $user): array
+    {
+        $sections = [];
+        foreach ($this->navigation->compose() as $section) {
+            $items = array_values(array_filter(
+                $section['items'],
+                fn (array $item) => $item['permission'] === null || $user->hasPermission($item['permission']),
+            ));
+            if ($items !== []) {
+                $sections[] = [...$section, 'items' => $items];
+            }
+        }
+
+        return $sections;
     }
 }

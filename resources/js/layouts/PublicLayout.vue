@@ -24,7 +24,8 @@ useFlashToast();
 
 interface MenuItem { label: string; url: string; target: string; children: MenuItem[] }
 interface SharedProps {
-    auth: { user: { name: string; username: string | null; avatar: string | null; verified: boolean; two_factor_enabled: boolean; is_admin: boolean } | null };
+    auth: { user: { name: string; username: string | null; avatar: string | null; verified: boolean; two_factor_enabled: boolean; is_admin: boolean; can_access_admin: boolean } | null };
+    registrationEnabled: boolean;
     impersonating: { name: string } | null;
     app: { name: string };
     menus: Record<string, MenuItem[]>;
@@ -225,7 +226,7 @@ const accountLinks = computed(() => page.props.auth?.user
     ]
     : [
         { label: t('home.login'), href: route('login') },
-        { label: t('home.create_account'), href: route('register') },
+        ...(page.props.registrationEnabled ? [{ label: t('home.create_account'), href: route('register') }] : []),
         { label: t('home.link_support'), href: route('contact.show') },
     ]);
 
@@ -605,7 +606,7 @@ const accountLinks = computed(() => page.props.auth?.user
                                     </a>
                                 </div>
 
-                                <div v-if="page.props.auth.user.is_admin" class="border-t py-1.5" :class="dark ? 'border-zinc-800' : 'border-zinc-100'">
+                                <div v-if="page.props.auth.user.can_access_admin" class="border-t py-1.5" :class="dark ? 'border-zinc-800' : 'border-zinc-100'">
                                     <Link :href="route('admin.dashboard')" class="flex items-center gap-2.5 px-4 py-2 text-[13px] font-medium transition-colors w-full" :class="dark ? 'text-hc-accent hover:text-hc-accent-hover hover:bg-zinc-800' : 'text-hc-accent hover:text-hc-accent-hover hover:bg-hc-accent/10'" @click="userOpen = false">
                                         <ShieldCheck :size="14" :stroke-width="1.8" />
                                         {{ t('home.admin_panel') }}
@@ -622,6 +623,14 @@ const accountLinks = computed(() => page.props.auth?.user
                         </div>
                     </template>
                     <template v-else>
+                        <Link
+                            v-if="page.props.registrationEnabled"
+                            :href="route('register')"
+                            class="hidden px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors sm:inline-flex"
+                            :class="dark ? 'text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'"
+                        >
+                            {{ t('home.create_account') }}
+                        </Link>
                         <Link
                             :href="route('login')"
                             class="px-4 py-1.5 text-[13px] font-medium rounded-md bg-hc-accent text-hc-base hover:bg-hc-accent-hover transition-colors"
@@ -675,7 +684,7 @@ const accountLinks = computed(() => page.props.auth?.user
                 <div class="flex items-center gap-3 pt-3 mt-1 border-t" :class="dark ? 'border-zinc-800' : 'border-zinc-200'">
                     <template v-if="!page.props.auth?.user">
                         <Link :href="route('login')" class="px-4 py-1.5 text-sm font-medium rounded-md bg-hc-accent text-hc-base hover:bg-hc-accent-hover transition-colors">{{ t('home.login') }}</Link>
-                        <Link :href="route('register')" class="text-sm font-medium transition-colors" :class="dark ? 'text-zinc-400 hover:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900'">{{ t('home.create_account') }}</Link>
+                        <Link v-if="page.props.registrationEnabled" :href="route('register')" class="text-sm font-medium transition-colors" :class="dark ? 'text-zinc-400 hover:text-zinc-100' : 'text-zinc-500 hover:text-zinc-900'">{{ t('home.create_account') }}</Link>
                     </template>
                     <template v-else>
                         <Link :href="route('account.index')" class="flex items-center gap-2 text-sm" :class="dark ? 'text-zinc-400' : 'text-zinc-500'" @click="mobileOpen = false">

@@ -266,7 +266,7 @@ const quickLinks = computed(() => {
 
                     <!-- Admin panel (admins) -->
                     <Link
-                        v-if="page.props.auth.user.is_admin"
+                        v-if="page.props.auth.user.can_access_admin"
                         :href="route('admin.dashboard')"
                         class="flex items-center justify-center gap-1.5 py-2.5 mt-2 rounded-lg text-[12px] font-semibold bg-blue-600 text-white hover:bg-blue-500 transition-colors"
                     >
