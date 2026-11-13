@@ -7,6 +7,14 @@ conventions and [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.11.2] — 2026-11-13
+
+### Fixed
+
+- show the admin panel to staff roles and add a register link
+
+---
+
 ## [0.11.1] — 2026-11-12
 
 ### Fixed
