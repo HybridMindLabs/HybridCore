@@ -11,9 +11,12 @@ class MailTemplateService
 
     public function find(string $slug): ?EmailTemplate
     {
-        return Cache::remember("email_template.{$slug}", self::CACHE_TTL, function () use ($slug) {
-            return EmailTemplate::where('slug', $slug)->where('active', true)->first();
+        // Attributes only: the cache refuses to unserialize objects.
+        $attributes = Cache::remember("email_template.{$slug}", self::CACHE_TTL, function () use ($slug) {
+            return EmailTemplate::where('slug', $slug)->where('active', true)->first()?->getAttributes();
         });
+
+        return $attributes === null ? null : (new EmailTemplate)->newFromBuilder($attributes);
     }
 
     public function render(EmailTemplate $template, array $variables = []): array

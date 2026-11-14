@@ -74,11 +74,12 @@ class Role extends Model
     /** @return Collection<int, string> */
     public function permissionSlugsCached(): Collection
     {
-        return Cache::remember(
+        // Plain array: the cache refuses to unserialize objects.
+        return collect(Cache::remember(
             'role.permissions.'.$this->id,
             300,
-            fn () => $this->permissions->pluck('slug'),
-        );
+            fn () => $this->permissions->pluck('slug')->all(),
+        ));
     }
 
     public function forgetPermissionCache(): void
