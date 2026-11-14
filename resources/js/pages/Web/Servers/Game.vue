@@ -497,13 +497,13 @@ const activityTiles = computed(() => [
                         ? 'border-zinc-800/70 bg-[#111113]'
                         : 'border-zinc-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]'"
                 >
-                    <!-- Header -->
+                    <!-- Header: same column template as the rows below -->
                     <div
-                        class="hidden lg:grid grid-cols-[minmax(0,1fr)_170px_110px_150px_80px_96px] border-b text-[11px] font-semibold uppercase tracking-wider"
+                        class="hidden lg:grid grid-cols-[minmax(0,1fr)_240px_170px_104px_72px_84px] border-b text-[11px] font-semibold uppercase tracking-wider"
                         :class="dark ? 'border-zinc-800/60 bg-[#1a1a1e] text-zinc-500' : 'border-zinc-100 bg-zinc-50 text-zinc-400'"
                     >
                         <button
-                            class="text-left px-5 py-3 flex items-center gap-1 hover:text-current transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50 transition"
+                            class="px-5 py-3 uppercase tracking-wider flex items-center gap-1 hover:text-current transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50"
                             :class="sortCol === 'name' ? (dark ? 'text-zinc-200' : 'text-zinc-900') : ''"
                             :aria-label="t('servers.sort_by', { column: t('servers.col_name') })"
                             @click="toggleSort('name')">
@@ -513,16 +513,7 @@ const activityTiles = computed(() => [
                         </button>
                         <div class="px-4 py-3">{{ t('servers.col_connection') }}</div>
                         <button
-                            class="px-4 py-3 text-right flex items-center justify-end gap-1 hover:text-current transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50 transition"
-                            :class="sortCol === 'players' ? (dark ? 'text-zinc-200' : 'text-zinc-900') : ''"
-                            :aria-label="t('servers.sort_by', { column: t('servers.col_online') })"
-                            @click="toggleSort('players')">
-                            {{ t('servers.col_online') }}
-                            <component v-if="sortCol === 'players'" :is="sortDir === 'asc' ? ArrowUp : ArrowDown"
-                                :size="11" :stroke-width="2.5" aria-hidden="true" />
-                        </button>
-                        <button
-                            class="px-4 py-3 flex items-center gap-1 hover:text-current transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50 transition"
+                            class="px-4 py-3 uppercase tracking-wider flex items-center gap-1 hover:text-current transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50"
                             :class="sortCol === 'map' ? (dark ? 'text-zinc-200' : 'text-zinc-900') : ''"
                             :aria-label="t('servers.sort_by', { column: t('servers.col_map') })"
                             @click="toggleSort('map')">
@@ -531,7 +522,16 @@ const activityTiles = computed(() => [
                                 :size="11" :stroke-width="2.5" aria-hidden="true" />
                         </button>
                         <button
-                            class="px-4 py-3 text-right flex items-center justify-end gap-1 hover:text-current transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50 transition"
+                            class="px-4 py-3 uppercase tracking-wider flex items-center gap-1 hover:text-current transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50 justify-center"
+                            :class="sortCol === 'players' ? (dark ? 'text-zinc-200' : 'text-zinc-900') : ''"
+                            :aria-label="t('servers.sort_by', { column: t('servers.col_online') })"
+                            @click="toggleSort('players')">
+                            {{ t('servers.col_online') }}
+                            <component v-if="sortCol === 'players'" :is="sortDir === 'asc' ? ArrowUp : ArrowDown"
+                                :size="11" :stroke-width="2.5" aria-hidden="true" />
+                        </button>
+                        <button
+                            class="px-4 py-3 uppercase tracking-wider flex items-center gap-1 hover:text-current transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50 justify-end"
                             :class="sortCol === 'ping' ? (dark ? 'text-zinc-200' : 'text-zinc-900') : ''"
                             :aria-label="t('servers.sort_by', { column: t('servers.col_ping') })"
                             @click="toggleSort('ping')">
@@ -546,7 +546,7 @@ const activityTiles = computed(() => [
                     <div
                         v-for="server in filtered"
                         :key="server.id"
-                        class="hc-server-row group relative grid grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1fr)_170px_110px_150px_80px_110px] items-center border-b last:border-0 overflow-hidden transition-colors"
+                        class="hc-server-row group relative grid grid-cols-[minmax(0,1fr)_auto_auto] lg:grid-cols-[minmax(0,1fr)_240px_170px_104px_72px_84px] items-center border-b last:border-0 overflow-hidden transition-colors"
                         :class="dark
                             ? 'border-zinc-800/50 hover:bg-white/[0.03]'
                             : 'border-zinc-100 hover:bg-zinc-100/70'"
@@ -569,7 +569,7 @@ const activityTiles = computed(() => [
                             :class="server.status?.is_online ? 'opacity-100' : 'opacity-30'" />
 
                         <!-- Name -->
-                        <div class="relative px-5 py-3 flex items-center gap-3 min-w-0">
+                        <div class="relative px-5 py-3.5 flex items-center gap-3 min-w-0">
                             <div class="relative shrink-0">
                                 <span class="block w-9 h-9 rounded-lg overflow-hidden">
                                     <GameIcon :slug="game.slug" :alt="game.name" />
@@ -590,31 +590,38 @@ const activityTiles = computed(() => [
                                     :class="dark ? 'text-zinc-100 hover:text-blue-400' : 'text-zinc-900 hover:text-blue-600'">
                                     {{ server.name }}
                                 </Link>
-                                <div class="flex items-center gap-1.5 mt-0.5 min-w-0">
-                                    <Lock v-if="server.status?.is_password_protected" :size="10" :stroke-width="2"
+                                <div class="flex items-center gap-1.5 mt-1 min-w-0 text-[11.5px]">
+                                    <Lock v-if="server.status?.is_password_protected" :size="11" :stroke-width="2"
                                         class="text-amber-500 shrink-0" :title="t('servers.password_protected')" />
-                                    <Shield v-if="server.status?.vac_secured" :size="10" :stroke-width="2"
+                                    <Shield v-if="server.status?.vac_secured" :size="11" :stroke-width="2"
                                         class="text-emerald-500 shrink-0" :title="t('servers.vac_secured')" />
-                                    <span class="text-[11.5px] font-mono truncate"
-                                        :class="dark ? 'text-zinc-500' : 'text-zinc-500'">
-                                        {{ server.status?.map ?? '—' }}
-                                    </span>
                                     <span v-if="server.country_code"
                                         class="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wide"
                                         :class="dark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-200 text-zinc-500'"
                                         :title="server.country_code.toUpperCase()">{{ server.country_code.toUpperCase() }}</span>
-                                    <!-- Below lg the dedicated columns are gone, so the
-                                         two numbers a player decides on move here. -->
-                                    <span class="lg:hidden text-[11px] font-mono shrink-0"
-                                        :class="pingClass(server.status)">· {{ server.status?.ping ?? '—' }}ms</span>
+                                    <span
+                                        v-for="tag in server.tags.slice(0, 3)"
+                                        :key="tag"
+                                        class="hidden lg:inline shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                                        :class="dark ? 'bg-zinc-800/80 text-zinc-400' : 'bg-zinc-200 text-zinc-500'"
+                                    >{{ tag }}</span>
+                                    <!-- Below lg the map, address and ping columns are
+                                         gone, so map and ping move under the name. -->
+                                    <span class="lg:hidden font-mono truncate" :class="dark ? 'text-zinc-400' : 'text-zinc-500'">
+                                        {{ server.status?.map || '—' }}
+                                    </span>
+                                    <span v-if="server.status?.ping != null" class="lg:hidden font-mono shrink-0" :class="pingClass(server.status)">
+                                        · {{ server.status.ping }}ms
+                                    </span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Address + copy -->
-                        <div class="relative hidden lg:flex px-4 items-center gap-1.5 min-w-0">
-                            <span class="text-[12px] font-mono truncate flex-1"
-                                :class="dark ? 'text-zinc-400' : 'text-zinc-500'">{{ server.address }}</span>
+                        <div class="relative hidden lg:flex px-4 items-center gap-1 min-w-0">
+                            <span class="text-[12px] font-mono truncate"
+                                :class="dark ? 'text-zinc-300' : 'text-zinc-600'"
+                                :title="server.address">{{ server.address }}</span>
                             <button
                                 type="button"
                                 class="w-7 h-7 flex items-center justify-center rounded-md transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
@@ -629,40 +636,15 @@ const activityTiles = computed(() => [
                             </button>
                         </div>
 
-                        <!-- Ping -->
-                        <div class="relative hidden lg:flex px-4 items-center justify-end">
-                            <span v-if="server.status?.ping != null"
-                                class="text-[12.5px] font-mono tabular-nums" :class="pingClass(server.status)">
-                                {{ server.status.ping }}ms
-                            </span>
-                            <span v-else class="text-[12px]" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">—</span>
+                        <!-- Map -->
+                        <div class="relative hidden lg:block px-4 min-w-0">
+                            <span class="block text-[12.5px] font-mono truncate"
+                                :class="server.status?.map ? (dark ? 'text-zinc-200' : 'text-zinc-700') : (dark ? 'text-zinc-600' : 'text-zinc-400')"
+                                :title="server.status?.map || undefined">{{ server.status?.map || '—' }}</span>
                         </div>
 
-                        <!-- Tags -->
-                        <div class="relative hidden lg:flex px-4 items-center gap-1 min-w-0">
-                            <span
-                                v-for="tag in server.tags.slice(0, 2)"
-                                :key="tag"
-                                class="text-[10px] font-semibold px-1.5 py-0.5 rounded truncate"
-                                :class="dark ? 'bg-zinc-800 text-zinc-400' : 'bg-zinc-200 text-zinc-500'"
-                            >{{ tag }}</span>
-                        </div>
-
-                        <!-- Connect -->
-                        <div class="relative hidden lg:flex items-center justify-end px-2">
-                            <a
-                                :href="route('servers.connect', { game: game.slug, ip: server.ip, port: server.port })"
-                                class="w-8 h-8 flex items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
-                                :class="dark ? 'text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10' : 'text-zinc-500 hover:text-emerald-800 hover:bg-emerald-500/10'"
-                                :aria-label="t('home.connect_to', { name: server.name })"
-                                :title="t('home.connect_to', { name: server.name })"
-                            >
-                                <Play :size="15" :stroke-width="2" fill="currentColor" aria-hidden="true" />
-                            </a>
-                        </div>
-
-                        <!-- Players + favourite -->
-                        <div class="relative flex items-center justify-end gap-1.5 px-4 lg:px-3 py-3">
+                        <!-- Players -->
+                        <div class="relative flex items-center justify-center px-2 lg:px-4 py-3">
                             <span v-if="server.status?.is_online"
                                 class="px-2.5 py-1 rounded-md text-[12px] font-bold tabular-nums text-white min-w-[62px] text-center"
                                 :style="{ backgroundColor: playerBarColor(server.status) }"
@@ -677,7 +659,28 @@ const activityTiles = computed(() => [
                                 :class="dark ? 'bg-zinc-800 text-zinc-500' : 'bg-zinc-200 text-zinc-500'">
                                 {{ t('servers.offline') }}
                             </span>
+                        </div>
 
+                        <!-- Ping -->
+                        <div class="relative hidden lg:flex px-4 items-center justify-end">
+                            <span v-if="server.status?.ping != null"
+                                class="text-[12.5px] font-mono tabular-nums" :class="pingClass(server.status)">
+                                {{ server.status.ping }}ms
+                            </span>
+                            <span v-else class="text-[12px]" :class="dark ? 'text-zinc-500' : 'text-zinc-400'">—</span>
+                        </div>
+
+                        <!-- Connect + favourite -->
+                        <div class="relative flex items-center justify-end gap-0.5 pr-3 lg:pr-4">
+                            <a
+                                :href="route('servers.connect', { game: game.slug, ip: server.ip, port: server.port })"
+                                class="hidden lg:flex w-8 h-8 items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                                :class="dark ? 'text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10' : 'text-zinc-500 hover:text-emerald-800 hover:bg-emerald-500/10'"
+                                :aria-label="t('home.connect_to', { name: server.name })"
+                                :title="t('home.connect_to', { name: server.name })"
+                            >
+                                <Play :size="15" :stroke-width="2" fill="currentColor" aria-hidden="true" />
+                            </a>
                             <button
                                 type="button"
                                 class="w-8 h-8 flex items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 disabled:opacity-50"
