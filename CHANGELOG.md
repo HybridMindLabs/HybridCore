@@ -7,6 +7,15 @@ conventions and [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.11.3] — 2026-11-14
+
+### Fixed
+
+- align the game server table with its headers
+- cache role permissions and mail templates as plain data
+
+---
+
 ## [0.11.2] — 2026-11-13
 
 ### Fixed
