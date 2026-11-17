@@ -7,6 +7,18 @@ conventions and [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.12.0] — 2026-11-17
+
+### Added
+
+- let new members pick their username at sign-up
+
+### Fixed
+
+- stop the OAuth redirect loop that ended in 429
+
+---
+
 ## [0.11.3] — 2026-11-14
 
 ### Fixed
