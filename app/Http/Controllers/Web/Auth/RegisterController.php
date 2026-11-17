@@ -16,6 +16,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -49,16 +50,21 @@ class RegisterController extends Controller
 
         $data = $request->validated();
 
-        $base = preg_replace('/[^a-z0-9_-]/i', '', strtolower(explode(' ', $data['name'])[0])) ?: 'user';
-        $username = $base;
-        $i = 2;
-        while (User::where('username', $username)->exists()) {
-            $username = $base.'_'.$i++;
+        if (filled($data['username'] ?? null)) {
+            $username = strtolower($data['username']);
+        } else {
+            $base = substr(Str::slug($data['name'], '_'), 0, 28) ?: 'user';
+            $username = $base;
+            $i = 2;
+            while (User::where('username', $username)->exists()) {
+                $username = $base.'_'.$i++;
+            }
         }
 
         $user = User::create([
             'name' => $data['name'],
             'username' => $username,
+            'display_name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             // Marks this as a password the user actually chose, unlike the

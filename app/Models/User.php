@@ -209,10 +209,10 @@ class User extends Authenticatable implements MustVerifyEmail
 
     // ── Display ──────────────────────────────────────────────────────────────
 
-    /** The visible name: display_name if set, otherwise username. */
+    /** The visible name: display_name if set, then the name given at sign-up, then username. */
     public function getDisplayNameAttribute(?string $value): string
     {
-        return ($value ?: null) ?? $this->username ?? '?';
+        return ($value ?: null) ?? ($this->name ?: null) ?? $this->username ?? '?';
     }
 
     /** True with either a confirmed TOTP secret or at least one registered passkey. */

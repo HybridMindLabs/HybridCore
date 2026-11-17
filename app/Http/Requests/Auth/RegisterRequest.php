@@ -21,7 +21,9 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:50'],
+            // Optional so API and older clients keep working; the form always sends it.
+            'username' => ['nullable', 'string', 'min:3', 'max:32', 'regex:/^[a-z0-9_\-]+$/i', 'unique:users,username'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'confirmed', app(LoginSecurityService::class)->passwordRules()],
         ];

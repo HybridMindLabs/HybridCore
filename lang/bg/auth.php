@@ -27,6 +27,8 @@ return [
         'title' => 'Създай своя акаунт',
         'subtitle' => 'Присъедини се към HybridCore и намери следващия си сървър по-бързо.',
         'name' => 'Име в профила',
+        'username' => 'Потребителско име',
+        'username_hint' => 'Линк към профила ти: /u/:username',
         'email' => 'Имейл адрес',
         'password' => 'Парола',
         'password_confirmation' => 'Потвърдете паролата',

@@ -27,6 +27,8 @@ return [
         'title' => 'Create your account',
         'subtitle' => 'Join HybridCore and find your next server faster.',
         'name' => 'Display name',
+        'username' => 'Username',
+        'username_hint' => 'Your profile link: /u/:username',
         'email' => 'Email address',
         'password' => 'Password',
         'password_confirmation' => 'Confirm password',
