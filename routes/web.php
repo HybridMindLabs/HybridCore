@@ -164,12 +164,6 @@ Route::middleware([EnsureAppIsInstalled::class, EnsureNotInMaintenance::class])
             Route::get('/account/export/{filename}', [AccountController::class, 'downloadExport'])->name('account.export.download');
         });
 
-        // ---- Generic OAuth entry points (extensions provide implementations) ----
-        Route::middleware('throttle:10,1,oauth-generic')->group(function (): void {
-            Route::get('/auth/{provider}/redirect', [OAuthController::class, 'redirect'])->name('oauth.redirect');
-            Route::get('/auth/{provider}/callback', [OAuthController::class, 'callback'])->name('oauth.callback');
-        });
-
         // ---- Core OAuth providers: Discord, Steam ----
         Route::middleware('throttle:10,1,oauth-provider')->group(function (): void {
             Route::get('/auth/discord/redirect', [SocialAuthController::class, 'redirect'])
@@ -186,6 +180,15 @@ Route::middleware([EnsureAppIsInstalled::class, EnsureNotInMaintenance::class])
                 ->name('oauth.google.redirect')->defaults('provider', 'google');
             Route::get('/auth/google/callback', [SocialAuthController::class, 'callback'])
                 ->name('oauth.google.callback')->defaults('provider', 'google');
+        });
+
+        // ---- Generic OAuth entry points (extensions provide implementations) ----
+        // Registered after the core providers: the {provider} pattern also
+        // matches /auth/discord/..., and the generic handler redirects to the
+        // provider route, so matching it first loops until the throttle trips.
+        Route::middleware('throttle:10,1,oauth-generic')->group(function (): void {
+            Route::get('/auth/{provider}/redirect', [OAuthController::class, 'redirect'])->name('oauth.redirect');
+            Route::get('/auth/{provider}/callback', [OAuthController::class, 'callback'])->name('oauth.callback');
         });
 
         // Steam has no email — finish account creation here.

@@ -37,7 +37,8 @@ class OAuthController extends Controller
         $def = $this->resolveEnabled($provider);
 
         if (! empty($def['callback_route']) && app('router')->has($def['callback_route'])) {
-            return redirect()->route($def['callback_route']);
+            // Keep the provider's code/state; the route alone would drop them.
+            return redirect()->route($def['callback_route'], request()->query());
         }
 
         abort(503, __('auth.oauth_unavailable'));
