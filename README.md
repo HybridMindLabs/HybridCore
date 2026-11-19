@@ -60,6 +60,8 @@ bloating the foundation.
 - Stripe, PayPal, crypto and Revolut gateways behind one driver interface
 - Payment ledger with refunds, automatic invoices, subscriptions and signed gateway webhooks
 - CSV export of payments and invoices for any date range
+- **Finance report** — net revenue, refunds, orders, paying members and MRR for any period, with the
+  change against the previous period, best sellers, payment methods and top paying members
 
 **Public API**
 - REST API under `/api/v1`: servers, live player lists, site stats, news, member profiles, notifications

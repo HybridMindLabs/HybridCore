@@ -21,6 +21,7 @@ class CoreNavigation
         // covers admin.payments.index via this same registry. Adding it here
         // too duplicates the sidebar entry.
         $nav->register('navigation.invoices', 'admin.invoices.index', 'Receipt', 'navigation.sections.management', 'payments.view', 40);
+        $nav->register('Finance', 'admin.finance.index', 'Wallet', 'navigation.sections.management', 'payments.view', 45);
 
         // ── Gaming ────────────────────────────────────────────────
         $nav->register('Servers', 'admin.servers.index', 'Server', 'navigation.sections.gaming', 'servers.view', 10);

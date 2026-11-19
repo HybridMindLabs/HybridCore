@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ContentReportController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EmailController;
 use App\Http\Controllers\Admin\ExtensionController;
+use App\Http\Controllers\Admin\FinanceReportController;
 use App\Http\Controllers\Admin\GameController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\IpBanController;
@@ -303,6 +304,7 @@ Route::middleware('perm:news.manage')->group(function (): void {
 // ── Payments ────────────────────────────────────────────────────
 Route::middleware('perm:payments.view')->group(function (): void {
     Route::get('/payments', [PaymentController::class, 'index'])->name('admin.payments.index');
+    Route::get('/finance', [FinanceReportController::class, 'index'])->name('admin.finance.index');
     Route::get('/payments/export', [PaymentController::class, 'export'])->middleware('throttle:10,1,admin-payments-export')->name('admin.payments.export');
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('admin.invoices.index');
     Route::get('/invoices/export', [InvoiceController::class, 'export'])->middleware('throttle:10,1,admin-invoices-export')->name('admin.invoices.export');
