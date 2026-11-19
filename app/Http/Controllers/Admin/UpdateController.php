@@ -37,6 +37,7 @@ class UpdateController extends Controller
             'panelUpdatesEnabled' => (bool) config('hybridcore.panel_updates'),
             'latestRelease' => fn () => app(UpdateService::class)->latestRelease(),
             'preflight' => fn () => app(CoreUpdater::class)->preflight(),
+            'plan' => fn () => app(CoreUpdater::class)->plan(),
             'history' => fn () => ActivityLog::with('causer')
                 ->where('event', 'system.updated')
                 ->latest()

@@ -9,6 +9,7 @@ use App\Services\CoreUpdater;
 use App\Services\DatabaseBackupService;
 use App\Services\GitUpdateVerifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use Tests\TestCase;
@@ -174,6 +175,61 @@ class CoreUpdaterTest extends TestCase
             ->assertJsonFragment(['problems' => [$updater->preflight()[0]]]);
 
         $this->assertSame([], array_filter($updater->ran, fn ($l) => str_starts_with($l, 'git pull')));
+    }
+
+    public function test_progress_shows_the_plan_the_running_step_and_a_percentage(): void
+    {
+        $updater = $this->updater();
+        $seen = [];
+
+        $updater->run(onStep: function (array $log) use (&$seen) {
+            if (end($log)['step'] === 'git pull') {
+                $seen = Cache::get(CoreUpdater::PROGRESS_KEY);
+            }
+        });
+
+        $this->assertTrue($seen['running']);
+        $this->assertSame($updater->plan(), $seen['plan']);
+        $this->assertGreaterThan(0, $seen['percent']);
+        $this->assertLessThan(100, $seen['percent']);
+        $this->assertArrayHasKey('seconds', $seen['log'][0]);
+
+        $final = Cache::get(CoreUpdater::PROGRESS_KEY);
+        $this->assertFalse($final['running']);
+        $this->assertSame(100, $final['percent']);
+        $this->assertNull($final['current']);
+    }
+
+    public function test_the_time_estimate_comes_from_the_previous_run(): void
+    {
+        $this->updater()->run();
+
+        $eta = null;
+        $this->updater()->run(onStep: function (array $log) use (&$eta) {
+            if (end($log)['step'] === 'maintenance on') {
+                $eta = Cache::get(CoreUpdater::PROGRESS_KEY)['eta_seconds'];
+            }
+        });
+
+        $this->assertIsInt($eta);
+    }
+
+    public function test_the_plan_follows_the_options(): void
+    {
+        $updater = $this->updater();
+
+        $this->assertContains('php artisan hybridcore:build', $updater->plan());
+        $this->assertNotContains('php artisan hybridcore:build', $updater->plan(build: false));
+        $this->assertNotContains('git pull', $updater->plan(pull: false));
+        $this->assertNotContains('composer install', $updater->plan(composer: false));
+    }
+
+    public function test_the_progress_poll_still_answers_in_maintenance_mode(): void
+    {
+        $this->artisan('down');
+
+        $this->getJson(route('admin.updates.status'))->assertOk();
+        $this->get(route('admin.updates.index'))->assertStatus(503);
     }
 
     public function test_status_reports_progress_of_the_last_run(): void

@@ -60,6 +60,11 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // An update puts the site in maintenance mode for its whole run; the
+        // panel's progress poll must keep answering or the progress bar
+        // freezes until the very end. It stays behind admin auth.
+        $middleware->preventRequestsDuringMaintenance(except: ['admin/updates/status']);
+
         // Most self-hosted installs sit behind Cloudflare, a load balancer or
         // some other reverse proxy. The origin then sees a plain HTTP request
         // from the proxy's IP, so without honouring the forwarded headers

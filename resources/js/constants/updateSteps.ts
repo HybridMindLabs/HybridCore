@@ -1,0 +1,16 @@
+/** Plain-language names for the steps an admin sees. */
+export const STEP_LABELS: Record<string, string> = {
+    'maintenance on': 'Put the site in maintenance mode',
+    'git fetch': 'Download the new version',
+    'git pull': 'Apply the new code',
+    'fix folder permissions': 'Fix folder permissions',
+    'composer install': 'Install PHP packages',
+    'database backup': 'Back up the database',
+    'php artisan migrate': 'Update the database',
+    'php artisan hybridcore:themes:sync': 'Refresh themes',
+    'php artisan hybridcore:build': 'Build the site files',
+    'restart SSR renderer': 'Restart the page renderer',
+    'php artisan optimize:clear': 'Clear caches',
+    'php artisan queue:restart': 'Restart background workers',
+    'maintenance off': 'Bring the site back online',
+};

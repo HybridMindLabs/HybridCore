@@ -40,13 +40,17 @@ class CoreUpdateCommand extends Command
         $this->components->info('Starting HybridCore update…');
 
         $printed = 0;
+        $plan = $updater->plan($pull, ! $this->option('no-composer'), false);
         $result = $updater->run(
             pull: $pull,
             composer: ! $this->option('no-composer'),
             build: false,
-            onStep: function (array $log) use (&$printed) {
+            onStep: function (array $log) use (&$printed, $plan) {
                 foreach (array_slice($log, $printed) as $entry) {
-                    $this->line(($entry['ok'] ? '<info>✓</info> ' : '<error>✗</error> ')."<comment>{$entry['step']}</comment>");
+                    $position = array_search($entry['step'], $plan, true);
+                    $counter = $position === false ? '' : '['.($position + 1).'/'.count($plan).'] ';
+                    $time = isset($entry['seconds']) ? sprintf(' <fg=gray>(%ss)</>', $entry['seconds']) : '';
+                    $this->line(($entry['ok'] ? '<info>✓</info> ' : '<error>✗</error> ').$counter."<comment>{$entry['step']}</comment>".$time);
                     if ($entry['output'] !== '') {
                         $this->line($entry['output']);
                     }
@@ -61,7 +65,7 @@ class CoreUpdateCommand extends Command
             return self::FAILURE;
         }
 
-        $this->components->info('Update complete. Current version: '.UpdateController::VERSION);
+        $this->components->info('Update complete in '.$result['seconds'].'s. Current version: '.UpdateController::VERSION);
         $this->remainingSteps();
 
         return self::SUCCESS;

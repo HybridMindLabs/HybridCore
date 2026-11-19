@@ -2,8 +2,11 @@
 import { confirm } from '@/composables/useConfirm';
 import { requireSudo } from '@/composables/useSudo';
 import { Head } from '@inertiajs/vue3';
-import { onMounted, ref } from 'vue';
-import { GitBranch, RefreshCw, ArrowDownToLine, CheckCircle2, AlertCircle, Circle, Clock, Terminal, XCircle, History, ShieldAlert, Loader2 } from '@lucide/vue';
+import { onMounted, onUnmounted, ref } from 'vue';
+import { csrfHeaders } from '@/lib/csrf';
+import UpdateProgress, { type UpdateProgressState } from '@/components/Admin/UpdateProgress.vue';
+import { STEP_LABELS } from '@/constants/updateSteps';
+import { GitBranch, RefreshCw, ArrowDownToLine, CheckCircle2, AlertCircle, Circle, Clock, Terminal, History, ShieldAlert, Loader2 } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
 
@@ -18,11 +21,12 @@ interface StepLog {
     step: string;
     output: string;
     ok?: boolean;
+    seconds?: number;
 }
 
 interface HistoryEntry { id: number; from: string | null; to: string | null; by: string | null; at: string | null }
 
-interface UpdateResult { success: boolean; message: string; log: StepLog[]; rolled_back: boolean; backup: string | null; commit?: Props['currentCommit'] }
+interface UpdateResult { success: boolean; message: string; log: StepLog[]; rolled_back: boolean; backup: string | null; seconds?: number; from?: string; to?: string; commit?: Props['currentCommit'] }
 
 interface Release {
     version: string; name: string; url: string; notes: string;
@@ -37,6 +41,7 @@ type Props = {
     panelUpdatesEnabled: boolean;
     latestRelease: Release | null;
     preflight: string[];
+    plan: string[];
     history: HistoryEntry[];
 };
 
@@ -54,10 +59,11 @@ const rolledBack = ref(false);
 const backupFile = ref<string | null>(null);
 const problems  = ref<string[]>(props.preflight ?? []);
 const currentCommit = ref(props.currentCommit);
-const csrf = () => (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '';
+const progress = ref<UpdateProgressState | null>(null);
 
 function showResult(data: UpdateResult) {
     applyLog.value = data.log ?? [];
+    progress.value = { ...(progress.value ?? { plan: [] }), running: false, log: data.log ?? [], current: null, result: data };
     rolledBack.value = !!data.rolled_back;
     backupFile.value = data.backup ?? null;
 
@@ -72,37 +78,57 @@ function showResult(data: UpdateResult) {
     upToDate.value = true;
 }
 
-/** Follow an update whose own request was cut off by a proxy/PHP timeout. */
+/**
+ * Poll the progress the updater writes while it runs. Starts together with
+ * the update request, because that request only answers at the very end
+ * (or never, when a proxy times it out first).
+ */
+let polling = false;
+let stopped = false;
+/** When this page started an update; older finished runs in the cache are not ours. */
+let startedAt = 0;
 async function followProgress() {
+    if (polling) return;
+    polling = true;
     applying.value = true;
-    for (;;) {
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+    while (!stopped) {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
         try {
             const res = await fetch(route('admin.updates.status'), { headers: { Accept: 'application/json' } });
-            if (!res.ok) continue; // maintenance mode or a restart in progress
-            const progress = await res.json();
-            applyLog.value = progress.log ?? applyLog.value;
-            if (!progress.running) {
-                if (progress.result) showResult(progress.result);
+            if (!res.ok) continue; // a restart or the code swap in progress
+            const data = await res.json();
+            if (!applying.value) break; // the update request already reported the result
+            if (!data.running && startedAt && new Date(data.updated_at ?? 0).getTime() < startedAt - 5000) continue;
+            progress.value = data;
+            applyLog.value = data.log ?? applyLog.value;
+            if (!data.running && data.result) {
+                showResult(data.result);
                 break;
             }
         } catch {
             // the server is busy swapping code; keep waiting
         }
     }
+    polling = false;
     applying.value = false;
 }
+onUnmounted(() => (stopped = true));
 
 onMounted(async () => {
     const res = await fetch(route('admin.updates.status'), { headers: { Accept: 'application/json' } }).catch(() => null);
-    if (res?.ok && (await res.json()).running) followProgress();
+    if (!res?.ok) return;
+    const data = await res.json();
+    if (data.running) {
+        progress.value = data;
+        followProgress();
+    }
 });
 
 async function checkForUpdates() {
     checking.value = true;
     error.value = '';
     try {
-        const res = await fetch(route('admin.updates.check'), { method: 'POST', headers: { 'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '', 'Accept': 'application/json' } });
+        const res = await fetch(route('admin.updates.check'), { method: 'POST', headers: { ...csrfHeaders(), 'Accept': 'application/json' } });
         const data = await res.json();
         commits.value = data.commits ?? [];
         upToDate.value = data.upToDate ?? false;
@@ -120,13 +146,25 @@ async function applyUpdate() {
     applyLog.value = [];
     error.value = '';
     rolledBack.value = false;
+    progress.value = null;
+    startedAt = Date.now();
     let following = false;
     try {
-        const post = () => fetch(route('admin.updates.apply'), { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf(), 'Accept': 'application/json' } });
-        let res = await post();
+        const post = () => fetch(route('admin.updates.apply'), { method: 'POST', headers: { ...csrfHeaders(), 'Accept': 'application/json' } });
+        // The progress poll runs alongside the request from the first second.
+        const start = () => {
+            const request = post();
+            following = true;
+            followProgress();
+            return request;
+        };
+        let res = await start();
         if (res.status === 423) {
+            applying.value = false;
+            following = false;
             if (!await requireSudo()) return;
-            res = await post();
+            applying.value = true;
+            res = await start();
         }
 
         const data = await res.json().catch(() => null);
@@ -134,20 +172,20 @@ async function applyUpdate() {
         if (res.status === 409 && data?.problems) {
             problems.value = data.problems;
             error.value = data.message;
+            progress.value = null;
+            following = false;
             return;
         }
 
         if (!data) {
-            // Gateway timeout: the update keeps running server-side.
-            following = true;
-            followProgress();
+            // Gateway timeout: the update keeps running server-side and the poll follows it.
             return;
         }
 
         showResult(data);
+        following = false;
     } catch {
-        following = true;
-        followProgress();
+        // Connection dropped; the poll keeps following the update.
     } finally {
         if (!following) applying.value = false;
     }
@@ -301,7 +339,7 @@ async function applyUpdate() {
             </div>
 
             <!-- Pre-flight problems -->
-            <div v-if="problems.length" class="bg-amber-500/10 border border-amber-500/30 rounded-xl px-5 py-4" role="alert">
+            <div v-if="problems.length && !progress?.running" class="bg-amber-500/10 border border-amber-500/30 rounded-xl px-5 py-4" role="alert">
                 <div class="flex items-start gap-3">
                     <ShieldAlert :size="16" :stroke-width="2" class="text-amber-400 mt-0.5 shrink-0" />
                     <div class="min-w-0">
@@ -319,29 +357,8 @@ async function applyUpdate() {
                 <p class="text-xs text-blue-100/70 mt-1">The update failed partway, so its migrations and code were rolled back. The site is running exactly as before.<span v-if="backupFile"> A database backup was taken first: <code class="font-mono">{{ backupFile }}</code>.</span></p>
             </div>
 
-            <!-- Following a long-running update -->
-            <div v-if="applying && applyLog.length" class="flex items-center gap-2 text-xs text-zinc-400">
-                <Loader2 :size="14" class="animate-spin" /> Updating… {{ applyLog[applyLog.length - 1]?.step }}
-            </div>
-
-            <!-- Apply log -->
-            <div v-if="applyLog.length > 0" class="bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden">
-                <div class="flex items-center gap-2 px-5 py-3 border-b border-zinc-800/60 bg-admin-sunken">
-                    <Terminal :size="14" :stroke-width="1.75" class="text-zinc-600" />
-                    <h3 class="text-zinc-400 text-xs font-semibold">Update Log</h3>
-                </div>
-                <div class="divide-y divide-zinc-800/40">
-                    <div v-for="(step, i) in applyLog" :key="`${i}-${step.step}`" class="px-5 py-3">
-                        <p class="text-xs font-mono mb-1.5 flex items-center gap-1.5" :class="step.ok === false ? 'text-red-400' : 'text-zinc-500'">
-                            <XCircle v-if="step.ok === false" :size="12" />
-                            <CheckCircle2 v-else-if="step.ok" :size="12" class="text-emerald-500" />
-                            $ {{ step.step }}
-                        </p>
-                        <pre v-if="step.output" class="text-[11px] font-mono text-zinc-600 whitespace-pre-wrap break-all">{{ step.output }}</pre>
-                        <p v-else class="text-[11px] text-zinc-700 italic">No output</p>
-                    </div>
-                </div>
-            </div>
+            <!-- Progress of the running (or last) update -->
+            <UpdateProgress v-if="progress" :progress="progress" />
 
         </div><!-- end left col -->
 
@@ -380,27 +397,12 @@ async function applyUpdate() {
                     <span class="text-sm font-semibold text-zinc-100">What runs</span>
                 </div>
                 <div class="p-3 flex flex-col gap-1.5">
-                    <div
-                        v-for="(cmd, i) in [
-                            'maintenance mode on',
-                            'git pull --ff-only',
-                            'fix folder permissions',
-                            'composer install',
-                            'database backup (MySQL/MariaDB)',
-                            'php artisan migrate',
-                            'npm ci && npm run build',
-                            'restart SSR renderer (if enabled)',
-                            'optimize:clear',
-                            'queue:restart',
-                            'maintenance mode off',
-                        ]"
-                        :key="i"
-                        class="flex items-center gap-2"
-                    >
+                    <div v-for="(step, i) in plan" :key="step" class="flex items-center gap-2">
                         <span class="w-4 h-4 rounded-full bg-zinc-800 border border-zinc-700/60 text-[9px] font-bold text-zinc-500 flex items-center justify-center shrink-0">{{ i + 1 }}</span>
-                        <code class="text-xs font-mono text-zinc-400">{{ cmd }}</code>
+                        <span class="text-xs text-zinc-400">{{ STEP_LABELS[step] ?? step }}</span>
                     </div>
                     <p class="text-[11px] text-zinc-500 mt-1">If any step after the pull fails, this run's migrations are rolled back and the previous code is restored, so the site comes back on the version it had.</p>
+                    <p class="text-[11px] text-zinc-500">While it runs, the progress bar shows each step, its output and the time left (estimated from the previous update).</p>
                 </div>
             </div>
 
