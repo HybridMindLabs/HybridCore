@@ -29,5 +29,8 @@ class CoreWebhookEvents
         Hooks::EXTENSION_DISABLED => ['label' => 'Extension disabled', 'group' => 'Extensions'],
         Hooks::EXTENSION_UPDATED => ['label' => 'Extension updated', 'group' => 'Extensions'],
         Hooks::EXTENSION_UNINSTALLED => ['label' => 'Extension uninstalled', 'group' => 'Extensions'],
+        'system.updated' => ['label' => 'System updated', 'group' => 'System'],
+        'system.update_failed' => ['label' => 'System update failed', 'group' => 'System'],
+        'system.reverted' => ['label' => 'System rolled back to an earlier version', 'group' => 'System'],
     ];
 }

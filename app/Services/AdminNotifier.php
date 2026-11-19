@@ -34,6 +34,11 @@ class AdminNotifier
             'description' => 'A gateway reports a failed payment.',
             'permission' => 'payments.view',
         ],
+        'system_update' => [
+            'label' => 'System update finishes',
+            'description' => 'A core update or rollback completes or fails.',
+            'permission' => 'system.view',
+        ],
     ];
 
     private const DEFAULT_CHANNELS = ['database' => true, 'mail' => false];

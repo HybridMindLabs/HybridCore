@@ -89,8 +89,10 @@ bloating the foundation.
   and extensions that guards against deleting images still in use
 - Settings, legal pages, menus, SEO + auto sitemap, email templates, maintenance mode
 - Extensions & themes management, system health, scheduled backups
-- **Self-update** from the panel or CLI — pre-flight checks, a database backup before migrating,
-  and automatic rollback of code and migrations if any step fails
+- **Self-update** from the panel or CLI — a report before you start (new version, database
+  migrations, PHP and extension requirements), a live progress bar, a database backup before
+  migrating, a health check of the new version and automatic rollback if anything fails;
+  one-click rollback of the last update, full logs and staff/webhook alerts for every run
 
 **Platform**
 - **Extension SDK v2** — routes (web/admin/api), migrations, config, views, commands,

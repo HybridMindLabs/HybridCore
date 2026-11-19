@@ -78,6 +78,56 @@ class DatabaseBackupService
     }
 
     /** Delete the oldest database backups beyond $keep. Returns how many were deleted. */
+    /**
+     * Load a backup made by create() back into the database. Only file names
+     * from storage/app/backups are accepted.
+     *
+     * @return array{ok: bool, error?: string}
+     */
+    public function restore(string $filename): array
+    {
+        if (! preg_match('/^'.preg_quote(self::FILENAME_PREFIX, '/').'[\d-]+\.sql$/', $filename)) {
+            return ['ok' => false, 'error' => 'That is not a database backup file.'];
+        }
+
+        $filepath = storage_path('app/backups/'.$filename);
+        if (! is_file($filepath)) {
+            return ['ok' => false, 'error' => "The backup {$filename} no longer exists."];
+        }
+
+        $mysqldump = $this->findMysqldump();
+        $mysql = $mysqldump ? dirname($mysqldump).'/mysql' : null;
+        if ($mysql === null || ! is_executable($mysql)) {
+            $mysql = trim((string) shell_exec('which mysql 2>/dev/null')) ?: null;
+        }
+        if ($mysql === null) {
+            return ['ok' => false, 'error' => 'The mysql client was not found on this server.'];
+        }
+
+        $db = config('database.connections.'.config('database.default'));
+
+        // Same as create(): the password goes through a private file, never the process list.
+        $cnf = tempnam(sys_get_temp_dir(), 'mysql_');
+        file_put_contents($cnf, "[client]\npassword=".addslashes((string) ($db['password'] ?? ''))."\n");
+        chmod($cnf, 0600);
+
+        $cmd = sprintf(
+            '%s --defaults-extra-file=%s -h %s -P %d -u %s %s < %s 2>&1',
+            escapeshellcmd($mysql),
+            escapeshellarg($cnf),
+            escapeshellarg((string) ($db['host'] ?? '127.0.0.1')),
+            (int) ($db['port'] ?? 3306),
+            escapeshellarg((string) ($db['username'] ?? 'root')),
+            escapeshellarg((string) ($db['database'] ?? '')),
+            escapeshellarg($filepath)
+        );
+
+        exec($cmd, $output, $exitCode);
+        unlink($cnf);
+
+        return $exitCode === 0 ? ['ok' => true] : ['ok' => false, 'error' => 'mysql could not load the backup: '.mb_substr(implode("\n", $output), 0, 500)];
+    }
+
     public function prune(int $keep): int
     {
         $dir = storage_path('app/backups');

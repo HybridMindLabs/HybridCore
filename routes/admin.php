@@ -169,6 +169,8 @@ Route::middleware('perm:system.manage')->group(function (): void {
     Route::post('/updates/check', [UpdateController::class, 'check'])->name('admin.updates.check');
     Route::get('/updates/status', [UpdateController::class, 'status'])->name('admin.updates.status');
     Route::post('/updates/apply', [UpdateController::class, 'apply'])->middleware('sudo')->name('admin.updates.apply')->middleware('throttle:5,1,admin-updates-apply');
+    Route::post('/updates/{update}/revert', [UpdateController::class, 'revert'])->middleware(['sudo', 'throttle:5,1,admin-updates-revert'])->name('admin.updates.revert');
+    Route::get('/updates/{update}/log', [UpdateController::class, 'log'])->name('admin.updates.log');
 
     // Maintenance mode
     Route::post('/maintenance/enable', [MaintenanceController::class, 'enable'])->name('admin.maintenance.enable');

@@ -28,6 +28,8 @@ const receivedAt = ref(Date.now());
 watch(() => props.progress, () => (receivedAt.value = Date.now()));
 
 const finished = computed(() => !props.progress.running && !!props.progress.result);
+// A rollback started from the history runs the same machinery with its own plan.
+const isRollback = computed(() => !!props.progress.plan?.includes('git reset to previous version'));
 const failed = computed(() => finished.value && !props.progress.result?.success);
 const percent = computed(() => (finished.value && !failed.value ? 100 : Math.max(2, props.progress.percent ?? 0)));
 
@@ -89,8 +91,8 @@ watch(() => props.progress.current?.output, async () => {
                 <div class="min-w-0">
                     <p class="text-sm font-semibold"
                         :class="failed ? (progress.result?.rolled_back ? 'text-blue-300' : 'text-red-400') : finished ? 'text-emerald-400' : 'text-zinc-100'">
-                        <template v-if="!finished">Updating HybridCore…</template>
-                        <template v-else-if="!failed">Update complete</template>
+                        <template v-if="!finished">{{ isRollback ? 'Rolling back…' : 'Updating HybridCore…' }}</template>
+                        <template v-else-if="!failed">{{ isRollback ? 'Rollback complete' : 'Update complete' }}</template>
                         <template v-else-if="progress.result?.rolled_back">Update failed — previous version restored</template>
                         <template v-else>Update failed</template>
                     </p>
@@ -134,12 +136,12 @@ watch(() => props.progress.current?.output, async () => {
                     <Loader2 v-if="row.state === 'running'" :size="15" class="shrink-0 text-blue-400 animate-spin" />
                     <CheckCircle2 v-else-if="row.state === 'done'" :size="15" class="shrink-0 text-emerald-500" />
                     <XCircle v-else-if="row.state === 'failed'" :size="15" class="shrink-0 text-red-400" />
-                    <Undo2 v-else-if="!progress.plan?.includes(row.step)" :size="15" class="shrink-0 text-blue-400" />
+                    <Undo2 v-else-if="!progress.plan?.includes(row.step) && row.step !== 'starting'" :size="15" class="shrink-0 text-blue-400" />
                     <Circle v-else :size="15" class="shrink-0 text-zinc-700" />
                     <span class="flex-1 min-w-0 truncate text-sm"
                         :class="row.state === 'pending' || row.state === 'skipped' ? 'text-zinc-500' : row.state === 'failed' ? 'text-red-300' : 'text-zinc-200'">
                         {{ label(row.step) }}
-                        <span v-if="!progress.plan?.includes(row.step)" class="ml-1 text-[11px] text-blue-400">rollback</span>
+                        <span v-if="!progress.plan?.includes(row.step) && row.step !== 'starting'" class="ml-1 text-[11px] text-blue-400">rollback</span>
                         <span v-if="row.state === 'skipped'" class="ml-1 text-[11px] text-zinc-600">not run</span>
                     </span>
                     <span class="shrink-0 text-[11px] tabular-nums text-zinc-500">

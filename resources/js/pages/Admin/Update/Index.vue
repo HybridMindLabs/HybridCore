@@ -6,7 +6,7 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { csrfHeaders } from '@/lib/csrf';
 import UpdateProgress, { type UpdateProgressState } from '@/components/Admin/UpdateProgress.vue';
 import { STEP_LABELS } from '@/constants/updateSteps';
-import { GitBranch, RefreshCw, ArrowDownToLine, CheckCircle2, AlertCircle, Circle, Clock, Terminal, History, ShieldAlert, Loader2 } from '@lucide/vue';
+import { GitBranch, RefreshCw, ArrowDownToLine, CheckCircle2, AlertCircle, Circle, Clock, Terminal, History, ShieldAlert, Loader2, XCircle, Undo2, Download, Database, Puzzle, ListChecks } from '@lucide/vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
 
@@ -24,7 +24,18 @@ interface StepLog {
     seconds?: number;
 }
 
-interface HistoryEntry { id: number; from: string | null; to: string | null; by: string | null; at: string | null }
+interface HistoryEntry {
+    id: number; event: string; description: string; from: string | null; to: string | null; seconds: number | null;
+    backup: string | null; log_url: string | null; can_revert: boolean; by: string | null; at: string | null;
+}
+
+/** What the fetched update would change, checked before anything is applied. */
+interface UpdateReport {
+    version_from: string; version_to: string; changes: string; migrations: string[];
+    checks: { label: string; ok: boolean; detail: string }[];
+    incompatible_extensions: { name: string; detail: string }[];
+    blocking: boolean;
+}
 
 interface UpdateResult { success: boolean; message: string; log: StepLog[]; rolled_back: boolean; backup: string | null; seconds?: number; from?: string; to?: string; commit?: Props['currentCommit'] }
 
@@ -60,6 +71,9 @@ const backupFile = ref<string | null>(null);
 const problems  = ref<string[]>(props.preflight ?? []);
 const currentCommit = ref(props.currentCommit);
 const progress = ref<UpdateProgressState | null>(null);
+const report = ref<UpdateReport | null>(null);
+const reverting = ref<number | null>(null);
+const restoreDatabase = ref(false);
 
 function showResult(data: UpdateResult) {
     applyLog.value = data.log ?? [];
@@ -132,6 +146,7 @@ async function checkForUpdates() {
         const data = await res.json();
         commits.value = data.commits ?? [];
         upToDate.value = data.upToDate ?? false;
+        report.value = data.report ?? null;
         checked.value = true;
     } catch (e) {
         error.value = 'Failed to check for updates. Make sure git is available in the server environment.';
@@ -140,8 +155,11 @@ async function checkForUpdates() {
     }
 }
 
-async function applyUpdate() {
-    if (!await confirm('Apply update? The site goes into maintenance mode while it pulls, rebuilds, and migrates — then comes back up automatically.')) return;
+/**
+ * Start an update or a rollback. The server answers 202 once a background
+ * process has it; the progress poll, started right away, follows it from there.
+ */
+async function startJob(url: string, body: Record<string, unknown> = {}) {
     applying.value = true;
     applyLog.value = [];
     error.value = '';
@@ -150,8 +168,11 @@ async function applyUpdate() {
     startedAt = Date.now();
     let following = false;
     try {
-        const post = () => fetch(route('admin.updates.apply'), { method: 'POST', headers: { ...csrfHeaders(), 'Accept': 'application/json' } });
-        // The progress poll runs alongside the request from the first second.
+        const post = () => fetch(url, {
+            method: 'POST',
+            headers: { ...csrfHeaders(), 'Accept': 'application/json', 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
         const start = () => {
             const request = post();
             following = true;
@@ -177,10 +198,9 @@ async function applyUpdate() {
             return;
         }
 
-        if (!data) {
-            // Gateway timeout: the update keeps running server-side and the poll follows it.
-            return;
-        }
+        // 202: running in its own process — or no answer at all (proxy timeout).
+        // Either way the poll carries on.
+        if (!data || data.started) return;
 
         showResult(data);
         following = false;
@@ -190,6 +210,24 @@ async function applyUpdate() {
         if (!following) applying.value = false;
     }
 }
+
+async function applyUpdate() {
+    const migrations = report.value?.migrations.length ?? 0;
+    const message = 'Apply update? The site goes into maintenance mode while it updates, '
+        + (migrations ? `runs ${migrations} database migration(s), ` : '')
+        + 'checks that the site works and then comes back up — or restores the previous version if anything fails.';
+    if (!await confirm(message)) return;
+    await startJob(route('admin.updates.apply'));
+}
+
+async function revertUpdate(entry: HistoryEntry) {
+    reverting.value = null;
+    await startJob(route('admin.updates.revert', entry.id), { restore_database: restoreDatabase.value });
+}
+
+const historyIcon = (event: string) => (event === 'system.update_failed' ? XCircle : event === 'system.reverted' ? Undo2 : CheckCircle2);
+const historyTone = (event: string) => (event === 'system.update_failed' ? 'text-red-400' : event === 'system.reverted' ? 'text-blue-400' : 'text-emerald-500');
+const formatSeconds = (s: number | null) => (s == null ? '' : s >= 60 ? `${Math.floor(s / 60)}m ${s % 60}s` : `${s}s`);
 </script>
 
 <template>
@@ -325,9 +363,41 @@ async function applyUpdate() {
                         </div>
                     </div>
 
+                    <!-- What this update will do, checked before it starts -->
+                    <div v-if="report" class="mb-4 rounded-xl border border-zinc-800/70 bg-admin-sunken p-4 flex flex-col gap-3">
+                        <div class="flex flex-wrap items-baseline justify-between gap-2">
+                            <p class="text-sm font-semibold text-zinc-100 flex items-center gap-1.5"><ListChecks :size="14" class="text-blue-400" /> Before you update</p>
+                            <p class="text-xs font-mono text-zinc-400">{{ report.version_from }} → <span class="text-zinc-100">{{ report.version_to }}</span></p>
+                        </div>
+                        <p v-if="report.changes" class="text-[11px] text-zinc-500">{{ report.changes }}</p>
+
+                        <div>
+                            <p class="text-xs font-medium text-zinc-300 flex items-center gap-1.5 mb-1"><Database :size="12" class="text-zinc-500" />
+                                {{ report.migrations.length ? `${report.migrations.length} database migration(s) will run` : 'No database changes' }}</p>
+                            <ul v-if="report.migrations.length" class="ml-5 list-disc text-[11px] font-mono text-zinc-500">
+                                <li v-for="m in report.migrations" :key="m">{{ m }}</li>
+                            </ul>
+                        </div>
+
+                        <ul v-if="report.checks.length" class="flex flex-col gap-1">
+                            <li v-for="c in report.checks" :key="c.label" class="flex items-center gap-1.5 text-xs" :class="c.ok ? 'text-zinc-400' : 'text-red-300'">
+                                <component :is="c.ok ? CheckCircle2 : XCircle" :size="12" :class="c.ok ? 'text-emerald-500' : 'text-red-400'" />
+                                {{ c.label }} <span class="text-zinc-600">— {{ c.detail }}</span>
+                            </li>
+                        </ul>
+
+                        <div v-if="report.incompatible_extensions.length" class="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+                            <p class="text-xs font-semibold text-amber-200 flex items-center gap-1.5"><Puzzle :size="12" /> Extensions that may stop working</p>
+                            <ul class="mt-1 ml-5 list-disc text-[11px] text-amber-100/80">
+                                <li v-for="e in report.incompatible_extensions" :key="e.name">{{ e.name }} {{ e.detail }} — update it after the core.</li>
+                            </ul>
+                        </div>
+                        <p v-if="report.blocking" class="text-xs text-red-300">This server does not meet the new version's requirements, so the update is blocked until they are fixed.</p>
+                    </div>
+
                     <button
                         type="button"
-                        :disabled="applying"
+                        :disabled="applying || !!report?.blocking"
                         class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-40 bg-blue-500 text-white hover:bg-blue-400"
                         @click="applyUpdate"
                     >
@@ -414,11 +484,39 @@ async function applyUpdate() {
                 </div>
                 <ul v-if="history.length" class="divide-y divide-zinc-800/50">
                     <li v-for="h in history" :key="h.id" class="px-4 py-2.5">
-                        <p class="text-xs font-mono text-zinc-300">{{ h.from || '—' }} → {{ h.to || '—' }}</p>
-                        <p class="text-[11px] text-zinc-500">{{ h.at }}<span v-if="h.by"> · {{ h.by }}</span></p>
+                        <div class="flex items-start gap-2">
+                            <component :is="historyIcon(h.event)" :size="13" class="mt-0.5 shrink-0" :class="historyTone(h.event)" />
+                            <div class="min-w-0 flex-1">
+                                <p class="text-xs font-mono text-zinc-300">{{ h.from || '—' }} → {{ h.to || '—' }}</p>
+                                <p v-if="h.event === 'system.update_failed'" class="text-[11px] text-red-300/80 line-clamp-2" :title="h.description">{{ h.description }}</p>
+                                <p class="text-[11px] text-zinc-500">
+                                    {{ h.at }}<span v-if="h.by"> · {{ h.by }}</span><span v-if="h.seconds != null"> · {{ formatSeconds(h.seconds) }}</span>
+                                </p>
+                                <div v-if="h.log_url || h.can_revert" class="mt-1 flex items-center gap-3">
+                                    <a v-if="h.log_url" :href="h.log_url" class="inline-flex items-center gap-1 text-[11px] text-zinc-400 hover:text-zinc-100"><Download :size="11" /> Log</a>
+                                    <button v-if="h.can_revert && panelUpdatesEnabled" type="button" :disabled="applying"
+                                        class="inline-flex items-center gap-1 text-[11px] text-amber-300 hover:text-amber-200 disabled:opacity-40"
+                                        @click="reverting = reverting === h.id ? null : h.id; restoreDatabase = false">
+                                        <Undo2 :size="11" /> Roll back to {{ h.from }}
+                                    </button>
+                                </div>
+
+                                <div v-if="reverting === h.id" class="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/[0.07] p-3 flex flex-col gap-2">
+                                    <p class="text-[11px] text-amber-100/90">The site goes into maintenance mode, this update's database changes are undone and the code, packages and site files of {{ h.from }} come back.</p>
+                                    <label v-if="h.backup" class="flex items-start gap-2 text-[11px] text-zinc-300 cursor-pointer">
+                                        <input v-model="restoreDatabase" type="checkbox" class="mt-0.5 w-3.5 h-3.5 rounded border-zinc-600 bg-zinc-900 text-amber-500" />
+                                        <span>Restore the database backup taken before the update instead <span class="text-zinc-500">({{ h.backup }}) — anything saved since then is lost</span></span>
+                                    </label>
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" class="px-3 py-1.5 rounded-md text-[11px] font-semibold bg-amber-500 text-black hover:bg-amber-400" @click="revertUpdate(h)">Roll back</button>
+                                        <button type="button" class="px-3 py-1.5 rounded-md text-[11px] text-zinc-400 hover:text-zinc-100" @click="reverting = null">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </li>
                 </ul>
-                <p v-else class="px-4 py-4 text-xs text-zinc-500">No updates applied from the panel yet.</p>
+                <p v-else class="px-4 py-4 text-xs text-zinc-500">No updates yet. Every update, failure and rollback appears here with its full log.</p>
             </div>
 
         </div><!-- end right col -->

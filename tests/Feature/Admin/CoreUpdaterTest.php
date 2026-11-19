@@ -5,9 +5,14 @@ namespace Tests\Feature\Admin;
 use App\Models\ActivityLog;
 use App\Models\User;
 use App\Services\ActivityLogService;
+use App\Services\AdminNotifier;
 use App\Services\CoreUpdater;
 use App\Services\DatabaseBackupService;
+use App\Services\Extensions\ExtensionRequirements;
 use App\Services\GitUpdateVerifier;
+use App\Services\UpdateLauncher;
+use App\Services\UpdatePreview;
+use App\Services\WebhookDispatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -93,7 +98,7 @@ class CoreUpdaterTest extends TestCase
 
     private function updater(): FakeCoreUpdater
     {
-        return new FakeCoreUpdater(app(GitUpdateVerifier::class), app(DatabaseBackupService::class), app(ActivityLogService::class));
+        return new FakeCoreUpdater(app(GitUpdateVerifier::class), app(DatabaseBackupService::class), app(ActivityLogService::class), app(AdminNotifier::class), app(WebhookDispatcher::class));
     }
 
     public function test_preflight_blocks_local_changes_to_tracked_files(): void
@@ -230,6 +235,148 @@ class CoreUpdaterTest extends TestCase
 
         $this->getJson(route('admin.updates.status'))->assertOk();
         $this->get(route('admin.updates.index'))->assertStatus(503);
+    }
+
+    public function test_a_site_that_fails_its_health_check_is_rolled_back_with_its_old_files(): void
+    {
+        $updater = $this->updater();
+        $updater->failing[CoreUpdater::phpBinary().' artisan hybridcore:smoke'] = true;
+
+        $result = $updater->run();
+
+        $this->assertFalse($result['success']);
+        $this->assertTrue($result['rolled_back']);
+        $this->assertContains('git reset --hard aaa1111', $updater->ran);
+        // Built once for the new version, once more for the restored one.
+        $this->assertCount(2, array_keys($updater->ran, 'artisan hybridcore:build', true));
+    }
+
+    public function test_every_outcome_keeps_its_log_and_alerts_the_staff(): void
+    {
+        $admin = auth()->user();
+        $updater = $this->updater();
+        $updater->failing['composer install'] = true;
+
+        $result = $updater->run();
+
+        $this->assertFileExists(storage_path('app/updates/'.$result['log_file']));
+        $failed = ActivityLog::where('event', 'system.update_failed')->firstOrFail();
+        $this->assertSame($result['log_file'], $failed->properties['log_file']);
+        $this->assertSame(1, $admin->fresh()->notifications()->count());
+
+        @unlink(storage_path('app/updates/'.$result['log_file']));
+    }
+
+    public function test_an_update_can_be_reverted_to_where_it_started(): void
+    {
+        $updater = $this->updater();
+        $updater->headNow = 'bbb2222';
+
+        $result = $updater->revert(['from' => 'aaa1111', 'to' => 'bbb2222', 'batch_before' => 1]);
+
+        $this->assertTrue($result['success']);
+        $this->assertSame('aaa1111', $result['to']);
+        $this->assertContains('git reset --hard aaa1111', $updater->ran);
+        $this->assertContains('artisan hybridcore:build', $updater->ran);
+        $this->assertSame('aaa1111', ActivityLog::where('event', 'system.reverted')->firstOrFail()->properties['to']);
+        $this->assertFileDoesNotExist(storage_path('framework/down'));
+    }
+
+    public function test_the_panel_hands_the_update_to_a_background_process(): void
+    {
+        config(['hybridcore.panel_updates' => true, 'hybridcore.update_in_background' => true]);
+        $this->app->instance(CoreUpdater::class, $this->updater());
+        $this->app->instance(UpdatePreview::class, new class(app(ExtensionRequirements::class)) extends UpdatePreview
+        {
+            public function blockingProblems(): array
+            {
+                return [];
+            }
+        });
+        $launcher = new class extends UpdateLauncher
+        {
+            public array $arguments = [];
+
+            public function launch(array $arguments): bool
+            {
+                $this->arguments = $arguments;
+
+                return true;
+            }
+        };
+        $this->app->instance(UpdateLauncher::class, $launcher);
+
+        $this->withSession(['auth.password_confirmed_at' => time()])
+            ->postJson(route('admin.updates.apply'))
+            ->assertStatus(202);
+
+        $this->assertContains('--build', $launcher->arguments);
+        $this->assertContains('--user='.auth()->id(), $launcher->arguments);
+        $this->getJson(route('admin.updates.status'))->assertJsonPath('running', true)->assertJsonPath('current.step', 'starting');
+    }
+
+    public function test_a_requirement_the_new_version_has_blocks_the_update(): void
+    {
+        $preview = new class(app(ExtensionRequirements::class)) extends UpdatePreview
+        {
+            protected function git(array $arguments): ?string
+            {
+                return match (true) {
+                    $arguments[0] === 'rev-parse' && ($arguments[1] ?? '') === '--abbrev-ref' => "main\n",
+                    $arguments[0] === 'rev-parse' => "abc\n",
+                    $arguments[0] === 'show' && str_ends_with($arguments[1], 'composer.json') => json_encode(['require' => ['php' => '>=99.0', 'ext-json' => '*']]),
+                    $arguments[0] === 'show' => "const VERSION = '9.9.9';",
+                    $arguments[0] === 'diff' && in_array('--name-only', $arguments, true) => "database/migrations/2030_01_01_000000_add_things.php\n",
+                    default => ' 3 files changed',
+                };
+            }
+        };
+
+        $report = $preview->build();
+
+        $this->assertSame('9.9.9', $report['version_to']);
+        $this->assertSame(['2030_01_01_000000_add_things'], $report['migrations']);
+        $this->assertTrue($report['blocking']);
+        $this->assertStringContainsString('PHP >=99.0', $preview->blockingProblems()[0]);
+    }
+
+    public function test_only_the_latest_update_still_on_disk_can_be_rolled_back(): void
+    {
+        config(['hybridcore.panel_updates' => true]);
+        $old = ActivityLog::create(['event' => 'system.updated', 'description' => 'old', 'properties' => ['from' => 'a', 'to' => 'b']]);
+        ActivityLog::create(['event' => 'system.updated', 'description' => 'new', 'properties' => ['from' => 'b', 'to' => 'c']]);
+
+        $this->withSession(['auth.password_confirmed_at' => time()])
+            ->postJson(route('admin.updates.revert', $old))
+            ->assertStatus(409)
+            ->assertJsonFragment(['Only the most recent update can be rolled back.']);
+    }
+
+    public function test_an_update_log_downloads_and_odd_names_are_refused(): void
+    {
+        @mkdir(storage_path('app/updates'), 0755, true);
+        file_put_contents(storage_path('app/updates/update-2026-01-01-000000.json'), '{"ok":true}');
+        $good = ActivityLog::create(['event' => 'system.updated', 'description' => 'x', 'properties' => ['log_file' => 'update-2026-01-01-000000.json']]);
+        $bad = ActivityLog::create(['event' => 'system.updated', 'description' => 'x', 'properties' => ['log_file' => '../../.env']]);
+
+        $this->get(route('admin.updates.log', $good))->assertOk();
+        $this->get(route('admin.updates.log', $bad))->assertNotFound();
+
+        @unlink(storage_path('app/updates/update-2026-01-01-000000.json'));
+    }
+
+    public function test_visitors_see_an_update_notice_while_it_runs(): void
+    {
+        Cache::put(CoreUpdater::PROGRESS_KEY, ['running' => true, 'updated_at' => now()->toIso8601String()], 60);
+        $this->artisan('down');
+
+        auth()->logout();
+        $this->get('/')->assertStatus(503)->assertSee('installing an update');
+    }
+
+    public function test_the_health_check_passes_on_a_working_site(): void
+    {
+        $this->artisan('hybridcore:smoke')->assertSuccessful()->expectsOutputToContain('The site works.');
     }
 
     public function test_status_reports_progress_of_the_last_run(): void

@@ -12,5 +12,12 @@ export const STEP_LABELS: Record<string, string> = {
     'restart SSR renderer': 'Restart the page renderer',
     'php artisan optimize:clear': 'Clear caches',
     'php artisan queue:restart': 'Restart background workers',
+    'health check': 'Check that the site works',
     'maintenance off': 'Bring the site back online',
+    starting: 'Starting the update process',
+    'restore database backup': 'Restore the database backup',
+    'roll back database changes': 'Undo the database changes',
+    'git reset to previous version': 'Put back the previous code',
+    'composer install (previous version)': 'Reinstall the previous PHP packages',
+    'php artisan migrate:rollback': 'Undo the database changes',
 };

@@ -23,6 +23,18 @@ return [
     'panel_updates' => env('HYBRIDCORE_PANEL_UPDATES', true),
 
     /*
+    | Panel updates run as a separate `php artisan hybridcore:update` process,
+    | so web-server time limits cannot stop them halfway. Set to false where
+    | the host does not allow starting processes; the update then runs inside
+    | the request as before. PHP_BINARY is the php CLI used for it (under
+    | PHP-FPM the running binary is php-fpm, which cannot run artisan).
+    */
+
+    'update_in_background' => env('HYBRIDCORE_UPDATE_IN_BACKGROUND', true),
+
+    'php_binary' => env('HYBRIDCORE_PHP_BINARY'),
+
+    /*
     |--------------------------------------------------------------------------
     | Require signed commits for the self-update
     |--------------------------------------------------------------------------

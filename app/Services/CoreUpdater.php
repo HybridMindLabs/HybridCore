@@ -2,11 +2,14 @@
 
 namespace App\Services;
 
+use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use RuntimeException;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 use Throwable;
 
@@ -41,7 +44,8 @@ class CoreUpdater
         'composer install' => 20, 'database backup' => 6, 'php artisan migrate' => 8,
         'php artisan hybridcore:themes:sync' => 2, 'php artisan hybridcore:build' => 40,
         'restart SSR renderer' => 2, 'php artisan optimize:clear' => 2, 'php artisan queue:restart' => 1,
-        'maintenance off' => 1,
+        'health check' => 3, 'maintenance off' => 1, 'restore database backup' => 8,
+        'roll back database changes' => 4, 'git reset to previous version' => 2,
     ];
 
     private const MIN_FREE_BYTES = 512 * 1024 * 1024;
@@ -68,6 +72,8 @@ class CoreUpdater
         private readonly GitUpdateVerifier $verifier,
         private readonly DatabaseBackupService $backups,
         private readonly ActivityLogService $activity,
+        private readonly AdminNotifier $notifier,
+        private readonly WebhookDispatcher $webhooks,
     ) {}
 
     /**
@@ -110,32 +116,26 @@ class CoreUpdater
 
     /**
      * @param  (callable(array<int, array{step: string, output: string, ok: bool}>): void)|null  $onStep
-     * @return array{success: bool, message: string, log: array<int, array{step: string, output: string, ok: bool}>, from: string, to: string, rolled_back: bool, backup: ?string}
+     * @return array<string, mixed>
      */
     public function run(bool $pull = true, bool $composer = true, bool $build = true, ?callable $onStep = null): array
     {
-        $this->log = [];
-        $this->onStep = $onStep;
-        $this->plan = $this->plan($pull, $composer, $build);
-        $this->current = null;
-        $this->runStartedAt = microtime(true);
+        $this->start($this->plan($pull, $composer, $build), $onStep);
 
         $lock = Cache::lock(self::LOCK_KEY, 3600);
         if (! $lock->get()) {
-            return $this->result(false, 'Another update is already running.', '', '', false, null);
+            return $this->finish($this->result(false, 'Another update is already running.', '', '', false, null));
         }
 
         $from = $this->head();
         $pulled = false;
+        $built = false;
         $batchBefore = $this->latestBatch();
         $backup = null;
         $failure = null;
         $rolledBack = false;
 
-        $this->progress(true);
-        $this->begin('maintenance on');
-        Artisan::call('down', ['--retry' => 30]);
-        $this->record('maintenance on', '', true);
+        $secret = $this->maintenanceOn();
 
         try {
             if ($pull) {
@@ -145,10 +145,7 @@ class CoreUpdater
                 $pulled = $this->head() !== $from;
             }
 
-            // A pull can add folders that don't inherit storage/'s group permissions.
-            $this->begin('fix folder permissions');
-            [$ok, $out] = $this->exec(['chmod', '-R', 'ug+rwX', storage_path(), base_path('bootstrap/cache')]);
-            $this->record('fix folder permissions', trim($out) ?: 'OK', $ok);
+            $this->fixPermissions();
 
             if ($composer) {
                 $this->step('composer install', ['composer', 'install', '--no-interaction', '--no-dev', '--optimize-autoloader']);
@@ -162,49 +159,281 @@ class CoreUpdater
             if ($build) {
                 // Restores the previous bundle itself when the build fails.
                 $this->artisanStep('hybridcore:build', ['--sync' => true]);
-            }
-
-            if ($build && config('inertia.ssr.enabled')) {
-                // Needs a pre-authorised narrow sudo rule; -n fails fast instead of prompting.
-                $this->begin('restart SSR renderer');
-                [$ok, $out] = $this->exec(['sudo', '-n', 'systemctl', 'restart', 'hybridcore-ssr']);
-                $this->record('restart SSR renderer', trim($out) ?: 'Restarted hybridcore-ssr.', $ok);
+                $built = true;
+                $this->restartSsr();
             }
 
             $this->artisanStep('optimize:clear');
             $this->artisanStep('queue:restart');
+
+            // Every step passing is not the same as the site working.
+            $this->healthCheck($secret);
         } catch (Throwable $e) {
             $failure = $e;
 
             if ($pulled) {
-                $rolledBack = $this->rollback($from, $batchBefore, $composer);
+                $rolledBack = $this->rollback($from, $batchBefore, $composer, $built);
             }
         } finally {
-            $this->begin('maintenance off');
-            Artisan::call('up');
-            $this->record('maintenance off', '', true);
+            $this->maintenanceOff();
             $lock->release();
         }
 
         $to = $this->head();
+        $properties = ['from' => $from, 'to' => $to, 'backup' => $backup, 'batch_before' => $batchBefore];
 
         if ($failure !== null) {
             $message = $failure->getMessage().($rolledBack
                 ? ' The previous version was restored, the site is running as before.'
                 : ($pulled ? ' Rolling back failed — check the log below.' : ''));
 
-            return $this->finish($this->result(false, $message, $from, $to, $rolledBack, $backup));
+            return $this->conclude('system.update_failed', "System update failed: {$failure->getMessage()}",
+                $this->result(false, $message, $from, $to, $rolledBack, $backup), $properties);
         }
-
-        $this->activity->log('system.updated', $from === $to ? 'Ran system update (already on the latest code)' : "Updated from {$from} to {$to}", null, [
-            'from' => $from,
-            'to' => $to,
-            'backup' => $backup,
-        ]);
 
         $this->rememberDurations();
 
-        return $this->finish($this->result(true, 'Update complete.', $from, $to, false, $backup));
+        return $this->conclude('system.updated', $from === $to ? 'Ran system update (already on the latest code)' : "Updated from {$from} to {$to}",
+            $this->result(true, 'Update complete.', $from, $to, false, $backup), $properties);
+    }
+
+    /**
+     * Go back to the version a recorded update started from: this update's
+     * migrations are rolled back (or the database backup taken before it is
+     * restored), then the old code, packages and site files come back.
+     *
+     * @param  array{from: string, to: string, backup?: ?string, batch_before?: int}  $update
+     * @return array<string, mixed>
+     */
+    public function revert(array $update, bool $restoreDatabase = false, ?callable $onStep = null): array
+    {
+        $this->start($this->revertPlan($restoreDatabase), $onStep);
+
+        $lock = Cache::lock(self::LOCK_KEY, 3600);
+        if (! $lock->get()) {
+            return $this->finish($this->result(false, 'Another update is already running.', '', '', false, null));
+        }
+
+        $from = $this->head();
+        $failure = null;
+        $secret = $this->maintenanceOn();
+
+        try {
+            if ($restoreDatabase) {
+                $this->begin('restore database backup');
+                $restored = $this->backups->restore((string) ($update['backup'] ?? ''));
+                $this->record('restore database backup', $restored['ok'] ? 'Restored '.$update['backup'] : $restored['error'], $restored['ok']);
+                if (! $restored['ok']) {
+                    throw new RuntimeException('Restoring the database backup failed.');
+                }
+            } else {
+                // Migrations first: their down() only exists in the newer code.
+                $this->begin('roll back database changes');
+                $target = (int) ($update['batch_before'] ?? $this->latestBatch());
+                $rounds = 0;
+                while ($this->latestBatch() > $target && $rounds++ < 20) {
+                    Artisan::call('migrate:rollback', ['--force' => true]);
+                }
+                $this->record('roll back database changes', $rounds ? "Rolled back {$rounds} migration batch(es)." : 'Nothing to roll back.', $this->latestBatch() <= $target);
+            }
+
+            $this->step('git reset to previous version', ['git', 'reset', '--hard', $update['from']]);
+            $this->fixPermissions();
+            $this->step('composer install', ['composer', 'install', '--no-interaction', '--no-dev', '--optimize-autoloader']);
+            $this->artisanStep('hybridcore:build', ['--sync' => true]);
+            $this->restartSsr();
+            $this->artisanStep('optimize:clear');
+            $this->artisanStep('queue:restart');
+            $this->healthCheck($secret);
+        } catch (Throwable $e) {
+            $failure = $e;
+        } finally {
+            $this->maintenanceOff();
+            $lock->release();
+        }
+
+        $to = $this->head();
+        $properties = ['from' => $from, 'to' => $to, 'reverted_update' => $update['to'], 'database_restored' => $restoreDatabase];
+
+        if ($failure !== null) {
+            return $this->conclude('system.update_failed', "Rolling back to {$update['from']} failed: {$failure->getMessage()}",
+                $this->result(false, $failure->getMessage().' Check the log below; the site may need attention.', $from, $to, false, null), $properties);
+        }
+
+        return $this->conclude('system.reverted', "Rolled back from {$from} to {$to}",
+            $this->result(true, "Rolled back to {$to}.", $from, $to, false, null), $properties);
+    }
+
+    /** @return array<int, string> */
+    public function revertPlan(bool $restoreDatabase = false): array
+    {
+        return array_values(array_filter([
+            'maintenance on',
+            $restoreDatabase ? 'restore database backup' : 'roll back database changes',
+            'git reset to previous version',
+            'fix folder permissions',
+            'composer install',
+            'php artisan hybridcore:build',
+            config('inertia.ssr.enabled') ? 'restart SSR renderer' : null,
+            'php artisan optimize:clear',
+            'php artisan queue:restart',
+            'health check',
+            'maintenance off',
+        ]));
+    }
+
+    /**
+     * Show the panel an update that was handed to a background process and
+     * has not reported yet, so nobody starts a second one meanwhile.
+     *
+     * @param  array<int, string>  $plan
+     */
+    public function markQueued(array $plan): void
+    {
+        $this->plan = $plan;
+        $this->log = [];
+        $this->runStartedAt = microtime(true);
+        $this->current = ['step' => 'starting', 'started_at' => now()->toIso8601String(), 'output' => ''];
+        $this->progress(true);
+    }
+
+    /** The php CLI binary — under PHP-FPM, PHP_BINARY points at php-fpm itself. */
+    public static function phpBinary(): string
+    {
+        $configured = config('hybridcore.php_binary');
+        if (is_string($configured) && $configured !== '') {
+            return $configured;
+        }
+
+        $found = (new PhpExecutableFinder)->find(false);
+
+        return $found && ! str_contains(basename($found), 'fpm') ? $found : 'php';
+    }
+
+    /** @param  array<int, string>  $plan */
+    private function start(array $plan, ?callable $onStep): void
+    {
+        $this->log = [];
+        $this->onStep = $onStep;
+        $this->plan = $plan;
+        $this->current = null;
+        $this->runStartedAt = microtime(true);
+    }
+
+    /** Maintenance mode with a one-off bypass secret, so the health check can reach the site. */
+    private function maintenanceOn(): string
+    {
+        $secret = Str::random(40);
+
+        $this->progress(true);
+        $this->begin('maintenance on');
+        Artisan::call('down', ['--retry' => 30, '--secret' => $secret]);
+        $this->record('maintenance on', '', true);
+
+        return $secret;
+    }
+
+    private function maintenanceOff(): void
+    {
+        $this->begin('maintenance off');
+        Artisan::call('up');
+        $this->record('maintenance off', '', true);
+    }
+
+    private function fixPermissions(): void
+    {
+        // A pull can add folders that don't inherit storage/'s group permissions.
+        $this->begin('fix folder permissions');
+        [$ok, $out] = $this->exec(['chmod', '-R', 'ug+rwX', storage_path(), base_path('bootstrap/cache')]);
+        $this->record('fix folder permissions', trim($out) ?: 'OK', $ok);
+    }
+
+    private function restartSsr(): void
+    {
+        if (! config('inertia.ssr.enabled')) {
+            return;
+        }
+
+        // Needs a pre-authorised narrow sudo rule; -n fails fast instead of prompting.
+        $this->begin('restart SSR renderer');
+        [$ok, $out] = $this->exec(['sudo', '-n', 'systemctl', 'restart', 'hybridcore-ssr']);
+        $this->record('restart SSR renderer', trim($out) ?: 'Restarted hybridcore-ssr.', $ok);
+    }
+
+    /**
+     * Boot the new code in a fresh process and request key pages through it.
+     * A crash or a 5xx fails the update, which then rolls back.
+     */
+    private function healthCheck(string $secret): void
+    {
+        $this->step('health check', [self::phpBinary(), 'artisan', 'hybridcore:smoke', '--secret='.$secret]);
+    }
+
+    /**
+     * Keep the full log, record the outcome and tell the staff.
+     *
+     * @param  array<string, mixed>  $result
+     * @param  array<string, mixed>  $properties
+     * @return array<string, mixed>
+     */
+    private function conclude(string $event, string $description, array $result, array $properties): array
+    {
+        $result['log_file'] = $this->persistLog($event, $result);
+
+        try {
+            $this->activity->log($event, $description, null, [...$properties, 'log_file' => $result['log_file'], 'seconds' => $result['seconds']]);
+            $this->notify($event, $result);
+        } catch (Throwable $e) {
+            report($e);
+        }
+
+        return $this->finish($result);
+    }
+
+    /** @param  array<string, mixed>  $result */
+    private function persistLog(string $event, array $result): ?string
+    {
+        try {
+            $name = 'update-'.now()->format('Y-m-d-His').'.json';
+            $dir = storage_path('app/updates');
+            if (! is_dir($dir)) {
+                mkdir($dir, 0755, true);
+            }
+            file_put_contents($dir.'/'.$name, json_encode(['event' => $event, 'at' => now()->toIso8601String(), ...$result], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+
+            return $name;
+        } catch (Throwable $e) {
+            report($e);
+
+            return null;
+        }
+    }
+
+    /** @param  array<string, mixed>  $result */
+    private function notify(string $event, array $result): void
+    {
+        $ok = $result['success'];
+        $what = match ($event) {
+            'system.reverted' => "HybridCore was rolled back to {$result['to']}",
+            'system.updated' => $result['from'] === $result['to'] ? 'The system update finished (no new code)' : "HybridCore was updated from {$result['from']} to {$result['to']}",
+            default => 'The system update failed'.($result['rolled_back'] ? ' — the previous version was restored' : ''),
+        };
+
+        $this->notifier->send('system_update', new SystemNotification(
+            message: $what.' ('.$result['seconds'].'s).',
+            level: $ok ? 'success' : 'danger',
+            actionUrl: route('admin.updates.index'),
+            actionLabel: 'Open System Update',
+        ));
+
+        $this->webhooks->dispatch($event, [
+            'success' => $ok,
+            'message' => $result['message'],
+            'from' => $result['from'],
+            'to' => $result['to'],
+            'rolled_back' => $result['rolled_back'],
+            'seconds' => $result['seconds'],
+        ]);
     }
 
     /**
@@ -227,6 +456,7 @@ class CoreUpdater
             $build && config('inertia.ssr.enabled') ? 'restart SSR renderer' : null,
             'php artisan optimize:clear',
             'php artisan queue:restart',
+            'health check',
             'maintenance off',
         ]));
     }
@@ -241,7 +471,7 @@ class CoreUpdater
     }
 
     /** Undo a failed run: its migrations first (their down() lives in the new code), then the code. */
-    private function rollback(string $from, int $batchBefore, bool $composer): bool
+    private function rollback(string $from, int $batchBefore, bool $composer, bool $built = false): bool
     {
         try {
             if ($this->latestBatch() > $batchBefore) {
@@ -252,6 +482,11 @@ class CoreUpdater
 
             if ($composer) {
                 $this->step('composer install (previous version)', ['composer', 'install', '--no-interaction', '--no-dev', '--optimize-autoloader']);
+            }
+
+            // The new site files were already built; the old code needs its own.
+            if ($built) {
+                $this->artisanStep('hybridcore:build', ['--sync' => true]);
             }
 
             $this->artisanStep('optimize:clear');
