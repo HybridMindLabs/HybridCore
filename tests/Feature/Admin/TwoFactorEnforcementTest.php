@@ -115,6 +115,18 @@ class TwoFactorEnforcementTest extends TestCase
         $this->assertSame('14', $settings->get('security.require_2fa_grace_days'));
     }
 
+    public function test_saving_the_settings_page_keeps_the_announcement_banner(): void
+    {
+        $admin = $this->userWith2FA();
+        $settings = app(SettingsService::class);
+        $settings->setMany(['announcement_banner_enabled' => '1', 'announcement_banner_text' => 'Server move tonight']);
+
+        $this->actingAs($admin)->put(route('admin.settings.update'), $this->minimalSettingsPayload())->assertRedirect();
+
+        $this->assertSame('1', $settings->get('announcement_banner_enabled'));
+        $this->assertSame('Server move tonight', $settings->get('announcement_banner_text'));
+    }
+
     /** @return array<string, mixed> */
     private function minimalSettingsPayload(): array
     {

@@ -159,11 +159,18 @@ class SettingController extends Controller
             'captcha_recaptcha_v2_secret_key' => $data['captcha_recaptcha_v2_secret_key'] ?? '',
             'captcha_recaptcha_v3_site_key' => $data['captcha_recaptcha_v3_site_key'] ?? '',
             'captcha_recaptcha_v3_secret_key' => $data['captcha_recaptcha_v3_secret_key'] ?? '',
-            'announcement_banner_enabled' => ($data['announcement_banner_enabled'] ?? false) ? '1' : '0',
-            'announcement_banner_text' => $data['announcement_banner_text'] ?? '',
-            'announcement_banner_type' => $data['announcement_banner_type'] ?? 'info',
-            'announcement_banner_link' => $data['announcement_banner_link'] ?? '',
         ]);
+
+        // The settings page has no banner fields; a save from it must not
+        // switch off a banner that was set elsewhere.
+        if (array_key_exists('announcement_banner_enabled', $data)) {
+            $this->settings->setMany([
+                'announcement_banner_enabled' => $data['announcement_banner_enabled'] ? '1' : '0',
+                'announcement_banner_text' => $data['announcement_banner_text'] ?? '',
+                'announcement_banner_type' => $data['announcement_banner_type'] ?? 'info',
+                'announcement_banner_link' => $data['announcement_banner_link'] ?? '',
+            ]);
+        }
 
         $this->activity->log('settings.updated', 'Updated platform settings');
 
