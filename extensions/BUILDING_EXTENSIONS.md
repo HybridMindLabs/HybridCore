@@ -25,17 +25,19 @@ codebase.
 6. [Webhooks](#webhooks)
 7. [Admin Navigation](#admin-navigation)
 8. [Admin Dashboard Widgets](#admin-dashboard-widgets)
-9. [Extension Settings Page](#extension-settings-page)
-10. [Page Slots — injecting into core pages](#page-slots--injecting-into-core-pages)
-11. [Frontend & UX Registries](#frontend--ux-registries)
-12. [Routes](#routes)
-13. [Database Migrations](#database-migrations)
-14. [Translations](#translations)
-15. [Vue Pages (Inertia)](#vue-pages-inertia)
-16. [Slot Vue Components](#slot-vue-components)
-17. [Available Slot Names](#available-slot-names)
-18. [Naming Conventions](#naming-conventions)
-19. [Installation Checklist](#installation-checklist)
+9. [Page Builder Blocks](#page-builder-blocks)
+   - [Images your extension uses](#images-your-extension-uses)
+10. [Extension Settings Page](#extension-settings-page)
+11. [Page Slots — injecting into core pages](#page-slots--injecting-into-core-pages)
+12. [Frontend & UX Registries](#frontend--ux-registries)
+13. [Routes](#routes)
+14. [Database Migrations](#database-migrations)
+15. [Translations](#translations)
+16. [Vue Pages (Inertia)](#vue-pages-inertia)
+17. [Slot Vue Components](#slot-vue-components)
+18. [Available Slot Names](#available-slot-names)
+19. [Naming Conventions](#naming-conventions)
+20. [Installation Checklist](#installation-checklist)
 
 ---
 
@@ -454,6 +456,89 @@ $registry->widgets()->register(
 
 The `data` closure is **lazy** — it runs only when the admin dashboard is rendered.
 Heavy queries here are fine; they do not affect other pages.
+
+---
+
+## Page Builder Blocks
+
+Admins build pages from blocks (**Admin → Pages**, editor set to *Blocks*). An extension
+adds its own block type with a field list, an optional resolver for live data and a Vue
+component that renders it:
+
+```php
+use Hybridcore\Shop\Models\Product;
+
+$registry->pageBlocks()->register(
+    type:        'hybridcore-shop.products',      // vendor-prefixed, never changes once used
+    label:       'Shop products',
+    component:   'HybridcoreShopProductsBlock',   // resources/js/components/HybridcoreShopProductsBlock.vue
+    fields:      [
+        ['key' => 'title', 'type' => 'text',   'label' => 'Title', 'max' => 120],
+        ['key' => 'limit', 'type' => 'number', 'label' => 'How many', 'min' => 1, 'max' => 12, 'default' => 4],
+        ['key' => 'only_featured', 'type' => 'toggle', 'label' => 'Featured only'],
+    ],
+    resolve:     fn (array $data) => [
+        'products' => Product::visible()->limit($data['limit'])->get(['id', 'name', 'price'])->toArray(),
+    ],
+    icon:        'Package',
+    category:    'community',                     // layout | content | media | community
+    description: 'Products from your shop with a buy button.',
+);
+```
+
+**Field types** — the editor builds the form from them, and every save is reduced to exactly
+these keys, so a block never stores anything it did not declare:
+
+| Type | Stored as | Options |
+|---|---|---|
+| `text`, `textarea` | string | `max` (255 / 2000) |
+| `markdown` | string — render it in the resolver with `App\Support\SafeMarkdown::toHtml()` | `max` |
+| `url`, `image` | `http(s)://…` or `/relative` — anything else (`javascript:`, `//host`) is emptied | — |
+| `number` | integer, clamped | `min`, `max` |
+| `select` | one of the option keys | `options` (`value => label`) |
+| `toggle` | boolean | — |
+| `game` | game id or `null` (all games) | — |
+| `list` | array of rows | `fields`, `max_items` (24) |
+
+Every field may carry a `default`.
+
+**The component** receives `data` (the saved fields) and `props` (what `resolve` returned):
+
+```vue
+<script setup lang="ts">
+defineProps<{ data: { title: string; limit: number }; props: { products: { id: number; name: string }[] } }>();
+</script>
+```
+
+Things to know:
+
+- `resolve` runs on every public view of the page. Keep it to one or two indexed queries and
+  return plain arrays.
+- If `resolve` throws, the error is reported and **only that block** is left out — the page still renders.
+- When your extension is disabled its blocks disappear from pages and the editor marks them as
+  unavailable; they come back untouched when it is enabled again.
+- Never render user-entered fields with `v-html`. Markdown goes through `SafeMarkdown` in `resolve`.
+
+### Images your extension uses
+
+The media library shows where each image is used and asks twice before deleting one that
+is. Tell it about every column of yours that can hold an image (a storage path, a full URL,
+or Markdown/HTML/JSON that contains one):
+
+```php
+// Guarded so the extension still boots on cores older than the media library.
+if (method_exists($registry, 'mediaUsages')) {
+    $registry->mediaUsages()->register(
+        label:   'Shop package',
+        model:   ShopPackage::class,
+        columns: ['image_path'],
+        title:   fn (ShopPackage $p) => $p->name,
+        url:     fn (ShopPackage $p) => route('admin.shop.packages.edit', $p),   // optional
+    );
+}
+```
+
+If your table does not exist yet (extension not migrated), the lookup skips it instead of failing.
 
 ---
 

@@ -4,7 +4,7 @@ import {
     LayoutDashboard, Users, ShieldCheck, Settings, Activity, FileText,
     Puzzle, Paintbrush, Server, HeartPulse, Download,
     ScrollText, List, Circle, Package, Globe, Newspaper, BarChart3, DatabaseBackup, BookOpen, Mail, TrendingUp, X,
-    KeyRound, Webhook, ChevronDown, CreditCard, Receipt, Flag,
+    KeyRound, Webhook, ChevronDown, CreditCard, Receipt, Flag, Images, Trash2,
 } from '@lucide/vue';
 import { nextTick, onMounted, onUnmounted, reactive, watch } from 'vue';
 import { useAdminSidebar } from '@/composables/useAdminSidebar';
@@ -40,7 +40,7 @@ const iconMap: Record<string, unknown> = {
     LayoutDashboard, Users, ShieldCheck, Settings, Activity, FileText,
     Puzzle, Paintbrush, Server, HeartPulse, Download, ScrollText, List,
     Package, Globe, Newspaper, BarChart3, DatabaseBackup, BookOpen, Mail, TrendingUp,
-    KeyRound, Webhook, CreditCard, Receipt, Flag,
+    KeyRound, Webhook, CreditCard, Receipt, Flag, Images, Trash2,
 };
 
 const page = usePage<SharedProps>();

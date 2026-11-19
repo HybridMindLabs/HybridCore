@@ -79,6 +79,12 @@ bloating the foundation.
 - API tokens for external integrations — scoped abilities, per-token rate limiting, one-click rotation
 - Outbound webhooks — any core or extension event (including `server.offline` / `server.online`),
   signed deliveries, delivery history, test-send, Discord-formatted embeds
+- **Page builder** — compose pages from blocks (hero, text, columns, live servers, latest news, FAQ,
+  call to action, image, gallery, YouTube, divider) with live preview, scheduled publishing and
+  a 30-version history; extensions add their own blocks
+- **Media library** — one place for every image: bulk upload (resized to WebP, animations kept),
+  folders, alt text, multi-select delete, and a "used on" lookup across pages, news, rules, settings
+  and extensions that guards against deleting images still in use
 - Settings, legal pages, menus, SEO + auto sitemap, email templates, maintenance mode
 - Extensions & themes management, system health, scheduled backups
 - **Self-update** from the panel or CLI — pre-flight checks, a database backup before migrating,

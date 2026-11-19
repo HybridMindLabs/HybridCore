@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\IpBanController;
 use App\Http\Controllers\Admin\LegalController;
 use App\Http\Controllers\Admin\MaintenanceController;
+use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\ModerationController;
 use App\Http\Controllers\Admin\NewsArticleController;
@@ -343,6 +344,9 @@ Route::middleware('perm:news.manage')->group(function (): void {
 Route::middleware('perm:content.view')->group(function (): void {
     Route::get('/pages', [PageController::class, 'index'])->name('admin.pages.index');
     Route::get('/menus', [MenuController::class, 'index'])->name('admin.menus.index');
+    Route::get('/media', [MediaController::class, 'index'])->name('admin.media.index');
+    Route::get('/media/browse', [MediaController::class, 'browse'])->name('admin.media.browse');
+    Route::get('/media/{media}/usages', [MediaController::class, 'usages'])->name('admin.media.usages');
 });
 Route::middleware('perm:content.manage')->group(function (): void {
     Route::get('/pages/create', [PageController::class, 'create'])->name('admin.pages.create');
@@ -350,6 +354,14 @@ Route::middleware('perm:content.manage')->group(function (): void {
     Route::get('/pages/{page}/edit', [PageController::class, 'edit'])->name('admin.pages.edit');
     Route::put('/pages/{page}', [PageController::class, 'update'])->name('admin.pages.update');
     Route::delete('/pages/{page}', [PageController::class, 'destroy'])->name('admin.pages.destroy');
+    Route::post('/pages/{page}/revisions/{revision}/restore', [PageController::class, 'restoreRevision'])->name('admin.pages.revisions.restore');
+    Route::post('/pages/preview', [PageController::class, 'preview'])->middleware('throttle:60,1,admin-pages-preview')->name('admin.pages.preview');
+    Route::post('/media', [MediaController::class, 'store'])->middleware('throttle:30,1,admin-media-upload')->name('admin.media.store');
+    Route::post('/media/scan', [MediaController::class, 'scan'])->middleware('throttle:5,1,admin-media-scan')->name('admin.media.scan');
+    Route::put('/media/{media}', [MediaController::class, 'update'])->name('admin.media.update');
+    Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('admin.media.destroy');
+    Route::post('/media/bulk-delete', [MediaController::class, 'bulkDestroy'])->name('admin.media.bulk-destroy');
+    Route::post('/pages/images', [PageController::class, 'uploadImage'])->middleware('throttle:30,1,admin-pages-images')->name('admin.pages.images.upload');
 
     Route::post('/menus', [MenuController::class, 'store'])->name('admin.menus.store');
     Route::get('/menus/{menu}/edit', [MenuController::class, 'edit'])->name('admin.menus.edit');

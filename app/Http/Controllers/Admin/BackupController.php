@@ -177,7 +177,7 @@ class BackupController extends Controller
                 }
                 Page::updateOrCreate(
                     ['slug' => $page['slug']],
-                    collect($page)->only(['title', 'body', 'status', 'seo_title', 'seo_description', 'published_at'])->toArray()
+                    collect($page)->only(['title', 'body', 'blocks', 'format', 'layout', 'status', 'seo_title', 'seo_description', 'published_at'])->toArray()
                 );
             }
             $restored[] = 'pages';
@@ -240,7 +240,7 @@ class BackupController extends Controller
     public function exportContent(): JsonResponse
     {
         $data = [
-            'pages' => Page::all(['title', 'slug', 'body', 'status', 'seo_title', 'seo_description', 'published_at'])->toArray(),
+            'pages' => Page::all(['title', 'slug', 'body', 'blocks', 'format', 'layout', 'status', 'seo_title', 'seo_description', 'published_at'])->toArray(),
             'menus' => Menu::with('items')->get()->map(fn (Menu $m) => [
                 'name' => $m->name,
                 'slug' => $m->slug,
@@ -272,7 +272,7 @@ class BackupController extends Controller
                 'extensions' => Extension::all(['name', 'slug', 'version', 'author', 'type', 'enabled', 'path'])->toArray(),
                 'themes' => Theme::all(['name', 'slug', 'version', 'author', 'type', 'active'])->toArray(),
                 'content' => [
-                    'pages' => Page::all(['title', 'slug', 'body', 'status', 'seo_title', 'seo_description', 'published_at'])->toArray(),
+                    'pages' => Page::all(['title', 'slug', 'body', 'blocks', 'format', 'layout', 'status', 'seo_title', 'seo_description', 'published_at'])->toArray(),
                     'menus' => Menu::with('items')->get()->map(fn (Menu $m) => [
                         'name' => $m->name,
                         'slug' => $m->slug,

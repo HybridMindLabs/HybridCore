@@ -34,6 +34,8 @@ class ExtensionRegistry
         private readonly PaymentEventRegistry $payments,
         private readonly SubscriptionEventRegistry $subscriptions,
         private readonly WidgetRegistry $widgets,
+        private readonly PageBlockRegistry $pageBlocks,
+        private readonly MediaUsageRegistry $mediaUsages,
         private readonly PermissionRegistry $permissions,
         private readonly AbilityRegistry $abilities,
         private readonly SettingsRegistry $settings,
@@ -140,6 +142,18 @@ class ExtensionRegistry
     public function widgets(): WidgetRegistry
     {
         return $this->widgets;
+    }
+
+    /** Block types offered by the page builder. */
+    public function pageBlocks(): PageBlockRegistry
+    {
+        return $this->pageBlocks;
+    }
+
+    /** Model columns that can hold a media-library image, for "Used on" and the delete guard. */
+    public function mediaUsages(): MediaUsageRegistry
+    {
+        return $this->mediaUsages;
     }
 
     public function permissions(): PermissionRegistry

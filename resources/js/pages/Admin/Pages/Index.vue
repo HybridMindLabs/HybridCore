@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { confirm } from '@/composables/useConfirm';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { FileText, Plus, Pencil, Trash2, ExternalLink, Globe, FileX, Search, X } from '@lucide/vue';
+import { FileText, Plus, Pencil, Trash2, ExternalLink, Globe, FileX, Search, X, CalendarClock, Blocks } from '@lucide/vue';
 import { ref, computed } from 'vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import PageHeader from '@/components/UI/PageHeader.vue';
@@ -12,13 +12,15 @@ interface PageRow {
     title: string;
     slug: string;
     status: string;
+    format: string;
+    published_at: string | null;
     updated_at: string | null;
 }
 
 const props = defineProps<{ pages: PageRow[] }>();
 
 const search = ref('');
-const statusFilter = ref<'all' | 'published' | 'draft'>('all');
+const statusFilter = ref<'all' | 'published' | 'scheduled' | 'draft'>('all');
 
 const filteredPages = computed(() => {
     const q = search.value.trim().toLowerCase();
@@ -83,6 +85,7 @@ async function destroy(page: PageRow) {
                 <select v-model="statusFilter" class="bg-admin-surface border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-blue-500">
                     <option value="all">All statuses</option>
                     <option value="published">Published</option>
+                    <option value="scheduled">Scheduled</option>
                     <option value="draft">Draft</option>
                 </select>
             </div>
@@ -113,6 +116,9 @@ async function destroy(page: PageRow) {
                             >
                                 {{ page.title }}
                             </Link>
+                            <span v-if="page.format === 'blocks'" class="ml-2 inline-flex items-center gap-1 align-middle text-[10px] font-medium text-zinc-500" title="Built with blocks">
+                                <Blocks :size="10" /> Blocks
+                            </span>
                         </td>
                         <td class="px-4 py-3 text-zinc-600 text-xs font-mono hidden sm:table-cell">
                             /{{ page.slug }}
@@ -122,11 +128,13 @@ async function destroy(page: PageRow) {
                                 class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full"
                                 :class="page.status === 'published'
                                     ? 'bg-emerald-500/10 text-emerald-400'
-                                    : 'bg-zinc-800 text-zinc-500'"
+                                    : page.status === 'scheduled' ? 'bg-amber-500/10 text-amber-400' : 'bg-zinc-800 text-zinc-500'"
+                                :title="page.status === 'scheduled' && page.published_at ? `Goes live ${new Date(page.published_at).toLocaleString()}` : undefined"
                             >
                                 <Globe v-if="page.status === 'published'" :size="10" :stroke-width="2" />
+                                <CalendarClock v-else-if="page.status === 'scheduled'" :size="10" :stroke-width="2" />
                                 <FileX v-else :size="10" :stroke-width="2" />
-                                {{ page.status === 'published' ? 'Published' : 'Draft' }}
+                                {{ page.status === 'published' ? 'Published' : page.status === 'scheduled' ? 'Scheduled' : 'Draft' }}
                             </span>
                         </td>
                         <td class="px-4 py-3 text-zinc-600 text-xs hidden md:table-cell">

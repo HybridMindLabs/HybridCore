@@ -57,7 +57,7 @@ class AdminPageTest extends TestCase
                 'body' => '<p>Hello</p>',
                 'status' => 'published',
             ])
-            ->assertRedirect(route('admin.pages.index'));
+            ->assertRedirect(route('admin.pages.edit', Page::where('slug', 'about-us')->value('id')));
 
         $this->assertDatabaseHas('pages', ['slug' => 'about-us', 'status' => 'published']);
         $this->assertNotNull(Page::where('slug', 'about-us')->first()->published_at);
@@ -87,7 +87,8 @@ class AdminPageTest extends TestCase
                 'body' => $page->body,
                 'status' => 'published',
             ])
-            ->assertRedirect(route('admin.pages.index'));
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('pages', ['id' => $page->id, 'title' => 'Updated Title']);
     }

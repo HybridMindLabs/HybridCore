@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -13,6 +14,7 @@ use Illuminate\Support\Carbon;
  * @property string $title
  * @property string $slug
  * @property string|null $body
+ * @property array<int, array<string, mixed>>|null $blocks
  * @property string $format
  * @property string $layout
  * @property string $status
@@ -55,27 +57,66 @@ class Page extends Model
 
     public const STATUSES = ['draft', 'published'];
 
-    public const FORMATS = ['markdown', 'html'];
+    public const FORMATS = ['markdown', 'html', 'blocks'];
+
+    /** Revisions kept per page; older ones are pruned on save. */
+    public const MAX_REVISIONS = 30;
 
     public const LAYOUTS = ['default', 'wide', 'centered', 'sidebar'];
 
     protected $fillable = [
-        'title', 'slug', 'body', 'format', 'layout', 'status',
+        'title', 'slug', 'body', 'blocks', 'format', 'layout', 'status',
         'seo_title', 'seo_description', 'seo_og_image', 'published_at',
     ];
 
     protected function casts(): array
     {
-        return ['published_at' => 'datetime'];
+        return ['published_at' => 'datetime', 'blocks' => 'array'];
     }
 
+    /** Published and past its publish time — a future published_at schedules the page. */
     public function scopePublished(Builder $query): Builder
     {
-        return $query->where('status', 'published');
+        return $query->where('status', 'published')
+            ->where(fn (Builder $q) => $q->whereNull('published_at')->orWhere('published_at', '<=', now()));
     }
 
     public function isPublished(): bool
     {
         return $this->status === 'published';
+    }
+
+    public function isScheduled(): bool
+    {
+        return $this->isPublished() && $this->published_at?->isFuture() === true;
+    }
+
+    public function revisions(): HasMany
+    {
+        return $this->hasMany(PageRevision::class)->orderByDesc('id');
+    }
+
+    /**
+     * Store a copy of the page — as it is now, or the given attributes (e.g.
+     * getOriginal() before a save) — keeping the newest MAX_REVISIONS copies.
+     *
+     * @param  array<string, mixed>|null  $attributes
+     */
+    public function saveRevision(?User $user, ?array $attributes = null): void
+    {
+        $source = $attributes ?? $this->getAttributes();
+        $blocks = $attributes === null ? $this->blocks : ($attributes['blocks'] ?? null);
+
+        $this->revisions()->create([
+            'user_id' => $user?->id,
+            'title' => $source['title'],
+            'format' => $source['format'] ?? 'markdown',
+            'layout' => $source['layout'] ?? 'default',
+            'body' => $source['body'] ?? null,
+            'blocks' => $blocks,
+        ]);
+
+        $keep = $this->revisions()->limit(self::MAX_REVISIONS)->pluck('id');
+        $this->revisions()->whereNotIn('id', $keep)->delete();
     }
 }

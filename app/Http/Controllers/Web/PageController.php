@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Page;
+use App\Services\Extensions\Registries\PageBlockRegistry;
 use App\Support\Seo;
 use HTMLPurifier;
 use HTMLPurifier_Config;
@@ -23,11 +24,12 @@ class PageController extends Controller
         ]);
     }
 
-    public function show(string $slug): Response
+    public function show(string $slug, PageBlockRegistry $blocks): Response
     {
         $page = Page::published()->where('slug', $slug)->firstOrFail();
 
         $body = match ($page->format) {
+            'blocks' => null,
             'html' => $page->body ? $this->sanitizeHtml($this->substitutePlaceholders($page->body)) : null,
             default => $page->body ? $this->renderMarkdown($page->body) : null,
         };
@@ -38,6 +40,7 @@ class PageController extends Controller
                 'body' => $body,
                 'layout' => $page->layout ?? 'default',
                 'format' => $page->format ?? 'markdown',
+                'blocks' => $page->format === 'blocks' ? $blocks->render($page->blocks ?? []) : [],
             ],
             'seo' => Seo::forPage($page),
         ]);

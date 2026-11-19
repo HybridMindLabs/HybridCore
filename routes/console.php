@@ -11,11 +11,16 @@ use App\Models\ServerSnapshot;
 use App\Models\WebhookDelivery;
 use App\Services\AnalyticsService;
 use App\Services\Bridge\BridgeService;
+use App\Services\Media\MediaLibrary;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Facades\Schema;
+
+Artisan::command('hybridcore:media:scan', function (MediaLibrary $library) {
+    $this->info('Added '.$library->scan().' image(s) to the media library.');
+})->purpose('Add images already on the public disk to the media library');
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());

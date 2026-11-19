@@ -28,6 +28,7 @@ class CoreNavigation
         // ── Content ───────────────────────────────────────────────
         $nav->register('navigation.pages', 'admin.pages.index', 'FileText', 'navigation.sections.content', 'content.view', 10);
         $nav->register('navigation.menus', 'admin.menus.index', 'List', 'navigation.sections.content', 'content.view', 20);
+        $nav->register('Media library', 'admin.media.index', 'Images', 'navigation.sections.content', 'content.view', 25);
         $nav->register('navigation.rules', 'admin.rules.index', 'BookOpen', 'navigation.sections.content', 'settings.view', 30);
         $nav->register('navigation.news_articles', 'admin.news.articles.index', 'Newspaper', 'navigation.sections.content', 'news.view', 40);
         $nav->register('navigation.news_categories', 'admin.news.categories.index', 'BarChart3', 'navigation.sections.content', 'news.view', 50);
