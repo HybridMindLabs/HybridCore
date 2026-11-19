@@ -79,4 +79,16 @@ class ExtensionManifestValidatorTest extends TestCase
         $this->assertFalse($result['valid']);
         $this->assertCount(2, $result['errors']);
     }
+
+    public function test_folders_must_stay_inside_the_extension(): void
+    {
+        $base = ['id' => 'a/b', 'name' => 'X', 'version' => '1.0.0'];
+
+        $this->assertTrue($this->validator->validate([...$base, 'assets' => 'resources/assets', 'migrations' => 'database/migrations'])['valid']);
+
+        foreach (['../../..', '/etc', 'database/../../../database/migrations', 'C:/x', 'a\\..\\b'] as $path) {
+            $this->assertFalse($this->validator->validate([...$base, 'assets' => $path])['valid'], $path);
+            $this->assertFalse($this->validator->validate([...$base, 'migrations' => $path])['valid'], $path);
+        }
+    }
 }

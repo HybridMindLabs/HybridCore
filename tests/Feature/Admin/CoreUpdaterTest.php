@@ -282,6 +282,17 @@ class CoreUpdaterTest extends TestCase
         $this->assertFileDoesNotExist(storage_path('framework/down'));
     }
 
+    public function test_a_revert_target_that_is_not_a_commit_hash_is_refused(): void
+    {
+        $updater = $this->updater();
+
+        $result = $updater->revert(['from' => '--upload-pack=touch /tmp/x', 'to' => 'bbb2222']);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame([], array_filter($updater->ran, fn (string $line) => str_starts_with($line, 'git reset')));
+        $this->assertFileDoesNotExist(storage_path('framework/down'));
+    }
+
     public function test_the_panel_hands_the_update_to_a_background_process(): void
     {
         config(['hybridcore.panel_updates' => true, 'hybridcore.update_in_background' => true]);

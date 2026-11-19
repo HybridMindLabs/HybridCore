@@ -2,7 +2,8 @@
 
 namespace App\Services;
 
-use App\Notifications\SystemNotification;
+use App\Services\Update\UpdateProgress;
+use App\Services\Update\UpdateReporter;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -21,60 +22,33 @@ use Throwable;
  * the checkout is reset and dependencies reinstalled — so a broken update
  * never leaves the site live on a half-applied release.
  *
- * Progress is written to the cache while it runs — the planned steps, the one
- * running now with its live output, durations, a percentage and an estimate
- * based on the previous run — so the panel can show a progress bar even
- * though the update request itself only answers at the very end.
+ * Live progress for the panel lives in UpdateProgress; the log file,
+ * notifications and webhooks at the end in UpdateReporter.
  */
 class CoreUpdater
 {
-    public const PROGRESS_KEY = 'hybridcore.update.progress';
+    public const PROGRESS_KEY = UpdateProgress::KEY;
 
     private const LOCK_KEY = 'hybridcore.update.lock';
 
-    /** How long each step took last time, for the time estimate. */
-    private const DURATIONS_KEY = 'hybridcore.update.durations';
-
-    /**
-     * Rough share of a typical run per step; refined by real durations once
-     * an update has finished on this server.
-     */
-    private const WEIGHTS = [
-        'maintenance on' => 1, 'git fetch' => 4, 'git pull' => 3, 'fix folder permissions' => 1,
-        'composer install' => 20, 'database backup' => 6, 'php artisan migrate' => 8,
-        'php artisan hybridcore:themes:sync' => 2, 'php artisan hybridcore:build' => 40,
-        'restart SSR renderer' => 2, 'php artisan optimize:clear' => 2, 'php artisan queue:restart' => 1,
-        'health check' => 3, 'maintenance off' => 1, 'restore database backup' => 8,
-        'roll back database changes' => 4, 'git reset to previous version' => 2,
-    ];
-
     private const MIN_FREE_BYTES = 512 * 1024 * 1024;
 
-    /** @var array<int, array{step: string, output: string, ok: bool, seconds?: float}> */
-    private array $log = [];
+    private const COMPOSER_INSTALL = ['composer', 'install', '--no-interaction', '--no-dev', '--optimize-autoloader'];
 
-    /** @var array<int, string> */
-    private array $plan = [];
+    private readonly UpdateProgress $progress;
 
-    /** @var array{step: string, started_at: string, output: string}|null */
-    private ?array $current = null;
-
-    private float $stepStartedAt = 0;
-
-    private float $runStartedAt = 0;
-
-    private float $lastFlush = 0;
-
-    /** @var (callable(array<int, array{step: string, output: string, ok: bool}>): void)|null */
-    private $onStep = null;
+    private readonly UpdateReporter $reporter;
 
     public function __construct(
         private readonly GitUpdateVerifier $verifier,
         private readonly DatabaseBackupService $backups,
-        private readonly ActivityLogService $activity,
-        private readonly AdminNotifier $notifier,
-        private readonly WebhookDispatcher $webhooks,
-    ) {}
+        ActivityLogService $activity,
+        AdminNotifier $notifier,
+        WebhookDispatcher $webhooks,
+    ) {
+        $this->progress = new UpdateProgress;
+        $this->reporter = new UpdateReporter($activity, $notifier, $webhooks);
+    }
 
     /**
      * Problems that make starting an update unsafe. Empty means go.
@@ -115,12 +89,37 @@ class CoreUpdater
     }
 
     /**
+     * The steps a run with these options goes through, in order.
+     *
+     * @return array<int, string>
+     */
+    public function plan(bool $pull = true, bool $composer = true, bool $build = true): array
+    {
+        return array_values(array_filter([
+            'maintenance on',
+            $pull ? 'git fetch' : null,
+            $pull ? 'git pull' : null,
+            'fix folder permissions',
+            $composer ? 'composer install' : null,
+            'database backup',
+            'php artisan migrate',
+            'php artisan hybridcore:themes:sync',
+            $build ? 'php artisan hybridcore:build' : null,
+            $build && config('inertia.ssr.enabled') ? 'restart SSR renderer' : null,
+            'php artisan optimize:clear',
+            'php artisan queue:restart',
+            'health check',
+            'maintenance off',
+        ]));
+    }
+
+    /**
      * @param  (callable(array<int, array{step: string, output: string, ok: bool}>): void)|null  $onStep
      * @return array<string, mixed>
      */
     public function run(bool $pull = true, bool $composer = true, bool $build = true, ?callable $onStep = null): array
     {
-        $this->start($this->plan($pull, $composer, $build), $onStep);
+        $this->progress->start($this->plan($pull, $composer, $build), $onStep);
 
         $lock = Cache::lock(self::LOCK_KEY, 3600);
         if (! $lock->get()) {
@@ -148,7 +147,7 @@ class CoreUpdater
             $this->fixPermissions();
 
             if ($composer) {
-                $this->step('composer install', ['composer', 'install', '--no-interaction', '--no-dev', '--optimize-autoloader']);
+                $this->step('composer install', self::COMPOSER_INSTALL);
             }
 
             $backup = $this->backupDatabase();
@@ -191,10 +190,28 @@ class CoreUpdater
                 $this->result(false, $message, $from, $to, $rolledBack, $backup), $properties);
         }
 
-        $this->rememberDurations();
+        $this->progress->rememberDurations();
 
         return $this->conclude('system.updated', $from === $to ? 'Ran system update (already on the latest code)' : "Updated from {$from} to {$to}",
             $this->result(true, 'Update complete.', $from, $to, false, $backup), $properties);
+    }
+
+    /** @return array<int, string> */
+    public function revertPlan(bool $restoreDatabase = false): array
+    {
+        return array_values(array_filter([
+            'maintenance on',
+            $restoreDatabase ? 'restore database backup' : 'roll back database changes',
+            'git reset to previous version',
+            'fix folder permissions',
+            'composer install',
+            'php artisan hybridcore:build',
+            config('inertia.ssr.enabled') ? 'restart SSR renderer' : null,
+            'php artisan optimize:clear',
+            'php artisan queue:restart',
+            'health check',
+            'maintenance off',
+        ]));
     }
 
     /**
@@ -207,7 +224,13 @@ class CoreUpdater
      */
     public function revert(array $update, bool $restoreDatabase = false, ?callable $onStep = null): array
     {
-        $this->start($this->revertPlan($restoreDatabase), $onStep);
+        $this->progress->start($this->revertPlan($restoreDatabase), $onStep);
+
+        // The commit goes straight to `git reset --hard`; anything but a plain
+        // hash (an option such as --foo, a branch name) is refused.
+        if (! preg_match('/^[0-9a-f]{7,40}$/', (string) ($update['from'] ?? ''))) {
+            return $this->finish($this->result(false, 'This update has no valid version to go back to.', '', '', false, null));
+        }
 
         $lock = Cache::lock(self::LOCK_KEY, 3600);
         if (! $lock->get()) {
@@ -239,7 +262,7 @@ class CoreUpdater
 
             $this->step('git reset to previous version', ['git', 'reset', '--hard', $update['from']]);
             $this->fixPermissions();
-            $this->step('composer install', ['composer', 'install', '--no-interaction', '--no-dev', '--optimize-autoloader']);
+            $this->step('composer install', self::COMPOSER_INSTALL);
             $this->artisanStep('hybridcore:build', ['--sync' => true]);
             $this->restartSsr();
             $this->artisanStep('optimize:clear');
@@ -264,24 +287,6 @@ class CoreUpdater
             $this->result(true, "Rolled back to {$to}.", $from, $to, false, null), $properties);
     }
 
-    /** @return array<int, string> */
-    public function revertPlan(bool $restoreDatabase = false): array
-    {
-        return array_values(array_filter([
-            'maintenance on',
-            $restoreDatabase ? 'restore database backup' : 'roll back database changes',
-            'git reset to previous version',
-            'fix folder permissions',
-            'composer install',
-            'php artisan hybridcore:build',
-            config('inertia.ssr.enabled') ? 'restart SSR renderer' : null,
-            'php artisan optimize:clear',
-            'php artisan queue:restart',
-            'health check',
-            'maintenance off',
-        ]));
-    }
-
     /**
      * Show the panel an update that was handed to a background process and
      * has not reported yet, so nobody starts a second one meanwhile.
@@ -290,11 +295,13 @@ class CoreUpdater
      */
     public function markQueued(array $plan): void
     {
-        $this->plan = $plan;
-        $this->log = [];
-        $this->runStartedAt = microtime(true);
-        $this->current = ['step' => 'starting', 'started_at' => now()->toIso8601String(), 'output' => ''];
-        $this->progress(true);
+        $this->progress->queued($plan);
+    }
+
+    /** A run that stopped reporting for 20 minutes was killed (timeout, OOM) and no longer counts. */
+    public function isRunning(): bool
+    {
+        return UpdateProgress::isRunning();
     }
 
     /** The php CLI binary — under PHP-FPM, PHP_BINARY points at php-fpm itself. */
@@ -310,22 +317,24 @@ class CoreUpdater
         return $found && ! str_contains(basename($found), 'fpm') ? $found : 'php';
     }
 
-    /** @param  array<int, string>  $plan */
-    private function start(array $plan, ?callable $onStep): void
+    /**
+     * Output arriving while a step runs.
+     *
+     * @internal called by exec() and the artisan output buffer
+     */
+    public function live(string $chunk): void
     {
-        $this->log = [];
-        $this->onStep = $onStep;
-        $this->plan = $plan;
-        $this->current = null;
-        $this->runStartedAt = microtime(true);
+        $this->progress->live($chunk);
     }
+
+    // ── Steps ────────────────────────────────────────────────────────
 
     /** Maintenance mode with a one-off bypass secret, so the health check can reach the site. */
     private function maintenanceOn(): string
     {
         $secret = Str::random(40);
 
-        $this->progress(true);
+        $this->progress->flush(true);
         $this->begin('maintenance on');
         Artisan::call('down', ['--retry' => 30, '--secret' => $secret]);
         $this->record('maintenance on', '', true);
@@ -369,105 +378,20 @@ class CoreUpdater
         $this->step('health check', [self::phpBinary(), 'artisan', 'hybridcore:smoke', '--secret='.$secret]);
     }
 
-    /**
-     * Keep the full log, record the outcome and tell the staff.
-     *
-     * @param  array<string, mixed>  $result
-     * @param  array<string, mixed>  $properties
-     * @return array<string, mixed>
-     */
-    private function conclude(string $event, string $description, array $result, array $properties): array
+    private function backupDatabase(): ?string
     {
-        $result['log_file'] = $this->persistLog($event, $result);
+        $this->begin('database backup');
 
-        try {
-            $this->activity->log($event, $description, null, [...$properties, 'log_file' => $result['log_file'], 'seconds' => $result['seconds']]);
-            $this->notify($event, $result);
-        } catch (Throwable $e) {
-            report($e);
-        }
-
-        return $this->finish($result);
-    }
-
-    /** @param  array<string, mixed>  $result */
-    private function persistLog(string $event, array $result): ?string
-    {
-        try {
-            $name = 'update-'.now()->format('Y-m-d-His').'.json';
-            $dir = storage_path('app/updates');
-            if (! is_dir($dir)) {
-                mkdir($dir, 0755, true);
-            }
-            file_put_contents($dir.'/'.$name, json_encode(['event' => $event, 'at' => now()->toIso8601String(), ...$result], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-
-            return $name;
-        } catch (Throwable $e) {
-            report($e);
+        if (! in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb'], true)) {
+            $this->record('database backup', 'Skipped — only MySQL/MariaDB databases are backed up automatically.', true);
 
             return null;
         }
-    }
 
-    /** @param  array<string, mixed>  $result */
-    private function notify(string $event, array $result): void
-    {
-        $ok = $result['success'];
-        $what = match ($event) {
-            'system.reverted' => "HybridCore was rolled back to {$result['to']}",
-            'system.updated' => $result['from'] === $result['to'] ? 'The system update finished (no new code)' : "HybridCore was updated from {$result['from']} to {$result['to']}",
-            default => 'The system update failed'.($result['rolled_back'] ? ' — the previous version was restored' : ''),
-        };
+        $result = $this->backups->create();
+        $this->record('database backup', $result['ok'] ? 'Saved '.$result['filename'] : $result['error'], $result['ok']);
 
-        $this->notifier->send('system_update', new SystemNotification(
-            message: $what.' ('.$result['seconds'].'s).',
-            level: $ok ? 'success' : 'danger',
-            actionUrl: route('admin.updates.index'),
-            actionLabel: 'Open System Update',
-        ));
-
-        $this->webhooks->dispatch($event, [
-            'success' => $ok,
-            'message' => $result['message'],
-            'from' => $result['from'],
-            'to' => $result['to'],
-            'rolled_back' => $result['rolled_back'],
-            'seconds' => $result['seconds'],
-        ]);
-    }
-
-    /**
-     * The steps a run with these options goes through, in order.
-     *
-     * @return array<int, string>
-     */
-    public function plan(bool $pull = true, bool $composer = true, bool $build = true): array
-    {
-        return array_values(array_filter([
-            'maintenance on',
-            $pull ? 'git fetch' : null,
-            $pull ? 'git pull' : null,
-            'fix folder permissions',
-            $composer ? 'composer install' : null,
-            'database backup',
-            'php artisan migrate',
-            'php artisan hybridcore:themes:sync',
-            $build ? 'php artisan hybridcore:build' : null,
-            $build && config('inertia.ssr.enabled') ? 'restart SSR renderer' : null,
-            'php artisan optimize:clear',
-            'php artisan queue:restart',
-            'health check',
-            'maintenance off',
-        ]));
-    }
-
-    /** A run that stopped reporting for 20 minutes was killed (timeout, OOM) and no longer counts. */
-    public function isRunning(): bool
-    {
-        $progress = Cache::get(self::PROGRESS_KEY);
-
-        return ($progress['running'] ?? false) === true
-            && now()->diffInMinutes($progress['updated_at'] ?? now(), absolute: true) < 20;
+        return $result['ok'] ? $result['filename'] : null;
     }
 
     /** Undo a failed run: its migrations first (their down() lives in the new code), then the code. */
@@ -481,7 +405,7 @@ class CoreUpdater
             $this->step('git reset to previous version', ['git', 'reset', '--hard', $from]);
 
             if ($composer) {
-                $this->step('composer install (previous version)', ['composer', 'install', '--no-interaction', '--no-dev', '--optimize-autoloader']);
+                $this->step('composer install (previous version)', self::COMPOSER_INSTALL);
             }
 
             // The new site files were already built; the old code needs its own.
@@ -497,22 +421,6 @@ class CoreUpdater
 
             return false;
         }
-    }
-
-    private function backupDatabase(): ?string
-    {
-        $this->begin('database backup');
-
-        if (DB::connection()->getDriverName() !== 'mysql' && DB::connection()->getDriverName() !== 'mariadb') {
-            $this->record('database backup', 'Skipped — only MySQL/MariaDB databases are backed up automatically.', true);
-
-            return null;
-        }
-
-        $result = $this->backups->create();
-        $this->record('database backup', $result['ok'] ? 'Saved '.$result['filename'] : $result['error'], $result['ok']);
-
-        return $result['ok'] ? $result['filename'] : null;
     }
 
     private function latestBatch(): int
@@ -562,8 +470,7 @@ class CoreUpdater
     {
         $this->begin("php artisan {$command}");
 
-        $updater = $this;
-        $output = new class($updater) extends BufferedOutput
+        $output = new class($this) extends BufferedOutput
         {
             public function __construct(private readonly CoreUpdater $updater)
             {
@@ -585,156 +492,51 @@ class CoreUpdater
         }
     }
 
-    /** Mark a step as started, so the panel can show what is running right now. */
     private function begin(string $step): void
     {
-        $this->stepStartedAt = microtime(true);
-        $this->current = ['step' => $step, 'started_at' => now()->toIso8601String(), 'output' => ''];
-        $this->progress(true);
-    }
-
-    /**
-     * Output arriving while a step runs. Kept to the last few KB and written
-     * to the cache at most once a second.
-     *
-     * @internal called by exec() and the artisan output buffer
-     */
-    public function live(string $chunk): void
-    {
-        if ($this->current === null) {
-            return;
-        }
-
-        $this->current['output'] = mb_substr($this->current['output'].$chunk, -4000);
-
-        if (microtime(true) - $this->lastFlush >= 1) {
-            $this->progress(true);
-        }
+        $this->progress->begin($step);
     }
 
     private function record(string $step, string $output, bool $ok): void
     {
-        $seconds = $this->current !== null && $this->current['step'] === $step
-            ? round(microtime(true) - $this->stepStartedAt, 1)
-            : 0.0;
-
-        $this->log[] = ['step' => $step, 'output' => mb_substr($output, 0, 8000), 'ok' => $ok, 'seconds' => $seconds];
-        $this->current = null;
-        $this->progress(true);
-
-        if ($this->onStep) {
-            ($this->onStep)($this->log);
-        }
+        $this->progress->record($step, $output, $ok);
     }
 
-    /** Lets the panel follow a long update even if its own request times out. */
-    private function progress(bool $running, ?array $result = null): void
+    // ── Result ───────────────────────────────────────────────────────
+
+    /**
+     * Keep the full log, record the outcome and tell the staff.
+     *
+     * @param  array<string, mixed>  $result
+     * @param  array<string, mixed>  $properties
+     * @return array<string, mixed>
+     */
+    private function conclude(string $event, string $description, array $result, array $properties): array
     {
-        $this->lastFlush = microtime(true);
+        $result['log_file'] = $this->reporter->report($event, $description, $result, $properties);
 
-        Cache::put(self::PROGRESS_KEY, [
-            'running' => $running,
-            'plan' => $this->plan,
-            'log' => $this->log,
-            'current' => $this->current,
-            'percent' => $result !== null ? 100 : $this->percent(),
-            'eta_seconds' => $result !== null ? 0 : $this->eta(),
-            'elapsed_seconds' => $this->runStartedAt ? (int) round(microtime(true) - $this->runStartedAt) : 0,
-            'result' => $result,
-            'updated_at' => now()->toIso8601String(),
-        ], 3600);
-    }
-
-    /** Share of the planned work that is done, weighted by how long each step usually takes. */
-    private function percent(): int
-    {
-        $weights = $this->weights();
-        $total = array_sum($weights) ?: 1;
-        $done = 0.0;
-
-        foreach (array_unique(array_column($this->log, 'step')) as $step) {
-            $done += $weights[$step] ?? 0;
-        }
-
-        // The step running now counts in proportion to its usual duration, never as finished.
-        if ($this->current !== null && isset($weights[$this->current['step']])) {
-            $expected = $this->expectedSeconds($this->current['step']);
-            $share = $expected > 0 ? min(0.9, (microtime(true) - $this->stepStartedAt) / $expected) : 0.5;
-            $done += $weights[$this->current['step']] * $share;
-        }
-
-        return (int) min(99, floor($done / $total * 100));
-    }
-
-    /** Seconds left, from how long the remaining steps took last time; null before any update has finished here. */
-    private function eta(): ?int
-    {
-        $durations = Cache::get(self::DURATIONS_KEY);
-        if (! is_array($durations)) {
-            return null;
-        }
-
-        $finished = array_flip(array_column($this->log, 'step'));
-        $left = 0.0;
-        foreach ($this->plan as $step) {
-            if (isset($finished[$step])) {
-                continue;
-            }
-            $left += (float) ($durations[$step] ?? 0);
-            if ($this->current !== null && $this->current['step'] === $step) {
-                $left -= microtime(true) - $this->stepStartedAt;
-            }
-        }
-
-        return max(0, (int) round($left));
-    }
-
-    /** @return array<string, float> step => weight, only for steps in this run's plan */
-    private function weights(): array
-    {
-        $durations = Cache::get(self::DURATIONS_KEY);
-
-        return collect($this->plan)->mapWithKeys(fn (string $step) => [
-            $step => is_array($durations) && isset($durations[$step])
-                ? max(0.5, (float) $durations[$step])
-                : (float) (self::WEIGHTS[$step] ?? 1),
-        ])->all();
-    }
-
-    private function expectedSeconds(string $step): float
-    {
-        $durations = Cache::get(self::DURATIONS_KEY);
-
-        return is_array($durations) && isset($durations[$step]) ? (float) $durations[$step] : (float) (self::WEIGHTS[$step] ?? 1) * 3;
-    }
-
-    private function rememberDurations(): void
-    {
-        Cache::forever(self::DURATIONS_KEY, collect($this->log)
-            ->filter(fn (array $e) => in_array($e['step'], $this->plan, true))
-            ->mapWithKeys(fn (array $e) => [$e['step'] => $e['seconds'] ?? 0])
-            ->all());
+        return $this->finish($result);
     }
 
     /**
-     * @param  array{success: bool, message: string, log: array<int, array{step: string, output: string, ok: bool}>, from: string, to: string, rolled_back: bool, backup: ?string}  $result
-     * @return array{success: bool, message: string, log: array<int, array{step: string, output: string, ok: bool}>, from: string, to: string, rolled_back: bool, backup: ?string}
+     * @param  array<string, mixed>  $result
+     * @return array<string, mixed>
      */
     private function finish(array $result): array
     {
-        $this->progress(false, $result);
+        $this->progress->flush(false, $result);
 
         return $result;
     }
 
-    /** @return array{success: bool, message: string, log: array<int, array{step: string, output: string, ok: bool}>, from: string, to: string, rolled_back: bool, backup: ?string} */
+    /** @return array{success: bool, message: string, log: array<int, array{step: string, output: string, ok: bool}>, seconds: int, from: string, to: string, rolled_back: bool, backup: ?string} */
     private function result(bool $success, string $message, string $from, string $to, bool $rolledBack, ?string $backup): array
     {
         return [
             'success' => $success,
             'message' => $message,
-            'log' => $this->log,
-            'seconds' => $this->runStartedAt ? (int) round(microtime(true) - $this->runStartedAt) : 0,
+            'log' => $this->progress->log(),
+            'seconds' => $this->progress->elapsedSeconds(),
             'from' => $from,
             'to' => $to,
             'rolled_back' => $rolledBack,

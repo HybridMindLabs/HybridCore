@@ -53,16 +53,24 @@ class ExtensionManifestValidator
         }
 
         // Type checks for optional structures.
-        $arrayFields = ['permissions', 'settings', 'menu', 'widgets', 'requires', 'assets', 'translations', 'routes', 'providers'];
+        $arrayFields = ['permissions', 'settings', 'menu', 'widgets', 'requires', 'translations', 'routes', 'providers'];
         foreach ($arrayFields as $field) {
             if (isset($manifest[$field]) && ! is_array($manifest[$field])) {
                 $errors[] = "field {$field} must be an object/array";
             }
         }
 
-        foreach (['provider', 'migrations', 'lang', 'lang_namespace'] as $field) {
+        foreach (['provider', 'migrations', 'lang', 'lang_namespace', 'assets', 'seeder'] as $field) {
             if (isset($manifest[$field]) && ! is_string($manifest[$field])) {
                 $errors[] = "field {$field} must be a string";
+            }
+        }
+
+        // Folders inside the extension. Anything pointing out of it could
+        // publish the app's own files (assets) or reset core tables (migrations).
+        foreach (['migrations', 'lang', 'assets'] as $field) {
+            if (is_string($manifest[$field] ?? null) && ! self::isInsidePath($manifest[$field])) {
+                $errors[] = "field {$field} must be a folder inside the extension";
             }
         }
 
@@ -71,5 +79,18 @@ class ExtensionManifestValidator
             'errors' => $errors,
             'warnings' => $warnings,
         ];
+    }
+
+    /** A relative path that stays inside the folder it is resolved against. */
+    public static function isInsidePath(string $path): bool
+    {
+        $path = trim($path);
+
+        return $path !== ''
+            && ! str_starts_with($path, '/')
+            && ! str_contains($path, '\\')
+            && ! str_contains($path, "\0")
+            && preg_match('/^[A-Za-z]:/', $path) !== 1
+            && ! in_array('..', explode('/', $path), true);
     }
 }
