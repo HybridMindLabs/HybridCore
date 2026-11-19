@@ -81,4 +81,46 @@ class MediaUsageRegistry
 
         return $usages;
     }
+
+    /**
+     * Point every registered column that holds $old at $new instead, in
+     * whichever form it holds it (plain or JSON-escaped). Returns how many
+     * values changed. Written with a plain update, so model events and
+     * caches are not touched — clear the cache afterwards.
+     */
+    public function repoint(string $old, string $new): int
+    {
+        $like = '%'.addcslashes(basename($old), '%_').'%';
+        $pairs = [$old => $new, str_replace('/', '\\/', $old) => str_replace('/', '\\/', $new)];
+        $changed = 0;
+
+        foreach ($this->sources as $source) {
+            try {
+                $rows = $source['model']::query()
+                    ->where(fn ($q) => collect($source['columns'])->each(fn (string $c) => $q->orWhere($c, 'like', $like)))
+                    ->get();
+            } catch (Throwable $e) {
+                report($e);
+
+                continue;
+            }
+
+            foreach ($rows as $row) {
+                $updates = [];
+                foreach ($source['columns'] as $column) {
+                    $value = $row->getRawOriginal($column);
+                    if (is_string($value) && ($replaced = strtr($value, $pairs)) !== $value) {
+                        $updates[$column] = $replaced;
+                    }
+                }
+
+                if ($updates !== []) {
+                    $source['model']::query()->whereKey($row->getKey())->update($updates);
+                    $changed += count($updates);
+                }
+            }
+        }
+
+        return $changed;
+    }
 }

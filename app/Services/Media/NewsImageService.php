@@ -82,10 +82,10 @@ class NewsImageService
      * return the new path. The caller owns deciding what happens to the
      * original — references to it may still be sitting in article bodies.
      */
-    public function convertStored(string $path): string
+    public function convertStored(string $path, ?string $target = null): string
     {
         $disk = Storage::disk('public');
-        $target = preg_replace('/\.[^.]+$/', '', $path).'.webp';
+        $target ??= preg_replace('/\.[^.]+$/', '', $path).'.webp';
 
         $disk->put($target, $this->encode($disk->path($path)));
 
