@@ -48,15 +48,24 @@ class WidgetRegistry
      * Resolved widgets ready for the frontend, sorted.
      * A widget whose data callback throws is skipped (never breaks the dashboard).
      *
+     * Pass $allows to drop widgets the viewer has no permission for. They are
+     * dropped before their data callback runs, so a hidden widget neither costs
+     * a query nor sends its numbers to the browser.
+     *
+     * @param  (callable(string): bool)|null  $allows
      * @return array<int, array<string, mixed>>
      */
-    public function compose(): array
+    public function compose(?callable $allows = null): array
     {
         $widgets = array_values($this->widgets);
         usort($widgets, fn (array $a, array $b) => $a['sort'] <=> $b['sort']);
 
         $resolved = [];
         foreach ($widgets as $widget) {
+            if ($allows !== null && $widget['permission'] !== null && ! $allows($widget['permission'])) {
+                continue;
+            }
+
             try {
                 $props = $widget['data'] instanceof Closure ? ($widget['data'])() : [];
             } catch (Throwable) {
@@ -65,7 +74,8 @@ class WidgetRegistry
 
             $resolved[] = [
                 'id' => $widget['id'],
-                'title' => $widget['title'],
+                // Extensions register "vendor::file.key" titles; core ones are plain text.
+                'title' => (string) __($widget['title']),
                 'component' => $widget['component'],
                 'permission' => $widget['permission'],
                 'props' => $props,

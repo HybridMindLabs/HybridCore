@@ -50,7 +50,7 @@ class NewsShowTest extends TestCase
         $this->get(route('news.show', 'season-one-begins'))
             ->assertOk()
             ->assertInertia(fn (AssertableInertia $page) => $page
-                ->where('article.body', fn (string $body) => str_contains($body, '<h2>')
+                ->where('article.body', fn (string $body) => str_contains($body, '<h2 id="a-heading">')
                     && str_contains($body, '<strong>')
                     && ! str_contains($body, '## A heading'))
             );
@@ -64,6 +64,43 @@ class NewsShowTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->where('article.body', '<p>Already <em>HTML</em>.</p>')
+            );
+    }
+
+    public function test_an_html_article_cannot_carry_script(): void
+    {
+        $this->article('<p onclick="steal()">Hi</p><script>steal()</script><a href="javascript:steal()">x</a>', 'html');
+
+        $this->get(route('news.show', 'season-one-begins'))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('article.body', fn (string $body) => str_contains($body, 'Hi')
+                    && ! str_contains($body, '<script')
+                    && ! str_contains($body, 'onclick')
+                    && ! str_contains($body, 'javascript:'))
+            );
+    }
+
+    public function test_headings_get_anchors_and_a_contents_list(): void
+    {
+        $this->article('## Getting started
+
+Text.
+
+### Getting started
+
+More.
+
+## Правила');
+
+        $this->get(route('news.show', 'season-one-begins'))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('article.headings.0', ['id' => 'getting-started', 'text' => 'Getting started', 'level' => 2])
+                ->where('article.headings.1.id', 'getting-started-2')
+                ->where('article.headings.1.level', 3)
+                ->where('article.headings.2.id', 'правила')
+                ->where('article.body', fn (string $body) => str_contains($body, '<h2 id="getting-started">'))
             );
     }
 

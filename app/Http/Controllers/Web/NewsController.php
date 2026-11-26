@@ -8,6 +8,8 @@ use App\Models\NewsArticleView;
 use App\Models\NewsCategory;
 use App\Models\NewsComment;
 use App\Models\NewsTag;
+use App\Support\HeadingAnchors;
+use App\Support\HtmlSanitizer;
 use App\Support\Seo;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -91,9 +93,11 @@ class NewsController extends Controller
         // markdown article was handed to v-html as-is and readers saw literal
         // "## Heading" and "[text](url)" on the page.
         $body = match ($article->format) {
-            'html' => (string) $article->body,
+            // Staff-written HTML is cleaned the same way pages are.
+            'html' => HtmlSanitizer::clean((string) $article->body),
             default => $this->markdown->convert((string) $article->body)->getContent(),
         };
+        ['html' => $body, 'headings' => $headings] = HeadingAnchors::add($body);
 
         $comments = $article->comments()
             ->with('user')
@@ -126,6 +130,7 @@ class NewsController extends Controller
                 'slug' => $article->slug,
                 'excerpt' => $article->excerpt,
                 'body' => $body,
+                'headings' => $headings,
                 'format' => $article->format,
                 // Counted from the text, not the markup. The page derived this
                 // in JS from the HTML, so every tag inflated the total.

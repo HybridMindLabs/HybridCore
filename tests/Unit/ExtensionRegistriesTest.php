@@ -67,6 +67,23 @@ class ExtensionRegistriesTest extends TestCase
         $this->assertSame('good', $composed[0]['id']);
     }
 
+    public function test_widget_registry_drops_widgets_the_viewer_may_not_see_before_loading_them(): void
+    {
+        $widgets = new WidgetRegistry;
+        $loaded = false;
+        $widgets->register('open', 'Open', 'stat', fn () => ['value' => 1]);
+        $widgets->register('secret', 'Secret', 'stat', function () use (&$loaded) {
+            $loaded = true;
+
+            return ['value' => 99];
+        }, permission: 'payments.view');
+
+        $composed = $widgets->compose(fn (string $permission) => false);
+
+        $this->assertSame(['open'], array_column($composed, 'id'));
+        $this->assertFalse($loaded);
+    }
+
     public function test_widget_registry_unregister(): void
     {
         $widgets = new WidgetRegistry;

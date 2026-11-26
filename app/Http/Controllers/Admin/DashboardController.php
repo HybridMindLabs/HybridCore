@@ -141,7 +141,7 @@ class DashboardController extends Controller
         }
 
         return Inertia::render('Admin/Dashboard', [
-            'widgets' => $widgets->compose(),
+            'widgets' => $widgets->compose(fn (string $permission) => $request->user()->can($permission)),
             'revenue' => $request->user()->can('payments.view') ? $this->revenue((int) $request->query('range', 30)) : null,
             'maintenance_mode' => $maintenanceMode,
             'stats' => [

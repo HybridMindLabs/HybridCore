@@ -1,238 +1,110 @@
 <script setup lang="ts">
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { CheckCircle2, ChevronDown, Gamepad2, Plus, RefreshCw, Search, Server, Trash2, Users, X, XCircle } from '@lucide/vue';
+import { computed, onUnmounted, ref, watch } from 'vue';
+import AdminLayout from '@/layouts/AdminLayout.vue';
 import ListControls from '@/components/Admin/ListControls.vue';
 import SortHeader from '@/components/Admin/SortHeader.vue';
-import { useSelection } from '@/composables/useSelection';
-import { confirm } from '@/composables/useConfirm';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
-import {
-    Server, Plus, RefreshCw, Search, Gamepad2,
-    CheckCircle2, XCircle, Minus, Pencil, Trash2,
-    X, ChevronDown, Users, Plug, Copy, Check,
-    Terminal, Ban, Clock,
-} from '@lucide/vue';
-import AdminLayout from '@/layouts/AdminLayout.vue';
-import PageHeader from '@/components/UI/PageHeader.vue';
-import GameIcon from '@/components/UI/GameIcon.vue';
+import AddServerForm from '@/components/Admin/Servers/AddServerForm.vue';
+import BridgeTokenDialog from '@/components/Admin/Servers/BridgeTokenDialog.vue';
+import EditServerRow from '@/components/Admin/Servers/EditServerRow.vue';
+import ServerCommandLog from '@/components/Admin/Servers/ServerCommandLog.vue';
+import ServerRow from '@/components/Admin/Servers/ServerRow.vue';
+import type { AdminGame, AdminServer } from '@/components/Admin/Servers/serverForm';
 import EmptyState from '@/components/UI/EmptyState.vue';
-import { ref, watch, computed } from 'vue';
+import PageHeader from '@/components/UI/PageHeader.vue';
+import Pagination from '@/components/UI/Pagination.vue';
+import { useClickOutside } from '@/composables/useClickOutside';
+import { confirm } from '@/composables/useConfirm';
+import { useSelection } from '@/composables/useSelection';
 
-interface GameData { id: number; name: string; color?: string; icon?: string; default_port?: number | null; default_query_port?: number | null }
-interface ServerStatus { is_online: boolean; failure_reason: string | null; players_online: number; players_max: number; map: string | null }
-interface CommandRow {
-    id: number; command: string; source: string;
-    status: 'pending' | 'delivered' | 'acked' | 'expired' | 'cancelled';
-    attempts: number;
-    created_at: string | null; delivered_at: string | null; acked_at: string | null; expires_at: string | null;
-}
-interface ServerRow {
-    id: number; ip: string; port: number; query_port: number | null; address: string; display_address: string | null; name: string | null;
-    country_code: string | null; tags: string[]; is_active: boolean; is_visible: boolean;
-    last_queried_at: string | null;
-    bridge: { enabled: boolean; last_seen: string | null; online: boolean; pending_count: number };
-    game: { id: number; name: string; slug: string; color: string; icon: string };
-    status: ServerStatus | null;
-    commands: CommandRow[];
-}
+interface PageLink { url: string | null; label: string; active: boolean }
 
 const props = defineProps<{
-    servers: { data: ServerRow[]; meta: any; links: any; per_page: number };
-    games: GameData[];
+    servers: {
+        data: AdminServer[]; links: PageLink[]; current_page: number; last_page: number;
+        total: number; per_page: number; from: number | null; to: number | null;
+    };
+    games: AdminGame[];
     filters: { search: string | null; game_id: string | null; sort: string | null; dir: string };
     stats: { total: number; online: number; players: number };
 }>();
 
-// Filters
+// ── Filters ──────────────────────────────────────────────────────
 const search = ref(props.filters.search ?? '');
 const gameId = ref(props.filters.game_id ?? '');
 const searching = ref(false);
+let searchTimer: ReturnType<typeof setTimeout> | null = null;
 
-watch([search, gameId], () => {
+function applyFilters() {
     router.get(
         route('admin.servers.index'),
-        { search: search.value || undefined, game_id: gameId.value || undefined, sort: props.filters.sort ?? undefined, dir: props.filters.sort ? props.filters.dir : undefined, per_page: new URLSearchParams(window.location.search).get('per_page') || undefined },
+        {
+            search: search.value || undefined,
+            game_id: gameId.value || undefined,
+            sort: props.filters.sort ?? undefined,
+            dir: props.filters.sort ? props.filters.dir : undefined,
+            per_page: new URLSearchParams(window.location.search).get('per_page') || undefined,
+        },
         {
             preserveState: true, replace: true,
             onStart: () => { searching.value = true; },
             onFinish: () => { searching.value = false; },
         },
     );
+}
+
+// Typing used to fire a request per keystroke; wait for a short pause instead.
+watch(search, () => {
+    if (searchTimer) clearTimeout(searchTimer);
+    searchTimer = setTimeout(applyFilters, 300);
 });
+watch(gameId, applyFilters);
+onUnmounted(() => { if (searchTimer) clearTimeout(searchTimer); });
 
-// ── Bridge (game-server connection) ─────────────────────────
-const page = usePage<{ flash: { bridge_token?: string | null } }>();
-const bridgeToken = computed(() => page.props.flash?.bridge_token ?? null);
-const tokenCopied = ref(false);
+const sortParams = computed(() => ({ search: props.filters.search, game_id: props.filters.game_id }));
 
-async function issueBridgeToken(server: ServerRow) {
-    const message = server.bridge.enabled
-        ? `Rotate the bridge token for "${server.address}"? The current token stops working immediately.`
-        : `Generate a bridge token for "${server.address}"? The in-game plugin uses it to pull commands from the site.`;
-    if (!await confirm(message)) return;
-    router.post(route('admin.servers.bridge.issue', server.id), {}, { preserveScroll: true });
-}
-
-async function revokeBridgeToken(server: ServerRow) {
-    if (!await confirm(`Revoke the bridge token for "${server.address}"? The game server will be disconnected.`)) return;
-    router.delete(route('admin.servers.bridge.revoke', server.id), { preserveScroll: true });
-}
-
-async function copyToken() {
-    if (!bridgeToken.value) return;
-    await navigator.clipboard.writeText(bridgeToken.value);
-    tokenCopied.value = true;
-    setTimeout(() => (tokenCopied.value = false), 2000);
-}
-
-function dismissToken() {
-    router.reload({ only: [] }); // clears the one-time flash on next visit
-    page.props.flash.bridge_token = null;
-}
-
-// ── Bridge command log ──────────────────────────────────────
+// ── Rows ─────────────────────────────────────────────────────────
+const showAdd = ref(false);
+const editing = ref<number | null>(null);
 const expandedCommands = ref<number | null>(null);
 
 function toggleCommands(id: number) {
     expandedCommands.value = expandedCommands.value === id ? null : id;
 }
 
-const commandStatusStyle: Record<CommandRow['status'], { icon: typeof Clock; class: string; label: string }> = {
-    pending: { icon: Clock, class: 'text-amber-400', label: 'Pending' },
-    delivered: { icon: RefreshCw, class: 'text-blue-400', label: 'Delivered' },
-    acked: { icon: CheckCircle2, class: 'text-emerald-400', label: 'Acked' },
-    expired: { icon: XCircle, class: 'text-zinc-600', label: 'Expired' },
-    cancelled: { icon: Ban, class: 'text-zinc-600', label: 'Cancelled' },
-};
+// ── Bridge token (one-time flash) ────────────────────────────────
+const page = usePage<{ flash: { bridge_token?: string | null } }>();
+const bridgeToken = computed(() => page.props.flash?.bridge_token ?? null);
 
-async function cancelCommand(server: ServerRow, command: CommandRow) {
-    if (!await confirm(`Cancel queued command "${command.command}"? It will never be delivered.`, { confirmLabel: 'Cancel command', cancelLabel: 'Keep', danger: true })) return;
-    router.post(route('admin.servers.commands.cancel', [server.id, command.id]), {}, { preserveScroll: true });
+function dismissToken() {
+    page.props.flash.bridge_token = null;
 }
 
-// ── Bulk actions ────────────────────────────────────────────
+// ── Bulk actions ─────────────────────────────────────────────────
 type BulkAction = 'activate' | 'deactivate' | 'refresh' | 'delete';
 const { selected, allSelected, toggleAll, toggleOne } = useSelection(() => props.servers.data.map((s) => s.id));
 const bulkMenuOpen = ref(false);
 const bulkPending = ref(false);
+const bulkMenu = ref<HTMLElement | null>(null);
+useClickOutside(bulkMenu, () => { bulkMenuOpen.value = false; });
+
+const bulkLabels: Record<BulkAction, string> = {
+    activate: 'Activate', deactivate: 'Deactivate', refresh: 'Query now', delete: 'Permanently delete',
+};
 
 async function runBulk(action: BulkAction) {
     bulkMenuOpen.value = false;
     if (selected.value.length === 0) return;
-    const labels: Record<BulkAction, string> = {
-        activate: 'activate', deactivate: 'deactivate', refresh: 'query now', delete: 'permanently delete',
-    };
-    if (!await confirm(`${labels[action]} ${selected.value.length} selected server(s)?`)) return;
+    if (!await confirm(`${bulkLabels[action]} ${selected.value.length} selected server(s)?`)) return;
     bulkPending.value = true;
     router.post(route('admin.servers.bulk'), { action, server_ids: selected.value }, {
+        preserveScroll: true,
         onFinish: () => { bulkPending.value = false; selected.value = []; },
     });
 }
 
-// Add server form
-const showAdd = ref(false);
-const addForm = useForm({
-    game_id: '',
-    address: '',
-    query_port: '',
-    display_address: '',
-    is_visible: true,
-    tags: '',
-});
-const addFormError = ref('');
-
-// When a game is picked, offer its default ports so the operator doesn't have
-// to know that Rust queries on +2 or ARK on 27015. Only fills empty fields, so
-// anything typed by hand is left alone.
-watch(() => addForm.game_id, (id) => {
-    const game = props.games.find((g) => String(g.id) === String(id));
-    if (!game) return;
-
-    if (!addForm.address && game.default_port) {
-        addForm.address = `:${game.default_port}`;
-    }
-    if (!addForm.query_port && game.default_query_port) {
-        addForm.query_port = String(game.default_query_port);
-    }
-});
-
-function submitAdd() {
-    addFormError.value = '';
-    const parts = addForm.address.trim().split(':');
-    if (parts.length !== 2 || !parts[0] || !parts[1] || isNaN(Number(parts[1]))) {
-        addFormError.value = 'Use format IP:PORT — e.g. 192.168.1.1:27015';
-        return;
-    }
-    addForm.transform((d) => ({
-        game_id: d.game_id,
-        ip: parts[0].trim(),
-        port: Number(parts[1]),
-        query_port: d.query_port ? Number(d.query_port) : null,
-        display_address: d.display_address ? d.display_address.trim() : null,
-        is_visible: Boolean(d.is_visible),
-        tags: d.tags ? d.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
-    })).post(route('admin.servers.store'), {
-        onSuccess: () => { addForm.reset(); showAdd.value = false; },
-    });
-}
-
-// Inline edit
-const editing = ref<number | null>(null);
-const editForm = useForm({
-    game_id: '',
-    address: '',
-    query_port: '',
-    display_address: '',
-    name: '',
-    is_active: true,
-    is_visible: true,
-    tags: '',
-});
-const editFormError = ref('');
-
-function startEdit(s: ServerRow) {
-    editing.value = s.id;
-    editFormError.value = '';
-    editForm.game_id = String(s.game.id);
-    editForm.address = `${s.ip}:${s.port}`;
-    editForm.query_port = s.query_port ? String(s.query_port) : '';
-    editForm.display_address = s.display_address ?? '';
-    editForm.name = s.name ?? '';
-    editForm.is_active = s.is_active;
-    editForm.is_visible = s.is_visible ?? true;
-    editForm.tags = s.tags.join(', ');
-}
-
-function submitEdit(id: number) {
-    editFormError.value = '';
-    const parts = editForm.address.trim().split(':');
-    if (parts.length !== 2 || !parts[0] || !parts[1] || isNaN(Number(parts[1]))) {
-        editFormError.value = 'Use format IP:PORT — e.g. 192.168.1.1:27015';
-        return;
-    }
-    editForm.transform((d) => ({
-        game_id: d.game_id,
-        ip: parts[0].trim(),
-        port: Number(parts[1]),
-        query_port: d.query_port ? Number(d.query_port) : null,
-        display_address: d.display_address ? d.display_address.trim() : null,
-        name: d.name || null,
-        is_active: d.is_active,
-        is_visible: Boolean(d.is_visible),
-        tags: d.tags ? d.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
-    })).put(route('admin.servers.update', id), {
-        onSuccess: () => { editing.value = null; },
-    });
-}
-
-function refresh(id: number) {
-    router.post(route('admin.servers.refresh', id));
-}
-
-async function destroy(s: ServerRow) {
-    if (!await confirm(`Delete server "${s.name ?? s.address}"?`)) return;
-    router.delete(route('admin.servers.destroy', s.id));
-}
-
-const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 rounded-lg px-3 py-2 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 w-full';
+const filtering = computed(() => !!(search.value || gameId.value));
 </script>
 
 <template>
@@ -241,17 +113,14 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 round
 
         <PageHeader title="Game Servers" description="Manage and monitor all game servers." :icon="Server">
             <template #actions>
-                <Link
-                    :href="route('admin.servers.games')"
-                    class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 border border-zinc-800/70 transition-colors"
-                >
+                <Link :href="route('admin.servers.games')"
+                    class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 border border-zinc-800/70 transition-colors">
                     <Gamepad2 :size="14" :stroke-width="1.75" /> Games
                 </Link>
-                <button
-                    type="button"
+                <button type="button"
                     class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold bg-blue-500 text-white hover:bg-blue-400 transition-colors"
-                    @click="showAdd = !showAdd"
-                >
+                    :aria-expanded="showAdd"
+                    @click="showAdd = !showAdd">
                     <component :is="showAdd ? X : Plus" :size="14" :stroke-width="2" />
                     {{ showAdd ? 'Cancel' : 'Add Server' }}
                 </button>
@@ -260,151 +129,58 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 round
 
         <ListControls :per-page="servers.per_page" class="mb-3" />
 
-        <!-- Stats bar — reflects every server matching the current filters, not just this page -->
+        <!-- Stats — every server matching the current filters, not just this page. -->
         <div v-if="stats.total > 0" class="grid grid-cols-3 gap-4 mb-5">
-            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3">
-                <Server :size="16" :stroke-width="1.5" class="text-zinc-600 shrink-0" />
+            <div v-for="(card, i) in [
+                    { icon: Server, value: stats.total, label: 'Total servers', tone: 'text-zinc-100', iconTone: 'text-zinc-500' },
+                    { icon: CheckCircle2, value: stats.online, label: 'Online now', tone: 'text-emerald-400', iconTone: 'text-emerald-400' },
+                    { icon: Users, value: stats.players, label: 'Players online', tone: 'text-blue-400', iconTone: 'text-blue-400' },
+                ]" :key="card.label"
+                class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3"
+                :style="{ animationDelay: i * 40 + 'ms' }">
+                <component :is="card.icon" :size="16" :stroke-width="1.5" class="shrink-0" :class="card.iconTone" aria-hidden="true" />
                 <div>
-                    <p class="text-zinc-100 text-lg font-bold leading-none">{{ stats.total }}</p>
-                    <p class="text-zinc-600 text-xs mt-0.5">Total servers</p>
-                </div>
-            </div>
-            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3" style="animation-delay: 40ms">
-                <CheckCircle2 :size="16" :stroke-width="1.5" class="text-emerald-400 shrink-0" />
-                <div>
-                    <p class="text-emerald-400 text-lg font-bold leading-none">{{ stats.online }}</p>
-                    <p class="text-zinc-600 text-xs mt-0.5">Online now</p>
-                </div>
-            </div>
-            <div class="hc-hero-in bg-admin-surface border border-zinc-800/70 rounded-xl px-4 py-3 flex items-center gap-3" style="animation-delay: 80ms">
-                <Users :size="16" :stroke-width="1.5" class="text-blue-400 shrink-0" />
-                <div>
-                    <p class="text-blue-400 text-lg font-bold leading-none">{{ stats.players }}</p>
-                    <p class="text-zinc-600 text-xs mt-0.5">Players online</p>
+                    <p class="text-lg font-bold leading-none" :class="card.tone">{{ card.value }}</p>
+                    <p class="text-zinc-500 text-xs mt-0.5">{{ card.label }}</p>
                 </div>
             </div>
         </div>
 
-        <!-- Add Server Panel -->
-        <div v-if="showAdd" class="hc-hero-in mb-5 bg-admin-surface border border-zinc-800/70 rounded-xl overflow-hidden">
-            <div class="px-5 py-3 border-b border-zinc-800/50 flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-zinc-100 flex items-center gap-2">
-                    <Plus :size="14" :stroke-width="2" class="text-blue-400" /> Add New Server
-                </h3>
-                <button type="button" class="text-zinc-600 hover:text-zinc-300 transition-colors" @click="showAdd = false">
-                    <X :size="14" :stroke-width="1.75" />
-                </button>
-            </div>
-            <form class="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" @submit.prevent="submitAdd">
-                <div class="flex flex-col gap-1.5">
-                    <label class="text-zinc-500 text-xs font-medium">Game <span class="text-red-400">*</span></label>
-                    <select v-model="addForm.game_id" :class="inputClass">
-                        <option value="">Select game…</option>
-                        <option v-for="g in games" :key="g.id" :value="g.id">{{ g.name }}</option>
-                    </select>
-                    <p v-if="addForm.errors.game_id" class="text-red-400 text-xs">{{ addForm.errors.game_id }}</p>
-                </div>
-                <div class="flex flex-col gap-1.5">
-                    <label class="text-zinc-500 text-xs font-medium">
-                        IP:PORT <span class="text-red-400">*</span>
-                        <span class="text-zinc-700 font-normal ml-1">e.g. 192.168.1.1:27015</span>
-                    </label>
-                    <input
-                        v-model="addForm.address"
-                        type="text"
-                        placeholder="192.168.1.1:27015"
-                        :class="[inputClass, 'font-mono', addFormError ? 'border-red-500' : '']"
-                    />
-                    <p v-if="addFormError" class="text-red-400 text-xs">{{ addFormError }}</p>
-                    <p v-else-if="addForm.errors.ip" class="text-red-400 text-xs">{{ addForm.errors.ip }}</p>
-                    <p v-else-if="addForm.errors.port" class="text-red-400 text-xs">{{ addForm.errors.port }}</p>
-                </div>
-                <div class="flex flex-col gap-1.5">
-                    <label class="text-zinc-500 text-xs font-medium">
-                        Query port
-                        <span class="text-zinc-700 font-normal ml-1">only if different from the game port — Rust +2, ARK 27015</span>
-                    </label>
-                    <input v-model="addForm.query_port" type="number" placeholder="same as game port" :class="[inputClass, 'font-mono']" />
-                    <p v-if="addForm.errors.query_port" class="text-red-400 text-xs">{{ addForm.errors.query_port }}</p>
-                </div>
-                <div class="flex flex-col gap-1.5">
-                    <label class="text-zinc-500 text-xs font-medium">Tags <span class="text-zinc-700 font-normal">comma separated</span></label>
-                    <input v-model="addForm.tags" type="text" placeholder="competitive, ranked" :class="inputClass" />
-                </div>
-                <div class="flex flex-col gap-1.5 sm:col-span-2">
-                    <label class="text-zinc-500 text-xs font-medium">
-                        Public connection address (optional)
-                        <span class="text-zinc-700 font-normal ml-1">e.g. play.myserver.com — useful if the server is behind BungeeCord/Velocity or NAT</span>
-                    </label>
-                    <input
-                        v-model="addForm.display_address"
-                        type="text"
-                        placeholder="play.myserver.com"
-                        :class="inputClass"
-                    />
-                    <p v-if="addForm.errors.display_address" class="text-red-400 text-xs">{{ addForm.errors.display_address }}</p>
-                </div>
-                <div class="flex flex-col gap-1.5 justify-end">
-                    <label class="flex items-center gap-2 cursor-pointer py-2">
-                        <input v-model="addForm.is_visible" type="checkbox" class="w-4 h-4 rounded accent-blue-500" />
-                        <span class="text-zinc-300 text-xs font-medium">Show in public server list</span>
-                    </label>
-                    <p v-if="addForm.errors.is_visible" class="text-red-400 text-xs">{{ addForm.errors.is_visible }}</p>
-                </div>
-                <div class="flex items-end gap-2">
-                    <button
-                        type="submit"
-                        :disabled="addForm.processing"
-                        class="flex-1 bg-blue-500 text-white font-semibold rounded-lg px-4 py-2 text-sm hover:bg-blue-400 transition-colors disabled:opacity-50"
-                    >
-                        {{ addForm.processing ? 'Adding…' : 'Add & Query' }}
-                    </button>
-                </div>
-            </form>
-        </div>
+        <AddServerForm v-if="showAdd" :games="games" @close="showAdd = false" />
 
         <!-- Filters -->
         <div class="flex items-center gap-3 mb-4">
             <div class="relative flex-1 max-w-xs">
-                <Search :size="13" class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" :stroke-width="1.75" />
-                <input
-                    v-model="search"
-                    type="text"
-                    placeholder="Search by IP or name…"
-                    class="w-full bg-admin-surface border border-zinc-800/70 rounded-lg pl-8 pr-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
-                />
+                <Search :size="13" class="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" :stroke-width="1.75" aria-hidden="true" />
+                <input v-model="search" type="search" placeholder="Search by IP or name…" aria-label="Search servers"
+                    class="w-full bg-admin-surface border border-zinc-800/70 rounded-lg pl-8 pr-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20" />
             </div>
-            <select
-                v-model="gameId"
-                class="bg-admin-surface border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-blue-500"
-            >
+            <select v-model="gameId" aria-label="Filter by game"
+                class="bg-admin-surface border border-zinc-800/70 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-blue-500">
                 <option value="">All games</option>
-                <option v-for="g in games" :key="g.id" :value="g.id">{{ g.name }}</option>
+                <option v-for="g in games" :key="g.id" :value="String(g.id)">{{ g.name }}</option>
             </select>
 
-            <!-- Bulk actions -->
-            <div v-if="selected.length > 0" class="relative">
-                <button
-                    type="button"
+            <div v-if="selected.length > 0" ref="bulkMenu" class="relative">
+                <button type="button"
                     class="flex items-center gap-1.5 border border-zinc-700 bg-zinc-800 text-zinc-200 text-sm font-semibold rounded-lg px-3 py-2 hover:bg-zinc-700 transition-colors"
-                    @click.stop="bulkMenuOpen = !bulkMenuOpen"
-                    :disabled="bulkPending"
-                >
+                    :disabled="bulkPending" :aria-expanded="bulkMenuOpen" aria-haspopup="menu"
+                    @click.stop="bulkMenuOpen = !bulkMenuOpen">
                     <span>{{ selected.length }} selected</span>
                     <ChevronDown :size="12" :stroke-width="2" :class="bulkMenuOpen ? 'rotate-180' : ''" class="transition-transform" />
                 </button>
-                <div v-if="bulkMenuOpen" class="absolute left-0 top-full mt-1 w-44 bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl py-1 z-50">
-                    <button type="button" class="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors" @click="runBulk('activate')">
+                <div v-if="bulkMenuOpen" role="menu" class="absolute left-0 top-full mt-1 w-44 bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl py-1 z-50">
+                    <button type="button" role="menuitem" class="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors" @click="runBulk('activate')">
                         <CheckCircle2 :size="13" :stroke-width="1.75" class="text-emerald-400" /> Activate
                     </button>
-                    <button type="button" class="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors" @click="runBulk('deactivate')">
+                    <button type="button" role="menuitem" class="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors" @click="runBulk('deactivate')">
                         <XCircle :size="13" :stroke-width="1.75" class="text-zinc-500" /> Deactivate
                     </button>
-                    <button type="button" class="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors" @click="runBulk('refresh')">
+                    <button type="button" role="menuitem" class="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors" @click="runBulk('refresh')">
                         <RefreshCw :size="13" :stroke-width="1.75" class="text-blue-400" /> Query now
                     </button>
                     <div class="border-t border-zinc-800 my-1" />
-                    <button type="button" class="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors" @click="runBulk('delete')">
+                    <button type="button" role="menuitem" class="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors" @click="runBulk('delete')">
                         <Trash2 :size="13" :stroke-width="1.75" /> Delete
                     </button>
                 </div>
@@ -418,353 +194,39 @@ const inputClass = 'bg-zinc-900/60 border border-zinc-800/70 text-zinc-100 round
                 <thead>
                     <tr>
                         <th class="w-8">
-                            <input type="checkbox" :checked="allSelected" class="rounded border-zinc-700 bg-zinc-800 accent-blue-500 cursor-pointer" @change="toggleAll" />
+                            <input type="checkbox" :checked="allSelected" aria-label="Select all servers on this page"
+                                class="rounded border-zinc-700 bg-zinc-800 accent-blue-500 cursor-pointer" @change="toggleAll" />
                         </th>
-                        <th><SortHeader label="Server" column="name" :sort="filters.sort" :dir="filters.dir" route-name="admin.servers.index" :params="{ search: filters.search, game_id: filters.game_id }" /></th>
+                        <th><SortHeader label="Server" column="name" :sort="filters.sort" :dir="filters.dir" route-name="admin.servers.index" :params="sortParams" /></th>
                         <th class="hidden sm:table-cell">Game</th>
                         <th>Status</th>
-                        <th class="hidden md:table-cell"><SortHeader label="Players" column="players" :sort="filters.sort" :dir="filters.dir" route-name="admin.servers.index" :params="{ search: filters.search, game_id: filters.game_id }" /></th>
+                        <th class="hidden md:table-cell"><SortHeader label="Players" column="players" :sort="filters.sort" :dir="filters.dir" route-name="admin.servers.index" :params="sortParams" /></th>
                         <th class="hidden lg:table-cell">Queried</th>
-                        <th />
+                        <th><span class="sr-only">Actions</span></th>
                     </tr>
                 </thead>
                 <tbody>
                     <template v-for="server in servers.data" :key="server.id">
-
-                        <!-- Edit row -->
-                        <tr v-if="editing === server.id" class="border-b border-zinc-800/70 bg-zinc-900/40">
-                            <td colspan="7" class="px-4 py-4">
-                                <form class="flex flex-col gap-3" @submit.prevent="submitEdit(server.id)">
-                                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                                        <div class="flex flex-col gap-1">
-                                            <label class="text-zinc-600 text-[11px]">Game</label>
-                                            <select v-model="editForm.game_id" :class="inputClass + ' !py-1.5 !text-xs'">
-                                                <option v-for="g in games" :key="g.id" :value="g.id">{{ g.name }}</option>
-                                            </select>
-                                        </div>
-                                        <div class="flex flex-col gap-1">
-                                            <label class="text-zinc-600 text-[11px]">IP:PORT</label>
-                                            <input
-                                                v-model="editForm.address"
-                                                type="text"
-                                                placeholder="1.2.3.4:27015"
-                                                :class="[inputClass, 'font-mono !py-1.5 !text-xs', editFormError ? 'border-red-500' : '']"
-                                            />
-                                        </div>
-                                        <div class="flex flex-col gap-1">
-                                            <label class="text-zinc-600 text-[11px]">Query port</label>
-                                            <input v-model="editForm.query_port" type="number" placeholder="same as game" :class="inputClass + ' font-mono !py-1.5 !text-xs'" />
-                                        </div>
-                                        <div class="flex flex-col gap-1">
-                                            <label class="text-zinc-600 text-[11px]">Name override</label>
-                                            <input v-model="editForm.name" type="text" placeholder="Optional display name" :class="inputClass + ' !py-1.5 !text-xs'" />
-                                        </div>
-                                        <div class="flex flex-col gap-1">
-                                            <label class="text-zinc-600 text-[11px]">Tags</label>
-                                            <input v-model="editForm.tags" type="text" placeholder="tag1, tag2" :class="inputClass + ' !py-1.5 !text-xs'" />
-                                        </div>
-                                        <div class="flex flex-col gap-1 sm:col-span-2">
-                                            <label class="text-zinc-600 text-[11px]">
-                                                Public connection address (optional)
-                                                <span class="text-zinc-700 font-normal ml-1">e.g. play.myserver.com</span>
-                                            </label>
-                                            <input v-model="editForm.display_address" type="text" placeholder="play.myserver.com" :class="inputClass + ' !py-1.5 !text-xs'" />
-                                        </div>
-                                        <div class="flex flex-col gap-1">
-                                            <label class="text-zinc-600 text-[11px]">Visibility</label>
-                                            <label class="flex items-center gap-2 cursor-pointer mt-1.5">
-                                                <input v-model="editForm.is_visible" type="checkbox" class="w-4 h-4 rounded accent-blue-500" />
-                                                <span class="text-zinc-400 text-xs">Show in public server list</span>
-                                            </label>
-                                        </div>
-                                        <div class="flex flex-col gap-1">
-                                            <label class="text-zinc-600 text-[11px]">Active</label>
-                                            <label class="flex items-center gap-2 cursor-pointer mt-1.5">
-                                                <input v-model="editForm.is_active" type="checkbox" class="w-4 h-4 rounded accent-blue-500" />
-                                                <span class="text-zinc-400 text-xs">Enabled</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <p v-if="editFormError" class="text-red-400 text-xs">{{ editFormError }}</p>
-                                    <div class="flex items-center gap-2 justify-end pt-1 border-t border-zinc-800/50">
-                                        <button
-                                            type="button"
-                                            class="px-3 py-1.5 text-xs text-zinc-500 hover:text-zinc-100 transition-colors"
-                                            @click="editing = null"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            :disabled="editForm.processing"
-                                            class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue-500 text-white hover:bg-blue-400 transition-colors disabled:opacity-50"
-                                        >
-                                            Save changes
-                                        </button>
-                                    </div>
-                                </form>
-                            </td>
-                        </tr>
-
-                        <!-- Normal row -->
-                        <tr
-                            v-else
-                            class="border-b border-zinc-800/50 last:border-0 hover:bg-zinc-900/30 transition-colors"
-                            :class="[!server.is_active ? 'opacity-40' : '', selected.includes(server.id) ? 'bg-blue-500/[0.04]' : '']"
-                        >
-                            <td class="px-4 py-3 w-8">
-                                <input
-                                    type="checkbox"
-                                    :checked="selected.includes(server.id)"
-                                    class="rounded border-zinc-700 bg-zinc-800 accent-blue-500 cursor-pointer"
-                                    @change="toggleOne(server.id)"
-                                />
-                            </td>
-                            <td class="px-4 py-3">
-                                <div class="flex items-center gap-2">
-                                    <p class="text-zinc-100 text-sm font-medium leading-tight">
-                                        {{ server.name ?? server.address }}
-                                    </p>
-                                    <span
-                                        v-if="!server.is_visible"
-                                        class="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                                        title="Hidden from public server browser"
-                                    >
-                                        Hidden
-                                    </span>
-                                </div>
-                                <p class="text-zinc-600 text-xs font-mono mt-0.5">
-                                    {{ server.address }}
-                                    <span v-if="server.display_address && server.display_address !== `${server.ip}:${server.port}`" class="text-zinc-500 ml-1">
-                                        ({{ server.ip }}:{{ server.port }})
-                                    </span>
-                                </p>
-                                <div v-if="server.tags.length" class="flex flex-wrap gap-1 mt-1.5">
-                                    <span
-                                        v-for="tag in server.tags"
-                                        :key="tag"
-                                        class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800/80 text-zinc-500"
-                                    >{{ tag }}</span>
-                                </div>
-                            </td>
-                            <td class="px-4 py-3 hidden sm:table-cell">
-                                <div class="inline-flex items-center gap-2">
-                                    <GameIcon :slug="server.game.slug" :alt="server.game.name" :size="32" img-class="w-6 h-6 rounded object-contain" />
-                                    <span
-                                        class="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full"
-                                        :style="{ background: server.game.color + '1a', color: server.game.color }"
-                                    >
-                                        {{ server.game.name }}
-                                    </span>
-                                </div>
-                            </td>
-                            <td class="px-4 py-3">
-                                <div v-if="server.status">
-                                    <div class="flex items-center gap-1.5">
-                                        <CheckCircle2 v-if="server.status.is_online" :size="13" :stroke-width="2" class="text-emerald-400 shrink-0" />
-                                        <XCircle v-else :size="13" :stroke-width="2" class="text-red-400 shrink-0" />
-                                        <span class="text-xs font-medium" :class="server.status.is_online ? 'text-emerald-400' : 'text-red-400'">
-                                            {{ server.status.is_online ? 'Online' : 'Offline' }}
-                                        </span>
-                                    </div>
-                                    <p
-                                        v-if="!server.status.is_online && server.status.failure_reason"
-                                        class="text-red-400/60 text-[11px] mt-0.5 max-w-[16rem] truncate"
-                                        :title="server.status.failure_reason"
-                                    >{{ server.status.failure_reason }}</p>
-                                </div>
-                                <div v-else class="flex items-center gap-1.5">
-                                    <Minus :size="13" :stroke-width="2" class="text-zinc-700" />
-                                    <span class="text-xs text-zinc-600">Not queried</span>
-                                </div>
-                            </td>
-                            <td class="px-4 py-3 hidden md:table-cell">
-                                <span v-if="server.status?.is_online" class="text-zinc-300 text-xs tabular-nums">
-                                    {{ server.status.players_online }}<span class="text-zinc-600">/{{ server.status.players_max }}</span>
-                                </span>
-                                <span v-else class="text-zinc-700 text-xs">—</span>
-                            </td>
-                            <td class="px-4 py-3 hidden lg:table-cell">
-                                <span class="text-zinc-600 text-xs">{{ server.last_queried_at ?? 'Never' }}</span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <div class="flex items-center justify-end gap-1">
-                                    <button
-                                        type="button"
-                                        :title="server.bridge.enabled
-                                            ? `Bridge: ${server.bridge.online ? 'connected' : 'no recent heartbeat'}${server.bridge.last_seen ? ' · last seen ' + server.bridge.last_seen : ''} — click to rotate token, right-click to revoke`
-                                            : 'Generate bridge token for the in-game plugin'"
-                                        class="relative w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
-                                        :class="server.bridge.enabled
-                                            ? (server.bridge.online ? 'text-emerald-400 hover:bg-emerald-500/10' : 'text-amber-400 hover:bg-amber-500/10')
-                                            : 'text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800'"
-                                        @click="issueBridgeToken(server)"
-                                        @contextmenu.prevent="server.bridge.enabled && revokeBridgeToken(server)"
-                                    >
-                                        <Plug :size="13" :stroke-width="1.75" />
-                                        <span
-                                            v-if="server.bridge.enabled"
-                                            class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full"
-                                            :class="server.bridge.online ? 'bg-emerald-400' : 'bg-amber-400'"
-                                        />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        :title="`Bridge command log${server.bridge.pending_count ? ` — ${server.bridge.pending_count} pending` : ''}`"
-                                        class="relative w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
-                                        :class="expandedCommands === server.id ? 'text-blue-400 bg-blue-500/10' : 'text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800'"
-                                        @click="toggleCommands(server.id)"
-                                    >
-                                        <Terminal :size="13" :stroke-width="1.75" />
-                                        <span
-                                            v-if="server.bridge.pending_count"
-                                            class="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-0.5 flex items-center justify-center rounded-full bg-amber-400 text-[9px] font-bold text-zinc-950 leading-none"
-                                        >{{ server.bridge.pending_count }}</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        title="Refresh status"
-                                        class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
-                                        @click="refresh(server.id)"
-                                    >
-                                        <RefreshCw :size="13" :stroke-width="1.75" />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        title="Edit server"
-                                        class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
-                                        @click="startEdit(server)"
-                                    >
-                                        <Pencil :size="13" :stroke-width="1.75" />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        title="Delete server"
-                                        class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                                        @click="destroy(server)"
-                                    >
-                                        <Trash2 :size="13" :stroke-width="1.75" />
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Bridge command log -->
-                        <tr v-if="expandedCommands === server.id" class="border-b border-zinc-800/50 bg-zinc-900/20">
-                            <td colspan="7" class="px-4 py-3">
-                                <div v-if="!server.commands.length" class="text-zinc-700 text-xs py-2">
-                                    No commands queued for this server yet — extensions and core queue them via <code class="text-zinc-600">BridgeService::queue()</code>.
-                                </div>
-                                <div v-else class="flex flex-col gap-1">
-                                    <div
-                                        v-for="cmd in server.commands"
-                                        :key="cmd.id"
-                                        class="flex items-center justify-between gap-3 px-2.5 py-1.5 rounded-lg bg-zinc-900/50 text-xs"
-                                    >
-                                        <div class="flex items-center gap-2 min-w-0">
-                                            <component
-                                                :is="commandStatusStyle[cmd.status].icon"
-                                                :size="12"
-                                                :stroke-width="2"
-                                                :class="commandStatusStyle[cmd.status].class"
-                                                class="shrink-0"
-                                            />
-                                            <code class="text-zinc-300 font-mono truncate">{{ cmd.command }}</code>
-                                            <span
-                                                class="shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-500 font-mono"
-                                                :title="'Queued by'"
-                                            >{{ cmd.source }}</span>
-                                        </div>
-                                        <div class="flex items-center gap-3 shrink-0">
-                                            <span :class="commandStatusStyle[cmd.status].class" class="font-medium">{{ commandStatusStyle[cmd.status].label }}</span>
-                                            <span v-if="cmd.attempts > 0" class="text-zinc-700">{{ cmd.attempts }}x</span>
-                                            <span class="text-zinc-700">{{ cmd.acked_at ?? cmd.delivered_at ?? cmd.created_at }}</span>
-                                            <button
-                                                v-if="cmd.status === 'pending'"
-                                                type="button"
-                                                title="Cancel command"
-                                                class="text-zinc-600 hover:text-red-400 transition-colors"
-                                                @click="cancelCommand(server, cmd)"
-                                            >
-                                                <Ban :size="12" :stroke-width="1.75" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <p v-if="server.commands.length === 10" class="text-zinc-700 text-[11px] pt-1">
-                                        Showing the 10 most recent commands.
-                                    </p>
-                                </div>
-                            </td>
-                        </tr>
+                        <EditServerRow v-if="editing === server.id" :server="server" :games="games" @done="editing = null" />
+                        <ServerRow v-else :server="server"
+                            :selected="selected.includes(server.id)" :commands-open="expandedCommands === server.id"
+                            @toggle-select="toggleOne(server.id)" @toggle-commands="toggleCommands(server.id)" @edit="editing = server.id" />
+                        <ServerCommandLog v-if="expandedCommands === server.id" :server="server" />
                     </template>
 
                     <tr v-if="!servers.data.length">
                         <td colspan="7">
-                            <EmptyState
-                                :icon="Server"
-                                :title="search || gameId ? 'No matches' : 'No servers yet'"
-                                :description="search || gameId ? 'Try adjusting the search or game filter.' : 'Add your first game server to start monitoring it.'"
-                            />
+                            <EmptyState :icon="Server"
+                                :title="filtering ? 'No matches' : 'No servers yet'"
+                                :description="filtering ? 'Try adjusting the search or game filter.' : 'Add your first game server to start monitoring it.'" />
                         </td>
                     </tr>
                 </tbody>
             </table>
+
+            <Pagination :paginator="servers" />
         </div>
 
-        <!-- Pagination -->
-        <div v-if="servers.meta?.last_page > 1" class="flex items-center justify-center gap-1 mt-4">
-            <Link
-                v-for="link in servers.links"
-                :key="link.label"
-                :href="link.url ?? '#'"
-                v-html="link.label"
-                class="px-3 py-1.5 rounded-lg text-xs transition-colors"
-                :class="link.active
-                    ? 'bg-blue-500 text-white font-semibold'
-                    : link.url
-                        ? 'text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800'
-                        : 'text-zinc-700 cursor-default'"
-                :as="link.url ? 'a' : 'span'"
-            />
-        </div>
-
-        <!-- One-time bridge token reveal -->
-        <div v-if="bridgeToken" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-            <div class="w-full max-w-lg bg-admin-surface border border-zinc-800 rounded-2xl p-6">
-                <h3 class="text-zinc-100 text-base font-bold flex items-center gap-2">
-                    <Plug :size="16" :stroke-width="1.75" class="text-emerald-400" /> Bridge token generated
-                </h3>
-                <p class="text-zinc-500 text-xs mt-1 leading-relaxed">
-                    Paste this token into the in-game plugin config. For security it is stored hashed —
-                    <span class="text-amber-400 font-semibold">this is the only time it will be shown</span>.
-                    If you lose it, generate a new one.
-                </p>
-
-                <div class="flex items-center gap-2 mt-4 bg-zinc-900/70 border border-zinc-800 rounded-lg px-3 py-2.5">
-                    <code class="flex-1 text-[13px] text-emerald-300 font-mono break-all select-all">{{ bridgeToken }}</code>
-                    <button
-                        type="button"
-                        class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg border border-zinc-700 text-zinc-400 hover:text-zinc-100 hover:border-zinc-500 transition-colors"
-                        title="Copy token"
-                        @click="copyToken"
-                    >
-                        <component :is="tokenCopied ? Check : Copy" :size="13" :stroke-width="1.75" :class="tokenCopied ? 'text-emerald-400' : ''" />
-                    </button>
-                </div>
-
-                <p class="text-zinc-600 text-[11px] mt-3 font-mono">
-                    POST /api/bridge/poll · Authorization: Bearer &lt;token&gt;
-                </p>
-
-                <button
-                    type="button"
-                    class="mt-4 w-full bg-blue-500 text-white font-semibold rounded-lg px-4 py-2 text-sm hover:bg-blue-400 transition-colors"
-                    @click="dismissToken"
-                >
-                    I saved the token
-                </button>
-            </div>
-        </div>
-
+        <BridgeTokenDialog v-if="bridgeToken" :token="bridgeToken" @close="dismissToken" />
     </AdminLayout>
 </template>
