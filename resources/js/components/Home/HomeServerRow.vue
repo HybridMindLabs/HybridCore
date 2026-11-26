@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Link, usePage, router } from '@inertiajs/vue3';
 import { Star, Copy, Check, Play } from '@lucide/vue';
-import { ref, computed, watch, onUnmounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import GameIcon from '@/components/UI/GameIcon.vue';
+import { useClipboard } from '@/composables/useClipboard';
 import { useTheme } from '@/composables/useTheme';
 import { useLocale } from '@/composables/useLocale';
 import { gameColor, pingColor, type HomeServer } from './types';
@@ -31,34 +32,8 @@ const fillColor = computed(() => {
 });
 
 // ── Copy address ─────────────────────────────────────────────────
-const copied = ref(false);
-let copyTimer: ReturnType<typeof setTimeout> | null = null;
-
-async function copyAddress() {
-    try {
-        await navigator.clipboard.writeText(props.server.address);
-    } catch {
-        // Clipboard API needs a secure context; fall back to a temporary field.
-        const field = document.createElement('textarea');
-        field.value = props.server.address;
-        field.setAttribute('readonly', '');
-        field.style.position = 'fixed';
-        field.style.opacity = '0';
-        document.body.appendChild(field);
-        field.select();
-        try {
-            document.execCommand('copy');
-        } finally {
-            document.body.removeChild(field);
-        }
-    }
-
-    copied.value = true;
-    if (copyTimer) clearTimeout(copyTimer);
-    copyTimer = setTimeout(() => { copied.value = false; }, 1600);
-}
-
-onUnmounted(() => { if (copyTimer) clearTimeout(copyTimer); });
+const { copied, copy } = useClipboard();
+const copyAddress = () => copy(props.server.address);
 
 function toggleFavourite() {
     if (!page.props.auth?.user) { router.visit(route('login')); return; }
